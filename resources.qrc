@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/plugins/QGISPlugin_WaterIng" >
+        <file>images/icon.png</file>
+        <file>images/icon_load_elements.png</file>
+        <file>images/watering_logo.png</file>
+    </qresource>
+</RCC>
