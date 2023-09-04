@@ -12,9 +12,9 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLabel
 from qgis.gui import QgsProjectionSelectionDialog as QgsGenericProjectionSelector, QgsMapCanvas
 from qgis.utils import iface
-from repositories.reservoirNodeRepository import ReservoirNodeRepository
-from repositories.tankNodeRepository import TankNodeRepository
-from repositories.waterDemandNodeRepository import WateringDemandNodeRepository
+from .repositories.reservoirNodeRepository import ReservoirNodeRepository
+from .repositories.tankNodeRepository import TankNodeRepository
+from .repositories.waterDemandNodeRepository import WateringDemandNodeRepository
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_load_dialog.ui'))
@@ -78,18 +78,17 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         project.setFileName("My WaterIng Project" if project_name == "" else project_name)
         project.write()
         #load layers
-        self.CreateElementLayers()
+        self.CreateLayers()
     
     def CreateLayers(self):
         project_path = self.newShpDirectory.filePath()
-
-        waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][0])                
-        tankNodeRepository = TankNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][0])    
-        reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][0])    
-
-
-
-    
+        self.loadMap()
+        #waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])                
+        tankNodeRepository = TankNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
+        #reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
+        self.writeWateringMetadata()
+        self.setStatusBar()
+        
     def writeWateringMetadata(self):
         QgsProject.instance().writeEntry("watering", "project_name", self.listOfProjects[self.projects_box.currentIndex()][0])
         QgsProject.instance().writeEntry("watering", "project_id", self.listOfProjects[self.projects_box.currentIndex()][1])
@@ -103,36 +102,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
             layer = QgsRasterLayer(tms,'OSM', 'wms')
             QgsProject.instance().addMapLayer(layer)
-            
-        self.openLayers()
-        
-    def openLayers(self):
-        #tanks layer
-        demand_node_layer = QgsVectorLayer(self.demandNodeFile, QFileInfo(self.demandNodeFile).baseName(), "ogr")
-        reservoirs_layer = QgsVectorLayer(self.reservoirsFile, QFileInfo(self.reservoirsFile).baseName(), "ogr")
-        tanks_layer = QgsVectorLayer(self.tanksFile, QFileInfo(self.tanksFile).baseName(), "ogr")
-        
-        self.setTanksSymbol(tanks_layer)
-        self.setReservoirsSymbol(reservoirs_layer)
-        self.setNodesSymbol(demand_node_layer)
-        
-        if not tanks_layer.isValid():
-            print("Error opening tanks:", tanks_layer.dataProvider().error().message())
-        elif not reservoirs_layer.isValid():
-            print("Error opening reservoirs:", reservoirs_layer.dataProvider().error().message())
-        elif not demand_node_layer.isValid():
-            print("Error opening demand nodes:", reservoirs_layer.dataProvider().error().message())
-        else:
-            QgsProject.instance().addMapLayer(tanks_layer)
-            QgsProject.instance().addMapLayer(reservoirs_layer)
-            QgsProject.instance().addMapLayer(demand_node_layer)
-            print("tanks opened successfully:", tanks_layer.name())
-            print("reservoirs opened successfully:", reservoirs_layer.name())
-            print("demand nodes opened successfully:", demand_node_layer.name())
-        
-        self.writeWateringMetadata()
-        self.setStatusBar()
-
     
     def setStatusBar(self):
         project = QgsProject.instance()

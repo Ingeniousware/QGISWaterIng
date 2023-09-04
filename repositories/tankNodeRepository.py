@@ -1,7 +1,11 @@
 import os
 import requests
-from repositories.abstract_repository import AbstractRepository
+from .abstract_repository import AbstractRepository
 
+from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
+from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
+from PyQt5.QtCore import QVariant, QFileInfo
+from PyQt5.QtGui import QColor
 
 class TankNodeRepository(AbstractRepository):
 
@@ -11,29 +15,29 @@ class TankNodeRepository(AbstractRepository):
         self.UrlGet = "https://dev.watering.online/api/v1/TankNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_tanks.shp")
         self.Layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
-
-             
-    def setElementFields(self):
-        fields = QgsFields()
-        fields.append(QgsField("Tank ID", QVariant.String))
-        fields.append(QgsField("Last Modified", QVariant.String))
-        fields.append(QgsField("Name", QVariant.String))
-        fields.append(QgsField("Description", QVariant.String))
-        fields.append(QgsField("Z[m]", QVariant.Double))
-        fields.append(QgsField("Initial Level [m]", QVariant.Double))
-        fields.append(QgsField("Minimum Level [m]", QVariant.Double))
-        fields.append(QgsField("Maximum Level [m]", QVariant.Double))
-        fields.append(QgsField("Minimum Volume [m3]", QVariant.Double))
-        fields.append(QgsField("Diameter", QVariant.Double))
-        fields.append(QgsField("Can Overflow", QVariant.Bool))
-        return fields
+        self.createElementShp()
      
     def createElementShp(self):
         #Tanks Loading
         response_tanks = self.loadElements()
+
+        tank_field_definitions = [
+            ("Tank ID", QVariant.String),
+            ("Last Modified", QVariant.String),
+            ("Name", QVariant.String),
+            ("Description", QVariant.String),
+            ("Z[m]", QVariant.Double),
+            ("Initial Level [m]", QVariant.Double),
+            ("Minimum Level [m]", QVariant.Double),
+            ("Maximum Level [m]", QVariant.Double),
+            ("Minimum Volume [m3]", QVariant.Double),
+            ("Diameter", QVariant.Double),
+            ("Can Overflow", QVariant.Bool)
+        ]
+        
         
         #Setting shapefile fields 
-        fields = self.setElementFields()
+        fields = self.setElementFields(tank_field_definitions)
         
         sourceCrs = QgsCoordinateReferenceSystem(4326)
         destCrs = QgsCoordinateReferenceSystem(3857)
@@ -62,7 +66,7 @@ class TankNodeRepository(AbstractRepository):
                 tank["canOverflow"]
             ]
             list_of_tanks.append(tank_features)
-    
+        
         for tank in list_of_tanks:
             feature = QgsFeature(new_layer.fields())
             g = QgsGeometry.fromPointXY(QgsPointXY(tank[0][0], tank[0][1]))
@@ -87,13 +91,6 @@ class TankNodeRepository(AbstractRepository):
             print("Shapefile created successfully!")
         else:
             print("Error creating tanks Shapefile!")
-
+        
+        self.openLayers(QgsSimpleMarkerSymbolLayerBase.Pentagon, 6)
     
-
-    def setElementSymbol(self, layer):
-        renderer = layer.renderer()
-        symbol = renderer.symbol()
-        symbol.changeSymbolLayer(0, QgsSimpleMarkerSymbolLayer(QgsSimpleMarkerSymbolLayerBase.Pentagon))
-        symbol.setSize(6) 
-        symbol.setColor(QColor.fromRgb(23, 61, 108))
-        layer.triggerRepaint()
