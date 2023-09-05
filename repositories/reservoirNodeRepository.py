@@ -14,9 +14,9 @@ class ReservoirNodeRepository(AbstractRepository):
         super(ReservoirNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "https://dev.watering.online/api/v1/WaterReservoir"
         self.StorageShapeFile = os.path.join(project_path, "watering_reservoirs.shp")
-        self.reservoirsLayer()
+        self.initializeRepository()
      
-    def reservoirsLayer(self):
+    def initializeRepository(self):
         #Reservoirs Loading from API
         response_reservoirs = self.loadElements()
         
