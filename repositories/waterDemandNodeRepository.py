@@ -14,7 +14,6 @@ class WateringDemandNodeRepository(AbstractRepository):
         super(WateringDemandNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "https://dev.watering.online/api/v1/DemandNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
-        self.Layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
         self.demandNodesLayer()
         
     def demandNodesLayer(self):

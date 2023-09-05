@@ -14,7 +14,6 @@ class TankNodeRepository(AbstractRepository):
         super(TankNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "https://dev.watering.online/api/v1/TankNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_tanks.shp")
-        self.Layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
         self.tanksLayer()
      
     def tanksLayer(self):

@@ -14,7 +14,6 @@ class ReservoirNodeRepository(AbstractRepository):
         super(ReservoirNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "https://dev.watering.online/api/v1/WaterReservoir"
         self.StorageShapeFile = os.path.join(project_path, "watering_reservoirs.shp")
-        self.Layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
         self.reservoirsLayer()
      
     def reservoirsLayer(self):
