@@ -16,16 +16,6 @@ class ReservoirNodeRepository(AbstractRepository):
         self.StorageShapeFile = os.path.join(project_path, "watering_reservoirs.shp")
         self.Layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
 
-             
-    def setElementFields(self):
-        fields = QgsFields()
-        fields.append(QgsField("Reservoir ID", QVariant.String))
-        fields.append(QgsField("Last Modified", QVariant.String))
-        fields.append(QgsField("Name", QVariant.String))
-        fields.append(QgsField("Description", QVariant.String))
-        fields.append(QgsField("Z[m]", QVariant.Double))
-        fields.append(QgsField("Head[m]", QVariant.Double))
-        return fields
 
      
     def createElementShp(self):
@@ -33,13 +23,19 @@ class ReservoirNodeRepository(AbstractRepository):
         response_reservoirs = self.loadElements()
         
         #Setting shapefile fields 
-        fields = self.setElementFields()
         
-        sourceCrs = QgsCoordinateReferenceSystem(4326)
-        destCrs = QgsCoordinateReferenceSystem(3857)
-        transform = QgsCoordinateTransform(sourceCrs, destCrs, QgsProject.instance())
+        reservoirs_field_definitions = [
+        ("Reservoir ID", QVariant.String),
+        ("Last Modified", QVariant.String),
+        ("Name", QVariant.String),
+        ("Description", QVariant.String),
+        ("Z[m]", QVariant.Double),
+        ("Head[m]", QVariant.Double)
+        ]
         
-        new_layer = QgsVectorLayer("Point?crs=" + destCrs.authid(), "New Layer", "memory")
+        fields = self.setElementFields(reservoirs_field_definitions)
+
+        new_layer = QgsVectorLayer("Point?crs=" + self.destCrs.authid(), "New Layer", "memory")
         new_layer.dataProvider().addAttributes(fields)
         new_layer.updateFields()
         
@@ -56,6 +52,7 @@ class ReservoirNodeRepository(AbstractRepository):
             reservoirFeatures.append(response_reservoirs.json()["data"][i]["z"])
             reservoirFeatures.append(response_reservoirs.json()["data"][i]["head"])
             list_of_reservoirs.append(reservoirFeatures)
+
 
         for reservoir in list_of_reservoirs:
             feature = QgsFeature(new_layer.fields())
