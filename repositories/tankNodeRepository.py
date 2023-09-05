@@ -15,12 +15,13 @@ class TankNodeRepository(AbstractRepository):
         self.UrlGet = "https://dev.watering.online/api/v1/TankNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_tanks.shp")
         self.Layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
-        self.createElementShp()
+        self.tanksLayer()
      
-    def createElementShp(self):
+    def tanksLayer(self):
         #Tanks Loading
         response_tanks = self.loadElements()
 
+        #Setting shapefile fields 
         tank_field_definitions = [
             ("Tank ID", QVariant.String),
             ("Last Modified", QVariant.String),
@@ -38,19 +39,13 @@ class TankNodeRepository(AbstractRepository):
         tank_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z","initialLevel",
                          "minimumLevel","maximumLevel","minimumVolume", "nominalDiameter","canOverflow"]
         
-        #Setting shapefile fields 
         fields = self.setElementFields(tank_field_definitions)
         
         #Adding tanks to shapefile
         list_of_tanks = self.loadElementFeatures(response_tanks, tank_features)
-        new_layer = self.createElementLayer(tank_features, list_of_tanks, fields, tank_field_definitions)
+        tanks_layer = self.createElementLayer(tank_features, list_of_tanks, fields, tank_field_definitions)
         
-        #Writing Shapefile
-        writer = QgsVectorFileWriter.writeAsVectorFormat(new_layer, self.StorageShapeFile, "utf-8", new_layer.crs(), "ESRI Shapefile")
-        if writer[0] == QgsVectorFileWriter.NoError:
-            print("Shapefile created successfully!")
-        else:
-            print("Error creating tanks Shapefile!")
-        
+        #Write and open shapefile
+        self.writeShp(tanks_layer)
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Pentagon, 6)
     

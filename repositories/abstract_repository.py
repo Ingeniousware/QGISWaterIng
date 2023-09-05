@@ -1,7 +1,7 @@
 import requests
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem
-from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY
+from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 
@@ -42,7 +42,6 @@ class AbstractRepository():
             geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
-            print(len(element))
             for i in range(len(fields_definitions)):
                 feature.setAttribute(fields_definitions[i][0], element[i+2])
             layer.dataProvider().addFeature(feature)
@@ -51,6 +50,13 @@ class AbstractRepository():
         
     def createElementShp(self):
         ...
+    
+    def writeShp(self, layer):
+        writer = QgsVectorFileWriter.writeAsVectorFormat(layer, self.StorageShapeFile, "utf-8", layer.crs(), "ESRI Shapefile")
+        if writer[0] == QgsVectorFileWriter.NoError:
+            print("Shapefile created successfully!")
+        else:
+            print("Error creating tanks Shapefile!")
         
     def openLayers(self, layer_symbol, layer_size):
         element_layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
