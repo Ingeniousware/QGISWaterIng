@@ -48,7 +48,7 @@ class AbstractRepository():
             
         return layer 
         
-    def createElementShp(self):
+    def initializeRepository(self):
         ...
     
     def writeShp(self, layer):
