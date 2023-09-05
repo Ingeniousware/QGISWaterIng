@@ -1,6 +1,7 @@
 import requests
 
-from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
+from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem
+from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 
@@ -10,7 +11,9 @@ class AbstractRepository():
         """Constructor."""
         self.Token = token
         self.ScenarioFK = scenarioFK
-
+        self.sourceCrs = QgsCoordinateReferenceSystem(4326)
+        self.destCrs = QgsCoordinateReferenceSystem(3857)
+        
     def loadElements(self):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         return requests.get(self.UrlGet, params=params_element, headers={'Authorization': "Bearer {}".format(self.Token)})  
@@ -20,14 +23,32 @@ class AbstractRepository():
         for name, data_type in fields_definitions:
             fields.append(QgsField(name, data_type))
         return fields
-    
+        
     def loadElementFeatures(self, response, element_features):
         list_of_elements = []
         response_data = response.json()["data"]
         for element in response_data:
-            list_of_elements.append(element_features)
+            features = [element[field] for field in element_features]
+            list_of_elements.append(features)
         return list_of_elements
     
+    def createElementLayer(self, element_features, list_of_elements, fields, fields_definitions):
+        layer = QgsVectorLayer("Point?crs=" + self.destCrs.authid(), "New Layer", "memory")
+        layer.dataProvider().addAttributes(fields)
+        layer.updateFields()
+        
+        for element in list_of_elements:
+            feature = QgsFeature(layer.fields())
+            geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
+            geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+            feature.setGeometry(geometry)
+            print(len(element))
+            for i in range(len(fields_definitions)):
+                feature.setAttribute(fields_definitions[i][0], element[i+2])
+            layer.dataProvider().addFeature(feature)
+            
+        return layer 
+        
     def createElementShp(self):
         ...
         
@@ -40,7 +61,6 @@ class AbstractRepository():
         else:
             QgsProject.instance().addMapLayer(element_layer)
             print("opened successfully:", element_layer.name())
-
 
     def setElementSymbol(self, layer, layer_symbol, layer_size):
         renderer = layer.renderer()

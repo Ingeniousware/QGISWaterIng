@@ -35,56 +35,16 @@ class TankNodeRepository(AbstractRepository):
             ("Can Overflow", QVariant.Bool)
         ]
         
+        tank_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z","initialLevel",
+                         "minimumLevel","maximumLevel","minimumVolume", "nominalDiameter","canOverflow"]
         
         #Setting shapefile fields 
         fields = self.setElementFields(tank_field_definitions)
         
-        sourceCrs = QgsCoordinateReferenceSystem(4326)
-        destCrs = QgsCoordinateReferenceSystem(3857)
-        transform = QgsCoordinateTransform(sourceCrs, destCrs, QgsProject.instance())
-        
-        new_layer = QgsVectorLayer("Point?crs=" + destCrs.authid(), "New Layer", "memory")
-        new_layer.dataProvider().addAttributes(fields)
-        new_layer.updateFields()
-        
         #Adding tanks to shapefile
-        list_of_tanks = []
-        response_data = response_tanks.json()["data"]
-        for tank in response_data:
-            tank_features = [
-                (tank["lng"], tank["lat"]),
-                tank["serverKeyId"],
-                tank["lastModified"],
-                tank["name"],
-                tank["description"],
-                tank["z"],
-                tank["initialLevel"],
-                tank["minimumLevel"],
-                tank["maximumLevel"],
-                tank["minimumVolume"],
-                tank["nominalDiameter"],
-                tank["canOverflow"]
-            ]
-            list_of_tanks.append(tank_features)
+        list_of_tanks = self.loadElementFeatures(response_tanks, tank_features)
+        new_layer = self.createElementLayer(tank_features, list_of_tanks, fields, tank_field_definitions)
         
-        for tank in list_of_tanks:
-            feature = QgsFeature(new_layer.fields())
-            g = QgsGeometry.fromPointXY(QgsPointXY(tank[0][0], tank[0][1]))
-            g.transform(transform)
-            feature.setGeometry(g) 
-            feature.setAttribute("Tank ID", tank[1])
-            feature.setAttribute("Last Modified", tank[2])
-            feature.setAttribute("Name", tank[3])
-            feature.setAttribute("Description", tank[4])
-            feature.setAttribute("Z[m]", tank[5])
-            feature.setAttribute("Initial Level [m]", tank[6])
-            feature.setAttribute("Minimum Level [m]", tank[7])
-            feature.setAttribute("Maximum Level [m]", tank[8])
-            feature.setAttribute("Minimum Volume [m3]", tank[9])
-            feature.setAttribute("Diameter", tank[10])
-            feature.setAttribute("Can Overflow", tank[11])
-            new_layer.dataProvider().addFeature(feature)
-
         #Writing Shapefile
         writer = QgsVectorFileWriter.writeAsVectorFormat(new_layer, self.StorageShapeFile, "utf-8", new_layer.crs(), "ESRI Shapefile")
         if writer[0] == QgsVectorFileWriter.NoError:
