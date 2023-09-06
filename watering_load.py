@@ -15,6 +15,8 @@ from qgis.utils import iface
 from .repositories.reservoirNodeRepository import ReservoirNodeRepository
 from .repositories.tankNodeRepository import TankNodeRepository
 from .repositories.waterDemandNodeRepository import WateringDemandNodeRepository
+from .repositories.pipeNodeRepository import PipeNodeRepository
+
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_load_dialog.ui'))
@@ -83,9 +85,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def CreateLayers(self):
         project_path = self.newShpDirectory.filePath()
         self.loadMap()
+        pipeNodeRepository = PipeNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
         waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])                
         tankNodeRepository = TankNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
-        reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
+        reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
+        #pipeNodeRepository = PipeNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
         self.writeWateringMetadata()
         self.setStatusBar()
         
@@ -95,13 +99,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         QgsProject.instance().writeEntry("watering", "scenario_name", self.listOfScenarios[self.scenarios_box.currentIndex()][0])
         QgsProject.instance().writeEntry("watering", "scenario_id", self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         
-        
     def loadMap(self):
-        #checks if open street maps is already loaded
-        if not QgsProject.instance().mapLayersByName("OSM"):
-            tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-            layer = QgsRasterLayer(tms,'OSM', 'wms')
-            QgsProject.instance().addMapLayer(layer)
+        tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+        layer = QgsRasterLayer(tms,'OSM', 'wms')
+        QgsProject.instance().addMapLayer(layer)
     
     def setStatusBar(self):
         project = QgsProject.instance()
