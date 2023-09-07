@@ -1,5 +1,7 @@
+from qgis.gui import QgsMapToolEmitPoint, QgsVertexMarker
 
-""" class PointMapTool(QgsMapToolEmitPoint):
+
+class InsertNodeAbstractTool(QgsMapToolEmitPoint):
 
     def __init__(self, canvas):
 
@@ -27,4 +29,4 @@
 
         m.setIconType(QgsVertexMarker.ICON_BOX) # or ICON_CROSS, ICON_X
 
-        m.setPenWidth(3) """
+        m.setPenWidth(3)
