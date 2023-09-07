@@ -13,6 +13,7 @@ from .resources import *
 # Import the code for the dialog
 from .watering_load import WateringLoad
 from .watering_login import WateringLogin
+from .watering_analysis import WateringAnalysis
 import os.path
 import requests
 
@@ -124,6 +125,14 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Water Analysis'),
+            callback=self.waterAnalysis,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
         # will be set False in run()
         #self.first_start = True
 
@@ -163,15 +172,37 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         else:
-            self.dlgtool1 = WateringLoad()
+            self.dlg = WateringLoad()
 
             # show the dialog
-            self.dlgtool1.show()
+            self.dlg.show()
             # Run the dialog event loop
-            result = self.dlgtool1.exec_()
+            result = self.dlg.exec_()
             # See if OK was pressed
             if result:
                 # Do something useful here - delete the line containing pass and
                 # substitute with your code.
                 pass
+            
+    def waterAnalysis(self):
+        
+        print(self.checkExistingProject())
+        if self.checkExistingProject() == False:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a scenario first in Download Elements!"), level=1, duration=5)
+        else:
+            self.dlg = WateringAnalysis()
+
+            # show the dialog
+            self.dlg.show()
+            # Run the dialog event loop
+            result = self.dlg.exec_()
+            # See if OK was pressed
+            if result:
+                # Do something useful here - delete the line containing pass and
+                # substitute with your code.
+                pass
+    
+    def checkExistingProject(self):
+        scenario_id =  QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        return False if scenario_id == "default text" else True
         

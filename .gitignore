@@ -1,4 +1,4 @@
 /.DS_Store
 .vscode
-/repositories/__pycache__/*.pyc
+/repositories/__pycache__/
 /__pycache__
