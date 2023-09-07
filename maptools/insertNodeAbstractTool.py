@@ -1,4 +1,5 @@
 from qgis.gui import QgsMapToolEmitPoint, QgsVertexMarker
+from PyQt5.QtGui import QColor
 
 
 class InsertNodeAbstractTool(QgsMapToolEmitPoint):
