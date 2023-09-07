@@ -14,9 +14,9 @@ class PipeNodeRepository(AbstractRepository):
         super(PipeNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "https://dev.watering.online/api/v1/WaterPipe"
         self.StorageShapeFile = os.path.join(project_path, "watering_pipes.shp")
-        self.pipesLayer()
-     
-    def pipesLayer(self):
+        self.initializeRepository()
+
+    def initializeRepository(self):
         #Pipes loading
         response_pipes = self.loadElements()
         
@@ -34,8 +34,8 @@ class PipeNodeRepository(AbstractRepository):
             ("Down-Node", QVariant.String),
         ]
         
-        #pipe_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z","initialLevel",
-        #                 "minimumLevel","maximumLevel","minimumVolume", "nominalDiameter","canOverflow"]
+        pipe_attributes = ["serverKeyId", "lastModified", "name", "description", "diameterInt",
+                           "length", "roughnessAbsolute", "roughnessCoefficient", "nodeUpName", "nodeDownName"]
         
         fields = self.setElementFields(pipe_field_definitions)
         
@@ -45,45 +45,16 @@ class PipeNodeRepository(AbstractRepository):
         layer.updateFields()
         
         #Adding tanks to shapefile
-        list_of_pipes = []
-        response_data = response_pipes.json()["data"]
-        for pipe in response_data:
-            pipe_features = [
-               (pipe["vertices"][0]["lng"], pipe["vertices"][0]["lat"]),
-                (pipe["vertices"][1]["lng"], pipe["vertices"][1]["lat"]),
-                pipe["serverKeyId"],
-                pipe["lastModified"],
-                pipe["name"],
-                pipe["description"],
-                pipe["diameterInt"],
-                pipe["length"],
-                pipe["roughnessAbsolute"],
-                pipe["roughnessCoefficient"],
-                pipe["nodeUpName"],
-                pipe["nodeDownName"]
-            ]
-            list_of_pipes.append(pipe_features)
-        
-        for pipe in list_of_pipes:
+        for pipe in response_pipes.json()["data"]:
             feature = QgsFeature(layer.fields())
-            point1 = QgsPointXY(pipe[0][0], pipe[0][1])
-            point2 = QgsPointXY(pipe[1][0], pipe[1][1])
-            points = [point1, point2]
+            points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in pipe["vertices"]]
+            #points = self.getPipesVertexes(pipe["vertices"])
             g = QgsGeometry.fromPolylineXY(points)
             feature.setGeometry(g)
-            feature.setAttribute("Pipe ID", pipe[2])
-            feature.setAttribute("Last Modified", pipe[3])
-            feature.setAttribute("Name", pipe[4])
-            feature.setAttribute("Description", pipe[5])
-            feature.setAttribute("Diameter [m]", pipe[6])
-            feature.setAttribute("Length [m]", pipe[7])
-            feature.setAttribute("Roughness (absol) [mm]", pipe[8])
-            feature.setAttribute("Rough.Coeff.(H.W.)", pipe[9])
-            feature.setAttribute("Up-Node", pipe[10])
-            feature.setAttribute("Down-Node", pipe[11])
-            print(feature.attributes)
+            for field, attribute in zip(pipe_field_definitions, pipe_attributes):
+                feature.setAttribute(field[0], pipe[attribute])
             layer_provider.addFeature(feature)
-         
+        
         writer = QgsVectorFileWriter.writeAsVectorFormat(layer, self.StorageShapeFile, "utf-8", self.destCrs, "ESRI Shapefile")
         if writer[0] == QgsVectorFileWriter.NoError:
             print("Shapefile created successfully!")
