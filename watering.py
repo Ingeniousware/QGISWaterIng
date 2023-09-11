@@ -186,7 +186,6 @@ class QGISPlugin_WaterIng:
             
     def waterAnalysis(self):
         
-        print(self.checkExistingProject())
         if self.checkExistingProject() == False:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a scenario first in Download Elements!"), level=1, duration=5)
         else:

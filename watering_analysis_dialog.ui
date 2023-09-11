@@ -43,7 +43,7 @@
     <string>Analysis</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="newProjectBtn">
+  <widget class="QPushButton" name="BtGetAnalysisResults">
    <property name="geometry">
     <rect>
      <x>40</x>

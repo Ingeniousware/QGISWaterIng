@@ -28,7 +28,11 @@ class WateringDemandNodeRepository(AbstractRepository):
             ("Description", QVariant.String),
             ("Z[m]", QVariant.Double),
             ("Base Demand [l/s]", QVariant.Double),
-            ("Demand Pattern", QVariant.Bool)
+            ("Demand Pattern", QVariant.Bool),
+            ("Pressure", QVariant.Double),
+            ("Demand", QVariant.Double),
+            ("Demand C", QVariant.Double),
+            ("Age", QVariant.Double)
         ]
     
         demandNode_features = ["lng", "lat", "serverKeyId","lastModified", "name","description",

@@ -3,7 +3,7 @@ import requests
 from .abstract_repository import AbstractRepository
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
-from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSymbol
+from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSymbol, edit
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 
@@ -32,10 +32,15 @@ class PipeNodeRepository(AbstractRepository):
             ("Rough.Coeff.(H.W.)", QVariant.Double),
             ("Up-Node", QVariant.String),
             ("Down-Node", QVariant.String),
+            ("C Status", QVariant.String),
+            ("Velocity", QVariant.String),
+            ("Flow", QVariant.String),
+            ("HeadLoss", QVariant.String)
         ]
         
         pipe_attributes = ["serverKeyId", "lastModified", "name", "description", "diameterInt",
-                           "length", "roughnessAbsolute", "roughnessCoefficient", "nodeUpName", "nodeDownName"]
+                           "length", "roughnessAbsolute", "roughnessCoefficient", "nodeUpName", "nodeDownName",
+                           "pipeCurrentStatus","velocity", "flow" ,"headLoss"]
         
         fields = self.setElementFields(pipe_field_definitions)
         
@@ -46,9 +51,9 @@ class PipeNodeRepository(AbstractRepository):
         
         #Adding tanks to shapefile
         for pipe in response_pipes.json()["data"]:
+            pipe.update({'pipeCurrentStatus': 0, 'velocity': 0, 'flow': 0, 'headLoss': 0})
             feature = QgsFeature(layer.fields())
             points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in pipe["vertices"]]
-            #points = self.getPipesVertexes(pipe["vertices"])
             g = QgsGeometry.fromPolylineXY(points)
             feature.setGeometry(g)
             for field, attribute in zip(pipe_field_definitions, pipe_attributes):
@@ -70,3 +75,16 @@ class PipeNodeRepository(AbstractRepository):
         layer.renderer().setSymbol(symbol)
 
         QgsProject.instance().addMapLayer(layer)
+        
+        self.editLayer(layer)
+    
+    def editLayer(self, layer):
+        layer.startEditing()
+        idx = layer.fields().indexOf('HeadLoss')
+
+        new_value = 3
+        for feature in layer.getFeatures():
+            if feature['Pipe ID'] == "3aaceacc-e5a6-424a-84d8-0199dd0c9538":
+                layer.changeAttributeValue(feature.id(), idx, new_value)
+
+        layer.commitChanges()

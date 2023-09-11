@@ -32,7 +32,11 @@ class TankNodeRepository(AbstractRepository):
             ("Maximum Level [m]", QVariant.Double),
             ("Minimum Volume [m3]", QVariant.Double),
             ("Diameter", QVariant.Double),
-            ("Can Overflow", QVariant.Bool)
+            ("Can Overflow", QVariant.Bool),
+            ("Pressure", QVariant.Double),
+            ("Demand", QVariant.Double),
+            ("Demand C", QVariant.Double),
+            ("Age", QVariant.Double)
         ]
         
         tank_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z","initialLevel",

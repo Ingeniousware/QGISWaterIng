@@ -6,12 +6,15 @@ import requests
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.core import QgsVectorLayer, QgsField, QgsFields, QgsFeature, QgsGeometry, QgsVectorFileWriter, QgsPointXY, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
-from qgis.core import QgsProject, QgsRasterLayer, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsSingleSymbolRenderer, QgsProjectMetadata
-from PyQt5.QtCore import QVariant, QFileInfo
+from qgis.core import QgsProject, QgsRasterLayer, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsSingleSymbolRenderer, QgsProjectMetadata, QgsProcessingFeedback, Qgis
+from PyQt5.QtCore import QVariant, QFileInfo, Qt
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLabel
 from qgis.gui import QgsProjectionSelectionDialog as QgsGenericProjectionSelector, QgsMapCanvas
+from qgis.PyQt.QtWidgets import QProgressBar
 from qgis.utils import iface
+
+
 from .repositories.reservoirNodeRepository import ReservoirNodeRepository
 from .repositories.tankNodeRepository import TankNodeRepository
 from .repositories.waterDemandNodeRepository import WateringDemandNodeRepository
@@ -89,7 +92,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])                
         tankNodeRepository = TankNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
         reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        #pipeNodeRepository = PipeNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
         self.writeWateringMetadata()
         self.setStatusBar()
         
@@ -119,3 +121,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         iface.mainWindow().statusBar().showMessage(message)
         
         self.close()
+    
+    def progressBar(self):
+        progressMessageBar = iface.messageBar().createMessage("Loading Elements...")
+        progress = QProgressBar()
+        progress.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
+        progressMessageBar.layout().addWidget(progress)
+        iface.messageBar().pushWidget(progressMessageBar, Qgis.Info)

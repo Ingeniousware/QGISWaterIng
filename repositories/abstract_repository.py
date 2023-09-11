@@ -29,6 +29,7 @@ class AbstractRepository():
         response_data = response.json()["data"]
         for element in response_data:
             features = [element[field] for field in element_features]
+            features.extend([0] * 4)
             list_of_elements.append(features)
         return list_of_elements
     
