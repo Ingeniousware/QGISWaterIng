@@ -3,7 +3,8 @@
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from PyQt5.QtWidgets import QDialog
-from qgis.core import QgsProject, edit
+from qgis.core import QgsProject, edit, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat, QgsClassificationEqualInterval
+from qgis.core import QgsStyle, QgsSymbol, QgsClassificationLogarithmic, QgsClassificationQuantile, QgsLineSymbol
 from qgis.utils import iface
 
 import os
@@ -63,8 +64,6 @@ class WateringAnalysis(QtWidgets.QDialog, FORM_CLASS):
             element_dict[element[keys_api[0]]] = [element[keys_api[1]], element[keys_api[2]], 
                                  element[keys_api[3]], element[keys_api[4]]]
             
-        print(element_dict)
-        
         layer = QgsProject.instance().mapLayersByName(layer_name)[0]
 
         layer.startEditing()
@@ -84,4 +83,43 @@ class WateringAnalysis(QtWidgets.QDialog, FORM_CLASS):
         layer.commitChanges()
         
         print(layer_name, "analysis results done")
+        
+        self.changeColor("watering_pipes", "Velocity", 1)
+        self.changeColor("watering_demand_nodes", "Pressure", 3)
+    
+    def changeColor(self, layer_name, field_name, size):
+        # Set layer name and desired paremeters
+        layer_name = layer_name
+        ramp_name = 'Rocket'
+        value_field = field_name
+        num_classes = 10
+        classification_method = QgsClassificationQuantile()
+
+        #You can use any of these classification method classes:
+        #QgsClassificationQuantile()
+        #QgsClassificationEqualInterval()
+        #QgsClassificationJenks()
+        #QgsClassificationPrettyBreaks()
+        #QgsClassificationLogarithmic()
+        #QgsClassificationStandardDeviation()
+        
+        layer = QgsProject().instance().mapLayersByName(layer_name)[0]
+        
+        # change format settings as necessary
+        format = QgsRendererRangeLabelFormat()
+        format.setFormat("%1 - %2")
+        format.setPrecision(2)
+        format.setTrimTrailingZeroes(True)
+
+        default_style = QgsStyle().defaultStyle()
+        color_ramp = default_style.colorRamp(ramp_name)
+        renderer = QgsGraduatedSymbolRenderer()
+        renderer.setClassAttribute(value_field)
+        renderer.setClassificationMethod(classification_method)
+        renderer.setLabelFormat(format)
+        renderer.updateClasses(layer, num_classes)
+        renderer.updateColorRamp(color_ramp)
+        renderer.setSymbolSizes(size, size)
+        layer.setRenderer(renderer)
+        layer.triggerRepaint()
         
