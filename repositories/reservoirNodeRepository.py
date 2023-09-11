@@ -22,7 +22,7 @@ class ReservoirNodeRepository(AbstractRepository):
         
         #Setting shapefile fields 
         reservoirs_field_definitions = [
-            ("Reservoir ID", QVariant.String),
+            ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
             ("Name", QVariant.String),
             ("Description", QVariant.String),

@@ -22,7 +22,7 @@ class PipeNodeRepository(AbstractRepository):
         
         #Setting shapefile fields 
         pipe_field_definitions = [
-            ("Pipe ID", QVariant.String),
+            ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
             ("Name", QVariant.String),
             ("Description", QVariant.String),
@@ -32,10 +32,10 @@ class PipeNodeRepository(AbstractRepository):
             ("Rough.Coeff.(H.W.)", QVariant.Double),
             ("Up-Node", QVariant.String),
             ("Down-Node", QVariant.String),
-            ("C Status", QVariant.String),
-            ("Velocity", QVariant.String),
-            ("Flow", QVariant.String),
-            ("HeadLoss", QVariant.String)
+            ("C Status", QVariant.Double),
+            ("Velocity", QVariant.Double),
+            ("Flow", QVariant.Double),
+            ("HeadLoss", QVariant.Double)
         ]
         
         pipe_attributes = ["serverKeyId", "lastModified", "name", "description", "diameterInt",
@@ -75,16 +75,3 @@ class PipeNodeRepository(AbstractRepository):
         layer.renderer().setSymbol(symbol)
 
         QgsProject.instance().addMapLayer(layer)
-        
-        self.editLayer(layer)
-    
-    def editLayer(self, layer):
-        layer.startEditing()
-        idx = layer.fields().indexOf('HeadLoss')
-
-        new_value = 3
-        for feature in layer.getFeatures():
-            if feature['Pipe ID'] == "3aaceacc-e5a6-424a-84d8-0199dd0c9538":
-                layer.changeAttributeValue(feature.id(), idx, new_value)
-
-        layer.commitChanges()

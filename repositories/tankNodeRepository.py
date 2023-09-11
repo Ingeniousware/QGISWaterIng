@@ -22,7 +22,7 @@ class TankNodeRepository(AbstractRepository):
 
         #Setting shapefile fields 
         tank_field_definitions = [
-            ("Tank ID", QVariant.String),
+            ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
             ("Name", QVariant.String),
             ("Description", QVariant.String),

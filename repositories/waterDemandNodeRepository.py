@@ -22,7 +22,7 @@ class WateringDemandNodeRepository(AbstractRepository):
         
         #Setting shapefile fields 
         demandNode_field_definitions = [
-            ("Demand Node ID", QVariant.String),
+            ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
             ("Name", QVariant.String),
             ("Description", QVariant.String),
