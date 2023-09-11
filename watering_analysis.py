@@ -4,8 +4,9 @@ from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from PyQt5.QtWidgets import QDialog
 from qgis.core import QgsProject, edit, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat, QgsClassificationEqualInterval
-from qgis.core import QgsStyle, QgsSymbol, QgsClassificationLogarithmic, QgsClassificationQuantile, QgsLineSymbol
+from qgis.core import QgsStyle, QgsSymbol, QgsClassificationLogarithmic, QgsClassificationQuantile, QgsLineSymbol, QgsGradientColorRamp
 from qgis.utils import iface
+from qgis.PyQt.QtGui import QColor
 
 import os
 import requests
@@ -84,13 +85,13 @@ class WateringAnalysis(QtWidgets.QDialog, FORM_CLASS):
         
         print(layer_name, "analysis results done")
         
-        self.changeColor("watering_pipes", "Velocity", 1)
-        self.changeColor("watering_demand_nodes", "Pressure", 3)
+        self.changeColor("watering_pipes", "Velocity", 1, QColor(135,206,250), QColor(0, 0, 139))
+        self.changeColor("watering_demand_nodes", "Pressure", 3, QColor(255, 0, 0), QColor(0, 0, 139))
     
-    def changeColor(self, layer_name, field_name, size):
+    def changeColor(self, layer_name, field_name, size, start_color, end_color):
         # Set layer name and desired paremeters
         layer_name = layer_name
-        ramp_name = 'Rocket'
+        #ramp_name = 'Rocket'
         value_field = field_name
         num_classes = 10
         classification_method = QgsClassificationQuantile()
@@ -111,8 +112,13 @@ class WateringAnalysis(QtWidgets.QDialog, FORM_CLASS):
         format.setPrecision(2)
         format.setTrimTrailingZeroes(True)
 
+        start_color = start_color  # Light Blue
+        end_color = end_color  # Dark Blue
+
+        # Create the color ramp
         default_style = QgsStyle().defaultStyle()
-        color_ramp = default_style.colorRamp(ramp_name)
+        #color_ramp = default_style.colorRamp(ramp_name)
+        color_ramp = QgsGradientColorRamp(start_color, end_color)
         renderer = QgsGraduatedSymbolRenderer()
         renderer.setClassAttribute(value_field)
         renderer.setClassificationMethod(classification_method)
