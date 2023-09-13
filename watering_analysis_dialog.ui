@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>404</width>
-    <height>122</height>
+    <width>472</width>
+    <height>150</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,9 +16,9 @@
   <widget class="QComboBox" name="analysis_box">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>44</y>
-     <width>331</width>
+     <x>30</x>
+     <y>40</y>
+     <width>411</width>
      <height>21</height>
     </rect>
    </property>
@@ -26,7 +26,7 @@
   <widget class="QLabel" name="projectLabel">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>30</x>
      <y>20</y>
      <width>171</width>
      <height>20</height>
@@ -43,17 +43,63 @@
     <string>Analysis</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="BtGetAnalysisResults">
+  <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
    <property name="geometry">
     <rect>
-     <x>40</x>
-     <y>80</y>
-     <width>331</width>
+     <x>180</x>
+     <y>100</y>
+     <width>111</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Get Analysis Results</string>
+    <string>Current</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="BtGetAnalysisResultsBackward">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>100</y>
+     <width>111</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Backward</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="BtGetAnalysisResultsForward">
+   <property name="geometry">
+    <rect>
+     <x>330</x>
+     <y>100</y>
+     <width>111</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Forward</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="projectLabel_2">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>80</y>
+     <width>171</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>13</pointsize>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Simulation Period</string>
    </property>
   </widget>
  </widget>
