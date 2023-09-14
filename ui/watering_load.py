@@ -66,7 +66,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         elif self.newShpDirectory.filePath() == "":
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a folder!"), level=1, duration=5)
         else:
-            self.progressBar()
             self.createNewProject()
             
     def createNewProject(self):

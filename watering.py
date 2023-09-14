@@ -13,6 +13,8 @@ from .resources import *
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
 from .ui.watering_analysis import WateringAnalysis
+from .ui.watering_add_node import WateringAddDemandNode
+
 import os.path
 
 class QGISPlugin_WaterIng:
@@ -107,7 +109,7 @@ class QGISPlugin_WaterIng:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_login.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Watering Login'),
@@ -128,6 +130,22 @@ class QGISPlugin_WaterIng:
             icon_path,
             text=self.tr(u'Water Analysis'),
             callback=self.waterAnalysis,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Select'),
+            callback=self.print,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Add Demand Node'),
+            callback=self.addDemandNode,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
@@ -199,7 +217,26 @@ class QGISPlugin_WaterIng:
                 # substitute with your code.
                 pass
     
+    def addDemandNode(self):
+
+        if self.checkExistingProject() == False:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
+        else:
+            #self.dlg = WateringAnalysis()
+            print("Ok")
+            # show the dialog
+            #self.dlg.show()
+            # Run the dialog event loop
+            #result = self.dlg.exec_()
+            # See if OK was pressed
+            #if result:
+                # Do something useful here - delete the line containing pass and
+                # substitute with your code.
+                #pass
+            
     def checkExistingProject(self):
         scenario_id =  QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         return False if scenario_id == "default text" else True
         
+    def print(self):
+        print("Working")

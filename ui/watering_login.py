@@ -39,6 +39,7 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
                 self.errorLogin.setText("Login Successful.")
                 os.environ['TOKEN'] = response.json()["token"]
                 self.token = os.environ['TOKEN']
+                self.logged = True
             else:
                 self.errorLogin.setStyleSheet("color: red")
                 self.errorLogin.setText("Invalid email or password.")
@@ -52,4 +53,4 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
             self.close()
             self.dlgLoad = WateringLoad()
             self.dlgLoad.show()
-            result = self.dlgLoad.exec_()
+            self.dlgLoad.exec_()

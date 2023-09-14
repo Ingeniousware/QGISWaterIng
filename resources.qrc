@@ -4,5 +4,8 @@
         <file>images/icon_load_elements.png</file>
         <file>images/watering_logo.png</file>
         <file>images/icon_analysis.png</file>
+        <file>images/icon_select.png</file>
+        <file>images/icon_add_node.png</file>
+        <file>images/icon_login.png</file>
     </qresource>
 </RCC>
