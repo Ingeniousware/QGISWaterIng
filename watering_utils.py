@@ -1,21 +1,30 @@
 # -*- coding: utf-8 -*-
 
 # Import QGis
-from qgis.core import QgsProject, QgsVectorLayer, QgsMapLayer
-from PyQt5.QtGui import QIcon, QCursor
-from PyQt5.QtWidgets import QAction, QMessageBox, QApplication, QMenu, QFileDialog, QToolButton
-from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from qgis.core import QgsMessageLog, QgsCoordinateTransform, QgsApplication
+from PyQt5.QtCore import Qt
+from qgis.utils import iface
+from qgis.core import Qgis
+from qgis.PyQt.QtWidgets import QProgressBar
 
-import json
-import os
-from .watering_login import WateringLogin
+from PyQt5.QtCore import QTimer
+from time import time, gmtime, strftime
 
-class WateringUtils:  
-    def __init__(self, directory="", networkName="", iface=None):
+class WateringUtils():  
+    
+    def set_progress(progress_value, progressBar):
+        progressBar.setValue(progress_value)
+        #progressBar.setFormat(f"%p%")
+
+    def timer_hide_progress_bar(progressBar):
+        timer = QTimer()
+        timer.setSingleShot(True)
+        timer.timeout.connect(progressBar.setVisible(False))
+        timer.start(6000)
+        progressBar.setFormat("Loading completed")
         
-        self.iface = iface
-        self.ProjectDirectory = directory
-        self.NetworkName = networkName
-        
+    def hide_progress_bar(progressBar):
+        progressBar.setVisible(False)
+
+    def show_progress_bar(progressBar):
+        progressBar.setVisible(True)
     

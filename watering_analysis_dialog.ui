@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>472</width>
-    <height>150</height>
+    <width>453</width>
+    <height>152</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QComboBox" name="analysis_box">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>20</x>
      <y>40</y>
      <width>411</width>
      <height>21</height>
@@ -24,9 +24,12 @@
    </property>
   </widget>
   <widget class="QLabel" name="projectLabel">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>20</x>
      <y>20</y>
      <width>171</width>
      <height>20</height>
@@ -46,8 +49,8 @@
   <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
    <property name="geometry">
     <rect>
-     <x>180</x>
-     <y>100</y>
+     <x>170</x>
+     <y>110</y>
      <width>111</width>
      <height>21</height>
     </rect>
@@ -59,8 +62,8 @@
   <widget class="QPushButton" name="BtGetAnalysisResultsBackward">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>100</y>
+     <x>20</x>
+     <y>110</y>
      <width>111</width>
      <height>21</height>
     </rect>
@@ -72,8 +75,8 @@
   <widget class="QPushButton" name="BtGetAnalysisResultsForward">
    <property name="geometry">
     <rect>
-     <x>330</x>
-     <y>100</y>
+     <x>320</x>
+     <y>110</y>
      <width>111</width>
      <height>21</height>
     </rect>
@@ -85,8 +88,8 @@
   <widget class="QLabel" name="projectLabel_2">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>80</y>
+     <x>20</x>
+     <y>90</y>
      <width>171</width>
      <height>20</height>
     </rect>
@@ -100,6 +103,19 @@
    </property>
    <property name="text">
     <string>Simulation Period</string>
+   </property>
+  </widget>
+  <widget class="QProgressBar" name="progressBar">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>70</y>
+     <width>411</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="value">
+    <number>0</number>
    </property>
   </widget>
  </widget>
