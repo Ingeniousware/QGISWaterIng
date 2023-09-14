@@ -3,22 +3,15 @@
 import os
 import requests
 
-from qgis.PyQt import uic
-from qgis.PyQt import QtWidgets
-from qgis.core import QgsVectorLayer, QgsField, QgsFields, QgsFeature, QgsGeometry, QgsVectorFileWriter, QgsPointXY, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
-from qgis.core import QgsProject, QgsRasterLayer, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsSingleSymbolRenderer, QgsProjectMetadata, QgsProcessingFeedback, Qgis
-from PyQt5.QtCore import QVariant, QFileInfo, Qt
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QLabel
-from qgis.gui import QgsProjectionSelectionDialog as QgsGenericProjectionSelector, QgsMapCanvas
-from qgis.PyQt.QtWidgets import QProgressBar
+from qgis.PyQt import uic, QtWidgets
+from qgis.core import QgsProject, QgsRasterLayer
 from qgis.utils import iface
 
-
-from .repositories.reservoirNodeRepository import ReservoirNodeRepository
-from .repositories.tankNodeRepository import TankNodeRepository
-from .repositories.waterDemandNodeRepository import WateringDemandNodeRepository
-from .repositories.pipeNodeRepository import PipeNodeRepository
+from ..watering_utils import WateringUtils
+from ..repositories.reservoirNodeRepository import ReservoirNodeRepository
+from ..repositories.tankNodeRepository import TankNodeRepository
+from ..repositories.waterDemandNodeRepository import WateringDemandNodeRepository
+from ..repositories.pipeNodeRepository import PipeNodeRepository
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -47,7 +40,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 
         self.loadScenarios(self.projects_box.currentIndex())
         self.projects_box.currentIndexChanged.connect(self.loadScenarios)
-
+        
     def loadScenarios(self, value):
         #Resetting scenarios box in case of changing the selected project.
         self.scenarios_box.clear()
@@ -64,7 +57,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.scenarios_box.addItem(response_scenarios.json()["data"][i]["name"])
             self.listOfScenarios.append((response_scenarios.json()["data"][i]["name"],
                                          response_scenarios.json()["data"][i]["serverKeyId"]))
-
     
     def checkExistingProject(self):
         scenario_id, type_conversion_ok = QgsProject.instance().readEntry("watering","scenario_id","default text")
@@ -74,6 +66,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         elif self.newShpDirectory.filePath() == "":
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a folder!"), level=1, duration=5)
         else:
+            self.progressBar()
             self.createNewProject()
             
     def createNewProject(self):
@@ -119,12 +112,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         message = "Project: " + project_name + " | Scenario: " + scenario_name
         
         iface.mainWindow().statusBar().showMessage(message)
-        
         self.close()
+        
     
-    def progressBar(self):
-        progressMessageBar = iface.messageBar().createMessage("Loading Elements...")
-        progress = QProgressBar()
-        progress.setAlignment(Qt.AlignLeft|Qt.AlignVCenter)
-        progressMessageBar.layout().addWidget(progress)
-        iface.messageBar().pushWidget(progressMessageBar, Qgis.Info)

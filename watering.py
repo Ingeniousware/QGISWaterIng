@@ -1,21 +1,19 @@
 # -*- coding: utf-8 -*-
 
 # Import QGis
-from qgis.core import QgsProject, QgsVectorLayer, QgsMapLayer
-from PyQt5.QtGui import QIcon, QCursor
-from PyQt5.QtWidgets import QAction, QMessageBox, QApplication, QMenu, QFileDialog, QToolButton, QToolBar
-from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from qgis.core import QgsMessageLog, QgsCoordinateTransform, QgsApplication
+from qgis.core import QgsProject
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication
 
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
-from .watering_load import WateringLoad
-from .watering_login import WateringLogin
-from .watering_analysis import WateringAnalysis
+from .ui.watering_load import WateringLoad
+from .ui.watering_login import WateringLogin
+from .ui.watering_analysis import WateringAnalysis
 import os.path
-import requests
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""

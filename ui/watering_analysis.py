@@ -7,10 +7,10 @@ from PyQt5.QtCore import QTimer
 import os
 import requests
 from time import time, gmtime, strftime
-from .watering_utils import WateringUtils
+from ..watering_utils import WateringUtils
 
-from .NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
-from .NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
+from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
+from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_analysis_dialog.ui'))

@@ -2,12 +2,10 @@
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
-from PyQt5.QtWidgets import QDialog
 
 import os
 import requests
 from .watering_load import WateringLoad
-from .userstate import *
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_login_dialog.ui'))
@@ -41,8 +39,6 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
                 self.errorLogin.setText("Login Successful.")
                 os.environ['TOKEN'] = response.json()["token"]
                 self.token = os.environ['TOKEN']
-                self.logged = True
-                token = "  eaeaeaea"
             else:
                 self.errorLogin.setStyleSheet("color: red")
                 self.errorLogin.setText("Invalid email or password.")
