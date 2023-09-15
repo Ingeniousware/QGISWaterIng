@@ -5,15 +5,18 @@ from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.gui import QgsMapCanvas
 
 
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
+
+from .maptools.insertDemandNodeTool import InsertDemandNodeTool
+
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
 from .ui.watering_analysis import WateringAnalysis
-from .ui.watering_add_node import WateringAddDemandNode
 
 import os.path
 
@@ -47,7 +50,9 @@ class QGISPlugin_WaterIng:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Watering API Connection')
-    
+        self.add_node_action = None
+        self.canvas = iface.mapCanvas()
+        
         # Toolbar
         self.toolbar = self.iface.addToolBar("WaterIng Toolbar")
         self.toolbar.setObjectName("QGISWatering")
@@ -142,7 +147,7 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
-        self.add_action(
+        self.add_node_action = self.add_action(
             icon_path,
             text=self.tr(u'Add Demand Node'),
             callback=self.addDemandNode,
@@ -151,7 +156,6 @@ class QGISPlugin_WaterIng:
         
         # will be set False in run()
         #self.first_start = True
-
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -222,8 +226,8 @@ class QGISPlugin_WaterIng:
         if self.checkExistingProject() == False:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
         else:
+            InsertDemandNodeTool(self.canvas, self.add_node_action)
             #self.dlg = WateringAnalysis()
-            print("Ok")
             # show the dialog
             #self.dlg.show()
             # Run the dialog event loop

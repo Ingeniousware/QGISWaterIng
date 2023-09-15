@@ -1,4 +1,4 @@
-from maptools.insertNodeAbstractTool import InsertNodeAbstractTool
+from .insertNodeAbstractTool import InsertNodeAbstractTool
 
 
 class InsertReservoirNodeTool(InsertNodeAbstractTool):

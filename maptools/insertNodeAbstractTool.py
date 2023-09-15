@@ -1,23 +1,26 @@
-from qgis.gui import QgsMapToolEmitPoint, QgsVertexMarker
+from qgis.gui import QgsMapToolEmitPoint, QgsVertexMarker, QgsMapTool
 from PyQt5.QtGui import QColor
+from qgis.PyQt import uic, QtWidgets
 
+class InsertNodeAbstractTool(QgsMapTool):
 
-class InsertNodeAbstractTool(QgsMapToolEmitPoint):
-
-    def __init__(self, canvas):
-
+    def __init__(self, canvas, action):
+        
+        self.action = action
         self.canvas = canvas
-
-        QgsMapToolEmitPoint.__init__(self, self.canvas)
+        
+        super().__init__(self.canvas)
 
         self.point = None
-
-
+        
+        self.canvas.setMapTool(self)
+        
+        self.action.triggered.connect(self.endProcedure)
 
     def canvasPressEvent(self, e):
-
+        
         self.point = self.toMapCoordinates(e.pos())
-
+        
         print(self.point.x(), self.point.y())
 
         m = QgsVertexMarker(self.canvas)
@@ -31,3 +34,9 @@ class InsertNodeAbstractTool(QgsMapToolEmitPoint):
         m.setIconType(QgsVertexMarker.ICON_BOX) # or ICON_CROSS, ICON_X
 
         m.setPenWidth(3)
+
+        self.endProcedure()
+        
+    def endProcedure(self):
+    
+        self.canvas.unsetMapTool(self)
