@@ -153,6 +153,7 @@ class QGISPlugin_WaterIng:
             callback=self.addDemandNode,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+        self.add_node_action.setCheckable(True)
         
         # will be set False in run()
         #self.first_start = True
