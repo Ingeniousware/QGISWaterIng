@@ -13,7 +13,7 @@ from .resources import *
 # Import the code for the dialog
 
 from .maptools.insertDemandNodeTool import InsertDemandNodeTool
-
+from .maptools.selectNodeTool import SelectNodeTool
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
 from .ui.watering_analysis import WateringAnalysis
@@ -51,7 +51,9 @@ class QGISPlugin_WaterIng:
         self.actions = []
         self.menu = self.tr(u'&Watering API Connection')
         self.add_node_action = None
+        self.select_node_action = None
         self.canvas = iface.mapCanvas()
+        self.first_click = True
         
         # Toolbar
         self.toolbar = self.iface.addToolBar("WaterIng Toolbar")
@@ -139,12 +141,13 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
-        self.add_action(
+        self.select_node_action = self.add_action(
             icon_path,
-            text=self.tr(u'Select'),
-            callback=self.print,
+            text=self.tr(u'Select Element'),
+            callback=self.selectNode,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+        self.select_node_action.setCheckable(True)
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
         self.add_node_action = self.add_action(
@@ -153,10 +156,6 @@ class QGISPlugin_WaterIng:
             callback=self.addDemandNode,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
-        self.add_node_action.setCheckable(True)
-        
-        # will be set False in run()
-        #self.first_start = True
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -169,75 +168,38 @@ class QGISPlugin_WaterIng:
         del self.toolbar
 
     def addLogin(self):
-        """Run method that performs all the real work"""
-
-        # Create the dialog with elements (after translation) and keep reference
-        # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        
         self.dlg = WateringLogin()
-
-        # show the dialog
         self.dlg.show()
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        
-        # See if OK was pressed
-        if result:
-            pass
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
-        
+        self.dlg.exec_()
         
     def addLoad(self):
-        
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         else:
             self.dlg = WateringLoad()
-
-            # show the dialog
-            self.dlg.show()
-            # Run the dialog event loop
-            result = self.dlg.exec_()
-            # See if OK was pressed
-            if result:
-                # Do something useful here - delete the line containing pass and
-                # substitute with your code.
-                pass
+            self.dlg.show()          
+            self.dlg.exec_()
             
     def waterAnalysis(self):
-        
         if self.checkExistingProject() == False:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a scenario first in Download Elements!"), level=1, duration=5)
         else:
             self.dlg = WateringAnalysis()
-
-            # show the dialog
             self.dlg.show()
-            # Run the dialog event loop
-            result = self.dlg.exec_()
-            # See if OK was pressed
-            if result:
-                # Do something useful here - delete the line containing pass and
-                # substitute with your code.
-                pass
+            self.dlg.exec_()
     
     def addDemandNode(self):
-
         if self.checkExistingProject() == False:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
         else:
+            self.add_node_action.setCheckable(True)
             InsertDemandNodeTool(self.canvas, self.add_node_action)
-            #self.dlg = WateringAnalysis()
-            # show the dialog
-            #self.dlg.show()
-            # Run the dialog event loop
-            #result = self.dlg.exec_()
-            # See if OK was pressed
-            #if result:
-                # Do something useful here - delete the line containing pass and
-                # substitute with your code.
-                #pass
+
+    def selectNode(self):
+        if self.checkExistingProject() == False:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
+        else:
+            SelectNodeTool(self.canvas, self.select_node_action)
             
     def checkExistingProject(self):
         scenario_id =  QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
