@@ -56,6 +56,7 @@ class QGISPlugin_WaterIng:
         self.first_click = True
         
         # Toolbar
+        self.activeMapTool = None
         self.toolbar = self.iface.addToolBar("WaterIng Toolbar")
         self.toolbar.setObjectName("QGISWatering")
         self.toolbar.setVisible(True)
@@ -140,14 +141,8 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
-        self.select_node_action = self.add_action(
-            icon_path,
-            text=self.tr(u'Select Element'),
-            callback=self.selectNode,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-        self.select_node_action.setCheckable(True)
+        
+
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
         self.add_node_action = self.add_action(
@@ -171,14 +166,40 @@ class QGISPlugin_WaterIng:
         self.dlg = WateringLogin()
         self.dlg.show()
         self.dlg.exec_()
+
+
+    def InitializeProjectToolbar(self):
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
+        self.select_node_action = self.add_action(
+            icon_path,
+            text=self.tr(u'Select Element'),
+            callback=self.selectNode,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.select_node_action.setCheckable(True)
+        self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
+        self.toolSelectNode.setAction(self.select_node_action)
+
         
     def addLoad(self):
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         else:
             self.dlg = WateringLoad()
-            self.dlg.show()          
-            self.dlg.exec_()
+            self.dlg.show()      
+            print("Before callong exec for watering load")    
+            loadResult = self.dlg.exec_()
+            print("Load result:")
+            print(loadResult)
+            if (loadResult == 1):
+                #a project has been loaded as the result of showing the dialog
+                print("Initializing toolbar after connecting to project")
+                self.InitializeProjectToolbar()
+            else:
+                self.InitializeProjectToolbar()
+
+
+                
             
     def waterAnalysis(self):
         if self.checkExistingProject() == False:
@@ -198,8 +219,17 @@ class QGISPlugin_WaterIng:
     def selectNode(self):
         if self.checkExistingProject() == False:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
-        else:
-            SelectNodeTool(self.canvas, self.select_node_action)
+        else:            
+            if (self.select_node_action.isChecked()):
+              print("Setting Map Tool = ToolSeectNode")
+              if (self.activeMapTool is not None):
+                self.activeMapTool.unsetMapTool(self.activeMapTool)              
+              self.canvas.setMapTool(self.toolSelectNode)
+              self.activeMapTool = self.toolSelectNode
+            else:
+              self.canvas.unsetMapTool(self.toolSelectNode)
+              self.activeMapTool = None
+
             
     def checkExistingProject(self):
         scenario_id =  QgsProject.instance().readEntry("watering","scenario_id","default text")[0]

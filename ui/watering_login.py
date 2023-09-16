@@ -51,6 +51,7 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
         else:
             #run Load Elements dialog
             self.close()
-            self.dlgLoad = WateringLoad()
+            """ self.dlgLoad = WateringLoad()
             self.dlgLoad.show()
-            self.dlgLoad.exec_()
+            self.dlgLoad.exec_() """
+            self.done(True)  #self.close()  instead of just closing we call done(true) to return 1 as result of this dialog modal execution

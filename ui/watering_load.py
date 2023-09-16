@@ -110,7 +110,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         message = "Project: " + project_name + " | Scenario: " + scenario_name
         
-        iface.mainWindow().statusBar().showMessage(message)
-        self.close()
+        iface.mainWindow().statusBar().showMessage(message)        
+        self.done(True)  #self.close()  instead of just closing we call done(true) to return 1 as result of this dialog modal execution
         
     
