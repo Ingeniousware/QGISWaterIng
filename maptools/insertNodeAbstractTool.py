@@ -3,14 +3,12 @@ from PyQt5.QtGui import QColor
 
 class InsertNodeAbstractTool(QgsMapTool):
 
-    def __init__(self, canvas, action):
+    def __init__(self, canvas):
         
-        self.action = action
+        #self.action = action
         self.canvas = canvas
         super().__init__(self.canvas)
         self.point = None
-        self.canvas.setMapTool(self)
-        self.action.triggered.connect(self.endProcedure)
             
     def canvasPressEvent(self, e):
         self.point = self.toMapCoordinates(e.pos())
@@ -24,7 +22,4 @@ class InsertNodeAbstractTool(QgsMapTool):
         m.setIconType(QgsVertexMarker.ICON_BOX) # or ICON_CROSS, ICON_X
         m.setPenWidth(3)
         
-        #self.endProcedure()
-        
-    def endProcedure(self):
-        self.canvas.unsetMapTool(self)
+    

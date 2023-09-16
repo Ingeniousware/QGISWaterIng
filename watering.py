@@ -50,8 +50,8 @@ class QGISPlugin_WaterIng:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Watering API Connection')
-        self.add_node_action = None
-        self.select_node_action = None
+        self.insertSensorAction = None
+        self.selectElementAction = None
         self.canvas = iface.mapCanvas()
         self.first_click = True
         
@@ -143,15 +143,6 @@ class QGISPlugin_WaterIng:
         
         
 
-        
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
-        self.add_node_action = self.add_action(
-            icon_path,
-            text=self.tr(u'Add Demand Node'),
-            callback=self.addDemandNode,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -170,15 +161,26 @@ class QGISPlugin_WaterIng:
 
     def InitializeProjectToolbar(self):
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
-        self.select_node_action = self.add_action(
+        self.selectElementAction = self.add_action(
             icon_path,
             text=self.tr(u'Select Element'),
-            callback=self.selectNode,
+            callback=self.activateToolSelectMapElement,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
-        self.select_node_action.setCheckable(True)
+        self.selectElementAction.setCheckable(True)
         self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
-        self.toolSelectNode.setAction(self.select_node_action)
+        self.toolSelectNode.setAction(self.selectElementAction)
+        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        self.insertSensorAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Add Demand Node'),
+            callback=self.activateToolInsertSensor,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.insertSensorAction.setCheckable(True)
+        self.toolInsertNode = InsertDemandNodeTool(self.canvas)  
+        self.toolInsertNode.setAction(self.insertSensorAction)
 
         
     def addLoad(self):
@@ -195,8 +197,6 @@ class QGISPlugin_WaterIng:
                 #a project has been loaded as the result of showing the dialog
                 print("Initializing toolbar after connecting to project")
                 self.InitializeProjectToolbar()
-            else:
-                self.InitializeProjectToolbar()
 
 
                 
@@ -209,21 +209,35 @@ class QGISPlugin_WaterIng:
             self.dlg.show()
             self.dlg.exec_()
     
-    def addDemandNode(self):
+
+
+    def activateToolInsertSensor(self):
         if self.checkExistingProject() == False:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
         else:
-            self.add_node_action.setCheckable(True)
-            InsertDemandNodeTool(self.canvas, self.add_node_action)
+            if (self.insertSensorAction.isChecked()):
+              print("Setting Map Tool = toolInsertNode")
+              if (self.activeMapTool is not None):
+                self.canvas.unsetMapTool(self.activeMapTool)  
+                self.activeMapTool.action().setChecked(False)  
+                #self.selectElementAction.setChecked(False)   
+                
+              self.canvas.setMapTool(self.toolInsertNode)
+              self.activeMapTool = self.toolInsertNode
+            else:
+              self.canvas.unsetMapTool(self.toolInsertNode)
+              self.activeMapTool = None
 
-    def selectNode(self):
+    def activateToolSelectMapElement(self):
         if self.checkExistingProject() == False:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
         else:            
-            if (self.select_node_action.isChecked()):
-              print("Setting Map Tool = ToolSeectNode")
+            if (self.selectElementAction.isChecked()):
+              print("Setting Map Tool = toolSelectNode")
               if (self.activeMapTool is not None):
-                self.activeMapTool.unsetMapTool(self.activeMapTool)              
+                self.canvas.unsetMapTool(self.activeMapTool)  
+                self.activeMapTool.action().setChecked(False)  
+                #self.insertSensorAction.setChecked(False)                      
               self.canvas.setMapTool(self.toolSelectNode)
               self.activeMapTool = self.toolSelectNode
             else:
