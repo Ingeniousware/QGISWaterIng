@@ -5,7 +5,7 @@ from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication
-from qgis.gui import QgsMapCanvas
+from qgis.gui import QgsMapCanvas, QgsMapToolIdentify
 
 
 # Initialize Qt resources from file resources.py
@@ -139,7 +139,12 @@ class QGISPlugin_WaterIng:
             text=self.tr(u'Water Analysis'),
             callback=self.waterAnalysis,
             toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+            parent=self.iface.mainWindow())        
+
+        #adding a standard action to our toolbar
+        self.toolIdentify = QgsMapToolIdentify(self.canvas)
+        self.toolIdentify.setAction(self.iface.actionIdentify())
+        self.toolbar.addAction(self.iface.actionIdentify())
         
         
 
@@ -181,6 +186,8 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction.setCheckable(True)
         self.toolInsertNode = InsertDemandNodeTool(self.canvas)  
         self.toolInsertNode.setAction(self.insertSensorAction)
+
+    
 
         
     def addLoad(self):
