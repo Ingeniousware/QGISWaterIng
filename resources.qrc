@@ -7,5 +7,6 @@
         <file>images/icon_select.png</file>
         <file>images/icon_add_node.png</file>
         <file>images/icon_login.png</file>
+        <file>images/sensor.png</file>
     </qresource>
 </RCC>

@@ -176,7 +176,7 @@ class QGISPlugin_WaterIng:
         self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
         self.toolSelectNode.setAction(self.selectElementAction)
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
         self.insertSensorAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Demand Node'),
