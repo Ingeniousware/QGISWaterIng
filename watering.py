@@ -54,7 +54,6 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction = None
         self.selectElementAction = None
         self.canvas = iface.mapCanvas()
-        QgsProject.instance().readProject.connect(self.updateActionStateOpen)
         QgsProject.instance().cleared.connect(self.updateActionStateClose)
         
         # Toolbar
@@ -194,7 +193,9 @@ class QGISPlugin_WaterIng:
         else:
             self.dlg = WateringLoad()
             self.dlg.show() 
-            self.dlg.exec_()
+            if (self.dlg.exec_() == 1): 
+                self.updateActionStateOpen()
+
                 
     def waterAnalysis(self):
         if WateringUtils.noScenarioOpened():
