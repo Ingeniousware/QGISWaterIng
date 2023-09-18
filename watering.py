@@ -12,7 +12,7 @@ from qgis.gui import QgsMapCanvas, QgsMapToolIdentify
 from .resources import *
 # Import the code for the dialog
 
-from .maptools.insertDemandNodeTool import InsertDemandNodeTool
+from .maptools.insertSensorNodeTool import InsertSensorNodeTool
 from .maptools.selectNodeTool import SelectNodeTool
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
@@ -151,8 +151,6 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.selectElementAction.setCheckable(True)
-        self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
-        self.toolSelectNode.setAction(self.selectElementAction)
         self.selectElementAction.setEnabled(not WateringUtils.noScenarioOpened())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
@@ -162,9 +160,7 @@ class QGISPlugin_WaterIng:
             callback=self.activateToolInsertSensor,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
-        self.insertSensorAction.setCheckable(True)
-        self.toolInsertNode = InsertDemandNodeTool(self.canvas)  
-        self.toolInsertNode.setAction(self.insertSensorAction)
+        self.insertSensorAction.setCheckable(True)        
         self.insertSensorAction.setEnabled(not WateringUtils.noScenarioOpened())
                                        
         #adding a standard action to our toolbar
@@ -241,6 +237,10 @@ class QGISPlugin_WaterIng:
               self.activeMapTool = None
               
     def updateActionStateOpen(self):
+        self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
+        self.toolInsertNode.setAction(self.insertSensorAction)
+        self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
+        self.toolSelectNode.setAction(self.selectElementAction)
         self.readAnalysisAction.setEnabled(True)
         self.selectElementAction.setEnabled(True)
         self.insertSensorAction.setEnabled(True)
