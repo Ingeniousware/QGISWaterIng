@@ -135,12 +135,13 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
-        self.add_action(
+        self.readAnalysisAction = self.add_action(
             icon_path,
             text=self.tr(u'Water Analysis'),
             callback=self.waterAnalysis,
             toolbar = self.toolbar,
-            parent=self.iface.mainWindow())        
+            parent=self.iface.mainWindow())     
+        self.readAnalysisAction.setEnabled(not WateringUtils.noScenarioOpened())   
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
         self.selectElementAction = self.add_action(
@@ -240,10 +241,12 @@ class QGISPlugin_WaterIng:
               self.activeMapTool = None
               
     def updateActionStateOpen(self):
+        self.readAnalysisAction.setEnabled(True)
         self.selectElementAction.setEnabled(True)
         self.insertSensorAction.setEnabled(True)
     
     def updateActionStateClose(self):
+        self.readAnalysisAction.setEnabled(False)
         self.selectElementAction.setEnabled(False)
         self.selectElementAction.setChecked(False)
         self.insertSensorAction.setEnabled(False)
