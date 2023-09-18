@@ -17,6 +17,7 @@ from .maptools.selectNodeTool import SelectNodeTool
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
 from .ui.watering_analysis import WateringAnalysis
+from .watering_utils import WateringUtils
 
 import os.path
 
@@ -53,7 +54,8 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction = None
         self.selectElementAction = None
         self.canvas = iface.mapCanvas()
-        self.first_click = True
+        QgsProject.instance().readProject.connect(self.updateActionStateOpen)
+        QgsProject.instance().cleared.connect(self.updateActionStateClose)
         
         # Toolbar
         self.activeMapTool = None
@@ -141,13 +143,35 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())        
 
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
+        self.selectElementAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Select Element'),
+            callback=self.activateToolSelectMapElement,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.selectElementAction.setCheckable(True)
+        self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
+        self.toolSelectNode.setAction(self.selectElementAction)
+        self.selectElementAction.setEnabled(not WateringUtils.noScenarioOpened())
+        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
+        self.insertSensorAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Add Demand Node'),
+            callback=self.activateToolInsertSensor,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.insertSensorAction.setCheckable(True)
+        self.toolInsertNode = InsertDemandNodeTool(self.canvas)  
+        self.toolInsertNode.setAction(self.insertSensorAction)
+        self.insertSensorAction.setEnabled(not WateringUtils.noScenarioOpened())
+                                       
         #adding a standard action to our toolbar
         self.toolIdentify = QgsMapToolIdentify(self.canvas)
         self.toolIdentify.setAction(self.iface.actionIdentify())
         self.toolbar.addAction(self.iface.actionIdentify())
         
-        
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -162,64 +186,27 @@ class QGISPlugin_WaterIng:
         self.dlg = WateringLogin()
         self.dlg.show()
         self.dlg.exec_()
-
-
-    def InitializeProjectToolbar(self):
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
-        self.selectElementAction = self.add_action(
-            icon_path,
-            text=self.tr(u'Select Element'),
-            callback=self.activateToolSelectMapElement,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-        self.selectElementAction.setCheckable(True)
-        self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
-        self.toolSelectNode.setAction(self.selectElementAction)
-        
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
-        self.insertSensorAction = self.add_action(
-            icon_path,
-            text=self.tr(u'Add Demand Node'),
-            callback=self.activateToolInsertSensor,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-        self.insertSensorAction.setCheckable(True)
-        self.toolInsertNode = InsertDemandNodeTool(self.canvas)  
-        self.toolInsertNode.setAction(self.insertSensorAction)
-
-    
-
         
     def addLoad(self):
+        #self.InitializeProjectToolbar()
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         else:
             self.dlg = WateringLoad()
-            self.dlg.show()      
-            print("Before callong exec for watering load")    
-            loadResult = self.dlg.exec_()
-            print("Load result:")
-            print(loadResult)
-            if (loadResult == 1):
-                #a project has been loaded as the result of showing the dialog
-                print("Initializing toolbar after connecting to project")
-                self.InitializeProjectToolbar()
-
-
+            self.dlg.show() 
+            self.dlg.exec_()
                 
-            
     def waterAnalysis(self):
-        if self.checkExistingProject() == False:
-            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a scenario first in Download Elements!"), level=1, duration=5)
+        if WateringUtils.noScenarioOpened():
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5)
         else:
             self.dlg = WateringAnalysis()
             self.dlg.show()
             self.dlg.exec_()
     
 
-
     def activateToolInsertSensor(self):
-        if self.checkExistingProject() == False:
+        if WateringUtils.noScenarioOpened():
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
         else:
             if (self.insertSensorAction.isChecked()):
@@ -236,7 +223,7 @@ class QGISPlugin_WaterIng:
               self.activeMapTool = None
 
     def activateToolSelectMapElement(self):
-        if self.checkExistingProject() == False:
+        if WateringUtils.noScenarioOpened():
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
         else:            
             if (self.selectElementAction.isChecked()):
@@ -250,11 +237,14 @@ class QGISPlugin_WaterIng:
             else:
               self.canvas.unsetMapTool(self.toolSelectNode)
               self.activeMapTool = None
-
+              
+    def updateActionStateOpen(self):
+        self.selectElementAction.setEnabled(True)
+        self.insertSensorAction.setEnabled(True)
+    
+    def updateActionStateClose(self):
+        self.selectElementAction.setEnabled(False)
+        self.selectElementAction.setChecked(False)
+        self.insertSensorAction.setEnabled(False)
+        self.insertSensorAction.setChecked(False)
             
-    def checkExistingProject(self):
-        scenario_id =  QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        return False if scenario_id == "default text" else True
-        
-    def print(self):
-        print("Working")
