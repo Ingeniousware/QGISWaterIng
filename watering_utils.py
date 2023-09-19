@@ -30,7 +30,7 @@ class WateringUtils():
     def show_progress_bar(progressBar):
         progressBar.setVisible(True)
         
-    def noScenarioOpened():
+    def isScenarioNotOpened():
         scenario_id, ok = QgsProject.instance().readEntry("watering",
                                             "scenario_id",
                                             "default text")
