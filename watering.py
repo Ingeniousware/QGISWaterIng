@@ -55,7 +55,8 @@ class QGISPlugin_WaterIng:
         self.selectElementAction = None
         self.canvas = iface.mapCanvas()
         QgsProject.instance().cleared.connect(self.updateActionStateClose)
-        
+        QgsProject.instance().readProject.connect(self.updateActionStateOpen)
+                                                  
         # Toolbar
         self.activeMapTool = None
         self.toolbar = self.iface.addToolBar("WaterIng Toolbar")
@@ -204,49 +205,46 @@ class QGISPlugin_WaterIng:
     
 
     def activateToolInsertSensor(self):
-        if WateringUtils.noScenarioOpened():
-            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
+        if (self.insertSensorAction.isChecked()):
+            print("Setting Map Tool = toolInsertNode")
+            if (self.activeMapTool is not None):
+                if(self.activeMapTool.action() is not None):
+                    self.canvas.unsetMapTool(self.activeMapTool)
+                    self.activeMapTool.action().setChecked(False) 
+            self.toolInsertNode = InsertSensorNodeTool(self.canvas) 
+            self.canvas.setMapTool(self.toolInsertNode)
+            self.activeMapTool = self.toolInsertNode
+            self.selectElementAction.setChecked(False)  
         else:
-            if (self.insertSensorAction.isChecked()):
-              print("Setting Map Tool = toolInsertNode")
-              if (self.activeMapTool is not None):
-                self.canvas.unsetMapTool(self.activeMapTool)  
-                self.activeMapTool.action().setChecked(False)  
-                #self.selectElementAction.setChecked(False)   
-                
-              self.canvas.setMapTool(self.toolInsertNode)
-              self.activeMapTool = self.toolInsertNode
-            else:
-              self.canvas.unsetMapTool(self.toolInsertNode)
-              self.activeMapTool = None
+            self.canvas.unsetMapTool(self.toolInsertNode)
+            self.activeMapTool = None
 
     def activateToolSelectMapElement(self):
-        if WateringUtils.noScenarioOpened():
-            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first!"), level=1, duration=5)
-        else:            
-            if (self.selectElementAction.isChecked()):
-              print("Setting Map Tool = toolSelectNode")
-              if (self.activeMapTool is not None):
-                self.canvas.unsetMapTool(self.activeMapTool)  
-                self.activeMapTool.action().setChecked(False)  
-                #self.insertSensorAction.setChecked(False)                      
-              self.canvas.setMapTool(self.toolSelectNode)
-              self.activeMapTool = self.toolSelectNode
-            else:
-              self.canvas.unsetMapTool(self.toolSelectNode)
-              self.activeMapTool = None
+        if (self.selectElementAction.isChecked()):
+            print("Setting Map Tool = toolSelectNode")
+            if (self.activeMapTool is not None):
+                if(self.activeMapTool.action() is not None):
+                    self.canvas.unsetMapTool(self.activeMapTool)  
+                    self.activeMapTool.action().setChecked(False)  
+            self.toolSelectNode = SelectNodeTool(self.canvas) 
+            self.canvas.setMapTool(self.toolSelectNode)
+            self.activeMapTool = self.toolSelectNode
+            self.insertSensorAction.setChecked(False)  
+        else:
+            self.canvas.unsetMapTool(self.toolSelectNode)
+            self.activeMapTool = None
               
     def updateActionStateOpen(self):
         self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
-        self.toolInsertNode.setAction(self.insertSensorAction)
         self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
+        self.toolInsertNode.setAction(self.insertSensorAction)
         self.toolSelectNode.setAction(self.selectElementAction)
-        self.readAnalysisAction.setEnabled(True)
+        #self.readAnalysisAction.setEnabled(True)
         self.selectElementAction.setEnabled(True)
         self.insertSensorAction.setEnabled(True)
     
     def updateActionStateClose(self):
-        self.readAnalysisAction.setEnabled(False)
+        #self.readAnalysisAction.setEnabled(False)
         self.selectElementAction.setEnabled(False)
         self.selectElementAction.setChecked(False)
         self.insertSensorAction.setEnabled(False)
