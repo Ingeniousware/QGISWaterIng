@@ -53,6 +53,7 @@ class QGISPlugin_WaterIng:
         self.menu = self.tr(u'&Watering API Connection')
         self.insertSensorAction = None
         self.selectElementAction = None
+        self.readAnalysisAction = None
         self.canvas = iface.mapCanvas()
         QgsProject.instance().cleared.connect(self.updateActionStateClose)
         QgsProject.instance().readProject.connect(self.updateActionStateOpen)
@@ -239,12 +240,12 @@ class QGISPlugin_WaterIng:
         self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
         self.toolInsertNode.setAction(self.insertSensorAction)
         self.toolSelectNode.setAction(self.selectElementAction)
-        #self.readAnalysisAction.setEnabled(True)
+        self.readAnalysisAction.setEnabled(True)
         self.selectElementAction.setEnabled(True)
         self.insertSensorAction.setEnabled(True)
     
     def updateActionStateClose(self):
-        #self.readAnalysisAction.setEnabled(False)
+        self.readAnalysisAction.setEnabled(False)
         self.selectElementAction.setEnabled(False)
         self.selectElementAction.setChecked(False)
         self.insertSensorAction.setEnabled(False)
