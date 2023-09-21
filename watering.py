@@ -225,7 +225,6 @@ class QGISPlugin_WaterIng:
             self.dlg.show()
             self.dlg.exec_()
     
-
     def activateToolInsertSensor(self):
         if (self.insertSensorAction.isChecked()):
             print("Setting Map Tool = toolInsertNode")
@@ -266,13 +265,15 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction.setEnabled(True)
     
     def updateActionStateClose(self):
-        """vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
-        for vertex in vertex_items:
-            self.canvas.scene().removeItem(vertex)"""
-        self.canvas.refresh()
+        self.cleanMarkers()
         self.readAnalysisAction.setEnabled(False)
         self.selectElementAction.setEnabled(False)
         self.selectElementAction.setChecked(False)
         self.insertSensorAction.setEnabled(False)
         self.insertSensorAction.setChecked(False)
-            
+        
+    def cleanMarkers(self):
+        vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
+        for vertex in vertex_items:
+            self.canvas.scene().removeItem(vertex)
+        self.canvas.refresh()   

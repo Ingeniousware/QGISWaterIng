@@ -2,6 +2,10 @@
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
+from PyQt5.QtCore import QAbstractTableModel
+import sys
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
 
 import os
 import requests
@@ -29,14 +33,49 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
 
         for i in range(0, response.json()["total"]):
             self.problem_box.addItem(response.json()["data"][i]["name"])
-            self.Solutions.append(response.json()["data"][i]["objectives"])
+            self.Solutions.append(response.json()["data"][i]["serverKeyId"])
         
         self.loadSolutions(self.problem_box.currentIndex())
         self.problem_box.currentIndexChanged.connect(self.loadSolutions)
         
     def loadSolutions(self, index):
-        self.solution_box.clear()
         
-        for item in self.Solutions[index]:
-            self.solution_box.addItem(item["name"])
+        problemFK = self.Solutions[index]
+        params = {'problemKeyId': "{}".format(problemFK)}
+        url = "https://dev.watering.online/api/v1/OptimizationSolutions"
+        response = requests.get(url, params=params,
+                   headers={'Authorization': "Bearer {}".format(self.token)})
         
+        data = response.json()["data"]
+        total = response.json()["total"]
+        
+        if total > 0:
+            matrix_table = []    
+            matrix_table = [[data[i]["name"], 
+                            data[i]["status"],
+                            data[i]["solutionSource"]] for i in range(total)]
+            
+            model = TableModel(matrix_table)
+            self.tableView.setModel(model)
+            
+class TableModel(QtCore.QAbstractTableModel):
+    def __init__(self, data):
+        super(TableModel, self).__init__()
+        self._data = data
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            # See below for the nested-list data structure.
+            # .row() indexes into the outer list,
+            # .column() indexes into the sub-list
+            return self._data[index.row()][index.column()]
+
+    def rowCount(self, index):
+        # The length of the outer list.
+        return len(self._data)
+
+    def columnCount(self, index):
+        # The following takes the first sub-list, and returns
+        # the length (only works if all rows are an equal length)
+        return len(self._data[0])
+    

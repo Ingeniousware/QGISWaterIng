@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -46,39 +49,6 @@
     <string>Problem</string>
    </property>
   </widget>
-  <widget class="QComboBox" name="solution_box">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>100</y>
-     <width>411</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="projectLabel_2">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>80</y>
-     <width>171</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>13</pointsize>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Solution</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="BtLoadSolution">
    <property name="geometry">
     <rect>
@@ -96,9 +66,9 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>150</y>
+     <y>80</y>
      <width>411</width>
-     <height>151</height>
+     <height>221</height>
     </rect>
    </property>
   </widget>
