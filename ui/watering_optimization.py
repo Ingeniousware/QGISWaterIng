@@ -39,7 +39,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.problem_box.currentIndexChanged.connect(self.loadSolutions)
         
     def loadSolutions(self, index):
-        
+
         problemFK = self.Solutions[index]
         params = {'problemKeyId': "{}".format(problemFK)}
         url = "https://dev.watering.online/api/v1/OptimizationSolutions"
@@ -48,21 +48,42 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         
         data = response.json()["data"]
         total = response.json()["total"]
-        
+
         if total > 0:
             matrix_table = []    
             matrix_table = [[data[i]["name"], 
-                            data[i]["status"],
+                            self.translateStatus(data[i]["status"]),
                             data[i]["solutionSource"]] for i in range(total)]
-            
+
             model = TableModel(matrix_table)
             self.tableView.setModel(model)
+        
+        self.tableView.clicked.connect(self.on_row_clicked)
+
+    def translateStatus(self, status):
+        
+        conditions = {0:"Created", 
+                      1:"Evaluating",
+                      2:"Evaluated",
+                      3:"ErrorsOnEvaluation"}
+        
+        return conditions.get(status)
+            
+    def on_row_clicked(self, index):
+        if index.isValid():
+            model = self.tableView.model()
+            row = index.row()
+            self.tableView.selectRow(row)
+            columns = model.columnCount(index)
+            elements = [model.data(model.index(row, col), Qt.DisplayRole) for col in range(columns)]
+            print(elements)
             
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data):
         super(TableModel, self).__init__()
         self._data = data
-
+        self.headers = ["Name", "Status", "Source"]
+        
     def data(self, index, role):
         if role == Qt.DisplayRole:
             # See below for the nested-list data structure.
@@ -78,4 +99,11 @@ class TableModel(QtCore.QAbstractTableModel):
         # The following takes the first sub-list, and returns
         # the length (only works if all rows are an equal length)
         return len(self._data[0])
+    
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return self.headers[section]
+        return super().headerData(section, orientation, role)
+    
+    
     
