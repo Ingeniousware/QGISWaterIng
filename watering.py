@@ -186,7 +186,7 @@ class QGISPlugin_WaterIng:
         self.toolIdentify.setAction(self.iface.actionIdentify())
         self.toolbar.addAction(self.iface.actionIdentify())
 
-        icon_path = ':/plugins/QGISWaterIng/images/icon_measurement.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_measurement.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Get Measurements'),
