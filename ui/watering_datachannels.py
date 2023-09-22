@@ -49,7 +49,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
                                 headers={'Authorization': "Bearer {}".format(self.token)})
 
         for i in range(0, response_analysis.json()["total"]):
-            self.analysis_box.addItem(response_analysis.json()["data"][i]["name"])
+            self.datachannels_box.addItem(response_analysis.json()["data"][i]["name"])
             self.listOfDataChannels.append((response_analysis.json()["data"][i]["serverKeyId"]))
 
     def getChannelMeasurementsData(self, behavior):
