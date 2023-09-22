@@ -8,6 +8,7 @@ from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 
 
+
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
@@ -19,6 +20,7 @@ from .ui.watering_login import WateringLogin
 from .ui.watering_analysis import WateringAnalysis
 from .ui.watering_optimization import WaterOptimization
 from .watering_utils import WateringUtils
+from .ui.watering_datachannels import WateringDatachannels
 
 import os.path
 
@@ -286,5 +288,15 @@ class QGISPlugin_WaterIng:
             self.canvas.scene().removeItem(vertex)
         self.canvas.refresh()  
 
+    def showSelectionDataChannels(self):
+        if WateringUtils.isScenarioNotOpened():
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
+        else:
+            self.dlg = WateringDatachannels()
+            self.dlg.show()
+            self.dlg.exec_()
+
     def getMeasurements(self):
-        ... 
+        ...
