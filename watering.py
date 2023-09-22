@@ -178,6 +178,14 @@ class QGISPlugin_WaterIng:
         self.toolIdentify = QgsMapToolIdentify(self.canvas)
         self.toolIdentify.setAction(self.iface.actionIdentify())
         self.toolbar.addAction(self.iface.actionIdentify())
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_load_elements.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Get Measurements'),
+            callback=self.getMeasurements,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
         
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -276,4 +284,7 @@ class QGISPlugin_WaterIng:
         vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
         for vertex in vertex_items:
             self.canvas.scene().removeItem(vertex)
-        self.canvas.refresh()   
+        self.canvas.refresh()  
+
+    def getMeasurements(self):
+        ... 
