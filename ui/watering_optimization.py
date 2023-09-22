@@ -6,6 +6,10 @@ from PyQt5.QtCore import QAbstractTableModel
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
+from qgis.utils import iface
+from qgis.gui import QgsVertexMarker, QgsMapCanvas
+from qgis.core import QgsProject
+from PyQt5.QtGui import QColor
 
 import os
 import requests
@@ -15,14 +19,18 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         """Constructor."""
         super(WaterOptimization, self).__init__(parent)
         self.setupUi(self)
         self.token = os.environ.get('TOKEN')
         self.ScenarioFK = None
         self.Solutions = []
+        self.Sensors = []
+        self.RowIndex = None
+        self.canvas = iface.mapCanvas()
         self.initializeRepository()
+        self.BtLoadSolution.clicked.connect(self.loadSolutionSensors)
         
     def initializeRepository(self):
         url_optimization = "https://dev.watering.online/api/v1/Optimization"
@@ -50,16 +58,45 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         total = response.json()["total"]
 
         if total > 0:
-            matrix_table = []    
-            matrix_table = [[data[i]["name"], 
+            matrix_table = []
+            for i in range(0, total):
+                matrix_table.append([data[i]["name"], 
                             self.translateStatus(data[i]["status"]),
-                            data[i]["solutionSource"]] for i in range(total)]
-
+                            data[i]["solutionSource"],
+                            data[i]["objectiveResults"][0]["valueResult"],
+                            data[i]["objectiveResults"][1]["valueResult"],
+                            data[i]["objectiveResults"][2]["valueResult"]])
+                
+                self.Sensors.append(self.getSolutionSensors(data[i]))
+                                                        
             model = TableModel(matrix_table)
             self.tableView.setModel(model)
-        
+            
         self.tableView.clicked.connect(self.on_row_clicked)
 
+    def loadSolutionSensors(self):
+        if self.RowIndex ==  None:
+            iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a row!"), level=1, duration=5)
+        elif len(self.Sensors) == 0:
+            iface.messageBar().pushMessage(self.tr("Error"), self.tr("No solutions to load!"), level=1, duration=5)
+        else:
+            self.cleanMarkers()
+            sensorDict = self.Sensors[self.RowIndex]
+            layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+            for feature in layer.getFeatures():
+                if feature['ID'] in sensorDict:
+                    self.insertSensor(feature.geometry().asPoint())
+            self.canvas.refresh()
+            
+    def insertSensor(self, coord):
+        m = QgsVertexMarker(self.canvas)
+        m.setCenter(coord)
+        m.setColor(QColor(0,255,0))
+        m.setIconSize(20)
+        m.setIconType(QgsVertexMarker.ICON_CIRCLE)
+        m.setPenWidth(4)
+        self.canvas.scene().addItem(m)
+                
     def translateStatus(self, status):
         
         conditions = {0:"Created", 
@@ -68,21 +105,30 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                       3:"ErrorsOnEvaluation"}
         
         return conditions.get(status)
-            
+
+    def getSolutionSensors(self, data):
+        sensorDict = {}
+        for sensor in data["variableResults"]:
+            sensorDict[sensor["optimizerNodeKey"]] = sensor["comment"]
+        return sensorDict
+        
     def on_row_clicked(self, index):
         if index.isValid():
-            model = self.tableView.model()
             row = index.row()
             self.tableView.selectRow(row)
-            columns = model.columnCount(index)
-            elements = [model.data(model.index(row, col), Qt.DisplayRole) for col in range(columns)]
-            print(elements)
-            
+            self.RowIndex = row
+
+    def cleanMarkers(self):
+        vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
+        for vertex in vertex_items:
+            self.canvas.scene().removeItem(vertex)
+        self.canvas.refresh()  
+        
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data):
         super(TableModel, self).__init__()
         self._data = data
-        self.headers = ["Name", "Status", "Source"]
+        self.headers = ["Name", "Status", "Source", "Obj1", "Obj2", "Obj3"]
         
     def data(self, index, role):
         if role == Qt.DisplayRole:
