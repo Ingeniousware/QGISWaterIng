@@ -318,13 +318,14 @@ class QGISPlugin_WaterIng:
             2.924979]
                 }
 
-        df = pd.DataFrame(data)
+        tempdf = pd.DataFrame(data)
+        tempdf['Date Time'] = pd.to_datetime(tempdf['Date Time'], format='%Y-%m-%d %H:%M:%S')
+ 
+        df = tempdf.to_numpy()
 
-        df['Date Time'] = pd.to_datetime(df['Date Time'], format='%Y-%m-%d %H:%M:%S')
-
-        # Plot the data
+         # Plot the data
         plt.figure(figsize=(10, 6))
-        plt.plot(df['Date Time'], df['Value'], marker='o', linestyle='-')
+        plt.plot(df[:, 0], df[:, 1], marker='o', linestyle='-')
         plt.title('Value vs. Date Time')
         plt.xlabel('Date Time')
         plt.ylabel('Value')
