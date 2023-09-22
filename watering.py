@@ -288,7 +288,8 @@ class QGISPlugin_WaterIng:
             self.canvas.scene().removeItem(vertex)
         self.canvas.refresh()  
 
-    def showSelectionDataChannels(self):
+
+    def getMeasurements(self):
         if WateringUtils.isScenarioNotOpened():
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
@@ -297,6 +298,3 @@ class QGISPlugin_WaterIng:
             self.dlg = WateringDatachannels()
             self.dlg.show()
             self.dlg.exec_()
-
-    def getMeasurements(self):
-        ...
