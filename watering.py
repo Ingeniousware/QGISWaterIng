@@ -24,11 +24,6 @@ from .ui.watering_datachannels import WateringDatachannels
 
 import os.path
 
-# Import libraries for chart measurments
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
 
@@ -295,39 +290,12 @@ class QGISPlugin_WaterIng:
 
 
     def getMeasurements(self):
-        """ if WateringUtils.isScenarioNotOpened():
+        if WateringUtils.isScenarioNotOpened():
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
         else:
             self.dlg = WateringDatachannels()
             self.dlg.show()
-            self.dlg.exec_() """
-        
-        data = {'Date Time': [
-            '2023-08-22 02:19:03',
-            '2023-08-22 02:23:21',
-            '2023-08-22 02:27:47',
-            '2023-08-22 02:32:10',
-            '2023-08-22 02:36:17'],
-            'Value': [
-            2.689487,
-            2.750362,
-            2.811238,
-            2.870512,
-            2.924979]
-                }
-
-        tempdf = pd.DataFrame(data)
-        tempdf['Date Time'] = pd.to_datetime(tempdf['Date Time'], format='%Y-%m-%d %H:%M:%S')
- 
-        df = tempdf.to_numpy()
-
-         # Plot the data
-        plt.figure(figsize=(10, 6))
-        plt.plot(df[:, 0], df[:, 1], marker='o', linestyle='-')
-        plt.title('Value vs. Date Time')
-        plt.xlabel('Date Time')
-        plt.ylabel('Value')
-        plt.grid(True)
-        plt.show()
+            self.dlg.exec_()
+                

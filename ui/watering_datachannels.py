@@ -12,6 +12,12 @@ from ..watering_utils import WateringUtils
 from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
 from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
 
+# Import libraries for chart measurments
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_datachannels_dialog.ui'))
 
@@ -47,6 +53,8 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             self.listOfDataChannels.append((response_analysis.json()["data"][i]["serverKeyId"]))
 
     def getChannelMeasurementsData(self, behavior):
+        
+
         #read the measurements from https://dev.watering.online/api/v1/measurements
 
         """ self.show_progress_bar()
@@ -58,7 +66,37 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior)
         self.set_progress(100)  
         self.timer_hide_progress_bar() """
-        ...
+
+        self.close()
+
+        data = {'Date Time': [
+            '2023-08-22 02:19:03',
+            '2023-08-22 02:23:21',
+            '2023-08-22 02:27:47',
+            '2023-08-22 02:32:10',
+            '2023-08-22 02:36:17'],
+            'Value': [
+            2.689487,
+            2.750362,
+            2.811238,
+            2.870512,
+            2.924979]
+                }
+
+        tempdf = pd.DataFrame(data)
+        tempdf['Date Time'] = pd.to_datetime(tempdf['Date Time'], format='%Y-%m-%d %H:%M:%S')
+ 
+        df = tempdf.to_numpy()
+
+         # Plot the data
+        plt.figure(figsize=(10, 6))
+        plt.plot(df[:, 0], df[:, 1], marker='o', linestyle='-')
+        plt.title('Value vs. Date Time')
+        plt.xlabel('Date Time')
+        plt.ylabel('Value')
+        plt.grid(True)
+        plt.show()
+      
         
     def set_progress(self, progress_value):
         t = time() - self.start
