@@ -9,5 +9,6 @@
         <file>images/icon_login.png</file>
         <file>images/sensor.png</file>
         <file>images/icon_optimization.png</file>
+        <file>images/icon_measurement.png</file>
     </qresource>
 </RCC>

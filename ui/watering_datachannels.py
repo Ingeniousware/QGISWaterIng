@@ -32,7 +32,8 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     def initializeRepository(self):
 
        #read here the datasources from https://dev.watering.online/api/v1/DataSources, take the datasource selected by the user and use it when downloading the measurementchannels
-
+        url_DataSources = "https://dev.watering.online/api/v1/DataSources"
+        self.ServeKeyId = "73476ef2-d8e8-41ca-a37e-c73197c848f5"
 
         url_analysis = "https://dev.watering.online/api/v1/MeasurementChannels"
         self.SourceFK = "61dffbf4-76f8-44b1-961d-dafad685673b"
@@ -47,6 +48,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
     def getChannelMeasurementsData(self, behavior):
         #read the measurements from https://dev.watering.online/api/v1/measurements
+
         """ self.show_progress_bar()
         analysisExecutionId = self.listOfDataChannels[self.analysis_box.currentIndex()][0]
         datetime = self.listOfDataChannels[self.analysis_box.currentIndex()][1]
