@@ -148,6 +148,7 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())     
         self.readAnalysisAction.setEnabled(not WateringUtils.isScenarioNotOpened())   
 
+        """ for the moment we are not going to use this select
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
         self.selectElementAction = self.add_action(
             icon_path,
@@ -156,7 +157,15 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.selectElementAction.setCheckable(True)
-        self.selectElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.selectElementAction.setEnabled(not WateringUtils.isScenarioNotOpened()) """
+                
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_optimization.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Optimization'),
+            callback=self.waterOptimization,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
         self.insertSensorAction = self.add_action(
@@ -167,19 +176,6 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         self.insertSensorAction.setCheckable(True)        
         self.insertSensorAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-        
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_optimization.png'
-        self.add_action(
-            icon_path,
-            text=self.tr(u'Optimization'),
-            callback=self.waterOptimization,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-                                       
-        #adding a standard action to our toolbar
-        self.toolIdentify = QgsMapToolIdentify(self.canvas)
-        self.toolIdentify.setAction(self.iface.actionIdentify())
-        self.toolbar.addAction(self.iface.actionIdentify())
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_measurement.png'
         self.add_action(
@@ -188,6 +184,12 @@ class QGISPlugin_WaterIng:
             callback=self.getMeasurements,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+                                                       
+        #adding a standard action to our toolbar
+        self.toolIdentify = QgsMapToolIdentify(self.canvas)
+        self.toolIdentify.setAction(self.iface.actionIdentify())
+        self.toolbar.addAction(self.iface.actionIdentify())
+
         
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""

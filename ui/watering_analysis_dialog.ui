@@ -16,16 +16,7 @@
   <property name="windowTitle">
    <string>Water Analysis</string>
   </property>
-  <widget class="QComboBox" name="analysis_box">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>40</y>
-     <width>411</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
+
   <widget class="QLabel" name="projectLabel">
    <property name="enabled">
     <bool>true</bool>
@@ -49,23 +40,35 @@
     <string>Analysis</string>
    </property>
   </widget>
+
+  <widget class="QComboBox" name="analysis_box">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>45</y>
+     <width>411</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  
   <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
    <property name="geometry">
     <rect>
-     <x>170</x>
+     <x>20</x>
      <y>110</y>
      <width>111</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Current</string>
+    <string>Download Results</string>
    </property>
   </widget>
   <widget class="QPushButton" name="BtGetAnalysisResultsBackward">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>170</x>
      <y>110</y>
      <width>111</width>
      <height>21</height>
@@ -86,26 +89,6 @@
    </property>
    <property name="text">
     <string>Forward</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="projectLabel_2">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>90</y>
-     <width>171</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>13</pointsize>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Simulation Period</string>
    </property>
   </widget>
   <widget class="QProgressBar" name="progressBar">
