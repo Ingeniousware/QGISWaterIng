@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>451</width>
+    <width>650</width>
     <height>378</height>
    </rect>
   </property>
@@ -21,7 +21,7 @@
     <rect>
      <x>20</x>
      <y>40</y>
-     <width>411</width>
+     <width>611</width>
      <height>21</height>
     </rect>
    </property>
@@ -52,7 +52,7 @@
   <widget class="QPushButton" name="BtLoadSolution">
    <property name="geometry">
     <rect>
-     <x>290</x>
+     <x>490</x>
      <y>330</y>
      <width>131</width>
      <height>21</height>
@@ -67,7 +67,7 @@
     <rect>
      <x>20</x>
      <y>80</y>
-     <width>411</width>
+     <width>611</width>
      <height>221</height>
     </rect>
    </property>
