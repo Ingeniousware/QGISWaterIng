@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>453</width>
-    <height>200</height>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -88,7 +88,7 @@
    </property>
   </widget>
 
-   <widget class="QLabel" name="date1Label">
+   <widget class="QLabel" name="dateInicialLabel">
    <property name="enabled">
     <bool>true</bool>
    </property>
@@ -112,11 +112,57 @@
    </property>
   </widget>
 
+  <widget class="QDateEdit" name="inicialDate_box">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>140</y>
+     <width>411</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+
+  <widget class="QLabel" name="dateFinalLabel">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>170</y>
+     <width>171</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>13</pointsize>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Final Date</string>
+   </property>
+  </widget>
+
+  <widget class="QDateEdit" name="finalDate_box">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>190</y>
+     <width>411</width>
+     <height>20</height>
+    </rect>
+   </property>
+  </widget>
+
   <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
    <property name="geometry">
     <rect>
      <x>223</x>
-     <y>130</y>
+     <y>450</y>
      <width>210</width>
      <height>28</height>
     </rect>
