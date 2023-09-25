@@ -78,49 +78,35 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         channelFK =  self.listOfDataChannelsKey[self.datachannels_box.currentIndex()]
   
         params = {'channelKeyId': "{}".format(channelFK)}
-        response_analysis = requests.get(url_Measurements, params=params,
-                                headers={'Authorization': "Bearer {}".format(self.token)})
+        headers={'Authorization': "Bearer {}".format(self.token)}
 
-        new_df = pd.DataFrame()
-        for i in range(0, response_analysis.json()["total"]):
-            #print((response_analysis.json()["data"][i]))
-            df = pd.DataFrame([response_analysis.json()["data"][i]])
-            temp_df = pd.DataFrame({'timeStamp': [df['timeStamp'][0]],'value': [df['value'][0]],})
-            new_df = new_df.append(temp_df, ignore_index = True) 
+        try:
+            response_analysis = requests.get(url_Measurements, params=params, headers=headers)
+            response_analysis.raise_for_status()
+            data = response_analysis.json()["data"]
 
-        self.close()
+            if not data:
+                print("No data available.")
+                return
+            
+            df = pd.DataFrame(data)
+            df['timeStamp'] = pd.to_datetime(df['timeStamp'], format='%Y-%m-%d %H:%M:%S')
 
-        #new_df = pd.DataFrame({'timeStamp': [df['timeStamp'][0]],'value': [df['value'][0]],})
-        """
-        data = {'Date Time': [
-            '2023-08-22 02:19:03',
-            '2023-08-22 02:23:21',
-            '2023-08-22 02:27:47',
-            '2023-08-22 02:32:10',
-            '2023-08-22 02:36:17'],
-            'Value': [
-            2.689487,
-            2.750362,
-            2.811238,
-            2.870512,
-            2.924979]
-                }
-                """
+            # Plot the data
+            plt.figure(figsize=(10, 6))
+            plt.plot(df['timeStamp'], df['value'], marker='o', linestyle='-')
+            plt.title('Value vs. Date Time')
+            plt.xlabel('timeStamp')
+            plt.ylabel('value')
+            plt.grid(True)
+            plt.show()
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Error: {e}")
+        except KeyError:
+            print("Invalid response format.")
+        
 
-        tempdf = pd.DataFrame(new_df)
-        tempdf['timeStamp'] = pd.to_datetime(tempdf['timeStamp'], format='%Y-%m-%d %H:%M:%S')
- 
-        new_df = tempdf.to_numpy()
-
-         # Plot the data
-        plt.figure(figsize=(10, 6))
-        plt.plot(new_df[:, 0], new_df[:, 1], marker='o', linestyle='-')
-        plt.title('Value vs. Date Time')
-        plt.xlabel('timeStamp')
-        plt.ylabel('value')
-        plt.grid(True)
-        plt.show()
-      
         
     def set_progress(self, progress_value):
         t = time() - self.start
