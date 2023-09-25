@@ -36,6 +36,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.hide_progress_bar()
         self.initializeRepository()
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getChannelMeasurementsData(0))
+        self.yaxis = WateringUtils()
 
     def loadDataSource(self):
         url_DataSources = "https://dev.watering.online/api/v1/DataSources"
@@ -96,8 +97,8 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             plt.figure(figsize=(10, 6))
             plt.plot(df['timeStamp'], df['value'], marker='o', linestyle='-')
             plt.title(self.datachannels_box.currentText())
-            plt.xlabel('timeStamp')
-            plt.ylabel(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1])
+            plt.xlabel('Date')
+            plt.ylabel(self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]))
             plt.grid(True)
             plt.show()
             
