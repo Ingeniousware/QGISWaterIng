@@ -160,12 +160,13 @@ class QGISPlugin_WaterIng:
         self.selectElementAction.setEnabled(not WateringUtils.isScenarioNotOpened()) """
                 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_optimization.png'
-        self.add_action(
+        self.openOptimizationManagerAction = self.add_action(
             icon_path,
             text=self.tr(u'Optimization'),
             callback=self.waterOptimization,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+        self.openOptimizationManagerAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
         self.insertSensorAction = self.add_action(
@@ -178,12 +179,13 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_measurement.png'
-        self.add_action(
+        self.readMeasurementsAction = self.add_action(
             icon_path,
             text=self.tr(u'Get Measurements'),
             callback=self.getMeasurements,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+        self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
                                                        
         #adding a standard action to our toolbar
         self.toolIdentify = QgsMapToolIdentify(self.canvas)
@@ -247,7 +249,6 @@ class QGISPlugin_WaterIng:
             self.toolInsertNode = InsertSensorNodeTool(self.canvas) 
             self.canvas.setMapTool(self.toolInsertNode)
             self.activeMapTool = self.toolInsertNode
-            self.selectElementAction.setChecked(False)  
         else:
             self.canvas.unsetMapTool(self.toolInsertNode)
             self.activeMapTool = None
@@ -271,18 +272,23 @@ class QGISPlugin_WaterIng:
         self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
         self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
         self.toolInsertNode.setAction(self.insertSensorAction)
-        self.toolSelectNode.setAction(self.selectElementAction)
-        self.readAnalysisAction.setEnabled(True)
-        self.selectElementAction.setEnabled(True)
+        #self.toolSelectNode.setAction(self.selectElementAction)
+        self.readAnalysisAction.setEnabled(True)        
         self.insertSensorAction.setEnabled(True)
+        self.openOptimizationManagerAction.setEnabled(True)
+        self.readMeasurementsAction.setEnabled(True)
+        # self.selectElementAction.setEnabled(True)
     
     def updateActionStateClose(self):
         self.cleanMarkers()
         self.readAnalysisAction.setEnabled(False)
-        self.selectElementAction.setEnabled(False)
-        self.selectElementAction.setChecked(False)
         self.insertSensorAction.setEnabled(False)
         self.insertSensorAction.setChecked(False)
+        self.openOptimizationManagerAction.setEnabled(False)
+        self.readMeasurementsAction.setEnabled(False)
+        # self.selectElementAction.setEnabled(False)
+        # self.selectElementAction.setChecked(False)
+
         
     def cleanMarkers(self):
         vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
