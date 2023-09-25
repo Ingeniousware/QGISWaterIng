@@ -1,15 +1,15 @@
 [general]
-name=Watering Test 
+name=QGIS-Watering
 qgisMinimumVersion=3.0
-description=This is a test plugin for hydraulic applications
-version=0.1
-author=Vitor Vieira
-email=vitorestradas@hotmail.com
+description=Smarter Water Network Analysis and Optimization
+version=0.2
+author=Ingeniousware GmbH
+email=contact@ingeniousware.net
 
-about=This is a test plugin for hydraulic applications.
+about= Extends QGIS capabilities to run online water network analysis connected to measurement data. The plugins import network models,  connect to WaterIng: the online platform for water network analysis and monitoring. It supports utilities on optimizing the location and number of sensors as well as analyzing the causes and consequences of anomalies detected in water distribution systems.
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://github.com/Ingeniousware/QGISWaterIng/issues
+repository=https://github.com/Ingeniousware/QGISWaterIng
 # End of mandatory metadata
 
 # Recommended items:
@@ -19,9 +19,9 @@ hasProcessingProvider=no
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=QGIS, hydraulic, tanks, pipes,nodes
+tags=QGIS, smart water network, online water distribution system analysis, optimization, water network monitoring, sensor placement, hydraulic
 
-homepage=http://homepage
+homepage=https://open.watering.online
 category=Plugins
 icon=images/icon.png
 # experimental flag
