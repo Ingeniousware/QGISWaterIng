@@ -93,12 +93,15 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             df = pd.DataFrame(data)
             df['timeStamp'] = pd.to_datetime(df['timeStamp'], format='%Y-%m-%d %H:%M:%S')
 
+            myNumpy = df.to_numpy()
+
             # Plot the data
             plt.figure(figsize=(10, 6))
-            plt.plot(df['timeStamp'], df['value'], marker='o', linestyle='-')
+            plt.plot(myNumpy[:,4], myNumpy[:,0], marker='o', linestyle='-')
             plt.title(self.datachannels_box.currentText())
             plt.xlabel('Date')
-            plt.ylabel(self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]))
+            plt.ylabel(self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
+                       + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
             plt.grid(True)
             plt.show()
             
