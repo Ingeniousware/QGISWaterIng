@@ -249,7 +249,6 @@ class QGISPlugin_WaterIng:
             self.toolInsertNode = InsertSensorNodeTool(self.canvas) 
             self.canvas.setMapTool(self.toolInsertNode)
             self.activeMapTool = self.toolInsertNode
-            self.selectElementAction.setChecked(False)  
         else:
             self.canvas.unsetMapTool(self.toolInsertNode)
             self.activeMapTool = None
@@ -273,7 +272,7 @@ class QGISPlugin_WaterIng:
         self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
         self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
         self.toolInsertNode.setAction(self.insertSensorAction)
-        self.toolSelectNode.setAction(self.selectElementAction)
+        #self.toolSelectNode.setAction(self.selectElementAction)
         self.readAnalysisAction.setEnabled(True)        
         self.insertSensorAction.setEnabled(True)
         self.openOptimizationManagerAction.setEnabled(True)
