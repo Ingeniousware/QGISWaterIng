@@ -23,6 +23,7 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
+    
     def __init__(self,parent=None):
         """Constructor."""
         super(WateringDatachannels, self).__init__(parent)
@@ -30,45 +31,67 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.token = os.environ.get('TOKEN')
         self.ProjectFK = None
         self.SourceFK = None
-        self.listOfDataChannels = []
+        self.listOfDataChannelsKey = []
+        self.listOfDataSourcesKey = []
         self.hide_progress_bar()
         self.initializeRepository()
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getChannelMeasurementsData(0))
-        
-    def initializeRepository(self):
 
-       #read here the datasources from https://dev.watering.online/api/v1/DataSources, take the datasource selected by the user and use it when downloading the measurementchannels
+    def loadDataSource(self):
         url_DataSources = "https://dev.watering.online/api/v1/DataSources"
-        self.ServeKeyId = "73476ef2-d8e8-41ca-a37e-c73197c848f5"
+        self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
+        params = {'projectKeyId': "{}".format(self.ProjectFK)}
+        response_analysis = requests.get(url_DataSources, params=params,
+                                headers={'Authorization': "Bearer {}".format(self.token)})
 
-        url_analysis = "https://dev.watering.online/api/v1/MeasurementChannels"
-        self.SourceFK = "61dffbf4-76f8-44b1-961d-dafad685673b"
+        for i in range(0, response_analysis.json()["total"]):
+            self.datasource_box.addItem(response_analysis.json()["data"][i]["name"])
+            self.listOfDataSourcesKey.append((response_analysis.json()["data"][i]["serverKeyId"]))
+
+        self.loadDataChannels(self.datasource_box.currentIndex())
+        self.datasource_box.currentIndexChanged.connect(self.loadDataChannels)
+
+
+    def loadDataChannels(self, indexValue):
+        self.datachannels_box.clear()
+        self.listOfDataChannelsKey = []
+        
+        url_DataChannels = "https://dev.watering.online/api/v1/MeasurementChannels"
+        self.SourceFK =  self.listOfDataSourcesKey[indexValue]
         self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
         params = {'projectKeyId': "{}".format(self.ProjectFK), 'sourceKeyId': "{}".format(self.SourceFK)}
-        response_analysis = requests.get(url_analysis, params=params,
+        response_analysis = requests.get(url_DataChannels, params=params,
                                 headers={'Authorization': "Bearer {}".format(self.token)})
 
         for i in range(0, response_analysis.json()["total"]):
             self.datachannels_box.addItem(response_analysis.json()["data"][i]["name"])
-            self.listOfDataChannels.append((response_analysis.json()["data"][i]["serverKeyId"]))
+            self.listOfDataChannelsKey.append((response_analysis.json()["data"][i]["serverKeyId"]))
 
+
+    def initializeRepository(self):
+        self.loadDataSource()
+
+    
     def getChannelMeasurementsData(self, behavior):
-        
 
-        #read the measurements from https://dev.watering.online/api/v1/measurements
+        url_Measurements = "https://dev.watering.online/api/v1/measurements"
+        channelFK =  self.listOfDataChannelsKey[self.datachannels_box.currentIndex()]
+  
+        params = {'channelKeyId': "{}".format(channelFK)}
+        response_analysis = requests.get(url_Measurements, params=params,
+                                headers={'Authorization': "Bearer {}".format(self.token)})
 
-        """ self.show_progress_bar()
-        analysisExecutionId = self.listOfDataChannels[self.analysis_box.currentIndex()][0]
-        datetime = self.listOfDataChannels[self.analysis_box.currentIndex()][1]
-        self.set_progress(33)  
-        pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
-        self.set_progress(67)  
-        waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior)
-        self.set_progress(100)  
-        self.timer_hide_progress_bar() """
+        new_df = pd.DataFrame()
+        for i in range(0, response_analysis.json()["total"]):
+            #print((response_analysis.json()["data"][i]))
+            df = pd.DataFrame([response_analysis.json()["data"][i]])
+            temp_df = pd.DataFrame({'timeStamp': [df['timeStamp'][0]],'value': [df['value'][0]],})
+            new_df = new_df.append(temp_df, ignore_index = True) 
 
         self.close()
 
+        #new_df = pd.DataFrame({'timeStamp': [df['timeStamp'][0]],'value': [df['value'][0]],})
+        """
         data = {'Date Time': [
             '2023-08-22 02:19:03',
             '2023-08-22 02:23:21',
@@ -82,18 +105,19 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             2.870512,
             2.924979]
                 }
+                """
 
-        tempdf = pd.DataFrame(data)
-        tempdf['Date Time'] = pd.to_datetime(tempdf['Date Time'], format='%Y-%m-%d %H:%M:%S')
+        tempdf = pd.DataFrame(new_df)
+        tempdf['timeStamp'] = pd.to_datetime(tempdf['timeStamp'], format='%Y-%m-%d %H:%M:%S')
  
-        df = tempdf.to_numpy()
+        new_df = tempdf.to_numpy()
 
          # Plot the data
         plt.figure(figsize=(10, 6))
-        plt.plot(df[:, 0], df[:, 1], marker='o', linestyle='-')
+        plt.plot(new_df[:, 0], new_df[:, 1], marker='o', linestyle='-')
         plt.title('Value vs. Date Time')
-        plt.xlabel('Date Time')
-        plt.ylabel('Value')
+        plt.xlabel('timeStamp')
+        plt.ylabel('value')
         plt.grid(True)
         plt.show()
       

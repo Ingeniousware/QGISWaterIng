@@ -10,14 +10,14 @@
     <x>0</x>
     <y>0</y>
     <width>453</width>
-    <height>252</height>
+    <height>200</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>WaterIng Data Channels</string>
   </property>
 
-  <widget class="QLabel" name="projectLabel">
+  <widget class="QLabel" name="sourcesLabel">
    <property name="enabled">
     <bool>true</bool>
    </property>
@@ -41,15 +41,26 @@
    </property>
   </widget>
 
+  <widget class="QComboBox" name="datasource_box">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>40</y>
+     <width>411</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
 
-  <widget class="QLabel" name="projectLabel">
+
+  <widget class="QLabel" name="channelLabel">
    <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>50</y>
+     <y>70</y>
      <width>171</width>
      <height>20</height>
     </rect>
@@ -66,23 +77,47 @@
    </property>
   </widget>
 
-  <widget class="QComboBox" name="datachannels_box">
+    <widget class="QComboBox" name="datachannels_box">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>70</y>
+     <y>90</y>
      <width>411</width>
      <height>21</height>
     </rect>
    </property>
   </widget>
 
+   <widget class="QLabel" name="date1Label">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>120</y>
+     <width>171</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>13</pointsize>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Inicial Date</string>
+   </property>
+  </widget>
+
   <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>110</y>
-     <width>181</width>
+     <x>223</x>
+     <y>130</y>
+     <width>210</width>
      <height>28</height>
     </rect>
    </property>
