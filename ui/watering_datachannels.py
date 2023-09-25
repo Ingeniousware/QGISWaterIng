@@ -31,7 +31,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.token = os.environ.get('TOKEN')
         self.ProjectFK = None
         self.SourceFK = None
-        self.listOfDataChannelsKey = []
+        self.listOfDataChannelsInfo = []
         self.listOfDataSourcesKey = []
         self.hide_progress_bar()
         self.initializeRepository()
@@ -54,7 +54,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
     def loadDataChannels(self, indexValue):
         self.datachannels_box.clear()
-        self.listOfDataChannelsKey = []
+        self.listOfDataChannelsInfo = []
         
         url_DataChannels = "https://dev.watering.online/api/v1/MeasurementChannels"
         self.SourceFK =  self.listOfDataSourcesKey[indexValue]
@@ -65,17 +65,17 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
         for i in range(0, response_analysis.json()["total"]):
             self.datachannels_box.addItem(response_analysis.json()["data"][i]["name"])
-            self.listOfDataChannelsKey.append((response_analysis.json()["data"][i]["serverKeyId"]))
-
+            self.listOfDataChannelsInfo.append((response_analysis.json()["data"][i]["serverKeyId"], 
+                                               response_analysis.json()["data"][i]["measurement"],
+                                               response_analysis.json()["data"][i]["units"]))
 
     def initializeRepository(self):
         self.loadDataSource()
 
-    
     def getChannelMeasurementsData(self, behavior):
 
         url_Measurements = "https://dev.watering.online/api/v1/measurements"
-        channelFK =  self.listOfDataChannelsKey[self.datachannels_box.currentIndex()]
+        channelFK =  self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][0]
   
         params = {'channelKeyId': "{}".format(channelFK)}
         headers={'Authorization': "Bearer {}".format(self.token)}
@@ -95,9 +95,9 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             # Plot the data
             plt.figure(figsize=(10, 6))
             plt.plot(df['timeStamp'], df['value'], marker='o', linestyle='-')
-            plt.title('Value vs. Date Time')
+            plt.title(self.datachannels_box.currentText())
             plt.xlabel('timeStamp')
-            plt.ylabel('value')
+            plt.ylabel(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1])
             plt.grid(True)
             plt.show()
             
@@ -105,9 +105,9 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             print(f"Error: {e}")
         except KeyError:
             print("Invalid response format.")
-        
 
-        
+        self.close()
+                
     def set_progress(self, progress_value):
         t = time() - self.start
         hms = strftime("%H:%M:%S", gmtime(t))

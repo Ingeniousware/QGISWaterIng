@@ -41,3 +41,10 @@ class WateringUtils():
         
         return WateringUtils.getScenarioId() == "default text"
     
+    def translateMeasurements(self, status):
+        conditions = {0:"Created", 
+                      1:"Evaluating",
+                      2:"Evaluated",
+                      3:"ErrorsOnEvaluation"}
+        
+        return conditions.get(status)
