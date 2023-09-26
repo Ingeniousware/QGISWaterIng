@@ -96,15 +96,13 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
             #AnomalyDetection.iqr_anomaly_detector(df)
             anomaly = AnomalyDetection.iqr_anomaly_detector(df)
-            
-
             title = self.datachannels_box.currentText()
             yLabel = (self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
-                        + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
+                        + " " + "(" + 
+                      self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
         
             PlotController.plot_anomalies(self,anomaly, title, yLabel)
     
-
             if not data:
                 print("No data available.")
                 return
