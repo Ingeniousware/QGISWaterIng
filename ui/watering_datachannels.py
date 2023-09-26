@@ -79,6 +79,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     
     def getChannelMeasurementsData(self, behavior):
 
+        
         url_Measurements = "https://dev.watering.online/api/v1/measurements"
         channelFK =  self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][0]
 
@@ -95,17 +96,27 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             response_analysis.raise_for_status()
             data = response_analysis.json()["data"]
 
+     
             df = pd.DataFrame(data)[selectColumns]
-            df['timeStamp'] = pd.to_datetime(df['timeStamp'], format='%Y-%m-%d %H:%M:%S')
+  
+            df['timeStamp'] = pd.to_datetime(df['timeStamp'])
+
+  
 
             anomaly = AnomalyDetection.iqr_anomaly_detector(df)
+            
+
             title = self.datachannels_box.currentText()
             yLabel = (self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
-                        + " " + "(" + 
-                      self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
+                        + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
         
-            PlotController.plot_anomalies(self,anomaly, title, yLabel)
+        
+            numpyAnomaly = anomaly.to_numpy()
+
+            PlotController.plot_numpyAnomalies(self,numpyAnomaly, title, yLabel)
+          
     
+
             if not data:
                 print("No data available.")
                 return
