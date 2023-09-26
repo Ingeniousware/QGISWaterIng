@@ -108,11 +108,11 @@
     </font>
    </property>
    <property name="text">
-    <string>Inicial Date</string>
+    <string>Inicial Date (dd/mm/yyyy)</string>
    </property>
   </widget>
 
-  <widget class="QDateEdit" name="inicialDate_box">
+  <widget class="QDateEdit" name="inicial_dateEdit">
    <property name="geometry">
     <rect>
      <x>20</x>
@@ -143,11 +143,11 @@
     </font>
    </property>
    <property name="text">
-    <string>Final Date</string>
+    <string>Final Date (dd/mm/yyyy)</string>
    </property>
   </widget>
 
-  <widget class="QDateEdit" name="finalDate_box">
+  <widget class="QDateEdit" name="final_dateEdit">
    <property name="geometry">
     <rect>
      <x>20</x>

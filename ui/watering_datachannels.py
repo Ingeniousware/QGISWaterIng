@@ -76,12 +76,16 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
     def initializeRepository(self):
         self.loadDataSource()
-
+    
     def getChannelMeasurementsData(self, behavior):
 
         url_Measurements = "https://dev.watering.online/api/v1/measurements"
         channelFK =  self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][0]
-  
+
+        #To visualize data from specific dates 
+        #inicialDate, finalDate = str(self.inicial_dateEdit.date().toPyDate()), str(self.final_dateEdit.date().toPyDate())
+        #inicialDate, finalDate = (inicialDate + " 00:00:00"), (finalDate + " 00:00:00")
+        #params = {'channelKeyId': "{}".format(channelFK), 'startDate': "{}".format(inicialDate),'endDate': "{}".format(finalDate)}
         params = {'channelKeyId': "{}".format(channelFK)}
         headers={'Authorization': "Bearer {}".format(self.token)}
         selectColumns = ['value', 'timeStamp']
