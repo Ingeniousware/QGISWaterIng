@@ -6,12 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>556</width>
-    <height>441</height>
+    <width>562</width>
+    <height>444</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Optimization</string>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
   </property>
   <widget class="QTabWidget" name="container">
    <property name="geometry">
@@ -28,6 +31,11 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
+   <property name="font">
+    <font>
+     <kerning>false</kerning>
+    </font>
+   </property>
    <property name="currentIndex">
     <number>1</number>
    </property>
@@ -41,56 +49,164 @@
     <attribute name="title">
      <string>Load Solution</string>
     </attribute>
-    <layout class="QVBoxLayout" name="verticalLayout_2">
-     <property name="leftMargin">
-      <number>0</number>
+    <widget class="QLabel" name="projectLabel">
+     <property name="enabled">
+      <bool>true</bool>
      </property>
-     <property name="topMargin">
-      <number>0</number>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>51</width>
+       <height>16</height>
+      </rect>
      </property>
-     <property name="rightMargin">
-      <number>0</number>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+       <kerning>false</kerning>
+      </font>
      </property>
-     <property name="bottomMargin">
-      <number>0</number>
+     <property name="text">
+      <string>Problem</string>
      </property>
-     <item>
-      <widget class="QLabel" name="projectLabel">
-       <property name="enabled">
-        <bool>true</bool>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>13</pointsize>
-         <weight>50</weight>
-         <bold>false</bold>
-        </font>
-       </property>
-       <property name="text">
-        <string>Problem</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="problem_box"/>
-     </item>
-     <item>
-      <widget class="QTableView" name="tableView"/>
-     </item>
-     <item>
-      <widget class="QPushButton" name="BtLoadSolution">
-       <property name="text">
-        <string>Load Solution</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    </widget>
+    <widget class="QComboBox" name="problem_box">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>40</y>
+       <width>511</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QTableView" name="tableView">
+     <property name="geometry">
+      <rect>
+       <x>6</x>
+       <y>80</y>
+       <width>501</width>
+       <height>251</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="BtLoadSolution">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>340</y>
+       <width>511</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load Solution</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="createSolutiom">
     <attribute name="title">
      <string>Create Solution</string>
     </attribute>
-    <layout class="QVBoxLayout" name="verticalLayout_7"/>
+    <widget class="QPushButton" name="BtUploadSolution">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>340</y>
+       <width>511</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Upload Solution to WaterIng</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="newSolutionInputName">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>40</y>
+       <width>501</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>20</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+     <property name="placeholderText">
+      <string>Solution Name</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="projectLabel_2">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>121</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+       <kerning>false</kerning>
+      </font>
+     </property>
+     <property name="text">
+      <string>Name</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="projectLabel_3">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>70</y>
+       <width>121</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+       <kerning>false</kerning>
+      </font>
+     </property>
+     <property name="text">
+      <string>Status</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="status_box">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>501</width>
+       <height>21</height>
+      </rect>
+     </property>
+    </widget>
    </widget>
   </widget>
  </widget>
