@@ -43,12 +43,12 @@ class PlotController():
 
         #plt.figure(figsize=(15, 9))
         plt.plot(anomaly['timeStamp'],anomaly['value'], linestyle='-', color='green')
-        plt.scatter(anomaly['timeStamp'],anomaly['value'], marker='o',s=4, linestyle='-', c=colormap[categories])
+        plt.scatter(anomaly['timeStamp'],anomaly['value'], marker='o',s=14, linestyle='-', c=colormap[categories])
         plt.title(title)
         plt.xlabel('Date')
         plt.ylabel(yLabel)
         plt.grid(True)
-        plt.xticks(rotation=90)
+        plt.xticks(rotation=80)
         plt.tight_layout()
         plt.show()
 
