@@ -8,6 +8,8 @@ import os
 import requests
 from time import time, gmtime, strftime
 from ..watering_utils import WateringUtils
+from ..anomaly_detection import AnomalyDetection
+from ..anomaly_detection import PlotController 
 
 from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
 from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
@@ -37,6 +39,8 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.initializeRepository()
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getChannelMeasurementsData(0))
         self.yaxis = WateringUtils()
+        self.anomalyDetection = AnomalyDetection()
+        self.plotAnomalys = PlotController()
 
     def loadDataSource(self):
         url_DataSources = "https://dev.watering.online/api/v1/DataSources"
@@ -80,30 +84,30 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
   
         params = {'channelKeyId': "{}".format(channelFK)}
         headers={'Authorization': "Bearer {}".format(self.token)}
+        selectColumns = ['value', 'timeStamp']
 
         try:
             response_analysis = requests.get(url_Measurements, params=params, headers=headers)
             response_analysis.raise_for_status()
             data = response_analysis.json()["data"]
 
+            df = pd.DataFrame(data)[selectColumns]
+            df['timeStamp'] = pd.to_datetime(df['timeStamp'], format='%Y-%m-%d %H:%M:%S')
+
+            #AnomalyDetection.iqr_anomaly_detector(df)
+            anomaly = AnomalyDetection.iqr_anomaly_detector(df)
+            
+
+            title = self.datachannels_box.currentText()
+            yLabel = (self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
+                        + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
+        
+            PlotController.plot_anomalies(self,anomaly, title, yLabel)
+    
+
             if not data:
                 print("No data available.")
                 return
-            
-            df = pd.DataFrame(data)
-            df['timeStamp'] = pd.to_datetime(df['timeStamp'], format='%Y-%m-%d %H:%M:%S')
-
-            myNumpy = df.to_numpy()
-
-            # Plot the data
-            plt.figure(figsize=(10, 6))
-            plt.plot(myNumpy[:,4], myNumpy[:,0], marker='o', linestyle='-')
-            plt.title(self.datachannels_box.currentText())
-            plt.xlabel('Date')
-            plt.ylabel(self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
-                       + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
-            plt.grid(True)
-            plt.show()
             
         except requests.exceptions.RequestException as e:
             print(f"Error: {e}")
