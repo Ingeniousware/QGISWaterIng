@@ -23,7 +23,7 @@ class AnomalyDetection():
         iqr = quartiles[0.75] - quartiles[0.25]
         lower_threshold = quartiles[0.25] - (threshold * iqr)
         upper_threshold = quartiles[0.75] + (threshold * iqr)
-        print(f"Lower threshold: {lower_threshold}, \nUpper threshold: {upper_threshold}\n")
+        #print(f"Lower threshold: {lower_threshold}, \nUpper threshold: {upper_threshold}\n")
         copy_data['Predictions'] = df[column].apply(AnomalyDetection.find_anomalies, args=(lower_threshold, upper_threshold))
         return copy_data
     
@@ -49,18 +49,6 @@ class PlotController():
         plt.xlabel('Date')
         plt.ylabel(yLabel)
         plt.grid(True)
-        plt.xticks(rotation=80)
+        plt.xticks(rotation=90)
         plt.show()
-
-        """ def plot_anomalies(self, anomaly, x, y):
-                
-        colormap = np.where(anomaly['Predictions'], 'r', 'g')
-        plt.figure(figsize=(16, 6))
-        plt.plot(anomaly[:,4], anomaly[:,0], marker='o', linestyle='-', c=colormap)
-        plt.title(self.datachannels_box.currentText())
-        plt.xlabel('Date')
-        plt.ylabel(self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
-                        + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
-        plt.grid(True)
-        plt.xticks(rotation=80)
-        plt.show() """
+        
