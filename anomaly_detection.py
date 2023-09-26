@@ -51,4 +51,22 @@ class PlotController():
         plt.xticks(rotation=90)
         plt.tight_layout()
         plt.show()
+
+    def plot_numpyAnomalies(self,anomaly, title, yLabel):
+
+        categories = (anomaly[:,2]).astype(int)
+        colormap = np.array(['g', 'r',])
+
+        print(categories)
+        print (type(categories))
+        #plt.figure(figsize=(15, 9))
+        plt.plot(anomaly[:,1],anomaly[:,0], linestyle='-', color='green')
+        plt.scatter(anomaly[:,1],anomaly[:,0], marker='o',s=4, linestyle='-', c=colormap[categories])
+        plt.title(title)
+        plt.xlabel('Date')
+        plt.ylabel(yLabel)
+        plt.grid(True)
+        plt.xticks(rotation=90)
+        plt.tight_layout()
+        plt.show()
         
