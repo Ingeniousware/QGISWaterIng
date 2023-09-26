@@ -15,6 +15,7 @@ import os
 import requests
 from ..watering_utils import WateringUtils
 import json
+import numpy as np
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_optimization_dialog.ui'))
@@ -49,8 +50,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         
         self.loadSolutions(self.problem_box.currentIndex())
         self.problem_box.currentIndexChanged.connect(self.loadSolutions)
-        
-        self.fillStatusBox()
+
         
     def loadSolutions(self, index):
 
@@ -66,11 +66,18 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         if total > 0:
             matrix_table = []
             for i in range(0, total):
+                
+                listOfObjectives = []
+                if not data[i]["objectiveResults"]:
+                    listOfObjectives.extend([[np.nan] * 3])
+                else:
+                    listOfObjectives.append([item["valueResult"] for item in data[i]["objectiveResults"]])
+
                 matrix_table.append([data[i]["name"], 
                                      self.translateStatus(data[i]["status"]), 
                                      data[i]["solutionSource"]] 
-                                    + [item["valueResult"] for item in data[i]["objectiveResults"]])      
-                 
+                                    + [item for item in listOfObjectives[0]])
+                
                 self.Sensors.append(self.getSolutionSensors(data[i]))
                                                         
             model = TableModel(matrix_table)
@@ -145,11 +152,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                                  headers={'Authorization': "Bearer {}".format(self.token)})
         
         print(response.status_code)
-    
-    def fillStatusBox(self):
-        for i in range(0, 4):
-            self.status_box.addItem(self.translateStatus(i))
-            
+        
     def insertSensor(self, coord):
         m = QgsVertexMarker(self.canvas)
         m.setCenter(coord)

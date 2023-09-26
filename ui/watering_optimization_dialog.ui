@@ -194,19 +194,48 @@
       </font>
      </property>
      <property name="text">
-      <string>Status</string>
+      <string>Status: Created</string>
      </property>
     </widget>
-    <widget class="QComboBox" name="status_box">
+    <widget class="QLabel" name="projectLabel_4">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>90</y>
-       <width>501</width>
-       <height>21</height>
+       <y>100</y>
+       <width>121</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+       <kerning>false</kerning>
+      </font>
+     </property>
+     <property name="text">
+      <string>Selected Sensors</string>
+     </property>
+    </widget>
+    <widget class="QTableView" name="tableView_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>130</y>
+       <width>491</width>
+       <height>201</height>
       </rect>
      </property>
     </widget>
+   </widget>
+   <widget class="QWidget" name="tab">
+    <attribute name="title">
+     <string>Pareto Chart</string>
+    </attribute>
    </widget>
   </widget>
  </widget>
