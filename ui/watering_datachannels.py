@@ -111,10 +111,10 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             yLabel = (self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
                         + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
         
-        
+
             numpyAnomaly = anomaly.to_numpy()
 
-            PlotController.plot_numpyAnomalies(self,numpyAnomaly, title, yLabel)
+            PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
           
     
 
