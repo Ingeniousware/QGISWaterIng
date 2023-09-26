@@ -83,7 +83,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         url_Measurements = "https://dev.watering.online/api/v1/measurements"
         channelFK =  self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][0]
 
-        #To visualize data from specific dates 
+        #To visualize data from specific dates#
         #inicialDate, finalDate = str(self.inicial_dateEdit.date().toPyDate()), str(self.final_dateEdit.date().toPyDate())
         #inicialDate, finalDate = (inicialDate + " 00:00:00"), (finalDate + " 00:00:00")
         #params = {'channelKeyId': "{}".format(channelFK), 'startDate': "{}".format(inicialDate),'endDate': "{}".format(finalDate)}
@@ -103,7 +103,6 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
   
 
-            #AnomalyDetection.iqr_anomaly_detector(df)
             anomaly = AnomalyDetection.iqr_anomaly_detector(df)
             
 
