@@ -18,6 +18,9 @@ from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisR
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import date, timedelta
+import tkinter as tk
+from tkinter import filedialog
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -36,11 +39,52 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.listOfDataChannelsInfo = []
         self.listOfDataSourcesKey = []
         self.hide_progress_bar()
-        self.initializeRepository()
+        self.loadDataSource()
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getChannelMeasurementsData(0))
         self.yaxis = WateringUtils()
         self.anomalyDetection = AnomalyDetection()
         self.plotAnomalys = PlotController()
+        self.selectdate_box.addItem("Last 30 days")
+        self.selectdate_box.addItem("Last 15 days")
+        self.selectdate_box.addItem("Custom")
+        # Hide custome dates until selected
+        self.dateInicialLabel.hide()
+        self.inicial_dateEdit.hide()
+        self.dateFinalLabel.hide()
+        self.final_dateEdit.hide()
+        self.selectdate_box.currentIndexChanged.connect(self.checkUserControlState)
+        self.DownloadDataToFile.clicked.connect(lambda: self.downloadData(0))
+
+    def downloadData(self, behavior):
+        root = tk.Tk()
+        root.withdraw()
+
+        # Ask the user for the save location and file name.
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
+
+        if not file_path:
+            return
+        try:
+            df.to_csv(file_path, index=False)
+            print(f"CSV file saved to {file_path}")
+        except Exception as e:
+            print(f"Error saving CSV file: {e}")
+        
+
+    def checkUserControlState(self):
+        if self.selectdate_box.currentIndex() == 2:
+            self.dateInicialLabel.show()
+            self.inicial_dateEdit.show()
+            self.dateFinalLabel.show()
+            self.final_dateEdit.show()
+
+        else:
+            self.dateInicialLabel.hide()
+            self.inicial_dateEdit.hide()
+            self.dateFinalLabel.hide()
+            self.final_dateEdit.hide()
+
+
 
     def loadDataSource(self):
         url_DataSources = "https://dev.watering.online/api/v1/DataSources"
@@ -74,20 +118,41 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
                                                response_analysis.json()["data"][i]["measurement"],
                                                response_analysis.json()["data"][i]["units"]))
 
-    def initializeRepository(self):
-        self.loadDataSource()
+
+    def get_date_range(self):
+                                     
+        # Check box to see the data from the last 30 days
+        dateSelected = self.selectdate_box.currentIndex()
+
+        if dateSelected == 0:
+            finalDate = date.today()
+            initialDate = finalDate - timedelta(days=30)
+            
+        elif dateSelected == 1 :
+            finalDate = date.today()
+            initialDate = finalDate - timedelta(days=15)
+
+        else:
+            # To visualize data from specific dates
+            initialDate = self.inicial_dateEdit.date().toPyDate() 
+            finalDate = self.final_dateEdit.date().toPyDate()
+        
+        initialDate = f"{initialDate} 00:00:00"
+        finalDate =  f"{finalDate} 00:00:00"
+        print(initialDate, finalDate)
+        
+        return(initialDate, finalDate)
+    
     
     def getChannelMeasurementsData(self, behavior):
 
-        
         url_Measurements = "https://dev.watering.online/api/v1/measurements"
         channelFK =  self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][0]
+        
+        initialDate, finalDate = (self.get_date_range())
+        params = {'channelKeyId': "{}".format(channelFK), 'startDate': "{}".format(initialDate),'endDate': "{}".format(finalDate)}
+        #params = {'channelKeyId': "{}".format(channelFK)}
 
-        #To visualize data from specific dates#
-        #inicialDate, finalDate = str(self.inicial_dateEdit.date().toPyDate()), str(self.final_dateEdit.date().toPyDate())
-        #inicialDate, finalDate = (inicialDate + " 00:00:00"), (finalDate + " 00:00:00")
-        #params = {'channelKeyId': "{}".format(channelFK), 'startDate': "{}".format(inicialDate),'endDate': "{}".format(finalDate)}
-        params = {'channelKeyId': "{}".format(channelFK)}
         headers={'Authorization': "Bearer {}".format(self.token)}
         selectColumns = ['value', 'timeStamp']
 
@@ -101,7 +166,6 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
   
             df['timeStamp'] = pd.to_datetime(df['timeStamp'])
 
-  
 
             anomaly = AnomalyDetection.iqr_anomaly_detector(df)
             
@@ -120,12 +184,12 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             if not data:
                 print("No data available.")
                 return
-            
+                        
         except requests.exceptions.RequestException as e:
             print(f"Error: {e}")
         except KeyError:
             print("Invalid response format.")
-
+    
         self.close()
                 
     def set_progress(self, progress_value):

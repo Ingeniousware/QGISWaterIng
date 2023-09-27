@@ -88,6 +88,17 @@
    </property>
   </widget>
 
+  <widget class="QComboBox" name="selectdate_box">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>130</y>
+     <width>411</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+
    <widget class="QLabel" name="dateInicialLabel">
    <property name="enabled">
     <bool>true</bool>
@@ -95,7 +106,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>120</y>
+     <y>160</y>
      <width>171</width>
      <height>20</height>
     </rect>
@@ -116,7 +127,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>140</y>
+     <y>180</y>
      <width>411</width>
      <height>20</height>
     </rect>
@@ -130,7 +141,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>170</y>
+     <y>210</y>
      <width>171</width>
      <height>20</height>
     </rect>
@@ -151,7 +162,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>190</y>
+     <y>230</y>
      <width>411</width>
      <height>20</height>
     </rect>
@@ -161,16 +172,31 @@
   <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
    <property name="geometry">
     <rect>
-     <x>223</x>
-     <y>250</y>
-     <width>210</width>
+     <x>230</x>
+     <y>260</y>
+     <width>200</width>
      <height>28</height>
     </rect>
    </property>
    <property name="text">
-    <string>Download Measurements / Data</string>
+    <string>Graph</string>
    </property>
   </widget>
+
+  <widget class="QPushButton" name="DownloadDataToFile">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>260</y>
+     <width>200</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Download data</string>
+   </property>
+  </widget>
+
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">
     <rect>
