@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>562</width>
-    <height>444</height>
+    <width>563</width>
+    <height>474</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>20</y>
+     <y>60</y>
      <width>521</width>
      <height>401</height>
     </rect>
@@ -37,7 +37,7 @@
     </font>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="loadSolution">
     <property name="autoFillBackground">
@@ -49,47 +49,13 @@
     <attribute name="title">
      <string>Load Solution</string>
     </attribute>
-    <widget class="QLabel" name="projectLabel">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>51</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>13</pointsize>
-       <weight>50</weight>
-       <bold>false</bold>
-       <kerning>false</kerning>
-      </font>
-     </property>
-     <property name="text">
-      <string>Problem</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="problem_box">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>40</y>
-       <width>511</width>
-       <height>21</height>
-      </rect>
-     </property>
-    </widget>
     <widget class="QTableView" name="tableView">
      <property name="geometry">
       <rect>
        <x>6</x>
-       <y>80</y>
+       <y>10</y>
        <width>501</width>
-       <height>251</height>
+       <height>321</height>
       </rect>
      </property>
     </widget>
@@ -262,6 +228,40 @@
      <string>Pareto Chart</string>
     </attribute>
    </widget>
+  </widget>
+  <widget class="QLabel" name="projectLabel">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>10</y>
+     <width>51</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>13</pointsize>
+     <weight>50</weight>
+     <bold>false</bold>
+     <kerning>false</kerning>
+    </font>
+   </property>
+   <property name="text">
+    <string>Problem</string>
+   </property>
+  </widget>
+  <widget class="QComboBox" name="problem_box">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>30</y>
+     <width>521</width>
+     <height>21</height>
+    </rect>
+   </property>
   </widget>
  </widget>
  <resources/>
