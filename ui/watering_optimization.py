@@ -76,11 +76,11 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 matrix_table.append([data[i]["name"], 
                                      self.translateStatus(data[i]["status"]), 
                                      data[i]["solutionSource"]] 
-                                    + [item for item in listOfObjectives[0][:4]])
+                                    + [item for item in listOfObjectives[0][:2]])
                 
                 self.Sensors.append(self.getSolutionSensors(data[i]))
                                                         
-            model = TableModel(matrix_table, ["Name", "Status", "Source", "Obj1", "Obj2", "Obj3", "Obj4"])
+            model = TableModel(matrix_table, ["Name", "Status", "Source", "Obj1", "Obj2"])
             self.tableView.setModel(model)
             
         self.tableView.clicked.connect(self.on_row_clicked)

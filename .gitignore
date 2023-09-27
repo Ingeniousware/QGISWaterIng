@@ -2,6 +2,7 @@
 .vscode
 /repositories/__pycache__/
 /NetworkAnalysis/__pycache__/
+/NetworkAnalysis/.DS_Store
 /ui/__pycache__/
 /maptools/__pycache__/
 /__pycache__
