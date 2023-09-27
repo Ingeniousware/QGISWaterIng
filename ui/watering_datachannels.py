@@ -3,6 +3,7 @@
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
 from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QFileDialog
 
 import os
 import requests
@@ -19,8 +20,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import date, timedelta
-import tkinter as tk
-from tkinter import filedialog
 
 
 
@@ -56,19 +55,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.final_dateEdit.hide()
         self.selectdate_box.currentIndexChanged.connect(self.checkUserControlState)
         self.DownloadDataToFile.clicked.connect(self.downloadData)
-
-    def downloadData(self):
-        """ dataFrame = self.createDataFrame_api()
-        root = tk.Tk()
-        #print(dataFrame)
-        # Ask the user for the save location and file name.
-        file_name = str(self.datachannels_box.currentText())
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv", initialfile=file_name, filetypes=[("CSV Files", "*.csv")])
-        dataFrame.to_csv(file_path, sep ="\t", index=False)
-        print(f"CSV file saved to {file_path}") """
-        print("Its working")
-        self.close()
-        
+    
 
     def checkUserControlState(self):
         if self.selectdate_box.currentIndex() == 2:
@@ -162,6 +149,27 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         df = pd.DataFrame(data)[selectColumns]
         
         return(df)
+
+    def downloadData(self):
+
+        dataFrame = self.createDataFrame_api()
+        dataFrame['value'],dataFrame['timeStamp'] = dataFrame['value'].astype(str), dataFrame['timeStamp'].astype(str)
+        
+        i_Date, f_Date = self.get_date_range()
+        i_Date = i_Date.replace("-","")
+        f_Date = f_Date.replace("-","")
+        i_Date = i_Date.replace(" ","")
+        f_Date = f_Date.replace(" ","")
+
+        print(i_Date,f_Date)
+
+        file_name = QFileDialog.getSaveFileName(parent = None, caption="Select file", filter="CSV File (*.csv)", 
+                                                directory = (str(self.datachannels_box.currentText()) + " " + f_Date + "-" + i_Date))    
+        
+        dataFrame.to_csv((file_name[0]), index=True)
+        print(f'DataFrame saved to {file_name[0]}')
+
+        self.close()
     
     def getChannelMeasurementsData(self, behavior):
         
