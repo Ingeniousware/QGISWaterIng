@@ -31,6 +31,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.Solutions = []
         self.Sensors = []
         self.RowIndex = None
+        self.Url = "https://dev.watering.online/api/v1/OptimizationSolutions"
         self.Layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
         self.canvas = iface.mapCanvas()
         self.initializeRepository()
@@ -56,8 +57,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
 
         problemFK = self.Solutions[index]
         params = {'problemKeyId': "{}".format(problemFK)}
-        url = "https://dev.watering.online/api/v1/OptimizationSolutions"
-        response = requests.get(url, params=params,
+        response = requests.get(self.Url, params=params,
                    headers={'Authorization': "Bearer {}".format(self.token)})
         
         data = response.json()["data"]
@@ -69,18 +69,18 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 
                 listOfObjectives = []
                 if not data[i]["objectiveResults"]:
-                    listOfObjectives.extend([[np.nan] * 3])
+                    listOfObjectives.extend([[np.nan] * 4])
                 else:
                     listOfObjectives.append([item["valueResult"] for item in data[i]["objectiveResults"]])
 
                 matrix_table.append([data[i]["name"], 
                                      self.translateStatus(data[i]["status"]), 
                                      data[i]["solutionSource"]] 
-                                    + [item for item in listOfObjectives[0]])
+                                    + [item for item in listOfObjectives[0][:4]])
                 
                 self.Sensors.append(self.getSolutionSensors(data[i]))
                                                         
-            model = TableModel(matrix_table, ["Name", "Status", "Source", "Obj1", "Obj2", "Obj3"])
+            model = TableModel(matrix_table, ["Name", "Status", "Source", "Obj1", "Obj2", "Obj3", "Obj4"])
             self.tableView.setModel(model)
             
         self.tableView.clicked.connect(self.on_row_clicked)
@@ -125,48 +125,18 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         name = self.newSolutionInputName.text() or "Solution Test"
         scenario_id = WateringUtils.getScenarioId()
         problemFk = self.Solutions[self.problem_box.currentIndex()]
-        variableResults = []
-        for node in nodesWithSensors:
-            variableResults.append(
-            {
-                "serverKeyId": "{}".format(problemFk),
-                "fkProblemDefinition": "{}".format(problemFk),
-                "fkProblemSolution": "{}".format(problemFk),
-                "fkDecisionVariable": "{}".format(problemFk),
-                "optimizerValue": 0,
-                "comment": "string",
-                "optimizerNodeKey": "{}".format(node)
-            })
-            
+
         post_message = {
-        "serverKeyId": "e35c8b59-3ac9-4fd2-b8b0-656eda0db3fd",
-        "name": "test",
-        "fkScenario": "af4b23a5-2aa8-4579-9843-2a4dd7908d31",
-        "fkProblemDefinition": "e35c8b59-3ac9-4fd2-b8b0-656eda0db3fd",
+        "serverKeyId": "",
+        "name": "{}".format(name),
+        "fkScenario": "{}".format(scenario_id),
+        "fkProblemDefinition": "{}".format(problemFk),
         "variableResults": [],
         "objectiveResults": [],
         "solutionSource": "string",
         "status": "0"}
-        
-
-        """post_message = {
-            "serverKeyId": "{}".format(problemFk),
-            "name": "test",
-            "fkScenario": "{}".format(scenario_id),
-            "fkProblemDefinition": "{}".format(problemFk),
-            "variableResults": [],
-            "objectiveResults": [],
-            "solutionSource": "string",
-            "status": "0"
-        }   """
-        
-        formated_post_message = json.dumps(post_message)
-        
-        url_post = "https://dev.watering.online/api/v1/OptimizationSolutions"
-        response = requests.post(url_post, data= formated_post_message,
-                                 headers={'Authorization': "Bearer {}".format(self.token)})
-        
-        print(response.status_code)
+    
+        requests.post(self.Url, json=post_message,headers={'Authorization': "Bearer {}".format(self.token)})
         
     def insertSensor(self, coord):
         m = QgsVertexMarker(self.canvas)
