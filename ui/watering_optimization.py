@@ -15,6 +15,7 @@ import os
 import requests
 from ..watering_utils import WateringUtils
 import json
+import numpy as np
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_optimization_dialog.ui'))
@@ -49,8 +50,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         
         self.loadSolutions(self.problem_box.currentIndex())
         self.problem_box.currentIndexChanged.connect(self.loadSolutions)
-        
-        self.fillStatusBox()
+        self.sensorsUploadTable()
         
     def loadSolutions(self, index):
 
@@ -66,18 +66,39 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         if total > 0:
             matrix_table = []
             for i in range(0, total):
+                
+                listOfObjectives = []
+                if not data[i]["objectiveResults"]:
+                    listOfObjectives.extend([[np.nan] * 3])
+                else:
+                    listOfObjectives.append([item["valueResult"] for item in data[i]["objectiveResults"]])
+
                 matrix_table.append([data[i]["name"], 
                                      self.translateStatus(data[i]["status"]), 
                                      data[i]["solutionSource"]] 
-                                    + [item["valueResult"] for item in data[i]["objectiveResults"]])      
-                 
+                                    + [item for item in listOfObjectives[0]])
+                
                 self.Sensors.append(self.getSolutionSensors(data[i]))
                                                         
-            model = TableModel(matrix_table)
+            model = TableModel(matrix_table, ["Name", "Status", "Source", "Obj1", "Obj2", "Obj3"])
             self.tableView.setModel(model)
             
         self.tableView.clicked.connect(self.on_row_clicked)
 
+    def sensorsUploadTable(self):
+        existingSensors = self.getExistingSensors()
+        if existingSensors:
+            matrix_table = []
+            for node in self.Layer.getFeatures():
+                if node.geometry().asPoint() in existingSensors:
+                    matrix_table.append([node["Name"],
+                                        node["ID"],
+                                        node["Descriptio"]])
+                        
+            model = TableModel(matrix_table, ["Name", "ID", "Description"])
+            self.sensors_table.setModel(model)
+            
+                    
     def loadSolutionSensors(self):
         if self.RowIndex ==  None:
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a row!"), level=1, duration=5)
@@ -93,7 +114,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
     
     def uploadSolution(self):
         nodesWithSensors = []
-        existingSensors = self.getMarkers()
+        existingSensors = self.getExistingSensors()
         for feature in self.Layer.getFeatures():
             if feature.geometry().asPoint() in existingSensors:
                 nodesWithSensors.append(feature["ID"])
@@ -116,6 +137,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 "comment": "string",
                 "optimizerNodeKey": "{}".format(node)
             })
+            
         post_message = {
         "serverKeyId": "e35c8b59-3ac9-4fd2-b8b0-656eda0db3fd",
         "name": "test",
@@ -145,11 +167,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                                  headers={'Authorization': "Bearer {}".format(self.token)})
         
         print(response.status_code)
-    
-    def fillStatusBox(self):
-        for i in range(0, 4):
-            self.status_box.addItem(self.translateStatus(i))
-            
+        
     def insertSensor(self, coord):
         m = QgsVertexMarker(self.canvas)
         m.setCenter(coord)
@@ -179,7 +197,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             self.tableView.selectRow(row)
             self.RowIndex = row
 
-    def getMarkers(self):
+    def getExistingSensors(self):
         existingSensors = {}
         vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
         for vertex in vertex_items:
@@ -193,10 +211,10 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.canvas.refresh()  
         
 class TableModel(QtCore.QAbstractTableModel):
-    def __init__(self, data):
+    def __init__(self, data, headers):
         super(TableModel, self).__init__()
         self._data = data
-        self.headers = ["Name", "Status", "Source", "Obj1", "Obj2", "Obj3"]
+        self.headers = headers
         
     def data(self, index, role):
         if role == Qt.DisplayRole:
