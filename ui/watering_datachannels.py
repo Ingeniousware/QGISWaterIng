@@ -23,6 +23,8 @@ import tkinter as tk
 from tkinter import filedialog
 
 
+
+
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_datachannels_dialog.ui'))
 
@@ -53,22 +55,19 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.dateFinalLabel.hide()
         self.final_dateEdit.hide()
         self.selectdate_box.currentIndexChanged.connect(self.checkUserControlState)
-        self.DownloadDataToFile.clicked.connect(lambda: self.downloadData(0))
+        self.DownloadDataToFile.clicked.connect(self.downloadData)
 
-    def downloadData(self, behavior):
+    def downloadData(self):
+        """ dataFrame = self.createDataFrame_api()
         root = tk.Tk()
-        root.withdraw()
-
+        #print(dataFrame)
         # Ask the user for the save location and file name.
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
-
-        if not file_path:
-            return
-        try:
-            df.to_csv(file_path, index=False)
-            print(f"CSV file saved to {file_path}")
-        except Exception as e:
-            print(f"Error saving CSV file: {e}")
+        file_name = str(self.datachannels_box.currentText())
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv", initialfile=file_name, filetypes=[("CSV Files", "*.csv")])
+        dataFrame.to_csv(file_path, sep ="\t", index=False)
+        print(f"CSV file saved to {file_path}") """
+        print("Its working")
+        self.close()
         
 
     def checkUserControlState(self):
@@ -139,13 +138,12 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         
         initialDate = f"{initialDate} 00:00:00"
         finalDate =  f"{finalDate} 00:00:00"
-        print(initialDate, finalDate)
+        #print(initialDate, finalDate)
         
         return(initialDate, finalDate)
     
-    
-    def getChannelMeasurementsData(self, behavior):
-
+    def createDataFrame_api(self):
+        
         url_Measurements = "https://dev.watering.online/api/v1/measurements"
         channelFK =  self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][0]
         
@@ -156,35 +154,33 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         headers={'Authorization': "Bearer {}".format(self.token)}
         selectColumns = ['value', 'timeStamp']
 
-        try:
-            response_analysis = requests.get(url_Measurements, params=params, headers=headers)
-            response_analysis.raise_for_status()
-            data = response_analysis.json()["data"]
+        response_analysis = requests.get(url_Measurements, params=params, headers=headers)
+        response_analysis.raise_for_status()
+        data = response_analysis.json()["data"]
 
      
-            df = pd.DataFrame(data)[selectColumns]
-  
-            df['timeStamp'] = pd.to_datetime(df['timeStamp'])
+        df = pd.DataFrame(data)[selectColumns]
+        
+        return(df)
+    
+    def getChannelMeasurementsData(self, behavior):
+        
+        data = self.createDataFrame_api()
+        data['timeStamp'] = pd.to_datetime(data['timeStamp'])
 
+        try:
 
-            anomaly = AnomalyDetection.iqr_anomaly_detector(df)
+            anomaly = AnomalyDetection.iqr_anomaly_detector(data)
             
 
             title = self.datachannels_box.currentText()
             yLabel = (self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
                         + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
         
-
             numpyAnomaly = anomaly.to_numpy()
 
             PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
           
-    
-
-            if not data:
-                print("No data available.")
-                return
-                        
         except requests.exceptions.RequestException as e:
             print(f"Error: {e}")
         except KeyError:
