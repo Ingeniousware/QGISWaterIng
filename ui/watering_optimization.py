@@ -54,7 +54,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.sensorsUploadTable()
         
     def loadSolutions(self, index):
-
+        self.Sensors = []
         problemFK = self.Solutions[index]
         params = {'problemKeyId': "{}".format(problemFK)}
         response = requests.get(self.Url, params=params,
@@ -69,7 +69,8 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 
                 listOfObjectives = []
                 if not data[i]["objectiveResults"]:
-                    listOfObjectives.extend([[np.nan] * 4])
+                    listOfObjectives.extend([[np.nan] * 2])
+                    
                 else:
                     listOfObjectives.append([item["valueResult"] for item in data[i]["objectiveResults"]])
 
@@ -125,13 +126,26 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         name = self.newSolutionInputName.text() or "Solution Test"
         scenario_id = WateringUtils.getScenarioId()
         problemFk = self.Solutions[self.problem_box.currentIndex()]
+        
+        variableResults = []
+        for node in nodesWithSensors:
+            variableResults.append(
+            {
+                "serverKeyId": "00000000-0000-0000-0000-000000000000",
+                "fkProblemDefinition": "{}".format(problemFk),
+                "fkProblemSolution": "00000000-0000-0000-0000-000000000000",
+                "fkDecisionVariable": "00000000-0000-0000-0000-000000000000",
+                "optimizerValue": 0,
+                "comment": "string",
+                "optimizerNodeKey": "{}".format(node)
+            })
 
         post_message = {
         "serverKeyId": "",
         "name": "{}".format(name),
         "fkScenario": "{}".format(scenario_id),
         "fkProblemDefinition": "{}".format(problemFk),
-        "variableResults": [],
+        "variableResults": variableResults,
         "objectiveResults": [],
         "solutionSource": "string",
         "status": "0"}
