@@ -164,10 +164,8 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
             message_box.exec_()
             return
-
-        
+                
         dataFrame['value'],dataFrame['timeStamp'] = dataFrame['value'].astype(str), dataFrame['timeStamp'].astype(str)
-        print("paso linea")
         
         i_Date, f_Date = self.get_date_range()
         for char in ("-",":"," "):
@@ -198,24 +196,14 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         
         data['timeStamp'] = pd.to_datetime(data['timeStamp'])
 
-        try:
-
-            anomaly = AnomalyDetection.iqr_anomaly_detector(data)
-            
-
-            title = self.datachannels_box.currentText()
-            yLabel = (self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
+        anomaly = AnomalyDetection.iqr_anomaly_detector(data)
+        title = self.datachannels_box.currentText()
+        yLabel = (self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
                         + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
-        
-            numpyAnomaly = anomaly.to_numpy()
+        numpyAnomaly = anomaly.to_numpy()
 
-            PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
+        PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
           
-        except requests.exceptions.RequestException as e:
-            print(f"Error: {e}")
-        except KeyError:
-            print("Invalid response format.")
-    
         self.close()
                 
     def set_progress(self, progress_value):

@@ -14,6 +14,8 @@ from time import time, gmtime, strftime
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Button
+
 
 class AnomalyDetection():
 
@@ -41,7 +43,7 @@ class PlotController():
         categories = (anomaly[:,2]).astype(int)
         colormap = np.array(['g', 'r',])
 
-        #plt.figure(figsize=(15, 9))
+        plt.figure()
         plt.plot(anomaly[:,1],anomaly[:,0], linestyle='-', color='green')
         plt.scatter(anomaly[:,1],anomaly[:,0], marker='o',s=4, linestyle='-', c=colormap[categories])
         plt.title(title)
@@ -50,5 +52,8 @@ class PlotController():
         plt.grid(True)
         plt.xticks(rotation=90)
         plt.tight_layout()
+        #axes = plt.axes([0.91, 0.000001, 0.1, 0.060])
+        #bnext = Button(axes, 'Refresh',color="blue")
+        #bnext.on_clicked("yes")
         plt.show()
-        
+    
