@@ -3,7 +3,7 @@
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 import os
 import requests
@@ -71,7 +71,6 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             self.final_dateEdit.hide()
 
 
-
     def loadDataSource(self):
         url_DataSources = "https://dev.watering.online/api/v1/DataSources"
         self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
@@ -107,19 +106,19 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
     def get_date_range(self):
                                      
-        # Check box to see the data from the last 30 days
+        # See the data from the last x days
         dateSelected = self.selectdate_box.currentIndex()
 
         if dateSelected == 0:
             finalDate = date.today()
             initialDate = finalDate - timedelta(days=30)
             
-        elif dateSelected == 1 :
+        elif dateSelected == 1:
             finalDate = date.today()
             initialDate = finalDate - timedelta(days=15)
-
+        
         else:
-            # To visualize data from specific dates
+            # Visualize data from specific dates
             initialDate = self.inicial_dateEdit.date().toPyDate() 
             finalDate = self.final_dateEdit.date().toPyDate()
         
@@ -145,7 +144,9 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         response_analysis.raise_for_status()
         data = response_analysis.json()["data"]
 
-     
+        if data == []:
+            return pd.DataFrame(data) 
+
         df = pd.DataFrame(data)[selectColumns]
         
         return(df)
@@ -153,7 +154,20 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     def downloadData(self):
 
         dataFrame = self.createDataFrame_api()
+        
+        if dataFrame.empty:
+            message_box = QMessageBox()
+            message_box.setIcon(QMessageBox.Information)
+            message_box.setWindowTitle("Error")
+            message_box.setText("No data available to download")
+            message_box.setStandardButtons(QMessageBox.Ok)
+
+            message_box.exec_()
+            return
+
+        
         dataFrame['value'],dataFrame['timeStamp'] = dataFrame['value'].astype(str), dataFrame['timeStamp'].astype(str)
+        print("paso linea")
         
         i_Date, f_Date = self.get_date_range()
         for char in ("-",":"," "):
@@ -171,6 +185,17 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     def getChannelMeasurementsData(self, behavior):
         
         data = self.createDataFrame_api()
+        
+        if data.empty:
+            message_box = QMessageBox()
+            message_box.setIcon(QMessageBox.Information)
+            message_box.setWindowTitle("Error")
+            message_box.setText("No data available to graph")
+            message_box.setStandardButtons(QMessageBox.Ok)
+
+            message_box.exec_()
+            return
+        
         data['timeStamp'] = pd.to_datetime(data['timeStamp'])
 
         try:
