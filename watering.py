@@ -291,10 +291,11 @@ class QGISPlugin_WaterIng:
 
         
     def cleanMarkers(self):
-        vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
-        for vertex in vertex_items:
-            self.canvas.scene().removeItem(vertex)
-        self.canvas.refresh()  
+        if (self.canvas and self.canvas.scene()):
+            vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
+            for vertex in vertex_items:
+                self.canvas.scene().removeItem(vertex)
+            self.canvas.refresh()  
 
 
     def getMeasurements(self):

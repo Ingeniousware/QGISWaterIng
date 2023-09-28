@@ -4,7 +4,7 @@ import os
 import requests
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsRasterLayer
+from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer
 from qgis.utils import iface
 
 from ..watering_utils import WateringUtils
@@ -79,11 +79,16 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     
     def CreateLayers(self):
         project_path = self.newShpDirectory.filePath()
-        self.loadMap()
-        pipeNodeRepository = PipeNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
+
+        root = QgsProject.instance().layerTreeRoot()
+        shapeGroup = root.addGroup("WaterIng Network Layout")
+
         waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])                
         tankNodeRepository = TankNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
         reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
+        pipeNodeRepository = PipeNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
+        self.loadMap()
+
         self.writeWateringMetadata()
         self.setStatusBar()
         
@@ -96,7 +101,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def loadMap(self):
         tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
         layer = QgsRasterLayer(tms,'OSM', 'wms')
-        QgsProject.instance().addMapLayer(layer)
+        QgsProject.instance().addMapLayer(layer, False)
+        root = QgsProject.instance().layerTreeRoot()
+        root.insertChildNode(5, QgsLayerTreeLayer(layer))
     
     def setStatusBar(self):
         project = QgsProject.instance()

@@ -2,7 +2,7 @@ import os
 import requests
 from .abstract_repository import AbstractRepository
 
-from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
+from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsLayerTreeLayer
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSymbol, edit
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
@@ -71,7 +71,20 @@ class PipeNodeRepository(AbstractRepository):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         symbol_layer = symbol.symbolLayer(0)
         symbol_layer.setColor(QColor.fromRgb(13, 42, 174))
-        symbol_layer.setWidth(1)
+        symbol_layer.setWidth(0.7)
         layer.renderer().setSymbol(symbol)
 
-        QgsProject.instance().addMapLayer(layer)
+
+        root = QgsProject.instance().layerTreeRoot()
+
+
+        shapeGroup = root.findGroup("WaterIng Network Layout")
+
+        #print(foundshapeGroup)        
+        #shapeGroup = root.addGroup("WaterIng Network Layout")
+
+        
+
+        shapeGroup.insertChildNode(1, QgsLayerTreeLayer(layer))
+
+        QgsProject.instance().addMapLayer(layer, False)

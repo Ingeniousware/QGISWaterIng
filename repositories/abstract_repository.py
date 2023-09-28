@@ -1,6 +1,6 @@
 import requests
 
-from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem
+from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
@@ -66,7 +66,13 @@ class AbstractRepository():
         if not element_layer.isValid():
             print("Error opening:", element_layer.dataProvider().error().message())
         else:
-            QgsProject.instance().addMapLayer(element_layer)
+            root = QgsProject.instance().layerTreeRoot()
+            shapeGroup = root.findGroup("WaterIng Network Layout")
+            shapeGroup.insertChildNode(1, QgsLayerTreeLayer(element_layer))
+
+            QgsProject.instance().addMapLayer(element_layer, False)
+
+            #QgsProject.instance().addMapLayer(element_layer)
             print("opened successfully:", element_layer.name())
 
     def setElementSymbol(self, layer, layer_symbol, layer_size):
