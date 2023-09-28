@@ -3,28 +3,26 @@
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
 from PyQt5.QtCore import QAbstractTableModel
-import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
 from qgis.gui import QgsVertexMarker, QgsMapCanvas
-from qgis.core import QgsProject
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import QAbstractTableModel, Qt, QSortFilterProxyModel
-from PyQt5.QtWidgets import QTableView, QApplication
+from qgis.gui import QgsMapCanvasItem
+from qgis.core import QgsPointXY
+from PyQt5.QtCore import pyqtSignal
 
 import os
 import requests
 from ..watering_utils import WateringUtils
-import json
-import numpy as np
+from ..maptools.insertSensorNodeTool import InsertSensorNodeTool
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_optimization_dialog.ui'))
 
 
 class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+    def __init__(self,parent=None):
         """Constructor."""
         super(WaterOptimization, self).__init__(parent)
         self.setupUi(self)
@@ -38,7 +36,13 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.canvas = iface.mapCanvas()
         self.initializeRepository()
         self.BtLoadSolution.clicked.connect(self.loadSolutionSensors)
+        self.BtCreateSolution.clicked.connect(self.createSolution)
         self.BtUploadSolution.clicked.connect(self.uploadSolution)
+        self.BtRefreshTable.clicked.connect(self.sensorsUploadTable)
+        item = CustomCanvasItem(self.canvas)
+        
+        item.itemAdded.connect(lambda pos: print(f'Item added at {pos}'))
+        item.itemRemoved.connect(lambda pos: print(f'Item removed from {pos}'))
         
     def initializeRepository(self):
         url_optimization = "https://dev.watering.online/api/v1/Optimization"
@@ -53,6 +57,12 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         
         self.loadSolutions(self.problem_box.currentIndex())
         self.problem_box.currentIndexChanged.connect(self.loadSolutions)
+        self.statusText.setText("-")
+        #item = CustomCanvasItem(self.canvas)
+        
+        #item.itemAdded.connect(lambda pos: print(f'Item added at {pos}'))
+        #item.itemRemoved.connect(lambda pos: print(f'Item removed from {pos}'))
+        
         self.sensorsUploadTable()
         
     def loadSolutions(self, index):
@@ -92,6 +102,13 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             
         self.tableView.clicked.connect(self.on_row_clicked)
 
+    def createSolution(self):
+        self.statusText.setText("Creating")
+        self.toolInsertNode = InsertSensorNodeTool(iface.mapCanvas()) 
+        self.canvas.setMapTool(self.toolInsertNode) 
+        self.cleanMarkers()
+        self.sensorsUploadTable()
+        
     def sensorsUploadTable(self):
         existingSensors = self.getExistingSensors()
         if existingSensors:
@@ -161,6 +178,10 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
     
         requests.post(self.Url, json=post_message,headers={'Authorization': "Bearer {}".format(self.token)})
         
+        self.canvas.unsetMapTool(self.toolInsertNode)
+        self.statusText.setText("Submitted")
+        self.statusText.setStyleSheet("color: green")
+        
     def insertSensor(self, coord):
         m = QgsVertexMarker(self.canvas)
         m.setCenter(coord)
@@ -229,3 +250,20 @@ class TableModel(QtCore.QAbstractTableModel):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.headers[section]
         return super().headerData(section, orientation, role)
+    
+class CustomCanvasItem(QgsMapCanvas):
+    itemAdded = pyqtSignal(QgsPointXY)
+    itemRemoved = pyqtSignal(QgsPointXY)
+
+    def __init__(self, canvas):
+        super(CustomCanvasItem, self).__init__(canvas)
+        self.canvas = canvas
+
+    def setPos(self, pos):
+        super().setPos(pos)
+        self.itemAdded.emit(pos)
+
+    def remove(self):
+        pos = self.pos()
+        self.canvas.scene().removeItem(self)
+        self.itemRemoved.emit(pos)

@@ -2,19 +2,31 @@
 <ui version="4.0">
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">
+  <property name="windowModality">
+   <enum>Qt::NonModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>563</width>
-    <height>474</height>
+    <height>482</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Optimization</string>
   </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
   <property name="modal">
-   <bool>true</bool>
+   <bool>false</bool>
   </property>
   <widget class="QTabWidget" name="container">
    <property name="geometry">
@@ -37,7 +49,7 @@
     </font>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="loadSolution">
     <property name="autoFillBackground">
@@ -80,9 +92,9 @@
     <widget class="QPushButton" name="BtUploadSolution">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>260</x>
        <y>340</y>
-       <width>511</width>
+       <width>231</width>
        <height>21</height>
       </rect>
      </property>
@@ -98,7 +110,7 @@
       <rect>
        <x>10</x>
        <y>40</y>
-       <width>501</width>
+       <width>491</width>
        <height>21</height>
       </rect>
      </property>
@@ -197,7 +209,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="projectLabel_5">
+    <widget class="QLabel" name="statusText">
      <property name="enabled">
       <bool>true</bool>
      </property>
@@ -219,7 +231,33 @@
       </font>
      </property>
      <property name="text">
-      <string>Created</string>
+      <string>-</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="BtCreateSolution">
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>340</y>
+       <width>231</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Create Solution</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="BtRefreshTable">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>80</y>
+       <width>231</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Refresh Table</string>
      </property>
     </widget>
    </widget>
@@ -227,6 +265,29 @@
     <attribute name="title">
      <string>Pareto Chart</string>
     </attribute>
+    <widget class="QGraphicsView" name="graphicsView">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>491</width>
+       <height>321</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="BtLoadPareto">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>340</y>
+       <width>491</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load Pareto Chart for Selected Problem</string>
+     </property>
+    </widget>
    </widget>
   </widget>
   <widget class="QLabel" name="projectLabel">
