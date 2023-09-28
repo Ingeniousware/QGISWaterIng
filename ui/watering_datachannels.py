@@ -156,12 +156,9 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         dataFrame['value'],dataFrame['timeStamp'] = dataFrame['value'].astype(str), dataFrame['timeStamp'].astype(str)
         
         i_Date, f_Date = self.get_date_range()
-        i_Date = i_Date.replace("-","")
-        f_Date = f_Date.replace("-","")
-        i_Date = i_Date.replace(" ","")
-        f_Date = f_Date.replace(" ","")
-
-        print(i_Date,f_Date)
+        for char in ("-",":"," "):
+            i_Date = i_Date.replace(char, "")
+            f_Date = f_Date.replace(char, "")
 
         file_name = QFileDialog.getSaveFileName(parent = None, caption="Select file", filter="CSV File (*.csv)", 
                                                 directory = (str(self.datachannels_box.currentText()) + " " + f_Date + "-" + i_Date))    
