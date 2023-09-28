@@ -10,6 +10,8 @@ from qgis.utils import iface
 from qgis.gui import QgsVertexMarker, QgsMapCanvas
 from qgis.core import QgsProject
 from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QAbstractTableModel, Qt, QSortFilterProxyModel
+from PyQt5.QtWidgets import QTableView, QApplication
 
 import os
 import requests
@@ -69,7 +71,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 
                 listOfObjectives = []
                 if not data[i]["objectiveResults"]:
-                    listOfObjectives.extend([[np.nan] * 2])
+                    listOfObjectives.extend([[0] * 2])
                     
                 else:
                     listOfObjectives.append([item["valueResult"] for item in data[i]["objectiveResults"]])
@@ -82,7 +84,11 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 self.Sensors.append(self.getSolutionSensors(data[i]))
                                                         
             model = TableModel(matrix_table, ["Name", "Status", "Source", "Obj1", "Obj2"])
-            self.tableView.setModel(model)
+            proxyModel = QSortFilterProxyModel()
+            proxyModel.setSourceModel(model)
+            
+            self.tableView.setModel(proxyModel)
+            self.tableView.setSortingEnabled(True)
             
         self.tableView.clicked.connect(self.on_row_clicked)
 
@@ -97,8 +103,11 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                                         node["Descriptio"]])
                         
             model = TableModel(matrix_table, ["Name", "ID", "Description"])
-            self.sensors_table.setModel(model)
+            proxyModel = QSortFilterProxyModel()
+            proxyModel.setSourceModel(model)
             
+            self.sensors_table.setModel(proxyModel)
+            self.sensors_table.setSortingEnabled(True)
                     
     def loadSolutionSensors(self):
         if self.RowIndex ==  None:
@@ -220,6 +229,3 @@ class TableModel(QtCore.QAbstractTableModel):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.headers[section]
         return super().headerData(section, orientation, role)
-    
-    
-    
