@@ -2,15 +2,11 @@
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
-from PyQt5.QtCore import QAbstractTableModel
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
-from qgis.gui import QgsVertexMarker, QgsMapCanvas
+from qgis.gui import QgsVertexMarker, QgsMapTool
 from PyQt5.QtGui import QColor
-from qgis.gui import QgsMapCanvasItem
-from qgis.core import QgsPointXY
-from PyQt5.QtCore import pyqtSignal
 
 import os
 import requests
@@ -34,15 +30,11 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.Url = "https://dev.watering.online/api/v1/OptimizationSolutions"
         self.Layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
         self.canvas = iface.mapCanvas()
+        self.toolInsertNode = iface.mapCanvas().mapTool()
         self.initializeRepository()
         self.BtLoadSolution.clicked.connect(self.loadSolutionSensors)
         self.BtCreateSolution.clicked.connect(self.createSolution)
         self.BtUploadSolution.clicked.connect(self.uploadSolution)
-        self.BtRefreshTable.clicked.connect(self.sensorsUploadTable)
-        item = CustomCanvasItem(self.canvas)
-        
-        item.itemAdded.connect(lambda pos: print(f'Item added at {pos}'))
-        item.itemRemoved.connect(lambda pos: print(f'Item removed from {pos}'))
         
     def initializeRepository(self):
         url_optimization = "https://dev.watering.online/api/v1/Optimization"
@@ -57,12 +49,13 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         
         self.loadSolutions(self.problem_box.currentIndex())
         self.problem_box.currentIndexChanged.connect(self.loadSolutions)
-        self.statusText.setText("-")
-        #item = CustomCanvasItem(self.canvas)
         
-        #item.itemAdded.connect(lambda pos: print(f'Item added at {pos}'))
-        #item.itemRemoved.connect(lambda pos: print(f'Item removed from {pos}'))
-        
+        if not self.getExistingSensors():
+            self.statusText.setText("-")
+        else: 
+            self.statusText.setText("Creating")
+ 
+        self.removeInsertAction()
         self.sensorsUploadTable()
         
     def loadSolutions(self, index):
@@ -103,11 +96,11 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.tableView.clicked.connect(self.on_row_clicked)
 
     def createSolution(self):
-        self.statusText.setText("Creating")
-        self.toolInsertNode = InsertSensorNodeTool(iface.mapCanvas()) 
-        self.canvas.setMapTool(self.toolInsertNode) 
         self.cleanMarkers()
-        self.sensorsUploadTable()
+        self.statusText.setText("Creating")
+        self.toolInsertNode = InsertSensorNodeTool(self.canvas)
+        self.canvas.setMapTool(self.toolInsertNode)
+        self.close()
         
     def sensorsUploadTable(self):
         existingSensors = self.getExistingSensors()
@@ -178,9 +171,9 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
     
         requests.post(self.Url, json=post_message,headers={'Authorization': "Bearer {}".format(self.token)})
         
-        self.canvas.unsetMapTool(self.toolInsertNode)
+        self.removeInsertAction()
         self.statusText.setText("Submitted")
-        self.statusText.setStyleSheet("color: green")
+        self.statusText.setStyleSheet("color: lightgreen")
         
     def insertSensor(self, coord):
         m = QgsVertexMarker(self.canvas)
@@ -223,6 +216,11 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         for vertex in vertex_items:
             self.canvas.scene().removeItem(vertex)
         self.canvas.refresh()  
+    
+    def removeInsertAction(self):
+        self.canvas.unsetMapTool(self.toolInsertNode)
+        self.toolInsertNode = None
+        self.canvas.refresh()
         
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
@@ -250,20 +248,3 @@ class TableModel(QtCore.QAbstractTableModel):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.headers[section]
         return super().headerData(section, orientation, role)
-    
-class CustomCanvasItem(QgsMapCanvas):
-    itemAdded = pyqtSignal(QgsPointXY)
-    itemRemoved = pyqtSignal(QgsPointXY)
-
-    def __init__(self, canvas):
-        super(CustomCanvasItem, self).__init__(canvas)
-        self.canvas = canvas
-
-    def setPos(self, pos):
-        super().setPos(pos)
-        self.itemAdded.emit(pos)
-
-    def remove(self):
-        pos = self.pos()
-        self.canvas.scene().removeItem(self)
-        self.itemRemoved.emit(pos)

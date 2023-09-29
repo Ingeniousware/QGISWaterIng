@@ -247,19 +247,6 @@
       <string>Create Solution</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="BtRefreshTable">
-     <property name="geometry">
-      <rect>
-       <x>270</x>
-       <y>80</y>
-       <width>231</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Refresh Table</string>
-     </property>
-    </widget>
    </widget>
    <widget class="QWidget" name="tab">
     <attribute name="title">
