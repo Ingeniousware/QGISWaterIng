@@ -211,6 +211,12 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
                         + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
         numpyAnomaly = anomaly.to_numpy()
 
+        WateringDatachannels.refreshData(self,numpyAnomaly, title, yLabel)
+    
+        self.close()
+
+    def refreshData(self, numpyAnomaly, title, yLabel):
+
         refresh_State = self.updateGraphs(0)
 
         if refresh_State == 0:
@@ -218,17 +224,19 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
             
         else: 
-            print("its inside the else")
-            total_duration = 10
-            start_time = time.time()
-            figure = PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
-            while time.time() - start_time < total_duration: 
-                ax = PlotController.updatechart(self,figure, numpyAnomaly)
-                print("its inside the while")
-                print("after ax")
-                time.sleep(5)
-
-        #PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
+            x_vec = numpyAnomaly[:,1]
+            y_vec = numpyAnomaly[:,0]
+            line1 = []
+            counter = 0
+            while True:
+                rand_val = np.random.uniform(.5,5)
+                y_vec[-1] = rand_val
+                line1 = PlotController.live_plotter(x_vec,y_vec,title, yLabel,line1)
+                y_vec = np.append(y_vec[1:],0.0)
+                counter += 1
+                print("Plotting new values")
+                if counter == 100:
+                    break
           
         self.close()
                 

@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Button
+import matplotlib.pyplot as plt
 
 
 class AnomalyDetection():
@@ -60,7 +61,8 @@ class PlotController():
         #plt.show()
         return figure
     
-    def updatechart(self, figure, anomaly):
+    """
+     def updatechart(self, figure, anomaly):
         print("updating chart")
         categories = (anomaly[:,2]).astype(int)
         colormap = np.array(['g', 'r',])
@@ -69,6 +71,25 @@ class PlotController():
         ax.plot(anomaly[:,1],anomaly[:,0], linestyle='-', color='green')
         ax.scatter(anomaly[:,1],anomaly[:,0], marker='o',s=4, linestyle='-', c=colormap[categories])
 
-        plt.show()
+        plt.show() """
+
+    plt.style.use('ggplot')
+
+    def live_plotter(x_vec,y1_data,title, yLabel,line1,pause_time=1):
+        if line1==[]:
+            plt.ion()
+            fig = plt.figure(figsize=(13,6))
+            ax = fig.add_subplot(111)
+            line1, = ax.plot(x_vec,y1_data,'-o',alpha=0.8, color='green')        
+            plt.ylabel(yLabel)
+            plt.title(title)
+            plt.show()
+        
+        line1.set_ydata(y1_data)
+        if np.min(y1_data)<=line1.axes.get_ylim()[0] or np.max(y1_data)>=line1.axes.get_ylim()[1]:
+            plt.ylim([np.min(y1_data)-np.std(y1_data),np.max(y1_data)+np.std(y1_data)])
+        plt.pause(pause_time)
+
+        return line1
 
     
