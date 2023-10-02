@@ -8,6 +8,14 @@ from qgis.utils import iface
 from qgis.gui import QgsVertexMarker, QgsMapTool
 from PyQt5.QtGui import QColor
 
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QGraphicsView, QGraphicsScene, QApplication
+from PyQt5.QtGui import QPainter
+
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QApplication
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import numpy as np
+
 import os
 import requests
 from ..watering_utils import WateringUtils
@@ -54,7 +62,8 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             self.statusText.setText("-")
         else: 
             self.statusText.setText("Creating")
- 
+            self.statusText.setStyleSheet("color: yellow")
+        
         self.removeInsertAction()
         self.sensorsUploadTable()
         
@@ -92,12 +101,15 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             
             self.tableView.setModel(proxyModel)
             self.tableView.setSortingEnabled(True)
+        
+        self.addParetoChart(response)
             
         self.tableView.clicked.connect(self.on_row_clicked)
 
     def createSolution(self):
         self.cleanMarkers()
         self.statusText.setText("Creating")
+        self.statusText.setStyleSheet("color: lightyellow")
         self.toolInsertNode = InsertSensorNodeTool(self.canvas)
         self.canvas.setMapTool(self.toolInsertNode)
         self.close()
@@ -171,6 +183,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
     
         requests.post(self.Url, json=post_message,headers={'Authorization': "Bearer {}".format(self.token)})
         
+        self.cleanMarkers()
         self.removeInsertAction()
         self.statusText.setText("Submitted")
         self.statusText.setStyleSheet("color: lightgreen")
@@ -221,6 +234,31 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.canvas.unsetMapTool(self.toolInsertNode)
         self.toolInsertNode = None
         self.canvas.refresh()
+    
+    def addParetoChart(self, response):
+        data = response.json()["data"]
+        points = []
+            
+        for i in range(0, response.json()["total"]):
+            if data[i]["objectiveResults"]:
+                points.append((data[i]["objectiveResults"][0]["valueResult"],
+                            (data[i]["objectiveResults"][1]["valueResult"])))
+        
+        #Static first version
+        scene = QtWidgets.QGraphicsScene()
+        self.chart.setScene(scene)
+        figure = Figure()
+        axes = figure.gca()
+        axes.set_title("Pareto")
+        x_values, y_values = zip(*points)
+        axes.set_xlabel("Obj1")
+        axes.set_ylabel("Obj2")
+        axes.scatter(x_values, y_values)
+        axes.legend()
+        axes.grid(True)
+        canvas = FigureCanvas(figure)
+        proxy_widget = scene.addWidget(canvas)
+        canvas.setGeometry(self.chart.geometry())
         
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
