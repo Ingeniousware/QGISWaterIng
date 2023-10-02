@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>453</width>
-    <height>300</height>
+    <height>325</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -88,11 +88,35 @@
    </property>
   </widget>
 
+<widget class="QLabel" name="dateLabel">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>120</y>
+     <width>171</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>13</pointsize>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="text">
+    <string>Select date</string>
+   </property>
+  </widget>
+
   <widget class="QComboBox" name="selectdate_box">
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>130</y>
+     <y>140</y>
      <width>411</width>
      <height>21</height>
     </rect>
@@ -106,7 +130,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>160</y>
+     <y>170</y>
      <width>171</width>
      <height>20</height>
     </rect>
@@ -127,7 +151,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>180</y>
+     <y>190</y>
      <width>411</width>
      <height>20</height>
     </rect>
@@ -141,7 +165,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>210</y>
+     <y>220</y>
      <width>171</width>
      <height>20</height>
     </rect>
@@ -162,7 +186,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>230</y>
+     <y>240</y>
      <width>411</width>
      <height>20</height>
     </rect>
@@ -173,7 +197,7 @@
    <property name="geometry">
     <rect>
      <x>230</x>
-     <y>260</y>
+     <y>270</y>
      <width>200</width>
      <height>28</height>
     </rect>
@@ -187,7 +211,7 @@
    <property name="geometry">
     <rect>
      <x>20</x>
-     <y>260</y>
+     <y>270</y>
      <width>200</width>
      <height>28</height>
     </rect>
@@ -196,6 +220,29 @@
     <string>Download data</string>
    </property>
   </widget>
+
+  <widget class="QCheckBox" name="RefreshGraphs">
+   <property name="geometry">
+      <rect>
+         <x>360</x>
+         <y>295</y>
+         <width>70</width>
+         <height>30</height>
+      </rect>
+   </property>
+   <property name="text">
+      <string>Refresh</string>
+   </property>
+   <property name="styleSheet">
+      <string>
+         QPushButton {
+            border: none;
+            background-color: transparent;
+            color: gray;
+         }
+      </string>
+   </property>
+</widget>
 
   <widget class="QProgressBar" name="progressBar">
    <property name="geometry">

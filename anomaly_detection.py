@@ -50,10 +50,9 @@ class PlotController():
         plt.xlabel('Date')
         plt.ylabel(yLabel)
         plt.grid(True)
-        plt.xticks(rotation=90)
+        plt.xticks(rotation=45)
         plt.tight_layout()
-        #axes = plt.axes([0.91, 0.000001, 0.1, 0.060])
-        #bnext = Button(axes, 'Refresh',color="blue")
-        #bnext.on_clicked("yes")
+        plt.subplots_adjust(bottom = 0.3)
+        
         plt.show()
     

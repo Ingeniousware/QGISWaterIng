@@ -20,6 +20,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import date, timedelta
+import time
 
 
 
@@ -55,6 +56,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.final_dateEdit.hide()
         self.selectdate_box.currentIndexChanged.connect(self.checkUserControlState)
         self.DownloadDataToFile.clicked.connect(self.downloadData)
+        self.RefreshGraphs.clicked.connect(self.updateGraphs)
     
 
     def checkUserControlState(self):
@@ -179,7 +181,14 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         print(f'DataFrame saved to {file_name[0]}')
 
         self.close()
+
+    def updateGraphs(self, behavior):
     
+        refresh_State = self.RefreshGraphs.checkState()
+
+        return refresh_State
+
+
     def getChannelMeasurementsData(self, behavior):
         
         data = self.createDataFrame_api()
@@ -202,7 +211,22 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
                         + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
         numpyAnomaly = anomaly.to_numpy()
 
-        PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
+        refresh_State = self.updateGraphs(0)
+
+        if refresh_State == 0:
+            print("its inside the if")
+            PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
+            
+        else: 
+            print("its inside the else")
+            total_duration = 10
+            start_time = time.time()
+            while time.time() - start_time < total_duration: 
+                PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
+                print("its inside the while")
+                time.sleep(5)
+
+        #PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
           
         self.close()
                 
