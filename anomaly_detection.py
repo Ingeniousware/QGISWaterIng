@@ -39,6 +39,7 @@ class AnomalyDetection():
 
 class PlotController():
 
+
     def plot_Anomalies(self,anomaly, title, yLabel):
 
         categories = (anomaly[:,2]).astype(int)
@@ -61,35 +62,34 @@ class PlotController():
         #plt.show()
         return figure
     
-    """
-     def updatechart(self, figure, anomaly):
-        print("updating chart")
-        categories = (anomaly[:,2]).astype(int)
-        colormap = np.array(['g', 'r',])
-
-        ax = figure.add_subplot(111)
-        ax.plot(anomaly[:,1],anomaly[:,0], linestyle='-', color='green')
-        ax.scatter(anomaly[:,1],anomaly[:,0], marker='o',s=4, linestyle='-', c=colormap[categories])
-
-        plt.show() """
-
     plt.style.use('ggplot')
 
-    def live_plotter(x_vec,y1_data,title, yLabel,line1,pause_time=1):
+    def live_plotter(self, x_vec,y1_data,title, yLabel,line1,pause_time=2):
+        
+        
         if line1==[]:
             plt.ion()
             fig = plt.figure(figsize=(13,6))
             ax = fig.add_subplot(111)
-            line1, = ax.plot(x_vec,y1_data,'-o',alpha=0.8, color='green')        
+            line1, = ax.plot(x_vec,y1_data,'-o',alpha=0.8, color='green')
             plt.ylabel(yLabel)
+            plt.xlabel('Date')
+            plt.xticks(rotation=45)
             plt.title(title)
+            plt.tight_layout()
+            plt.grid(True)
+            plt.subplots_adjust(bottom = 0.3)
             plt.show()
-        
-        line1.set_ydata(y1_data)
+
+            """ start_time = x_vec[0]  
+            end_time = x_vec[-1]
+            plt.xlim([start_time, end_time]) """
+
+
+        line1.set_data(x_vec,y1_data)
         if np.min(y1_data)<=line1.axes.get_ylim()[0] or np.max(y1_data)>=line1.axes.get_ylim()[1]:
             plt.ylim([np.min(y1_data)-np.std(y1_data),np.max(y1_data)+np.std(y1_data)])
         plt.pause(pause_time)
-
         return line1
 
     

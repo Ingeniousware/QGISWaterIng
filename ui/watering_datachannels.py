@@ -10,7 +10,8 @@ import requests
 from time import time, gmtime, strftime
 from ..watering_utils import WateringUtils
 from ..anomaly_detection import AnomalyDetection
-from ..anomaly_detection import PlotController 
+from ..anomaly_detection import PlotController
+from ..repositories.getDataRepository import getDataRepository
 
 from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
 from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
@@ -19,7 +20,7 @@ from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisR
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import time
 
 
@@ -106,92 +107,9 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
                                                response_analysis.json()["data"][i]["units"]))
 
 
-    def get_date_range(self):
-                                     
-        # See the data from the last x days
-        dateSelected = self.selectdate_box.currentIndex()
-
-        if dateSelected == 0:
-            finalDate = date.today()
-            initialDate = finalDate - timedelta(days=30)
-            
-        elif dateSelected == 1:
-            finalDate = date.today()
-            initialDate = finalDate - timedelta(days=15)
-        
-        else:
-            # Visualize data from specific dates
-            initialDate = self.inicial_dateEdit.date().toPyDate() 
-            finalDate = self.final_dateEdit.date().toPyDate()
-        
-        initialDate = f"{initialDate} 00:00:00"
-        finalDate =  f"{finalDate} 00:00:00"
-        #print(initialDate, finalDate)
-        
-        return(initialDate, finalDate)
-    
-    def createDataFrame_api(self):
-        
-        url_Measurements = "https://dev.watering.online/api/v1/measurements"
-        channelFK =  self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][0]
-        
-        initialDate, finalDate = (self.get_date_range())
-        params = {'channelKeyId': "{}".format(channelFK), 'startDate': "{}".format(initialDate),'endDate': "{}".format(finalDate)}
-        #params = {'channelKeyId': "{}".format(channelFK)}
-
-        headers={'Authorization': "Bearer {}".format(self.token)}
-        selectColumns = ['value', 'timeStamp']
-
-        response_analysis = requests.get(url_Measurements, params=params, headers=headers)
-        response_analysis.raise_for_status()
-        data = response_analysis.json()["data"]
-
-        if data == []:
-            return pd.DataFrame(data) 
-
-        df = pd.DataFrame(data)[selectColumns]
-        
-        return(df)
-
-    def downloadData(self):
-
-        dataFrame = self.createDataFrame_api()
-        
-        if dataFrame.empty:
-            message_box = QMessageBox()
-            message_box.setIcon(QMessageBox.Information)
-            message_box.setWindowTitle("Error")
-            message_box.setText("No data available to download")
-            message_box.setStandardButtons(QMessageBox.Ok)
-
-            message_box.exec_()
-            return
-                
-        dataFrame['value'],dataFrame['timeStamp'] = dataFrame['value'].astype(str), dataFrame['timeStamp'].astype(str)
-        
-        i_Date, f_Date = self.get_date_range()
-        for char in ("-",":"," "):
-            i_Date = i_Date.replace(char, "")
-            f_Date = f_Date.replace(char, "")
-
-        file_name = QFileDialog.getSaveFileName(parent = None, caption="Select file", filter="CSV File (*.csv)", 
-                                                directory = (str(self.datachannels_box.currentText()) + " " + f_Date + "-" + i_Date))    
-        
-        dataFrame.to_csv((file_name[0]), index=True)
-        print(f'DataFrame saved to {file_name[0]}')
-
-        self.close()
-
-    def updateGraphs(self, behavior):
-    
-        refresh_State = self.RefreshGraphs.checkState()
-
-        return refresh_State
-
-
     def getChannelMeasurementsData(self, behavior):
         
-        data = self.createDataFrame_api()
+        data = getDataRepository.createDataFrame_api(self)
         
         if data.empty:
             message_box = QMessageBox()
@@ -215,6 +133,10 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     
         self.close()
 
+    def updateGraphs(self, behavior):
+        refresh_State = self.RefreshGraphs.checkState()
+        return refresh_State
+
     def refreshData(self, numpyAnomaly, title, yLabel):
 
         refresh_State = self.updateGraphs(0)
@@ -227,17 +149,62 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             x_vec = numpyAnomaly[:,1]
             y_vec = numpyAnomaly[:,0]
             line1 = []
+            """ line1 = PlotController.live_plotter(x_vec,y_vec,title, yLabel,line1) """
             counter = 0
             while True:
-                rand_val = np.random.uniform(.5,5)
-                y_vec[-1] = rand_val
-                line1 = PlotController.live_plotter(x_vec,y_vec,title, yLabel,line1)
-                y_vec = np.append(y_vec[1:],0.0)
+                df = getDataRepository.createDataFrame_api(self)
+                df['timeStamp'] = pd.to_datetime(df['timeStamp'])
+                lastValue = df['value'].iloc[-1]
+                lastDate = df['timeStamp'].iloc[-1]
+                previousLastValue = pd.DataFrame(x_vec).iloc[-1]
+                print(previousLastValue, lastDate)
+
+                if lastDate == previousLastValue.iloc[-1]:
+                    print("No new data")
+                
+                #lastDate = datetime.now()
+                """ y_vec[-1] = lastValue
+                 x_vec[-1] = lastDate """
+                y_vec = np.append(y_vec,lastValue)
+                x_vec = np.append(x_vec,lastDate)
+
+
+                #print(y_vec,x_vec)
+                line1 = PlotController.live_plotter(self, x_vec,y_vec,title, yLabel,line1)
                 counter += 1
                 print("Plotting new values")
-                if counter == 100:
+                self.close()
+                #time.sleep(2)
+                if counter == 10:
                     break
           
+    def downloadData(self):
+
+        dataFrame = getDataRepository.createDataFrame_api(self)
+        
+        if dataFrame.empty:
+            message_box = QMessageBox()
+            message_box.setIcon(QMessageBox.Information)
+            message_box.setWindowTitle("Error")
+            message_box.setText("No data available to download")
+            message_box.setStandardButtons(QMessageBox.Ok)
+
+            message_box.exec_()
+            return
+                
+        dataFrame['value'],dataFrame['timeStamp'] = dataFrame['value'].astype(str), dataFrame['timeStamp'].astype(str)
+        
+        i_Date, f_Date = getDataRepository.get_date_range(self)
+        for char in ("-",":"," "):
+            i_Date = i_Date.replace(char, "")
+            f_Date = f_Date.replace(char, "")
+
+        file_name = QFileDialog.getSaveFileName(parent = None, caption="Select file", filter="CSV File (*.csv)", 
+                                                directory = (str(self.datachannels_box.currentText()) + " " + f_Date + "-" + i_Date))    
+        
+        dataFrame.to_csv((file_name[0]), index=True)
+        print(f'DataFrame saved to {file_name[0]}')
+
         self.close()
                 
     def set_progress(self, progress_value):
