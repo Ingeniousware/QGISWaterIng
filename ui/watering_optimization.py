@@ -5,16 +5,11 @@ from qgis.core import QgsProject
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
-from qgis.gui import QgsVertexMarker, QgsMapTool
+from qgis.gui import QgsVertexMarker
 from PyQt5.QtGui import QColor
 
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QGraphicsView, QGraphicsScene, QApplication
-from PyQt5.QtGui import QPainter
-
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QApplication
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import numpy as np
+import matplotlib.pyplot as plt
 
 import os
 import requests
@@ -34,6 +29,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.ScenarioFK = None
         self.Solutions = []
         self.Sensors = []
+        self.Points = []
         self.RowIndex = None
         self.Url = "https://dev.watering.online/api/v1/OptimizationSolutions"
         self.Layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
@@ -236,29 +232,43 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.canvas.refresh()
     
     def addParetoChart(self, response):
-        data = response.json()["data"]
+        for i in range(1, 3):
+            obj = "Objective " + str(i)
+            self.x_box.addItem(obj), self.y_box.addItem(obj)
+        
+        for i in range(0, response.json()["total"]):
+            if response.json()["data"][i]["objectiveResults"]:
+                self.solutions_box.addItem(response.json()["data"][i]["name"])
+                
+        self.BtLoadPareto.clicked.connect(lambda: self.loadParetoChart(response))
+        
+    def loadParetoChart(self, response):
+        #Static first version
+        data = response.json()["data"]   
         points = []
-            
+        
         for i in range(0, response.json()["total"]):
             if data[i]["objectiveResults"]:
-                points.append((data[i]["objectiveResults"][0]["valueResult"],
-                            (data[i]["objectiveResults"][1]["valueResult"])))
-        
-        #Static first version
-        scene = QtWidgets.QGraphicsScene()
-        self.chart.setScene(scene)
-        figure = Figure()
-        axes = figure.gca()
-        axes.set_title("Pareto")
+                points.append((data[i]["objectiveResults"][self.x_box.currentIndex()]["valueResult"],
+                            (data[i]["objectiveResults"][self.y_box.currentIndex()]["valueResult"])))
+                print(data[i]["objectiveResults"])
+                
         x_values, y_values = zip(*points)
-        axes.set_xlabel("Obj1")
-        axes.set_ylabel("Obj2")
-        axes.scatter(x_values, y_values)
-        axes.legend()
-        axes.grid(True)
-        canvas = FigureCanvas(figure)
-        proxy_widget = scene.addWidget(canvas)
-        canvas.setGeometry(self.chart.geometry())
+
+        plt.scatter(x_values, y_values)
+        plt.title("Pareto Chart")
+        plt.xlabel(self.x_box.currentText())
+        plt.ylabel(self.y_box.currentText())
+        
+        x_= x_values[self.solutions_box.currentIndex()]
+        y_= y_values[self.solutions_box.currentIndex()]
+
+        # Plot the point again in a different color
+        plt.scatter(x_, y_, color='red')
+
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
         
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
