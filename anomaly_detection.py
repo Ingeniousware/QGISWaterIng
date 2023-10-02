@@ -43,9 +43,10 @@ class PlotController():
         categories = (anomaly[:,2]).astype(int)
         colormap = np.array(['g', 'r',])
 
-        plt.figure()
-        plt.plot(anomaly[:,1],anomaly[:,0], linestyle='-', color='green')
-        plt.scatter(anomaly[:,1],anomaly[:,0], marker='o',s=4, linestyle='-', c=colormap[categories])
+        figure = plt.figure(figsize=(13, 4))
+        ax = figure.add_subplot(111)
+        ax.plot(anomaly[:,1],anomaly[:,0], linestyle='-', color='green')
+        ax.scatter(anomaly[:,1],anomaly[:,0], marker='o',s=4, linestyle='-', c=colormap[categories])
         plt.title(title)
         plt.xlabel('Date')
         plt.ylabel(yLabel)
@@ -54,5 +55,20 @@ class PlotController():
         plt.tight_layout()
         plt.subplots_adjust(bottom = 0.3)
         
+        
+        figure.show()
+        #plt.show()
+        return figure
+    
+    def updatechart(self, figure, anomaly):
+        print("updating chart")
+        categories = (anomaly[:,2]).astype(int)
+        colormap = np.array(['g', 'r',])
+
+        ax = figure.add_subplot(111)
+        ax.plot(anomaly[:,1],anomaly[:,0], linestyle='-', color='green')
+        ax.scatter(anomaly[:,1],anomaly[:,0], marker='o',s=4, linestyle='-', c=colormap[categories])
+
         plt.show()
+
     

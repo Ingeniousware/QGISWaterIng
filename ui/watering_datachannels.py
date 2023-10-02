@@ -221,9 +221,11 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             print("its inside the else")
             total_duration = 10
             start_time = time.time()
+            figure = PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
             while time.time() - start_time < total_duration: 
-                PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
+                ax = PlotController.updatechart(self,figure, numpyAnomaly)
                 print("its inside the while")
+                print("after ax")
                 time.sleep(5)
 
         #PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)

@@ -108,7 +108,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Select date</string>
+    <string>Date</string>
    </property>
   </widget>
 
