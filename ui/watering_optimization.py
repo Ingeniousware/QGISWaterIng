@@ -257,29 +257,31 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                             (data[i]["objectiveResults"][self.y_box.currentIndex()]["valueResult"])))
                 labels.append(data[i]["name"])
 
-        print(labels)
-        plt.cla() #clean previous configuration
+        fig, ax = plt.subplots()
+
+        # Extract x and y values from points
         x_values, y_values = zip(*points)
-        plt.scatter(x_values, y_values, color="b")
-        plt.title("Pareto Chart")
-        plt.xlabel(self.x_box.currentText())
-        plt.ylabel(self.y_box.currentText())
-        
+        ax.scatter(x_values, y_values, color="b")
+        ax.set_title("Pareto Chart")
+        ax.set_xlabel(self.x_box.currentText())
+        ax.set_ylabel(self.y_box.currentText())
+
         index_sol = self.solutions_box.currentIndex()
-        
-        x_= x_values[index_sol]
-        y_= y_values[index_sol]
+        x_ = x_values[index_sol]
+        y_ = y_values[index_sol]
 
         # Plot the point again in a different color
-        plt.scatter(x_, y_, color='red')
+        ax.scatter(x_, y_, color='red')
 
-        for i, name in enumerate(labels):
-            offset = 10
-            plt.annotate(name, (x_values[i], y_values[i]), ha = "left", va = "top",
-                         xytext=(x_values[i] + offset, y_values[i] + offset))
+        if self.label_checkBox.isChecked():
+            for i, name in enumerate(labels):
+                offset = 10
+                ax.annotate(name, (x_values[i], y_values[i]), ha="left", va="top",
+                            xytext=(x_values[i] + offset, y_values[i] + offset))
 
-        plt.grid(True)
-        plt.tight_layout()
+        ax.grid(True, color="lightgrey")
+        fig.tight_layout()
+        
         plt.show()
         
 class TableModel(QtCore.QAbstractTableModel):

@@ -26,7 +26,7 @@
    <bool>false</bool>
   </property>
   <property name="modal">
-   <bool>false</bool>
+   <bool>true</bool>
   </property>
   <widget class="QTabWidget" name="container">
    <property name="geometry">
@@ -49,7 +49,7 @@
     </font>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="loadSolution">
     <property name="autoFillBackground">
@@ -344,6 +344,9 @@
      </property>
      <property name="text">
       <string>Show Labels</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
     <widget class="QComboBox" name="solutions_box">
