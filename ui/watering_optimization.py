@@ -232,8 +232,12 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.canvas.refresh()
     
     def addParetoChart(self, response):
-        for i in range(1, 3):
-            obj = "Objective " + str(i)
+        self.solutions_box.clear()
+        self.x_box.clear()
+        self.y_box.clear()
+        
+        for i in range(0, 2):
+            obj = "Objective " + str(i + 1)
             self.x_box.addItem(obj), self.y_box.addItem(obj)
         
         for i in range(0, response.json()["total"]):
@@ -243,28 +247,36 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.BtLoadPareto.clicked.connect(lambda: self.loadParetoChart(response))
         
     def loadParetoChart(self, response):
-        #Static first version
         data = response.json()["data"]   
         points = []
+        labels = []
         
         for i in range(0, response.json()["total"]):
             if data[i]["objectiveResults"]:
                 points.append((data[i]["objectiveResults"][self.x_box.currentIndex()]["valueResult"],
                             (data[i]["objectiveResults"][self.y_box.currentIndex()]["valueResult"])))
-                print(data[i]["objectiveResults"])
-                
-        x_values, y_values = zip(*points)
+                labels.append(data[i]["name"])
 
-        plt.scatter(x_values, y_values)
+        print(labels)
+        plt.cla() #clean previous configuration
+        x_values, y_values = zip(*points)
+        plt.scatter(x_values, y_values, color="b")
         plt.title("Pareto Chart")
         plt.xlabel(self.x_box.currentText())
         plt.ylabel(self.y_box.currentText())
         
-        x_= x_values[self.solutions_box.currentIndex()]
-        y_= y_values[self.solutions_box.currentIndex()]
+        index_sol = self.solutions_box.currentIndex()
+        
+        x_= x_values[index_sol]
+        y_= y_values[index_sol]
 
         # Plot the point again in a different color
         plt.scatter(x_, y_, color='red')
+
+        for i, name in enumerate(labels):
+            offset = 10
+            plt.annotate(name, (x_values[i], y_values[i]), ha = "left", va = "top",
+                         xytext=(x_values[i] + offset, y_values[i] + offset))
 
         plt.grid(True)
         plt.tight_layout()
