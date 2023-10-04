@@ -28,9 +28,10 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.token = os.environ.get('TOKEN')
         self.ScenarioFK = None
         self.Solutions = []
-        self.Sensors = []
+        self.Sensors = {}
         self.Points = []
         self.RowIndex = None
+        self.SolutionId = None
         self.Url = "https://dev.watering.online/api/v1/OptimizationSolutions"
         self.Layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
         self.canvas = iface.mapCanvas()
@@ -64,7 +65,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.sensorsUploadTable()
         
     def loadSolutions(self, index):
-        self.Sensors = []
+        self.Sensors = {}
         problemFK = self.Solutions[index]
         params = {'problemKeyId': "{}".format(problemFK)}
         response = requests.get(self.Url, params=params,
@@ -86,20 +87,22 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
 
                 matrix_table.append([data[i]["name"], 
                                      self.translateStatus(data[i]["status"]), 
-                                     data[i]["solutionSource"]] 
+                                     data[i]["solutionSource"],
+                                     data[i]["serverKeyId"]] 
                                     + [item for item in listOfObjectives[0][:2]])
                 
-                self.Sensors.append(self.getSolutionSensors(data[i]))
+                self.Sensors.update(self.getSolutionSensors(data[i]))
                                                         
-            model = TableModel(matrix_table, ["Name", "Status", "Source", "Obj1", "Obj2"])
+            model = TableModel(matrix_table, ["Name", "Status", "Source", "Id", "Obj1", "Obj2"])
             proxyModel = QSortFilterProxyModel()
             proxyModel.setSourceModel(model)
             
             self.tableView.setModel(proxyModel)
             self.tableView.setSortingEnabled(True)
-        
+    
+        self.tableView.hideColumn(3)
         self.addParetoChart(response)
-            
+        
         self.tableView.clicked.connect(self.on_row_clicked)
 
     def createSolution(self):
@@ -128,13 +131,13 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             self.sensors_table.setSortingEnabled(True)
                     
     def loadSolutionSensors(self):
-        if self.RowIndex ==  None:
+        if (self.RowIndex ==  None or self.SolutionId == None):
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a row!"), level=1, duration=5)
         elif len(self.Sensors) == 0:
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("No solutions to load!"), level=1, duration=5)
         else:
             self.cleanMarkers()
-            sensorDict = self.Sensors[self.RowIndex]
+            sensorDict = self.Sensors[self.SolutionId]
             for feature in self.Layer.getFeatures():
                 if feature['ID'] in sensorDict:
                     self.insertSensor(feature.geometry().asPoint())
@@ -203,14 +206,21 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
 
     def getSolutionSensors(self, data):
         sensorDict = {}
-        for sensor in data["variableResults"]:
-            sensorDict[sensor["optimizerNodeKey"]] = sensor["comment"]
+        solution_id = data["serverKeyId"]
+        if data["variableResults"]:
+            for sensor in data["variableResults"]:
+                    if sensor["optimizerNodeKey"]:
+                        if solution_id not in sensorDict:
+                            sensorDict[solution_id] = {}
+                        sensorDict[solution_id][sensor["optimizerNodeKey"]] = 1
         return sensorDict
         
     def on_row_clicked(self, index):
         if index.isValid():
             row = index.row()
             self.tableView.selectRow(row)
+            id = self.tableView.model().data(self.tableView.model().index(row, 3))
+            self.SolutionId = id
             self.RowIndex = row
 
     def getExistingSensors(self):
@@ -243,7 +253,8 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         for i in range(0, response.json()["total"]):
             if response.json()["data"][i]["objectiveResults"]:
                 self.solutions_box.addItem(response.json()["data"][i]["name"])
-                
+
+        plt.close("all") #close all existing charts
         self.BtLoadPareto.clicked.connect(lambda: self.loadParetoChart(response))
         
     def loadParetoChart(self, response):
