@@ -137,10 +137,11 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("No solutions to load!"), level=1, duration=5)
         else:
             self.cleanMarkers()
-            sensorDict = self.Sensors[self.SolutionId]
-            for feature in self.Layer.getFeatures():
-                if feature['ID'] in sensorDict:
-                    self.insertSensor(feature.geometry().asPoint())
+            if self.SolutionId in self.Sensors:
+                sensorDict = self.Sensors[self.SolutionId]
+                for feature in self.Layer.getFeatures():
+                    if feature['ID'] in sensorDict:
+                        self.insertSensor(feature.geometry().asPoint())
             self.canvas.refresh()
     
     def uploadSolution(self):
