@@ -78,7 +78,7 @@ class PlotController():
             plt.title(title)
             plt.tight_layout()
             plt.grid(True)
-            plt.subplots_adjust(bottom = 0.3)
+            plt.subplots_adjust(bottom = 0.2)
             plt.show()
 
             """ start_time = x_vec[0]  
@@ -87,6 +87,11 @@ class PlotController():
 
 
         line1.set_data(x_vec,y1_data)
+        """ if isinstance(x_vec[0], (int, float)):  # Check if x_vec is numeric
+            x_min, x_max = ax.get_xlim()
+            new_x_min = min(x_vec) if np.min(x_vec) < x_min else x_min
+            new_x_max = max(x_vec) if np.max(x_vec) > x_max else x_max
+            ax.set_xlim(new_x_min, new_x_max) """
         if np.min(y1_data)<=line1.axes.get_ylim()[0] or np.max(y1_data)>=line1.axes.get_ylim()[1]:
             plt.ylim([np.min(y1_data)-np.std(y1_data),np.max(y1_data)+np.std(y1_data)])
         plt.pause(pause_time)

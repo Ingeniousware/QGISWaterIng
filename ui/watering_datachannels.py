@@ -22,6 +22,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from datetime import date, timedelta, datetime
 import time
+import threading
 
 
 
@@ -129,7 +130,19 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
                         + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
         numpyAnomaly = anomaly.to_numpy()
 
-        WateringDatachannels.refreshData(self,numpyAnomaly, title, yLabel)
+        #WateringDatachannels.refreshData(self,numpyAnomaly, title, yLabel)
+        refresh_State = self.updateGraphs(0)
+        if refresh_State == 0:
+            print("its inside the if")
+            PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
+            
+        else:
+            
+            x_vec = numpyAnomaly[:,1]
+            y_vec = numpyAnomaly[:,0]
+            line1 = []
+            threading.Thread(target=WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel), daemon = True).start()
+            #WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel)
     
         self.close()
 
@@ -137,45 +150,41 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         refresh_State = self.RefreshGraphs.checkState()
         return refresh_State
 
-    def refreshData(self, numpyAnomaly, title, yLabel):
+    def refreshData(self, x_vec, y_vec, line1, title, yLabel):
 
-        refresh_State = self.updateGraphs(0)
+        #line1 = PlotController.live_plotter(self,x_vec,y_vec,title, yLabel,line1)
+        counter = 0
 
-        if refresh_State == 0:
-            print("its inside the if")
-            PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
-            
-        else: 
-            x_vec = numpyAnomaly[:,1]
-            y_vec = numpyAnomaly[:,0]
-            line1 = []
-            """ line1 = PlotController.live_plotter(x_vec,y_vec,title, yLabel,line1) """
-            counter = 0
-            while True:
-                df = getDataRepository.createDataFrame_api(self)
-                df['timeStamp'] = pd.to_datetime(df['timeStamp'])
-                lastValue = df['value'].iloc[-1]
-                lastDate = df['timeStamp'].iloc[-1]
-                previousLastValue = pd.DataFrame(x_vec).iloc[-1]
-                print(previousLastValue, lastDate)
+        while True:
+            df = getDataRepository.createDataFrame_api(self)
+            df['timeStamp'] = pd.to_datetime(df['timeStamp'])
+            lastValue = df['value'].iloc[-1]
+            lastDate = df['timeStamp'].iloc[-1]
 
-                if lastDate == previousLastValue.iloc[-1]:
-                    print("No new data")
-                
+            previousLastValue = pd.DataFrame(x_vec).iloc[-1]
+            print(lastValue,previousLastValue, lastDate)
+
+            if lastDate == previousLastValue.iloc[-1]:
+                counter += 1
+                time.sleep(5)
+                print("No new data")
+            else:
+                counter +=1
                 #lastDate = datetime.now()
                 """ y_vec[-1] = lastValue
-                 x_vec[-1] = lastDate """
+                x_vec[-1] = lastDate """
                 y_vec = np.append(y_vec,lastValue)
                 x_vec = np.append(x_vec,lastDate)
-
-
-                #print(y_vec,x_vec)
-                line1 = PlotController.live_plotter(self, x_vec,y_vec,title, yLabel,line1)
-                counter += 1
+                #line1 = PlotController.live_plotter(self, x_vec,y_vec,title, yLabel,line1)
                 print("Plotting new values")
-                self.close()
-                #time.sleep(2)
-                if counter == 10:
+                time.sleep(5)
+        
+            #print(y_vec,x_vec)
+            line1 = PlotController.live_plotter(self, x_vec,y_vec,title, yLabel,line1)
+            self.close()
+            #time.sleep(2)
+            if counter == 10:
+                    print("End of loop")
                     break
           
     def downloadData(self):
