@@ -96,5 +96,6 @@ class PlotController():
             plt.ylim([np.min(y1_data)-np.std(y1_data),np.max(y1_data)+np.std(y1_data)])
         plt.pause(pause_time)
         return line1
+    
 
     
