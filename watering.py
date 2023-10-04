@@ -139,6 +139,14 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_load_elements.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Import INP File'),
+            callback=self.importINPFile,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
             icon_path,
@@ -217,6 +225,9 @@ class QGISPlugin_WaterIng:
             self.dlg.show() 
             if (self.dlg.exec_() == 1): 
                 self.updateActionStateOpen()
+
+    def importINPFile():
+        ...
 
                 
     def waterAnalysis(self):
