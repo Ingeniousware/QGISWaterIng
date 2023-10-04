@@ -8,7 +8,6 @@ from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 
 
-
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
@@ -21,6 +20,7 @@ from .ui.watering_analysis import WateringAnalysis
 from .ui.watering_optimization import WaterOptimization
 from .watering_utils import WateringUtils
 from .ui.watering_datachannels import WateringDatachannels
+from .file_Converter import fileConverter
 
 import os.path
 
@@ -226,8 +226,13 @@ class QGISPlugin_WaterIng:
             if (self.dlg.exec_() == 1): 
                 self.updateActionStateOpen()
 
-    def importINPFile():
-        ...
+    def importINPFile(self):
+        if os.environ.get('TOKEN') == None:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
+        else:
+            myFileConverter = fileConverter()
+            myFileConverter.fileConvertion()
+        print(f"Coordinate and label conversion complete. Updated data saved.")
 
                 
     def waterAnalysis(self):
