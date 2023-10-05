@@ -29,7 +29,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
         
     def loadProjects(self):
-        url_projects = "https://dev.watering.online/api/v1/ProjectWaterNetworks"
+        url_projects = WateringUtils.getServerUrl() + "/api/v1/ProjectWaterNetworks"
+        
         response_projects = requests.get(url_projects,
                                 headers={'Authorization': "Bearer {}".format(self.token)})
             
@@ -49,7 +50,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         ProjectFK = self.listOfProjects[value][1]
         showRemoved = False
         params = {'ProjectFK': "{}".format(ProjectFK), 'showRemoved': "{}".format(showRemoved)}
-        url = "https://dev.watering.online/api/v1/ScenarioWaterNetwork"
+        url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
         response_scenarios = requests.get(url, params=params,
                                 headers={'Authorization': "Bearer {}".format(self.token)})
             
@@ -59,7 +60,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                                          response_scenarios.json()["data"][i]["serverKeyId"]))
     
     def checkExistingProject(self):
-        scenario_id, type_conversion_ok = QgsProject.instance().readEntry("watering","scenario_id","default text")
+        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
     
         if scenario_id != "default text":
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("You already have a project opened!"), level=1, duration=5)
@@ -107,16 +108,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     
     def setStatusBar(self):
         project = QgsProject.instance()
-        project_name, type_conversion_ok = project.readEntry("watering",
-                                            "project_name",
-                                            "default text")
-        
-        scenario_name, type_conversion_ok = project.readEntry("watering",
-                                            "scenario_name",
-                                            "default text")
+        project_name = project.readEntry("watering","project_name","default text")[0]
+        scenario_name = project.readEntry("watering", "scenario_name","default text")[0]
         
         message = "Project: " + project_name + " | Scenario: " + scenario_name
-        
         iface.mainWindow().statusBar().showMessage(message)        
         self.done(True)  #self.close()  instead of just closing we call done(true) to return 1 as result of this dialog modal execution
         

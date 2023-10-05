@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from qgis.PyQt import uic
-from qgis.PyQt import QtWidgets
-from PyQt5.QtWidgets import QDialog
-from qgis.core import QgsProject, edit, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat, QgsClassificationEqualInterval
-from qgis.core import QgsStyle, QgsSymbol, QgsClassificationLogarithmic, QgsClassificationQuantile, QgsLineSymbol, QgsGradientColorRamp
-from qgis.utils import iface
-from qgis.PyQt.QtGui import QColor
+from qgis.core import QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat
+from qgis.core import QgsStyle, QgsClassificationQuantile, QgsGradientColorRamp
 
-import os
 import requests
+from ..watering_utils import WateringUtils
 
 class AbstractAnalysisRepository():
     
@@ -23,7 +18,8 @@ class AbstractAnalysisRepository():
     def getResponse(self):
         params = {'analysisExecutionId': "{}".format(self.analysisExecutionId), 'datetime': "{}".format(self.datetime),
                           'behavior': "{}".format(self.behavior)}
-        return requests.get(self.UrlGet, params=params, headers={'Authorization': "Bearer {}".format(self.token)})
+        url = WateringUtils.getServerUrl() + self.UrlGet
+        return requests.get(url, params=params, headers={'Authorization': "Bearer {}".format(self.token)})
     
     def elementAnalysisResults(self):     
         response = self.getResponse()

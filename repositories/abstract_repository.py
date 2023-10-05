@@ -1,4 +1,5 @@
 import requests
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter
@@ -16,7 +17,9 @@ class AbstractRepository():
         
     def loadElements(self):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
-        return requests.get(self.UrlGet, params=params_element, headers={'Authorization': "Bearer {}".format(self.Token)})  
+        url = WateringUtils.getServerUrl() + self.UrlGet
+        return requests.get(url, params=params_element, 
+                            headers={'Authorization': "Bearer {}".format(self.Token)})  
 
     def setElementFields(self, fields_definitions):
         fields = QgsFields()

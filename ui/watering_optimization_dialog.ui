@@ -49,7 +49,7 @@
     </font>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>2</number>
    </property>
    <widget class="QWidget" name="loadSolution">
     <property name="autoFillBackground">
@@ -65,9 +65,9 @@
      <property name="geometry">
       <rect>
        <x>6</x>
-       <y>10</y>
+       <y>40</y>
        <width>501</width>
-       <height>321</height>
+       <height>291</height>
       </rect>
      </property>
     </widget>
@@ -82,6 +82,19 @@
      </property>
      <property name="text">
       <string>Load Solution</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="BtRefreshTable">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>10</y>
+       <width>511</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Refresh</string>
      </property>
     </widget>
    </widget>
@@ -269,7 +282,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>100</y>
+       <y>30</y>
        <width>491</width>
        <height>21</height>
       </rect>
@@ -282,7 +295,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>80</y>
+       <y>10</y>
        <width>51</width>
        <height>16</height>
       </rect>
@@ -303,7 +316,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>160</y>
+       <y>90</y>
        <width>491</width>
        <height>21</height>
       </rect>
@@ -316,7 +329,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>140</y>
+       <y>70</y>
        <width>51</width>
        <height>16</height>
       </rect>
@@ -337,7 +350,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>190</y>
+       <y>120</y>
        <width>181</width>
        <height>20</height>
       </rect>
@@ -347,40 +360,6 @@
      </property>
      <property name="checked">
       <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="solutions_box">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>40</y>
-       <width>491</width>
-       <height>21</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLabel" name="projectLabel_7">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>81</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>13</pointsize>
-       <weight>50</weight>
-       <bold>false</bold>
-       <kerning>false</kerning>
-      </font>
-     </property>
-     <property name="text">
-      <string>Solution</string>
      </property>
     </widget>
    </widget>

@@ -76,7 +76,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
 
 
     def loadDataSource(self):
-        url_DataSources = "https://dev.watering.online/api/v1/DataSources"
+        url_DataSources = WateringUtils.getServerUrl() + "/api/v1/DataSources"
         self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
         params = {'projectKeyId': "{}".format(self.ProjectFK)}
         response_analysis = requests.get(url_DataSources, params=params,
@@ -94,7 +94,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.datachannels_box.clear()
         self.listOfDataChannelsInfo = []
         
-        url_DataChannels = "https://dev.watering.online/api/v1/MeasurementChannels"
+        url_DataChannels = WateringUtils.getServerUrl() + "/api/v1/MeasurementChannels"
         self.SourceFK =  self.listOfDataSourcesKey[indexValue]
         self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
         params = {'projectKeyId': "{}".format(self.ProjectFK), 'sourceKeyId': "{}".format(self.SourceFK)}

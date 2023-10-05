@@ -31,7 +31,7 @@ class WateringAnalysis(QtWidgets.QDialog, FORM_CLASS):
         self.BtGetAnalysisResultsForward.clicked.connect(lambda: self.getAnalysisResults(2))
         
     def initializeRepository(self):
-        url_analysis = "https://dev.watering.online/api/v1/WaterAnalysis"
+        url_analysis = WateringUtils.getServerUrl() + "/api/v1/WaterAnalysis"
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         params = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         response_analysis = requests.get(url_analysis, params=params,

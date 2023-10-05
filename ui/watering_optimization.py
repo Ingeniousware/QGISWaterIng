@@ -32,7 +32,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.Points = []
         self.RowIndex = None
         self.SolutionId = None
-        self.Url = "https://dev.watering.online/api/v1/OptimizationSolutions"
+        self.Url = WateringUtils.getServerUrl() + "/api/v1/OptimizationSolutions"
         self.Layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
         self.canvas = iface.mapCanvas()
         self.toolInsertNode = iface.mapCanvas().mapTool()
@@ -40,19 +40,22 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.BtLoadSolution.clicked.connect(self.loadSolutionSensors)
         self.BtCreateSolution.clicked.connect(self.createSolution)
         self.BtUploadSolution.clicked.connect(self.uploadSolution)
+        self.BtRefreshTable.clicked.connect(self.loadSolutions)
         
     def initializeRepository(self):
-        url_optimization = "https://dev.watering.online/api/v1/Optimization"
+        url_optimization = WateringUtils.getServerUrl() + "/api/v1/Optimization"
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         params = {'scenarioKeyId': "{}".format(self.ScenarioFK), 'showRemoved': False}
         response = requests.get(url_optimization, params=params,
                                 headers={'Authorization': "Bearer {}".format(self.token)})
 
+        print(response.text)
+        
         for i in range(0, response.json()["total"]):
             self.problem_box.addItem(response.json()["data"][i]["name"])
             self.Solutions.append(response.json()["data"][i]["serverKeyId"])
         
-        self.loadSolutions(self.problem_box.currentIndex())
+        self.loadSolutions()
         self.problem_box.currentIndexChanged.connect(self.loadSolutions)
         
         if not self.getExistingSensors():
@@ -64,7 +67,8 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.removeInsertAction()
         self.sensorsUploadTable()
         
-    def loadSolutions(self, index):
+    def loadSolutions(self):
+        index = self.problem_box.currentIndex()
         self.Sensors = {}
         problemFK = self.Solutions[index]
         params = {'problemKeyId': "{}".format(problemFK)}
@@ -243,7 +247,6 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.canvas.refresh()
     
     def addParetoChart(self, response):
-        self.solutions_box.clear()
         self.x_box.clear()
         self.y_box.clear()
         
@@ -251,10 +254,6 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             obj = "Objective " + str(i + 1)
             self.x_box.addItem(obj), self.y_box.addItem(obj)
         
-        for i in range(0, response.json()["total"]):
-            if response.json()["data"][i]["objectiveResults"]:
-                self.solutions_box.addItem(response.json()["data"][i]["name"])
-
         plt.close("all") #close all existing charts
         self.BtLoadPareto.clicked.connect(lambda: self.loadParetoChart(response))
         
@@ -262,7 +261,6 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         data = response.json()["data"]   
         points = []
         labels = []
-        
         for i in range(0, response.json()["total"]):
             if data[i]["objectiveResults"]:
                 points.append((data[i]["objectiveResults"][self.x_box.currentIndex()]["valueResult"],
@@ -278,12 +276,12 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         ax.set_xlabel(self.x_box.currentText())
         ax.set_ylabel(self.y_box.currentText())
 
-        index_sol = self.solutions_box.currentIndex()
-        x_ = x_values[index_sol]
-        y_ = y_values[index_sol]
+        #index_sol = self.solutions_box.currentIndex()
+        #x_ = x_values[index_sol]
+        #y_ = y_values[index_sol]
 
         # Plot the point again in a different color
-        ax.scatter(x_, y_, color='red')
+        #ax.scatter(x_, y_, color='red')
 
         if self.label_checkBox.isChecked():
             for i, name in enumerate(labels):

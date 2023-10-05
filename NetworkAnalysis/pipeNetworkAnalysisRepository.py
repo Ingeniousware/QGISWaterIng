@@ -1,4 +1,5 @@
 from .abstractAnalysisRepository import AbstractAnalysisRepository
+from ..watering_utils import WateringUtils
 from qgis.PyQt.QtGui import QColor
 
 
@@ -7,7 +8,7 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
     def __init__(self,token, analysisExecutionId, datetime, behavior):
         """Constructor."""
         super(PipeNetworkAnalysisRepository, self).__init__(token, analysisExecutionId, datetime ,behavior)      
-        self.UrlGet = "https://dev.watering.online/api/v1/WaterAnalysisResults/pipes"
+        self.UrlGet = "/api/v1/WaterAnalysisResults/pipes"
         self.KeysApi = ["pipeKey","pipeCurrentStatus", "velocity", "flow", "headLoss"]
         self.Attributes = ["C Status","Velocity", "Flow","HeadLoss"]
         self.LayerName = "watering_pipes"

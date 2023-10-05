@@ -21,5 +21,8 @@ class InsertNodeAbstractTool(QgsMapTool):
         m.setIconSize(5)
         m.setIconType(QgsVertexMarker.ICON_BOX) # or ICON_CROSS, ICON_X
         m.setPenWidth(3)
+    
+    def deactivate(self):
+        print("deactivate insert demand node tool")
         
     

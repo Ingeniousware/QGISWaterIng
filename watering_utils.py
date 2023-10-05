@@ -11,6 +11,8 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtCore import QTimer
 from time import time, gmtime, strftime
 
+#serverInput
+
 class WateringUtils():  
     
     def set_progress(progress_value, progressBar):
@@ -31,15 +33,13 @@ class WateringUtils():
         progressBar.setVisible(True)
 
     def getScenarioId():
-        scenario_id, ok = QgsProject.instance().readEntry("watering",
-                                            "scenario_id",
-                                            "default text")
-        
-        return scenario_id
+        return QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
     
     def isScenarioNotOpened():
-        
         return WateringUtils.getScenarioId() == "default text"
+    
+    def getServerUrl():
+        return QgsProject.instance().readEntry("watering","server_url","default text")[0]
     
     def translateMeasurements(self, status):
         conditions = {

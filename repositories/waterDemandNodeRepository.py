@@ -12,7 +12,7 @@ class WateringDemandNodeRepository(AbstractRepository):
     def __init__(self,token, project_path, scenarioFK):
         """Constructor."""
         super(WateringDemandNodeRepository, self).__init__(token, scenarioFK)      
-        self.UrlGet = "https://dev.watering.online/api/v1/DemandNode"
+        self.UrlGet = "/api/v1/DemandNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
         self.initializeRepository()
         

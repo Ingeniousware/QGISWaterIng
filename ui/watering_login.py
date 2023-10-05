@@ -2,10 +2,11 @@
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+from qgis.core import QgsProject
 
 import os
 import requests
-from .watering_load import WateringLoad
+from ..watering_utils import WateringUtils
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_login_dialog.ui'))
@@ -17,16 +18,21 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
         super(WateringLogin, self).__init__(parent)
         self.setupUi(self)
         self.loginBtn.clicked.connect(self.login)
-        self.buttonNext.accepted.connect(self.nextDlg)
+        self.buttonNext.accepted.connect(self.login)
         self.buttonNext.rejected.connect(self.close)
         self.token = None
         self.logged = False
             
     def login(self):
         
-        url_login = "https://dev.watering.online/api/v1/AuthManagement/Login"
+        #url_login = "api/v1/AuthManagement/Login"
         email = self.emailInput.text()
         password = self.passwordInput.text()
+        
+        server_url = self.serverInput.text() or "https://dev.watering.online"
+        QgsProject.instance().writeEntry("watering", "server_url", server_url)
+        
+        url_login = WateringUtils.getServerUrl() + "/api/v1/AuthManagement/Login"
         
         if len(email)==0 or len(password)==0:
             self.errorLogin.setStyleSheet("color: red")

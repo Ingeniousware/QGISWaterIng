@@ -1,4 +1,5 @@
 from .abstractAnalysisRepository import AbstractAnalysisRepository
+from ..watering_utils import WateringUtils
 from qgis.PyQt.QtGui import QColor
 
 class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
@@ -6,7 +7,7 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
     def __init__(self,token,analysisExecutionId, datetime, behavior):
         """Constructor."""
         super(NodeNetworkAnalysisRepository, self).__init__(token,analysisExecutionId, datetime, behavior)      
-        self.UrlGet = "https://dev.watering.online/api/v1/WaterAnalysisResults/nodes"
+        self.UrlGet = "/api/v1/WaterAnalysisResults/nodes"
         self.KeysApi = ["nodeKey", "pressure", "waterDemand", "waterDemandCovered", "waterAge"]
         self.Attributes = ["Pressure", "Demand","Demand C", "Age"]
         self.LayerName = "watering_demand_nodes"
