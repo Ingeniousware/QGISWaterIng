@@ -42,7 +42,8 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
         mySelector.setCrs(crs)
         if mySelector.exec():
             self.mCrs = mySelector.crs()
-            #self.selectedCRSLabel.insertPlainText(mCrs)
+            self.selectedCRSLabel.setText(self.mCrs.authid())
+
     
     def onConvertINPFile(self, behavior):
         fileConv = fileConverter()

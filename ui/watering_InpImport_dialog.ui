@@ -57,19 +57,19 @@
     <rect>
      <x>40</x>
      <y>66</y>
-     <width>71</width>
+     <width>150</width>
      <height>20</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <pointsize>13</pointsize>
-     <weight>50</weight>
+     <weight>150</weight>
      <bold>false</bold>
     </font>
    </property>
    <property name="text">
-    <string>Select CRS:</string>
+    <string>Select Source CRS:</string>
    </property>
   </widget>
 
@@ -87,7 +87,7 @@
    </property>
   </widget>
 
-   <widget class="QTextEdit" name="selectedCRSLabel">
+ <widget class="QTextEdit" name="selectedCRSLabel">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -95,23 +95,40 @@
      <width>300</width>
      <height>21</height>
     </rect>
-   </property>
+   </property> 
    <property name="styleSheet">
     <string notr="true">background-color: #808080; border: 1px solid #808080; color: white;</string>
    </property>
-    </widget>
+   <property name="readOnly">
+    <bool>true</bool>
+   </property>
+</widget>
 
   <widget class="QPushButton" name="convertINPFile">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>220</x>
      <y>230</y>
-     <width>331</width>
+     <width>150</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Convert</string>
+    <string>Upload</string>
+   </property>
+  </widget>
+
+ <widget class="QPushButton" name="convertINPFile">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>230</y>
+     <width>150</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Download</string>
    </property>
   </widget>
 

@@ -56,7 +56,6 @@ class fileConverter():
                         activeSection = dictionarySection[cleanLine]
                     else:
                         activeSection =  dictionarySection["unknonwn"]
-                    print(cleanLine)
 
         
                 activeSection.ProcessCoordinatesConvertion(out_file, cleanLine)
