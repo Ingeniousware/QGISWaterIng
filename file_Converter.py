@@ -1,3 +1,4 @@
+import os
 import requests
 from .inpProcessing.sectionCoordinates import sectionCoordinates
 from .inpProcessing.sectionINPAbstract import sectionINPAbstract
@@ -14,14 +15,17 @@ class fileConverter():
             #Constructor.
             #self.sourceCrs = QgsCoordinateReferenceSystem(32614)
             #self.destCrs = QgsCoordinateReferenceSystem(4326)
+            
             ...
 
 
-    def fileConvertion(self):
-        input_file_path = '/Users/alejandrorodriguez/Downloads/C-05.inp'
-        output_file_path = '/Users/alejandrorodriguez/Downloads/C-05_updated.inp'
+    def fileConvertion(self, file_path, sourceCrs):
+        file_dir, file_name = os.path.split(file_path)
+        new_file_name = os.path.splitext(file_name)[0] + '_converted' + os.path.splitext(file_name)[1]
+        output_file_path = os.path.join(file_dir, new_file_name)
 
-        with open(input_file_path, 'r', encoding='latin-1') as inp_file, open(output_file_path, 'w') as out_file:
+
+        with open(file_path, 'r', encoding='latin-1') as inp_file, open(output_file_path, 'w') as out_file:
             #processing_coordinates = False
             #processing_labels = False
             
@@ -34,9 +38,9 @@ class fileConverter():
                                 }
 
             dictionarySection["unknonwn"] = sectionUnknown()
-            dictionarySection["[COORDINATES]"] = sectionCoordinates()
-            dictionarySection["[LABELS]"] = sectionLabels()
-            dictionarySection["[VERTICES]"] = sectionVertices()
+            dictionarySection["[COORDINATES]"] = sectionCoordinates(sourceCrs)
+            dictionarySection["[LABELS]"] = sectionLabels(sourceCrs)
+            dictionarySection["[VERTICES]"] = sectionVertices(sourceCrs)
             dictionarySection["[BACKDROP]"] = sectionBackdrop()
             activeSection = sectionINPAbstract()
 
@@ -52,6 +56,10 @@ class fileConverter():
                         activeSection = dictionarySection[cleanLine]
                     else:
                         activeSection =  dictionarySection["unknonwn"]
+                    print(cleanLine)
 
+        
                 activeSection.ProcessCoordinatesConvertion(out_file, cleanLine)
+
+                
                 

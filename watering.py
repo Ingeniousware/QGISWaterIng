@@ -21,6 +21,7 @@ from .ui.watering_optimization import WaterOptimization
 from .watering_utils import WateringUtils
 from .ui.watering_datachannels import WateringDatachannels
 from .file_Converter import fileConverter
+from .ui.watering_INPImport import WateringINPImport
 
 import os.path
 
@@ -230,9 +231,9 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         else:
-            myFileConverter = fileConverter()
-            myFileConverter.fileConvertion()
-        print(f"Coordinate and label conversion complete. Updated data saved.")
+            self.dlg = WateringINPImport(self.iface)
+            self.dlg.show()
+            self.dlg.exec_()
 
                 
     def waterAnalysis(self):
