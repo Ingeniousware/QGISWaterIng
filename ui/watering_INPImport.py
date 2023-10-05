@@ -48,4 +48,5 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
     def onConvertINPFile(self, behavior):
         fileConv = fileConverter()
         fileConv.fileConvertion(self.file_path, self.mCrs)
+        self.close()
         
