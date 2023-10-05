@@ -8,7 +8,6 @@ from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 
 
-
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
@@ -21,6 +20,8 @@ from .ui.watering_analysis import WateringAnalysis
 from .ui.watering_optimization import WaterOptimization
 from .watering_utils import WateringUtils
 from .ui.watering_datachannels import WateringDatachannels
+from .file_Converter import fileConverter
+from .ui.watering_INPImport import WateringINPImport
 
 import os.path
 
@@ -139,6 +140,14 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_load_elements.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Import INP File'),
+            callback=self.importINPFile,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
             icon_path,
@@ -217,6 +226,14 @@ class QGISPlugin_WaterIng:
             self.dlg.show() 
             if (self.dlg.exec_() == 1): 
                 self.updateActionStateOpen()
+
+    def importINPFile(self):
+        if os.environ.get('TOKEN') == None:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
+        else:
+            self.dlg = WateringINPImport(self.iface)
+            self.dlg.show()
+            self.dlg.exec_()
 
                 
     def waterAnalysis(self):
