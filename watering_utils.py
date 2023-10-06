@@ -39,8 +39,12 @@ class WateringUtils():
         return WateringUtils.getScenarioId() == "default text"
     
     def getServerUrl():
-        return QgsProject.instance().readEntry("watering","server_url","default text")[0]
-    
+        if QgsProject.instance():
+            projectServerUrl =  QgsProject.instance().readEntry("watering","server_url","default text")[0]
+        defaultUrl = "https://dev.watering.online"
+        
+        return defaultUrl if projectServerUrl == "default text" else projectServerUrl
+        
     def translateMeasurements(self, status):
         conditions = {
             0: "Unknown",

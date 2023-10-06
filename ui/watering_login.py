@@ -3,6 +3,7 @@
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
 from qgis.core import QgsProject
+from qgis.utils import iface
 
 import os
 import requests
@@ -18,7 +19,7 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
         super(WateringLogin, self).__init__(parent)
         self.setupUi(self)
         self.loginBtn.clicked.connect(self.login)
-        self.buttonNext.accepted.connect(self.login)
+        self.buttonNext.accepted.connect(self.nextDlg)
         self.buttonNext.rejected.connect(self.close)
         self.token = None
         self.logged = False
@@ -38,17 +39,26 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
             self.errorLogin.setStyleSheet("color: red")
             self.errorLogin.setText("Please input all fields.")
         else:
-            myobj = {'email': "{}".format(email), 'password': "{}".format(password)}
-            response = requests.post(url_login, json=myobj)
-            if response.status_code == 200:
-                self.errorLogin.setStyleSheet("color: lightgreen")
-                self.errorLogin.setText("Login Successful.")
-                os.environ['TOKEN'] = response.json()["token"]
-                self.token = os.environ['TOKEN']
-                self.logged = True
-            else:
-                self.errorLogin.setStyleSheet("color: red")
-                self.errorLogin.setText("Invalid email or password.")
+            loginParams = {'email': "{}".format(email), 'password': "{}".format(password)}
+            try:
+                response = requests.post(url_login, json=loginParams)
+                print(response)
+                if response.status_code == 200:
+                    self.errorLogin.setStyleSheet("color: lightgreen")
+                    self.errorLogin.setText("Login Successful.")
+                    os.environ['TOKEN'] = response.json()["token"]
+                    self.token = os.environ['TOKEN']
+                    self.logged = True
+                else:
+                    self.errorLogin.setStyleSheet("color: red")
+                    self.errorLogin.setText("Invalid email or password.")
+            except requests.ConnectionError:
+                iface.messageBar().pushMessage(self.tr("Error"), self.tr("Failed to connect to the WaterIng, check your connection."), level=1, duration=5)
+            except requests.Timeout:
+                iface.messageBar().pushMessage(self.tr("Error"), self.tr("Request timed out."), level=1, duration=5)
+            except:
+                iface.messageBar().pushMessage(self.tr("Error"), self.tr("Unable to connect to WaterIng."), level=1, duration=5)
+                
                 
     def nextDlg(self):
         if self.logged == False:
@@ -57,7 +67,4 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
         else:
             #run Load Elements dialog
             self.close()
-            """ self.dlgLoad = WateringLoad()
-            self.dlgLoad.show()
-            self.dlgLoad.exec_() """
             self.done(True)  #self.close()  instead of just closing we call done(true) to return 1 as result of this dialog modal execution

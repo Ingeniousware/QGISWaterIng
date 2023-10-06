@@ -19,7 +19,6 @@ from ..maptools.insertSensorNodeTool import InsertSensorNodeTool
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_optimization_dialog.ui'))
 
-
 class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
     def __init__(self,parent=None):
         """Constructor."""
@@ -30,6 +29,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.Solutions = []
         self.Sensors = {}
         self.Points = []
+        self.Objectives = []
         self.RowIndex = None
         self.SolutionId = None
         self.Url = WateringUtils.getServerUrl() + "/api/v1/OptimizationSolutions"
@@ -52,18 +52,22 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         for i in range(0, response.json()["total"]):
             self.problem_box.addItem(response.json()["data"][i]["name"])
             self.Solutions.append(response.json()["data"][i]["serverKeyId"])
+            self.Objectives.append([obj["name"] for obj in response.json()["data"][i]["objectives"]])
         
-        self.loadSolutions()
-        self.problem_box.currentIndexChanged.connect(self.loadSolutions)
-        
-        if not self.getExistingSensors():
-            self.statusText.setText("-")
-        else: 
-            self.statusText.setText("Creating")
-            self.statusText.setStyleSheet("color: yellow")
-        
-        self.removeInsertAction()
-        self.sensorsUploadTable()
+        if self.Solutions:
+            self.loadSolutions()
+            self.problem_box.currentIndexChanged.connect(self.loadSolutions)
+            
+            if not self.getExistingSensors():
+                self.statusText.setText("-")
+            else: 
+                self.statusText.setText("Creating")
+                self.statusText.setStyleSheet("color: yellow")
+            
+            self.removeInsertAction()
+            self.sensorsUploadTable()
+        else:
+            iface.messageBar().pushMessage(self.tr("Error"), self.tr("No problems to load!"), level=1, duration=5)
         
     def loadSolutions(self):
         index = self.problem_box.currentIndex()
@@ -255,9 +259,9 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.x_box.clear()
         self.y_box.clear()
         
-        for i in range(0, 2):
-            obj = "Objective " + str(i + 1)
-            self.x_box.addItem(obj), self.y_box.addItem(obj)
+        for obj in self.Objectives[self.problem_box.currentIndex()]:
+            self.x_box.addItem(obj)
+            self.y_box.addItem(obj)
         
         plt.close("all") #close all existing charts
         self.BtLoadPareto.clicked.connect(lambda: self.loadParetoChart(response))
@@ -266,31 +270,23 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         data = response.json()["data"]   
         points = []
         labels = []
-        id = []
         
         for i in range(0, response.json()["total"]):
             if data[i]["objectiveResults"]:
-                #print(data[i]["objectiveResults"])
                 points.append((data[i]["objectiveResults"][self.x_box.currentIndex()]["valueResult"],
                             (data[i]["objectiveResults"][self.y_box.currentIndex()]["valueResult"])))
                 labels.append(data[i]["name"])
 
         #axes
-        """fig, ax = plt.subplots()
+        fig, ax = plt.subplots()
 
         # Extract x and y values from points
         x_values, y_values = zip(*points)
+        fig.metadata = {"x": self.x_box.currentIndex(), "y": self.y_box.currentIndex()}
         ax.scatter(x_values, y_values, color="b")
         ax.set_title("Pareto Chart")
         ax.set_xlabel(self.x_box.currentText())
         ax.set_ylabel(self.y_box.currentText())
-
-        #index_sol = self.solutions_box.currentIndex()
-        #x_ = x_values[index_sol]
-        #y_ = y_values[index_sol]
-
-        # Plot the point again in a different color
-        #ax.scatter(x_, y_, color='red')
 
         if self.label_checkBox.isChecked():
             for i, name in enumerate(labels):
@@ -299,31 +295,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                             xytext=(x_values[i] + offset, y_values[i] + offset))
 
         ax.grid(True, color="lightgrey")
-        fig.tight_layout()"""
-        
-        #plt
-        plt.ion()
-        x_values, y_values = zip(*points)
-        plt.scatter(x_values, y_values, color="b")
-        plt.title("Pareto Chart")
-        plt.xlabel(self.x_box.currentText())
-        plt.ylabel(self.y_box.currentText())
-
-        #index_sol = self.solutions_box.currentIndex()
-        #x_ = x_values[index_sol]
-        #y_ = y_values[index_sol]
-
-        # Plot the point again in a different color
-        #ax.scatter(x_, y_, color='red')
-
-        if self.label_checkBox.isChecked():
-            for i, name in enumerate(labels):
-                offset = 10
-                plt.annotate(name, (x_values[i], y_values[i]), ha="left", va="top",
-                            xytext=(x_values[i] + offset, y_values[i] + offset))
-
-        plt.grid(True, color="lightgrey")
-        
+        fig.tight_layout()
         plt.show()
         
         self.tableView.clicked.connect(self.tableClickedChart)
@@ -334,15 +306,28 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             self.tableView.selectRow(row)
             id = self.tableView.model().data(self.tableView.model().index(row, 3))
             self.SolutionId = id
-            obj = self.Sensors[id]["objectives"]
-            if len(obj) > 1:
-                x_ = self.Sensors[id]["objectives"][self.x_box.currentIndex()]
-                y_ = self.Sensors[id]["objectives"][self.y_box.currentIndex()]
-                #plt.scatter.set_color('red')
-                plt.scatter(x_, y_, color='red')
-                plt.draw()
-            else:
-                print("Not able to get solution in Pareto Graph!")
+            if id in self.Sensors:
+                obj = self.Sensors[id]["objectives"]
+                if len(obj) > 1:
+                    current_figure = plt.gcf()
+                    
+                    x_index = current_figure.metadata["x"]
+                    y_index = current_figure.metadata["y"]
+                    
+                    x_ = self.Sensors[id]["objectives"][x_index]
+                    y_ = self.Sensors[id]["objectives"][y_index]
+
+                    scatter = current_figure.axes[0].collections[0]
+            
+                    xdata, ydata = scatter.get_offsets().T
+                    colors = ['blue'] * len(xdata)  # Set all points to blue
+                    
+                    selected_index = np.where((xdata == x_) & (ydata == y_))[0]
+                    if selected_index.size > 0:
+                        colors[selected_index[0]] = 'red'  # Set the selected point to red
+                
+                    scatter.set_facecolor(colors)
+                    plt.draw()
         
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
