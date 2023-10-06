@@ -48,8 +48,6 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         params = {'scenarioKeyId': "{}".format(self.ScenarioFK), 'showRemoved': False}
         response = requests.get(url_optimization, params=params,
                                 headers={'Authorization': "Bearer {}".format(self.token)})
-
-        print(response.text)
         
         for i in range(0, response.json()["total"]):
             self.problem_box.addItem(response.json()["data"][i]["name"])
@@ -84,7 +82,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 
                 listOfObjectives = []
                 if not data[i]["objectiveResults"]:
-                    listOfObjectives.extend([[0] * 2])
+                    listOfObjectives.extend([[np.nan] * 2])
                     
                 else:
                     listOfObjectives.append([item["valueResult"] for item in data[i]["objectiveResults"]])
@@ -94,7 +92,6 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                                      data[i]["solutionSource"],
                                      data[i]["serverKeyId"]] 
                                     + [item for item in listOfObjectives[0][:2]])
-                
                 self.Sensors.update(self.getSolutionSensors(data[i]))
                                                         
             model = TableModel(matrix_table, ["Name", "Status", "Source", "Id", "Obj1", "Obj2"])
@@ -212,12 +209,20 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
     def getSolutionSensors(self, data):
         sensorDict = {}
         solution_id = data["serverKeyId"]
-        if data["variableResults"]:
+        obj_results = []
+        
+        if "objectiveResults" in data:
+            for value in data["objectiveResults"]:
+                obj_results.append(value["valueResult"])
+                
+        if "variableResults" in data:
             for sensor in data["variableResults"]:
                     if sensor["optimizerNodeKey"]:
                         if solution_id not in sensorDict:
                             sensorDict[solution_id] = {}
                         sensorDict[solution_id][sensor["optimizerNodeKey"]] = 1
+                        sensorDict[solution_id]["objectives"] = [obj for obj in obj_results]
+                        
         return sensorDict
         
     def on_row_clicked(self, index):
@@ -261,13 +266,17 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         data = response.json()["data"]   
         points = []
         labels = []
+        id = []
+        
         for i in range(0, response.json()["total"]):
             if data[i]["objectiveResults"]:
+                #print(data[i]["objectiveResults"])
                 points.append((data[i]["objectiveResults"][self.x_box.currentIndex()]["valueResult"],
                             (data[i]["objectiveResults"][self.y_box.currentIndex()]["valueResult"])))
                 labels.append(data[i]["name"])
 
-        fig, ax = plt.subplots()
+        #axes
+        """fig, ax = plt.subplots()
 
         # Extract x and y values from points
         x_values, y_values = zip(*points)
@@ -290,9 +299,50 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                             xytext=(x_values[i] + offset, y_values[i] + offset))
 
         ax.grid(True, color="lightgrey")
-        fig.tight_layout()
+        fig.tight_layout()"""
+        
+        #plt
+        plt.ion()
+        x_values, y_values = zip(*points)
+        plt.scatter(x_values, y_values, color="b")
+        plt.title("Pareto Chart")
+        plt.xlabel(self.x_box.currentText())
+        plt.ylabel(self.y_box.currentText())
+
+        #index_sol = self.solutions_box.currentIndex()
+        #x_ = x_values[index_sol]
+        #y_ = y_values[index_sol]
+
+        # Plot the point again in a different color
+        #ax.scatter(x_, y_, color='red')
+
+        if self.label_checkBox.isChecked():
+            for i, name in enumerate(labels):
+                offset = 10
+                plt.annotate(name, (x_values[i], y_values[i]), ha="left", va="top",
+                            xytext=(x_values[i] + offset, y_values[i] + offset))
+
+        plt.grid(True, color="lightgrey")
         
         plt.show()
+        
+        self.tableView.clicked.connect(self.tableClickedChart)
+    
+    def tableClickedChart(self, index):
+        if index.isValid():
+            row = index.row()
+            self.tableView.selectRow(row)
+            id = self.tableView.model().data(self.tableView.model().index(row, 3))
+            self.SolutionId = id
+            obj = self.Sensors[id]["objectives"]
+            if len(obj) > 1:
+                x_ = self.Sensors[id]["objectives"][self.x_box.currentIndex()]
+                y_ = self.Sensors[id]["objectives"][self.y_box.currentIndex()]
+                #plt.scatter.set_color('red')
+                plt.scatter(x_, y_, color='red')
+                plt.draw()
+            else:
+                print("Not able to get solution in Pareto Graph!")
         
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
