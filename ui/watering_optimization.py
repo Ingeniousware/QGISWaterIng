@@ -335,15 +335,14 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             id = self.tableView.model().data(self.tableView.model().index(row, 3))
             self.SolutionId = id
             obj = self.Sensors[id]["objectives"]
-            #index_sol = self.solutions_box.currentIndex()
-            x_ = obj[self.x_box.currentIndex()]
-            y_ = obj[self.y_box.currentIndex()]
-            if obj:
-                if x_:
-                    if y_:
-                        #plt.scatter.set_color('red')
-                        plt.scatter(x_, y_, color='red')
-                        plt.draw()
+            if len(obj) > 1:
+                x_ = self.Sensors[id]["objectives"][self.x_box.currentIndex()]
+                y_ = self.Sensors[id]["objectives"][self.y_box.currentIndex()]
+                #plt.scatter.set_color('red')
+                plt.scatter(x_, y_, color='red')
+                plt.draw()
+            else:
+                print("Not able to get solution in Pareto Graph!")
         
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
