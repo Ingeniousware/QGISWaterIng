@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import os
 from time import time, gmtime, strftime
 from ..file_Converter import fileConverter
+from ..watering_utils import WateringUtils
 import requests
 
 
@@ -33,6 +34,7 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
         self.output_file_path = None
         self.mCrs = None
         self.output_file_name = None
+        self.UrlGet = "/api/v1/ModelFile"
         self.convertINPFile.clicked.connect(lambda: self.selectorFilePath(0))
         self.selectCRSButton.clicked.connect(lambda: self.selctorCRS(0))
         self.convertINPFile.clicked.connect(lambda: self.onConvertINPFile(0))
@@ -57,30 +59,38 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
 
     
     def onConvertINPFile(self, behavior):
-        fileConv = fileConverter()
-        fileConv.fileConvertion(self.file_path, self.mCrs, self.output_file_path)
-
-        #Post file on watering
-        self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        url_API = f"https://dev.watering.online/api/v1/ModelFile?scenarioKeyId={self.ScenarioFK}"
-
-        data = {'scenarioKeyId': self.ScenarioFK}
-        headers = {'Authorization': "Bearer {}".format(self.token)}
+        try:
+            fileConv = fileConverter()
+            fileConv.fileConvertion(self.file_path, self.mCrs, self.output_file_path)
+            #Post file on watering
+            self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+            #url_API = f"https://dev.watering.online/api/v1/ModelFile?scenarioKeyId={self.ScenarioFK}"
+            url_API = WateringUtils.getServerUrl() + self.UrlGet
+            data = {'scenarioKeyId': self.ScenarioFK}
+            headers = {'Authorization': "Bearer {}".format(self.token)}
+            print(url_API)
+            with open(self.output_file_path, 'rb') as file:
+                file_data = file.read()
         
-        with open(self.output_file_path, 'rb') as file:
-            file_data = file.read()
-     
-        response = requests.post(url_API, data=data, files = {'file': (self.output_file_name, file_data)} , headers=headers)
+            response = requests.post(url_API, params=data, files = {'file': (self.output_file_name, file_data)} , headers=headers)
 
-        if response.status_code == 200:
-            print("File uploaded successfully!")
+            if response.status_code == 200:
+                print("File uploaded successfully!")
 
-        message_box = QMessageBox()
-        message_box.setIcon(QMessageBox.Information)
-        message_box.setWindowTitle("Watering INP")
-        message_box.setText("File uploaded")
-        message_box.setStandardButtons(QMessageBox.Ok)
-        message_box.exec_()
+            message_box = QMessageBox()
+            message_box.setIcon(QMessageBox.Information)
+            message_box.setWindowTitle("Watering INP")
+            message_box.setText("File uploaded")
+            message_box.setStandardButtons(QMessageBox.Ok)
+            message_box.exec_()
+
+        except FileNotFoundError:
+            message_box = QMessageBox()
+            message_box.setIcon(QMessageBox.Warning)
+            message_box.setWindowTitle("ScenariosNotLoaded")
+            message_box.setText("Load Watering Data")
+            message_box.setStandardButtons(QMessageBox.Ok)
+            message_box.exec_()
 
         self.close()
         

@@ -141,12 +141,13 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_load_elements.png'
-        self.add_action(
+        self.importFileINP = self.add_action(
             icon_path,
             text=self.tr(u'Import INP File'),
             callback=self.importINPFile,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+        self.importFileINP.setEnabled(not WateringUtils.isScenarioNotOpened())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
@@ -228,6 +229,8 @@ class QGISPlugin_WaterIng:
                 self.updateActionStateOpen()
 
     def importINPFile(self):
+        if WateringUtils.isScenarioNotOpened():
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         else:
@@ -294,6 +297,7 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction.setEnabled(True)
         self.openOptimizationManagerAction.setEnabled(True)
         self.readMeasurementsAction.setEnabled(True)
+        self.importFileINP.setEnabled(True)
         # self.selectElementAction.setEnabled(True)
     
     def updateActionStateClose(self):
@@ -303,6 +307,7 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction.setChecked(False)
         self.openOptimizationManagerAction.setEnabled(False)
         self.readMeasurementsAction.setEnabled(False)
+        self.importFileINP.setEnabled(False)
         # self.selectElementAction.setEnabled(False)
         # self.selectElementAction.setChecked(False)
 
