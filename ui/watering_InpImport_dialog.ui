@@ -118,7 +118,7 @@
    </property>
   </widget>
 
- <widget class="QPushButton" name="convertINPFile">
+ <!-- <widget class="QPushButton" name="downloadINPFile">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -131,7 +131,7 @@
     <string>Download</string>
    </property>
   </widget>
-
+ -->
  </widget>
  <customwidgets>
   <customwidget>

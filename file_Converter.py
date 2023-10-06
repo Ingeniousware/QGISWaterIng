@@ -13,17 +13,10 @@ import re
 class fileConverter():
     def __init__(self):
             #Constructor.
-            #self.sourceCrs = QgsCoordinateReferenceSystem(32614)
-            #self.destCrs = QgsCoordinateReferenceSystem(4326)
-            
             ...
 
 
-    def fileConvertion(self, file_path, sourceCrs):
-        file_dir, file_name = os.path.split(file_path)
-        new_file_name = os.path.splitext(file_name)[0] + '_converted' + os.path.splitext(file_name)[1]
-        output_file_path = os.path.join(file_dir, new_file_name)
-
+    def fileConvertion(self, file_path, sourceCrs, output_file_path):
 
         with open(file_path, 'r', encoding='latin-1') as inp_file, open(output_file_path, 'w') as out_file:
             #processing_coordinates = False
