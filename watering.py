@@ -23,11 +23,14 @@ from .ui.watering_datachannels import WateringDatachannels
 from .file_Converter import fileConverter
 from .ui.watering_INPImport import WateringINPImport
 
+from signalrcore.hub_connection_builder import HubConnectionBuilder
+
 import os.path
+
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
-
+    
     def __init__(self, iface):
         """Constructor.
 
@@ -67,7 +70,11 @@ class QGISPlugin_WaterIng:
         self.toolbar = self.iface.addToolBar("WaterIng Toolbar")
         self.toolbar.setObjectName("QGISWatering")
         self.toolbar.setVisible(True)
-        
+
+        self.hub_connection = None
+
+
+
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -217,16 +224,44 @@ class QGISPlugin_WaterIng:
         self.dlg = WateringLogin()
         self.dlg.show()
         self.dlg.exec_()
+
+        server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
+        #server_url = "https://localhost:52224/hubs/waternetworkhub"
+
+
+        self.hub_connection = HubConnectionBuilder()\
+        .with_url(server_url, options={"verify_ssl": False}) \
+        .with_automatic_reconnect({
+                "type": "interval",
+                "keep_alive_interval": 10,
+                "intervals": [1, 3, 5, 6, 7, 87, 3]
+            }).build()
+
+        self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+        self.hub_connection.on_close(lambda: print("connection closed"))
+
+        self.hub_connection.on("UPDATE_IMPORTED", print)
+        
+        self.hub_connection.start()
+
+
         
     def addLoad(self):
         #self.InitializeProjectToolbar()
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         else:
+            print("calling watering load dialog")
             self.dlg = WateringLoad()
             self.dlg.show() 
-            if (self.dlg.exec_() == 1): 
+            if (self.dlg.exec_() == 1):
+                print("before updating options")                
                 self.updateActionStateOpen()
+                scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+                invoresult = self.hub_connection.send("joingroup", [scenarioFK])
+                print(invoresult.invocation_id)                
+                
+
 
     def importINPFile(self):
         if WateringUtils.isScenarioNotOpened():
@@ -310,6 +345,7 @@ class QGISPlugin_WaterIng:
         self.importFileINP.setEnabled(False)
         # self.selectElementAction.setEnabled(False)
         # self.selectElementAction.setChecked(False)
+        self.hub_connection.stop()
 
         
     def cleanMarkers(self):
@@ -329,4 +365,4 @@ class QGISPlugin_WaterIng:
             self.dlg = WateringDatachannels()
             self.dlg.show()
             self.dlg.exec_()
-                
+
