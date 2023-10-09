@@ -17,10 +17,7 @@ class WaterMeterNodeRepository(AbstractRepository):
         self.initializeRepository()
      
     def initializeRepository(self):
-        #Tanks Loading
-
-        print(self.ScenarioFK)
-
+       
         response_waterMeter = self.loadElements()
 
         print(response_waterMeter)
@@ -32,12 +29,12 @@ class WaterMeterNodeRepository(AbstractRepository):
             ("Name", QVariant.String),
             ("Description", QVariant.String),
             ("Meterstate", QVariant.Double),
-            ("FunctionalType", QVariant.Bool),
+            ("FunctionalType", QVariant.Double),
             ("LastReadDateTime", QVariant.String)
         ]
         
         waterMeter_features = ["lng", "lat", "serverKeyId","lastModified","name", "description","meterstate",
-                                "functionalType","lastreadDateTime"]
+                                "functionalType","lastReadDateTime"]
         
         fields = self.setElementFields(waterMeter_field_definitions)
         
@@ -47,5 +44,5 @@ class WaterMeterNodeRepository(AbstractRepository):
         
         #Write and open shapefile
         self.writeShp(waterMeter_layer)
-        self.openLayers(QgsSimpleMarkerSymbolLayerBase.Pentagon, 6)
+        self.openLayers(QgsSimpleMarkerSymbolLayerBase.Diamond, 6)
     
