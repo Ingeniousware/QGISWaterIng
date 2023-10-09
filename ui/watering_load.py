@@ -13,7 +13,8 @@ from ..repositories.tankNodeRepository import TankNodeRepository
 from ..repositories.waterDemandNodeRepository import WateringDemandNodeRepository
 from ..repositories.pipeNodeRepository import PipeNodeRepository
 from ..repositories.waterMeterNodeRepository import WaterMeterNodeRepository
-
+from ..repositories.valveNodeRepository import ValveNodeRepository
+from ..repositories.pumpNodeRepository import PumpNodeRepository
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_load_dialog.ui'))
@@ -89,7 +90,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         tankNodeRepository = TankNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
         reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         pipeNodeRepository = PipeNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        waterMeterNodeRepository = WaterMeterNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
+        waterMeterNodeRepository = WaterMeterNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
+        valveNodeRepository = ValveNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])  
+        pumpNodeRepository = PumpNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
         self.loadMap()
 
         self.writeWateringMetadata()
