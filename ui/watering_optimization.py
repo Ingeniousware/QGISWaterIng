@@ -72,6 +72,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
     def loadSolutions(self):
         index = self.problem_box.currentIndex()
         self.Sensors = {}
+        plt.close("all")
         problemFK = self.Solutions[index]
         params = {'problemKeyId': "{}".format(problemFK)}
         response = requests.get(self.Url, params=params,
@@ -309,25 +310,26 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             if id in self.Sensors:
                 obj = self.Sensors[id]["objectives"]
                 if len(obj) > 1:
-                    current_figure = plt.gcf()
-                    
-                    x_index = current_figure.metadata["x"]
-                    y_index = current_figure.metadata["y"]
-                    
-                    x_ = self.Sensors[id]["objectives"][x_index]
-                    y_ = self.Sensors[id]["objectives"][y_index]
+                    for fig_num in plt.get_fignums():
+                        current_figure = plt.figure(fig_num)
+                        
+                        x_index = current_figure.metadata["x"]
+                        y_index = current_figure.metadata["y"]
+                        
+                        x_ = self.Sensors[id]["objectives"][x_index]
+                        y_ = self.Sensors[id]["objectives"][y_index]
 
-                    scatter = current_figure.axes[0].collections[0]
-            
-                    xdata, ydata = scatter.get_offsets().T
-                    colors = ['blue'] * len(xdata)  # Set all points to blue
-                    
-                    selected_index = np.where((xdata == x_) & (ydata == y_))[0]
-                    if selected_index.size > 0:
-                        colors[selected_index[0]] = 'red'  # Set the selected point to red
+                        scatter = current_figure.axes[0].collections[0]
                 
-                    scatter.set_facecolor(colors)
-                    plt.draw()
+                        xdata, ydata = scatter.get_offsets().T
+                        colors = ['blue'] * len(xdata)  # Set all points to blue
+                        
+                        selected_index = np.where((xdata == x_) & (ydata == y_))[0]
+                        if selected_index.size > 0:
+                            colors[selected_index[0]] = 'red'  # Set the selected point to red
+                    
+                        scatter.set_facecolor(colors)
+                        plt.draw()
         
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
