@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>563</width>
-    <height>482</height>
+    <width>561</width>
+    <height>480</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -49,7 +49,7 @@
     </font>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="loadSolution">
     <property name="autoFillBackground">
@@ -103,6 +103,9 @@
      <string>Create Solution</string>
     </attribute>
     <widget class="QPushButton" name="BtUploadSolution">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>260</x>
@@ -397,6 +400,17 @@
      <height>21</height>
     </rect>
    </property>
+  </widget>
+  <widget class="QWidget" name="horizontalWidget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>2</width>
+     <height>2</height>
+    </rect>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout"/>
   </widget>
  </widget>
  <resources/>

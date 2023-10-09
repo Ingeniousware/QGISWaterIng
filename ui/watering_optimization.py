@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
 from qgis.gui import QgsVertexMarker
 from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QHeaderView
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -63,7 +64,8 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             else: 
                 self.statusText.setText("Creating")
                 self.statusText.setStyleSheet("color: yellow")
-            
+                self.BtUploadSolution.setEnabled(True)
+                
             self.removeInsertAction()
             self.sensorsUploadTable()
         else:
@@ -71,6 +73,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         
     def loadSolutions(self):
         index = self.problem_box.currentIndex()
+        numObjectives = len(self.Objectives[self.problem_box.currentIndex()])
         self.Sensors = {}
         plt.close("all")
         problemFK = self.Solutions[index]
@@ -87,7 +90,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 
                 listOfObjectives = []
                 if not data[i]["objectiveResults"]:
-                    listOfObjectives.extend([[np.nan] * 2])
+                    listOfObjectives.extend([[np.nan] * numObjectives])
                     
                 else:
                     listOfObjectives.append([item["valueResult"] for item in data[i]["objectiveResults"]])
@@ -96,13 +99,15 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                                      self.translateStatus(data[i]["status"]), 
                                      data[i]["solutionSource"],
                                      data[i]["serverKeyId"]] 
-                                    + [item for item in listOfObjectives[0][:2]])
+                                    + [item for item in listOfObjectives[0][:numObjectives]])
                 self.Sensors.update(self.getSolutionSensors(data[i]))
-                                                        
-            model = TableModel(matrix_table, ["Name", "Status", "Source", "Id", "Obj1", "Obj2"])
+            
+            headers = ["Name", "Status", "Source", "Id"] + self.Objectives[self.problem_box.currentIndex()]            
+            model = TableModel(matrix_table, headers)
             proxyModel = QSortFilterProxyModel()
             proxyModel.setSourceModel(model)
             
+            self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             self.tableView.setModel(proxyModel)
             self.tableView.setSortingEnabled(True)
     
@@ -112,6 +117,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.tableView.clicked.connect(self.on_row_clicked)
 
     def createSolution(self):
+        self.BtUploadSolution.setEnabled(True)
         self.cleanMarkers()
         self.statusText.setText("Creating")
         self.statusText.setStyleSheet("color: lightyellow")
