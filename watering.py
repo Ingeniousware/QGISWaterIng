@@ -225,12 +225,12 @@ class QGISPlugin_WaterIng:
         self.dlg.show()
         self.dlg.exec_()
 
+
         server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
-        #server_url = "https://localhost:52224/hubs/waternetworkhub"
-
-
+   
         self.hub_connection = HubConnectionBuilder()\
-        .with_url(server_url, options={"verify_ssl": False}) \
+        .with_url(server_url, options={"verify_ssl": False, 
+                                       "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
         .with_automatic_reconnect({
                 "type": "interval",
                 "keep_alive_interval": 10,
@@ -239,8 +239,9 @@ class QGISPlugin_WaterIng:
 
         self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
         self.hub_connection.on_close(lambda: print("connection closed"))
+        self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
 
-        self.hub_connection.on("UPDATE_IMPORTED", print)
+        self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
         
         self.hub_connection.start()
 
@@ -345,7 +346,7 @@ class QGISPlugin_WaterIng:
         self.importFileINP.setEnabled(False)
         # self.selectElementAction.setEnabled(False)
         # self.selectElementAction.setChecked(False)
-        self.hub_connection.stop()
+        if (self.hub_connection): self.hub_connection.stop()
 
         
     def cleanMarkers(self):
@@ -366,3 +367,7 @@ class QGISPlugin_WaterIng:
             self.dlg.show()
             self.dlg.exec_()
 
+
+    def processINPImportUpdate(self, paraminput):
+        print(paraminput)
+    
