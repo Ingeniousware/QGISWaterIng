@@ -31,7 +31,7 @@ class PumpNodeRepository(AbstractRepository):
             ("Relative Speed", QVariant.Double)
         ]
         
-        pump_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "relativeSpeed", "pumpModelFK"]
+        pump_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "relativeSpeed"]
         
         fields = self.setElementFields(pump_field_definitions)
         
