@@ -22,6 +22,7 @@ from .watering_utils import WateringUtils
 from .ui.watering_datachannels import WateringDatachannels
 from .file_Converter import fileConverter
 from .ui.watering_INPImport import WateringINPImport
+from .ui.watering_update import WateringUpdate
 
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
@@ -156,6 +157,14 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         self.importFileINP.setEnabled(not WateringUtils.isScenarioNotOpened())
         
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_update.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Update Elements'),
+            callback=self.updateElements,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
             icon_path,
@@ -225,27 +234,6 @@ class QGISPlugin_WaterIng:
         self.dlg.show()
         self.dlg.exec_()
 
-
-        server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
-   
-        self.hub_connection = HubConnectionBuilder()\
-        .with_url(server_url, options={"verify_ssl": False, 
-                                       "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
-        .with_automatic_reconnect({
-                "type": "interval",
-                "keep_alive_interval": 10,
-                "intervals": [1, 3, 5, 6, 7, 87, 3]
-            }).build()
-
-        self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
-        self.hub_connection.on_close(lambda: print("connection closed"))
-        self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
-
-        self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
-        
-        self.hub_connection.start()
-
-
         
     def addLoad(self):
         #self.InitializeProjectToolbar()
@@ -256,8 +244,29 @@ class QGISPlugin_WaterIng:
             self.dlg = WateringLoad()
             self.dlg.show() 
             if (self.dlg.exec_() == 1):
+
+                server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
+   
+                self.hub_connection = HubConnectionBuilder()\
+                .with_url(server_url, options={"verify_ssl": False, 
+                                            "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
+                .with_automatic_reconnect({
+                        "type": "interval",
+                        "keep_alive_interval": 10,
+                        "intervals": [1, 3, 5, 6, 7, 87, 3]
+                    }).build()
+
+                self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+                self.hub_connection.on_close(lambda: print("connection closed"))
+                self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+
+                self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+                
+                self.hub_connection.start()
+
                 print("before updating options")                
                 self.updateActionStateOpen()
+                
                 scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
                 invoresult = self.hub_connection.send("joingroup", [scenarioFK])
                 print(invoresult.invocation_id)                
@@ -371,4 +380,12 @@ class QGISPlugin_WaterIng:
 
     def processINPImportUpdate(self, paraminput):
         print(paraminput)
+    
+    def updateElements(self):
+        if WateringUtils.isScenarioNotOpened():
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
+        else:
+            WateringUpdate()
     
