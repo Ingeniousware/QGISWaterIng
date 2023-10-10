@@ -34,14 +34,9 @@ class UpdateAbstractTool():
         data = response.json()["data"]
         for element in data:
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
-            
-            if attributes[-1] is False:
-                attributes[-1] = 0
             attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))
     
             self.ServerDict[element["serverKeyId"]] = attributes
-            
-        print(self.ServerDict)
           
     def getOfflineDict(self):
         for feature in self.Layer.getFeatures():
@@ -50,15 +45,11 @@ class UpdateAbstractTool():
             if not attributes[2]:
                 attributes[2] = ""
                 
-            if attributes[-1] is False:
-                attributes[-1] = 0
-                
             geom = feature.geometry()
             point = geom.asPoint()
             attributes.append((point.x(), point.y()))
 
             self.OfflineDict[feature["ID"]] = attributes
-
     
     def updateLayer(self):        
         server_keys = set(self.ServerDict.keys())
@@ -70,12 +61,14 @@ class UpdateAbstractTool():
 
         #Delete Element
         for element_id in offline_keys - server_keys:
-            self.deleteElement(element_id)
+            #self.deleteElement(element_id)
+            print("-")
 
         #Update Element
-        for element_id in server_keys & offline_keys:  # Intersection of keys
+        for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
-                self.updateElement(element_id)
+                #self.updateElement(element_id)
+                print("-")
                 
     def addElement(self, id):
         feature = QgsFeature(self.Layer.fields())
@@ -90,13 +83,13 @@ class UpdateAbstractTool():
         self.Layer.commitChanges()
     
     def deleteElement(self, id):
-        expression = f"ID = {id}"
+        """expression = f"ID = {id}"
         feature_ids_to_delete = [f.id() for f in self.Layer.getFeatures(QgsFeatureRequest().setFilterExpression(expression))]
 
         self.Layer.startEditing()
         
         for fid in feature_ids_to_delete:
-            self.Layer.deleteFeature(fid)
+            self.Layer.deleteFeature(fid)"""
             
         self.Layer.commitChanges()
     
