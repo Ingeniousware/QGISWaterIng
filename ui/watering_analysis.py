@@ -3,6 +3,7 @@
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
 from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QDockWidget
 
 import os
 import requests
@@ -16,10 +17,10 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_analysis_dialog.ui'))
 
 
-class WateringAnalysis(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self,parent=None):
+class WateringAnalysis(QDockWidget, FORM_CLASS):
+    def __init__(self,iface):
         """Constructor."""
-        super(WateringAnalysis, self).__init__(parent)
+        super(WateringAnalysis, self).__init__(iface.mainWindow())
         self.setupUi(self)
         self.token = os.environ.get('TOKEN')
         self.ScenarioFK = None
