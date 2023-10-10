@@ -4,7 +4,7 @@
 from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
-from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication
+from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 
 
@@ -281,9 +281,10 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
         else:
-            self.dlg = WateringAnalysis()
-            self.dlg.show()
-            self.dlg.exec_()
+            self.analysisDockPanel = WateringAnalysis(self.iface)
+            self.iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
+            self.analysisDockPanel.show()
+            #self.dlg.exec_()
             
     def waterOptimization(self):
         if WateringUtils.isScenarioNotOpened():

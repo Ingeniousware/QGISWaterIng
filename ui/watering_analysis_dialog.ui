@@ -1,110 +1,117 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>loadAnalysis</class>
- <widget class="QDialog" name="loadAnalysis">
-  <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
-  </property>
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>453</width>
-    <height>152</height>
-   </rect>
-  </property>
-  <property name="windowTitle">
-   <string>Water Analysis</string>
-  </property>
-
-  <widget class="QLabel" name="projectLabel">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>20</y>
-     <width>171</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>13</pointsize>
-     <weight>50</weight>
-     <bold>false</bold>
-    </font>
-   </property>
-   <property name="text">
-    <string>Analysis</string>
-   </property>
-  </widget>
-
-  <widget class="QComboBox" name="analysis_box">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>45</y>
-     <width>411</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
-  
-  <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>110</y>
-     <width>111</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Download Results</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="BtGetAnalysisResultsBackward">
-   <property name="geometry">
-    <rect>
-     <x>170</x>
-     <y>110</y>
-     <width>111</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Backward</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="BtGetAnalysisResultsForward">
-   <property name="geometry">
-    <rect>
-     <x>320</x>
-     <y>110</y>
-     <width>111</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Forward</string>
-   </property>
-  </widget>
-  <widget class="QProgressBar" name="progressBar">
-   <property name="geometry">
-    <rect>
-     <x>20</x>
-     <y>70</y>
-     <width>411</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="value">
-    <number>0</number>
-   </property>
-  </widget>
- </widget>
- <resources/>
- <connections/>
+    <class>QGISAnalysisDock</class>
+    <widget class="QDockWidget" name="QGISAnalysisDock">
+        <property name="geometry">
+            <rect>
+                <x>0</x>
+                <y>0</y>
+                <width>326</width>
+                <height>682</height>
+            </rect>
+        </property>
+        <property name="windowTitle">
+            <string>Water Analysis</string>
+        </property>
+        <widget class="QWidget" name="dockWidgetContents">
+            <layout class="QGridLayout" name="gridLayout_2">
+                <item row="0" column="1">
+                    <widget class="QScrollArea" name="scrollArea">
+                        <property name="widgetResizable">
+                            <bool>true</bool>
+                        </property>
+                        <widget class="QWidget" name="scrollAreaWidgetContents">
+                            <widget class="QLabel" name="projectLabel">
+                                <property name="enabled">
+                                    <bool>true</bool>
+                                </property>
+                                <property name="geometry">
+                                    <rect>
+                                        <x>20</x>
+                                        <y>20</y>
+                                        <width>171</width>
+                                        <height>20</height>
+                                    </rect>
+                                </property>
+                                <property name="font">
+                                    <font>
+                                        <pointsize>13</pointsize>
+                                        <weight>50</weight>
+                                        <bold>false</bold>
+                                    </font>
+                                </property>
+                                <property name="text">
+                                    <string>Analysis</string>
+                                </property>
+                            </widget>
+                            <widget class="QComboBox" name="analysis_box">
+                                <property name="geometry">
+                                    <rect>
+                                        <x>20</x>
+                                        <y>45</y>
+                                        <width>411</width>
+                                        <height>21</height>
+                                    </rect>
+                                </property>
+                            </widget>
+                            <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
+                                <property name="geometry">
+                                    <rect>
+                                        <x>20</x>
+                                        <y>110</y>
+                                        <width>111</width>
+                                        <height>21</height>
+                                    </rect>
+                                </property>
+                                <property name="text">
+                                    <string>Download Results</string>
+                                </property>
+                            </widget>
+                            <widget class="QPushButton" name="BtGetAnalysisResultsBackward">
+                                <property name="geometry">
+                                    <rect>
+                                        <x>170</x>
+                                        <y>110</y>
+                                        <width>111</width>
+                                        <height>21</height>
+                                    </rect>
+                                </property>
+                                <property name="text">
+                                    <string>Backward</string>
+                                </property>
+                            </widget>
+                            <widget class="QPushButton" name="BtGetAnalysisResultsForward">
+                                <property name="geometry">
+                                    <rect>
+                                        <x>320</x>
+                                        <y>110</y>
+                                        <width>111</width>
+                                        <height>21</height>
+                                    </rect>
+                                </property>
+                                <property name="text">
+                                    <string>Forward</string>
+                                </property>
+                            </widget>
+                            <widget class="QProgressBar" name="progressBar">
+                                <property name="geometry">
+                                    <rect>
+                                        <x>20</x>
+                                        <y>70</y>
+                                        <width>411</width>
+                                        <height>21</height>
+                                    </rect>
+                                </property>
+                                <property name="value">
+                                    <number>0</number>
+                                </property>
+                            </widget>
+                        </widget>
+                    </widget>
+                </item>
+            </layout>
+        </widget>
+    </widget>
+    <resources/>
+    <connections/>
 </ui>
