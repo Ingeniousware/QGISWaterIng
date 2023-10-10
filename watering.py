@@ -225,27 +225,6 @@ class QGISPlugin_WaterIng:
         self.dlg.show()
         self.dlg.exec_()
 
-
-        server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
-   
-        self.hub_connection = HubConnectionBuilder()\
-        .with_url(server_url, options={"verify_ssl": False, 
-                                       "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
-        .with_automatic_reconnect({
-                "type": "interval",
-                "keep_alive_interval": 10,
-                "intervals": [1, 3, 5, 6, 7, 87, 3]
-            }).build()
-
-        self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
-        self.hub_connection.on_close(lambda: print("connection closed"))
-        self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
-
-        self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
-        
-        self.hub_connection.start()
-
-
         
     def addLoad(self):
         #self.InitializeProjectToolbar()
@@ -256,8 +235,29 @@ class QGISPlugin_WaterIng:
             self.dlg = WateringLoad()
             self.dlg.show() 
             if (self.dlg.exec_() == 1):
+
+                server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
+   
+                self.hub_connection = HubConnectionBuilder()\
+                .with_url(server_url, options={"verify_ssl": False, 
+                                            "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
+                .with_automatic_reconnect({
+                        "type": "interval",
+                        "keep_alive_interval": 10,
+                        "intervals": [1, 3, 5, 6, 7, 87, 3]
+                    }).build()
+
+                self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+                self.hub_connection.on_close(lambda: print("connection closed"))
+                self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+
+                self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+                
+                self.hub_connection.start()
+
                 print("before updating options")                
                 self.updateActionStateOpen()
+                
                 scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
                 invoresult = self.hub_connection.send("joingroup", [scenarioFK])
                 print(invoresult.invocation_id)                

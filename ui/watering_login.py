@@ -19,8 +19,8 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
         super(WateringLogin, self).__init__(parent)
         self.setupUi(self)
         self.loginBtn.clicked.connect(self.login)
-        self.buttonNext.accepted.connect(self.nextDlg)
-        self.buttonNext.rejected.connect(self.close)
+        self.buttonAcceptCancel.accepted.connect(self.nextDlg)
+        self.buttonAcceptCancel.rejected.connect(self.close)
         self.token = None
         self.logged = False
             
