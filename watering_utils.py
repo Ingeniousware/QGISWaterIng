@@ -38,11 +38,17 @@ class WateringUtils():
     def isScenarioNotOpened():
         return WateringUtils.getScenarioId() == "default text"
     
+    def isProjectOpened():
+        project = QgsProject.instance()
+        return bool(project.mapLayers() or project.fileName())
+            
     def getServerUrl():
-        if QgsProject.instance():
-            projectServerUrl =  QgsProject.instance().readEntry("watering","server_url","default text")[0]
+        projectServerUrl = "default text"
         defaultUrl = "https://dev.watering.online"
         
+        if WateringUtils.isProjectOpened():
+            projectServerUrl =  QgsProject.instance().readEntry("watering","server_url","default text")[0]
+            
         return defaultUrl if projectServerUrl == "default text" else projectServerUrl
         
     def translateMeasurements(self, status):

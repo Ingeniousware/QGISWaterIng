@@ -22,6 +22,7 @@ from .watering_utils import WateringUtils
 from .ui.watering_datachannels import WateringDatachannels
 from .file_Converter import fileConverter
 from .ui.watering_INPImport import WateringINPImport
+from .ui.watering_update import WateringUpdate
 
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
@@ -155,6 +156,14 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.importFileINP.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_update.png'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Update Elements'),
+            callback=self.updateElements,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
@@ -371,4 +380,12 @@ class QGISPlugin_WaterIng:
 
     def processINPImportUpdate(self, paraminput):
         print(paraminput)
+    
+    def updateElements(self):
+        if WateringUtils.isScenarioNotOpened():
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
+        else:
+            WateringUpdate()
     
