@@ -16,7 +16,6 @@
   <property name="windowTitle">
    <string>Watering INP Import</string>
   </property>
-
   <widget class="QLabel" name="selectFileLabel">
    <property name="geometry">
     <rect>
@@ -29,7 +28,6 @@
    <property name="font">
     <font>
      <pointsize>13</pointsize>
-     <weight>50</weight>
      <bold>false</bold>
     </font>
    </property>
@@ -37,8 +35,7 @@
     <string>Select File:</string>
    </property>
   </widget>
-
-  <widget class="QgsFileWidget" name="newINPDirectory">
+  <widget class="QgsFileWidget" name="newINPDirectory" native="true">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -47,12 +44,8 @@
      <height>21</height>
     </rect>
    </property>
-   <property name="storageMode">
-    <enum>QgsFileWidget::GetFile</enum>
-   </property>
   </widget>
-
-    <widget class="QLabel" name="selectCrsLabel">
+  <widget class="QLabel" name="selectCrsLabel">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -64,7 +57,6 @@
    <property name="font">
     <font>
      <pointsize>13</pointsize>
-     <weight>150</weight>
      <bold>false</bold>
     </font>
    </property>
@@ -72,8 +64,7 @@
     <string>Select Source CRS:</string>
    </property>
   </widget>
-
-   <widget class="QPushButton" name="selectCRSButton">
+  <widget class="QPushButton" name="selectCRSButton">
    <property name="geometry">
     <rect>
      <x>349</x>
@@ -86,8 +77,7 @@
     <string>...</string>
    </property>
   </widget>
-
- <widget class="QTextEdit" name="selectedCRSLabel">
+  <widget class="QTextEdit" name="selectedCRSLabel">
    <property name="geometry">
     <rect>
      <x>40</x>
@@ -95,15 +85,20 @@
      <width>300</width>
      <height>21</height>
     </rect>
-   </property> 
+   </property>
    <property name="styleSheet">
-    <string notr="true">background-color: #808080; border: 1px solid #808080; color: white;</string>
+    <string notr="true"/>
+   </property>
+   <property name="verticalScrollBarPolicy">
+    <enum>Qt::ScrollBarAlwaysOff</enum>
+   </property>
+   <property name="horizontalScrollBarPolicy">
+    <enum>Qt::ScrollBarAsNeeded</enum>
    </property>
    <property name="readOnly">
     <bool>true</bool>
    </property>
-</widget>
-
+  </widget>
   <widget class="QPushButton" name="convertINPFile">
    <property name="geometry">
     <rect>
@@ -117,21 +112,6 @@
     <string>Upload</string>
    </property>
   </widget>
-
- <!-- <widget class="QPushButton" name="downloadINPFile">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>230</y>
-     <width>150</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Download</string>
-   </property>
-  </widget>
- -->
  </widget>
  <customwidgets>
   <customwidget>

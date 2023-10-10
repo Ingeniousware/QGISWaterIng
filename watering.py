@@ -291,7 +291,7 @@ class QGISPlugin_WaterIng:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
         else:
             self.analysisDockPanel = WateringAnalysis(self.iface)
-            self.iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
+            self.iface.addDockWidget(Qt.TopDockWidgetArea, self.analysisDockPanel)
             self.analysisDockPanel.show()
             #self.dlg.exec_()
             
