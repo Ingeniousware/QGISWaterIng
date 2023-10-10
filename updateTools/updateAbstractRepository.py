@@ -58,24 +58,27 @@ class UpdateAbstractTool():
         #Add Element
         for element_id in server_keys - offline_keys:
             self.addElement(element_id)
-
+            
         #Delete Element
         for element_id in offline_keys - server_keys:
-            #self.deleteElement(element_id)
-            print("-")
+            print("To delete")
+            print(offline_keys - server_keys)
+            self.deleteElement(element_id)
 
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
                 #self.updateElement(element_id)
-                print("-")
+                print("E")
                 
     def addElement(self, id):
         feature = QgsFeature(self.Layer.fields())
         feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
                                                                self.ServerDict[id][-1][1])))
+        feature["ID"] = id
+        
         self.Layer.startEditing()
-
+        
         for i, field in enumerate(self.Fields):
             feature[field] = self.ServerDict[id][i]
 
@@ -83,14 +86,9 @@ class UpdateAbstractTool():
         self.Layer.commitChanges()
     
     def deleteElement(self, id):
-        """expression = f"ID = {id}"
-        feature_ids_to_delete = [f.id() for f in self.Layer.getFeatures(QgsFeatureRequest().setFilterExpression(expression))]
-
+        matching_features = [feature.id() for feature in self.Layer.getFeatures() if feature['ID'] == id]
         self.Layer.startEditing()
-        
-        for fid in feature_ids_to_delete:
-            self.Layer.deleteFeature(fid)"""
-            
+        self.Layer.deleteFeature(matching_features[0])
         self.Layer.commitChanges()
     
     def updateElement(self, id):
