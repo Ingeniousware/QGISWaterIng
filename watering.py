@@ -74,6 +74,10 @@ class QGISPlugin_WaterIng:
 
         self.hub_connection = None
 
+        # Dock
+        self.analysisDockPanel = WateringAnalysis(self.iface)
+        self.iface.addDockWidget(Qt.TopDockWidgetArea, self.analysisDockPanel)
+
 
 
     # noinspection PyMethodMayBeStatic
@@ -290,8 +294,7 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
         else:
-            self.analysisDockPanel = WateringAnalysis(self.iface)
-            self.iface.addDockWidget(Qt.TopDockWidgetArea, self.analysisDockPanel)
+            self.analysisDockPanel.initializeRepository()
             self.analysisDockPanel.show()
             #self.dlg.exec_()
             

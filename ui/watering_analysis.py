@@ -22,16 +22,15 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         """Constructor."""
         super(WateringAnalysis, self).__init__(iface.mainWindow())
         self.setupUi(self)
-        self.token = os.environ.get('TOKEN')
         self.ScenarioFK = None
         self.listOfAnalysis = []
         self.hide_progress_bar()
-        self.initializeRepository()
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getAnalysisResults(0))
         self.BtGetAnalysisResultsBackward.clicked.connect(lambda: self.getAnalysisResults(1))
         self.BtGetAnalysisResultsForward.clicked.connect(lambda: self.getAnalysisResults(2))
         
     def initializeRepository(self):
+        self.token = os.environ.get('TOKEN')
         url_analysis = WateringUtils.getServerUrl() + "/api/v1/WaterAnalysis"
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         params = {'ScenarioFK': "{}".format(self.ScenarioFK)}
