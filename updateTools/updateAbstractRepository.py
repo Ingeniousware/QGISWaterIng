@@ -77,8 +77,8 @@ class UpdateAbstractTool():
     def addElement(self, id):
         print(f"Adding element in {self.LayerName}: {id}")
         
-        feature["ID"] = id
         feature = QgsFeature(self.Layer.fields())
+        feature["ID"] = id
         feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
                                                                self.ServerDict[id][-1][1])))
         
