@@ -1,7 +1,6 @@
-from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsPoint, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
-from qgis.core import QgsGeometry, QgsFeature,QgsFeatureRequest, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter
-from PyQt5.QtCore import QVariant, QFileInfo
-from PyQt5.QtGui import QColor
+from qgis.core import QgsProject, QgsCoordinateReferenceSystem
+from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY
+
 
 import os
 import requests
@@ -15,23 +14,27 @@ class UpdateAbstractTool():
         self.Layer = None
         self.ServerDict = {}
         self.OfflineDict = {}
+        self.Response = None
         
     def initializeRepository(self):
+        print("Update tool has been activated")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.loadElements()
     
     def loadElements(self):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         url = WateringUtils.getServerUrl() + self.UrlGet
-        response = requests.get(url, params=params_element, 
+        self.Response = requests.get(url, params=params_element, 
                             headers={'Authorization': "Bearer {}".format(self.Token)}) 
          
-        self.getServerDict(response)
+        self.getServerDict()
         self.getOfflineDict()
-        self.updateLayer()
-
-    def getServerDict(self, response):
-        data = response.json()["data"]
+        
+        self.updateFromServerToOffline()
+        self.updateFromOfflineToServer()
+    
+    def getServerDict(self):
+        data = self.Response.json()["data"]
         for element in data:
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
             attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))
@@ -51,31 +54,36 @@ class UpdateAbstractTool():
 
             self.OfflineDict[feature["ID"]] = attributes
     
-    def updateLayer(self):        
+    def updateFromServerToOffline(self):        
         server_keys = set(self.ServerDict.keys())
         offline_keys = set(self.OfflineDict.keys())
 
         #Add Element
         for element_id in server_keys - offline_keys:
             self.addElement(element_id)
-
+            
         #Delete Element
         for element_id in offline_keys - server_keys:
-            #self.deleteElement(element_id)
-            print("-")
+            self.deleteElement(element_id)
 
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
-                #self.updateElement(element_id)
-                print("-")
+                self.updateElement(element_id)
+    
+    def updateFromOfflineToServer(self):
+        ...
                 
     def addElement(self, id):
+        print(f"Adding element in {self.LayerName}: {id}")
+        
         feature = QgsFeature(self.Layer.fields())
+        feature["ID"] = id
         feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
                                                                self.ServerDict[id][-1][1])))
+        
         self.Layer.startEditing()
-
+        
         for i, field in enumerate(self.Fields):
             feature[field] = self.ServerDict[id][i]
 
@@ -83,23 +91,35 @@ class UpdateAbstractTool():
         self.Layer.commitChanges()
     
     def deleteElement(self, id):
-        """expression = f"ID = {id}"
-        feature_ids_to_delete = [f.id() for f in self.Layer.getFeatures(QgsFeatureRequest().setFilterExpression(expression))]
-
+        print(f"Deleting existing element in {self.LayerName}: {id}")
+        
+        features_to_delete = [feature.id() for feature in self.Layer.getFeatures() if feature['ID'] == id]
         self.Layer.startEditing()
         
-        for fid in feature_ids_to_delete:
-            self.Layer.deleteFeature(fid)"""
+        for feature in features_to_delete:
+            self.Layer.deleteFeature(feature)
             
         self.Layer.commitChanges()
     
     def updateElement(self, id):
-        ...
         
-    def compare(self):
-        print("comparision: ")
-        print(self.ServerDict["1d1bafe4-98a8-42ce-b5e3-52739e349764"] ==
-              self.OfflineDict["1d1bafe4-98a8-42ce-b5e3-52739e349764"])
+        print(f"Updating existing element in {self.LayerName}: {id}")
+        
+        features = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
+        
+        self.Layer.startEditing()
+        
+        for feature in features:
+            for i in range(len(self.Fields)):
+                feature[self.Fields[i]] = self.ServerDict[id][i]
+            
+            #update geometry
+            feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
+                                                               self.ServerDict[id][-1][1])))
+            
+            self.Layer.updateFeature(feature)
+        
+        self.Layer.commitChanges()
         
     def getTransformedCrs(self, lng, lat):
         source_crs = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS 84
