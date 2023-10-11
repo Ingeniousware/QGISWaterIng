@@ -6,6 +6,7 @@ import requests
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer
 from qgis.utils import iface
+from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
 from ..watering_utils import WateringUtils
 from ..repositories.reservoirNodeRepository import ReservoirNodeRepository
@@ -29,7 +30,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.listOfScenarios = []
         self.loadProjects()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
-        
+    
     def loadProjects(self):
         url_projects = WateringUtils.getServerUrl() + "/api/v1/ProjectWaterNetworks"
         
@@ -62,14 +63,36 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                                          response_scenarios.json()["data"][i]["serverKeyId"]))
     
     def checkExistingProject(self):
-        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-    
-        if scenario_id != "default text":
-            iface.messageBar().pushMessage(self.tr("Error"), self.tr("You already have a project opened!"), level=1, duration=5)
-        elif self.newShpDirectory.filePath() == "":
+        if self.newShpDirectory.filePath() == "":
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a folder!"), level=1, duration=5)
+        elif not WateringUtils.isScenarioNotOpened() or WateringUtils.isProjectOpened():
+            self.saveCurrentProject()
         else:
             self.createNewProject()
+
+    def saveCurrentProject(self):
+        project = QgsProject.instance()
+        if project.isDirty():
+            response = QMessageBox.question(None, 
+                                            "Save Project", 
+                                            "The current project has unsaved changes. Do you want to save it before creating a new project?", 
+                                            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+
+            if response == QMessageBox.Yes:
+                iface.actionSaveProjectAs().trigger()
+                project.write()
+                if project.write():
+                    print(f"Project saved at {project.fileName()}")
+                    iface.messageBar().pushMessage(self.tr("Error"), self.tr(f"Project saved at {project.fileName()}"), level=1, duration=5)
+                else:
+                    print("Failed to save the project.")
+                    iface.messageBar().pushMessage(self.tr("Error"), self.tr("Failed to save the project."), level=1, duration=5)
+
+            elif response == QMessageBox.Cancel:
+                return
+
+        project.clear()
+        self.createNewProject()
             
     def createNewProject(self):
         #project name
