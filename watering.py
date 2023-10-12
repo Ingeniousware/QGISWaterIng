@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Import QGis
+import time
 from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
@@ -77,6 +78,10 @@ class QGISPlugin_WaterIng:
         # Dock
         self.analysisDockPanel = WateringAnalysis(self.iface)
         self.iface.addDockWidget(Qt.TopDockWidgetArea, self.analysisDockPanel)
+
+        self.scenarioUnitOFWork = None
+
+
 
 
 
@@ -249,6 +254,8 @@ class QGISPlugin_WaterIng:
             self.dlg.show() 
             if (self.dlg.exec_() == 1):
 
+                self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork
+
                 server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
    
                 self.hub_connection = HubConnectionBuilder()\
@@ -260,20 +267,20 @@ class QGISPlugin_WaterIng:
                         "intervals": [1, 3, 5, 6, 7, 87, 3]
                     }).build()
 
-                self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+                #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+                self.hub_connection.on_open(self.createOnlineConnectionChannels)
                 self.hub_connection.on_close(lambda: print("connection closed"))
                 self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
-
+                
                 self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+                self.hub_connection.on("POST_RESERVOIR", self.processPOSTRESERVOIR)
+                self.hub_connection.on("DELETE_RESERVOIR", self.processDELETERESERVOIR)
                 
                 self.hub_connection.start()
 
                 print("before updating options")                
                 self.updateActionStateOpen()
-                
-                scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-                invoresult = self.hub_connection.send("joingroup", [scenarioFK])
-                print(invoresult.invocation_id)                
+             
                 
 
 
@@ -381,8 +388,23 @@ class QGISPlugin_WaterIng:
             self.dlg.exec_()
 
 
+    def createOnlineConnectionChannels(self):
+        print("Entering creation of online connection channels")
+        scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        invoresult = self.hub_connection.send("joingroup", [scenarioFK]) 
+        print(invoresult.invocation_id)
+
+
     def processINPImportUpdate(self, paraminput):
         print(paraminput)
+
+    def processPOSTRESERVOIR(self, paraminput):
+        #self.scenarioUnitOFWork.reservoirRepository.AddElement(paraminput)
+        print(paraminput)
+
+    def processDELETERESERVOIR(self, paraminput):
+        print(paraminput)
+        
     
     def updateElements(self):
         if WateringUtils.isScenarioNotOpened():
@@ -390,5 +412,8 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
         else:
-            WateringUpdate()
+            
+            self.scenarioUnitOFWork.UpdateFromServerToOffline()
+           
+            #WateringUpdate()
     
