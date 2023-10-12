@@ -11,5 +11,9 @@
         <file>images/icon_optimization.png</file>
         <file>images/icon_measurement.png</file>
         <file>images/icon_update.png</file>
+        <file>images/icon_play.png</file>
+        <file>images/icon_stop.png</file>
+        <file>images/icon_backward.png</file>
+        <file>images/icon_forward.png</file>
     </qresource>
 </RCC>

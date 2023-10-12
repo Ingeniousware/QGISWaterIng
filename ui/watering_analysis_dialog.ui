@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>439</width>
-    <height>235</height>
+    <width>377</width>
+    <height>381</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,8 +37,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>419</width>
-         <height>196</height>
+         <width>357</width>
+         <height>342</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -94,20 +94,7 @@
             <property name="sizeConstraint">
              <enum>QLayout::SetMinAndMaxSize</enum>
             </property>
-            <item>
-             <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Download Results</string>
-              </property>
-             </widget>
-            </item>
-            <item>
+            <item alignment="Qt::AlignTop">
              <widget class="QPushButton" name="BtGetAnalysisResultsBackward">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -116,11 +103,36 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>Backward</string>
+               <string/>
               </property>
              </widget>
             </item>
-            <item>
+
+            <item alignment="Qt::AlignTop">
+                <widget class="QPushButton" name="BtGetAnalysisResultsPlayPause">
+                    <property name="enabled">
+                        <bool>true</bool>
+                    </property>
+                    <property name="sizePolicy">
+                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                        </sizepolicy>
+                    </property>
+                    <property name="maximumSize">
+                        <size>
+                            <width>24</width>
+                            <height>24</height>
+                        </size>
+                    </property>
+                    <property name="text">
+                        <string/>
+                    </property>
+                </widget>
+            </item>
+
+
+            <item alignment="Qt::AlignTop">
              <widget class="QPushButton" name="BtGetAnalysisResultsForward">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -129,7 +141,7 @@
                </sizepolicy>
               </property>
               <property name="text">
-               <string>Forward</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -137,13 +149,20 @@
           </item>
          </layout>
         </item>
+        <item>
+         <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Load Results</string>
+          </property>
+         </widget>
+        </item>
        </layout>
-       <zorder>analysis_box</zorder>
-       <zorder>BtGetAnalysisResultsCurrent</zorder>
-       <zorder>BtGetAnalysisResultsBackward</zorder>
-       <zorder>BtGetAnalysisResultsForward</zorder>
-       <zorder>progressBar</zorder>
-       <zorder>projectLabel</zorder>
       </widget>
      </widget>
     </item>

@@ -3,7 +3,9 @@
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QDockWidget
+from PyQt5.QtWidgets import QDockWidget, QAction
+from PyQt5.QtGui import QIcon
+
 
 import os
 import requests
@@ -28,7 +30,13 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getAnalysisResults(0))
         self.BtGetAnalysisResultsBackward.clicked.connect(lambda: self.getAnalysisResults(1))
         self.BtGetAnalysisResultsForward.clicked.connect(lambda: self.getAnalysisResults(2))
+        self.BtGetAnalysisResultsPlayPause.clicked.connect(lambda: self.playbutton(0))
+
+        self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_play.png"))
+        self.BtGetAnalysisResultsBackward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_backward.png"))
+        self.BtGetAnalysisResultsForward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_forward.png"))
         
+    
     def initializeRepository(self):
         self.token = os.environ.get('TOKEN')
         url_analysis = WateringUtils.getServerUrl() + "/api/v1/WaterAnalysis"
@@ -52,6 +60,9 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior)
         self.set_progress(100)  
         self.timer_hide_progress_bar()
+
+    def playbutton(self, behavior):
+        print("Pause")
         
     def set_progress(self, progress_value):
         t = time() - self.start
