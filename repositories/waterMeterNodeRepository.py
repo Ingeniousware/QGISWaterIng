@@ -14,6 +14,7 @@ class WaterMeterNodeRepository(AbstractRepository):
         super(WaterMeterNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/WaterMeter"
         self.StorageShapeFile = os.path.join(project_path, "watering_waterMeter.shp")
+        self.field_definitions = None
         self.initializeRepository()
      
     def initializeRepository(self):
@@ -23,7 +24,7 @@ class WaterMeterNodeRepository(AbstractRepository):
         print(response_waterMeter)
 
         #Setting shapefile fields 
-        waterMeter_field_definitions = [
+        self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
             ("Name", QVariant.String),
@@ -36,11 +37,11 @@ class WaterMeterNodeRepository(AbstractRepository):
         waterMeter_features = ["lng", "lat", "serverKeyId","lastModified","name", "description","meterstate",
                                 "functionalType","lastReadDateTime"]
         
-        fields = self.setElementFields(waterMeter_field_definitions)
+        fields = self.setElementFields(self.field_definitions)
         
         #Adding tanks to shapefile
         list_of_waterMeter = self.loadElementFeatures(response_waterMeter, waterMeter_features)
-        waterMeter_layer = self.createElementLayer(waterMeter_features, list_of_waterMeter, fields, waterMeter_field_definitions)
+        waterMeter_layer = self.createElementLayer(waterMeter_features, list_of_waterMeter, fields, self.field_definitions)
         
         #Write and open shapefile
         self.writeShp(waterMeter_layer)

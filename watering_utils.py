@@ -10,6 +10,8 @@ from PyQt5.QtCore import QCoreApplication
 
 from PyQt5.QtCore import QTimer
 from time import time, gmtime, strftime
+import requests
+import os
 
 #serverInput
 
@@ -50,7 +52,22 @@ class WateringUtils():
             projectServerUrl =  QgsProject.instance().readEntry("watering","server_url","default text")[0]
             
         return defaultUrl if projectServerUrl == "default text" else projectServerUrl
-        
+    
+    def getResponse(url, params):
+        try:
+            response = requests.get(url, params=params,
+                                    headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})
+            print(response)
+            if response.status_code == 200:
+                    return response
+                
+        except requests.ConnectionError:
+            iface.messageBar().pushMessage(("Error"), ("Failed to connect to the WaterIng, check your connection."), level=1, duration=5)
+        except requests.Timeout:
+                iface.messageBar().pushMessage(("Error"), ("Request timed out."), level=1, duration=5)
+        except:
+            iface.messageBar().pushMessage(("Error"), ("Unable to connect to WaterIng."), level=1, duration=5)
+                
     def translateMeasurements(self, status):
         conditions = {
             0: "Unknown",

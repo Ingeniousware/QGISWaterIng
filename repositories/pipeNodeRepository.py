@@ -14,6 +14,8 @@ class PipeNodeRepository(AbstractRepository):
         super(PipeNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/WaterPipe"
         self.StorageShapeFile = os.path.join(project_path, "watering_pipes.shp")
+        self.LayerName = "watering_pipes"
+        self.field_definitions = None
         self.initializeRepository()
 
     def initializeRepository(self):
@@ -21,7 +23,7 @@ class PipeNodeRepository(AbstractRepository):
         response_pipes = self.loadElements()
         
         #Setting shapefile fields 
-        pipe_field_definitions = [
+        self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
             ("Name", QVariant.String),
@@ -42,7 +44,7 @@ class PipeNodeRepository(AbstractRepository):
                            "length", "roughnessAbsolute", "roughnessCoefficient", "nodeUpName", "nodeDownName",
                            "pipeCurrentStatus","velocity", "flow" ,"headLoss"]
         
-        fields = self.setElementFields(pipe_field_definitions)
+        fields = self.setElementFields(self.field_definitions)
         
         layer = QgsVectorLayer("LineString", "Line Layer", "memory")
         layer_provider = layer.dataProvider()
@@ -56,7 +58,7 @@ class PipeNodeRepository(AbstractRepository):
             points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in pipe["vertices"]]
             g = QgsGeometry.fromPolylineXY(points)
             feature.setGeometry(g)
-            for field, attribute in zip(pipe_field_definitions, pipe_attributes):
+            for field, attribute in zip(self.field_definitions, pipe_attributes):
                 feature.setAttribute(field[0], pipe[attribute])
             layer_provider.addFeature(feature)
         

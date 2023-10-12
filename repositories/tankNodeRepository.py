@@ -14,39 +14,40 @@ class TankNodeRepository(AbstractRepository):
         super(TankNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/TankNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_tanks.shp")
-        self.initializeRepository()
-     
-    def initializeRepository(self):
-        #Tanks Loading
-        response_tanks = self.loadElements()
-
-        #Setting shapefile fields 
-        tank_field_definitions = [
+        self.LayerName = "watering_tanks"
+        self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z","initialLevel",
+                         "minimumLevel","maximumLevel","minimumVolume", "nominalDiameter","canOverflow"]
+        self.Fields = ['Last Mdf', 'Name', 'Descript', 'Z[m]', 'Init. Lvl', 'Min. Lvl', 
+                        'Max. Lvl', 'Min. Vol.', 'Diameter', 'Overflow']
+        
+        self.field_definitions = [
             ("ID", QVariant.String),
-            ("Last Modified", QVariant.String),
+            ("Last Mdf", QVariant.String),
             ("Name", QVariant.String),
-            ("Description", QVariant.String),
+            ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
-            ("Initial Level [m]", QVariant.Double),
-            ("Minimum Level [m]", QVariant.Double),
-            ("Maximum Level [m]", QVariant.Double),
-            ("Minimum Volume [m3]", QVariant.Double),
+            ("Init. Lvl", QVariant.Double),
+            ("Min. Lvl", QVariant.Double),
+            ("Max. Lvl", QVariant.Double),
+            ("Min. Vol.", QVariant.Double),
             ("Diameter", QVariant.Double),
-            ("Can Overflow", QVariant.Bool),
+            ("Overflow", QVariant.Bool),
             ("Pressure", QVariant.Double),
             ("Demand", QVariant.Double),
             ("Demand C", QVariant.Double),
             ("Age", QVariant.Double)
         ]
+        self.initializeRepository()
+     
+    def initializeRepository(self):
+        #Tanks Loading
+        response_tanks = self.loadElements()
         
-        tank_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z","initialLevel",
-                         "minimumLevel","maximumLevel","minimumVolume", "nominalDiameter","canOverflow"]
-        
-        fields = self.setElementFields(tank_field_definitions)
+        fields = self.setElementFields(self.field_definitions)
         
         #Adding tanks to shapefile
-        list_of_tanks = self.loadElementFeatures(response_tanks, tank_features)
-        tanks_layer = self.createElementLayer(tank_features, list_of_tanks, fields, tank_field_definitions)
+        list_of_tanks = self.loadElementFeatures(response_tanks, self.features)
+        tanks_layer = self.createElementLayer(self.features, list_of_tanks, fields, self.field_definitions)
         
         #Write and open shapefile
         self.writeShp(tanks_layer)
