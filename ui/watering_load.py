@@ -8,6 +8,8 @@ from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer
 from qgis.utils import iface
 from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
+from ..unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
+
 from ..watering_utils import WateringUtils
 from ..repositories.reservoirNodeRepository import ReservoirNodeRepository
 from ..repositories.tankNodeRepository import TankNodeRepository
@@ -29,6 +31,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.listOfProjects = []
         self.listOfScenarios = []
         self.loadProjects()
+        self.myScenarioUnitOfWork = None
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
     
     def loadProjects(self):
@@ -109,13 +112,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         root = QgsProject.instance().layerTreeRoot()
         shapeGroup = root.addGroup("WaterIng Network Layout")
 
-        waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])                
-        tankNodeRepository = TankNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
-        reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        pipeNodeRepository = PipeNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        waterMeterNodeRepository = WaterMeterNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        valveNodeRepository = ValveNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])  
-        pumpNodeRepository = PumpNodeRepository(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])    
+        myScenarioUnitOfWork = scenarioUnitOfWork(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
+
         self.loadMap()
 
         self.writeWateringMetadata()

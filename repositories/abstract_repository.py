@@ -85,3 +85,22 @@ class AbstractRepository():
         symbol.setSize(layer_size) 
         symbol.setColor(QColor.fromRgb(23, 61, 108))
         layer.triggerRepaint()
+
+
+    def updateFromServerToOffline(self):        
+        server_keys = set(self.ServerDict.keys())
+        offline_keys = set(self.OfflineDict.keys())
+
+        #Add Element
+        for element_id in server_keys - offline_keys:
+            self.addElement(element_id)
+            
+        #Delete Element
+        for element_id in offline_keys - server_keys:
+            self.deleteElement(element_id)
+
+        #Update Element
+        for element_id in server_keys & offline_keys:
+            if self.ServerDict[element_id] != self.OfflineDict[element_id]:
+                self.updateElement(element_id)
+    
