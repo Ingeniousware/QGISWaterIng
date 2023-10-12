@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>377</width>
-    <height>381</height>
+    <width>419</width>
+    <height>204</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Water Analysis</string>
@@ -26,6 +32,12 @@
       <property name="enabled">
        <bool>true</bool>
       </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="sizeAdjustPolicy">
        <enum>QAbstractScrollArea::AdjustToContents</enum>
       </property>
@@ -37,8 +49,8 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>357</width>
-         <height>342</height>
+         <width>399</width>
+         <height>165</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -95,7 +107,7 @@
              <enum>QLayout::SetMinAndMaxSize</enum>
             </property>
             <item alignment="Qt::AlignTop">
-             <widget class="QPushButton" name="BtGetAnalysisResultsBackward">
+             <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -103,35 +115,51 @@
                </sizepolicy>
               </property>
               <property name="text">
+               <string>Load Results</string>
+              </property>
+             </widget>
+            </item>
+            <item alignment="Qt::AlignTop">
+             <widget class="QPushButton" name="BtGetAnalysisResultsBackward">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
                <string/>
               </property>
              </widget>
             </item>
-
             <item alignment="Qt::AlignTop">
-                <widget class="QPushButton" name="BtGetAnalysisResultsPlayPause">
-                    <property name="enabled">
-                        <bool>true</bool>
-                    </property>
-                    <property name="sizePolicy">
-                        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                        </sizepolicy>
-                    </property>
-                    <property name="maximumSize">
-                        <size>
-                            <width>24</width>
-                            <height>24</height>
-                        </size>
-                    </property>
-                    <property name="text">
-                        <string/>
-                    </property>
-                </widget>
+             <widget class="QPushButton" name="BtGetAnalysisResultsPlayPause">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
             </item>
-
-
             <item alignment="Qt::AlignTop">
              <widget class="QPushButton" name="BtGetAnalysisResultsForward">
               <property name="sizePolicy">
@@ -139,6 +167,12 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>24</width>
+                <height>24</height>
+               </size>
               </property>
               <property name="text">
                <string/>
@@ -148,19 +182,6 @@
            </layout>
           </item>
          </layout>
-        </item>
-        <item>
-         <widget class="QPushButton" name="BtGetAnalysisResultsCurrent">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Load Results</string>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>
