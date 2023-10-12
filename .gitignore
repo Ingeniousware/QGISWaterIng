@@ -10,3 +10,4 @@
 /inpProcessing/__pycache__/
 /repositories/.DS_Store
 /updateTools/__pycache__/
+/unitofwork/__pycache__

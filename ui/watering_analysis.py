@@ -32,9 +32,12 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.BtGetAnalysisResultsForward.clicked.connect(lambda: self.getAnalysisResults(2))
         self.BtGetAnalysisResultsPlayPause.clicked.connect(lambda: self.playbutton(0))
 
+        self.is_playing = False
         self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_play.png"))
+        self.BtGetAnalysisResultsPlayPause.clicked.connect(self.switch_icon_play_pause)
         self.BtGetAnalysisResultsBackward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_backward.png"))
         self.BtGetAnalysisResultsForward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_forward.png"))
+
         
     
     def initializeRepository(self):
@@ -49,6 +52,15 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             self.analysis_box.addItem(response_analysis.json()["data"][i]["name"])
             self.listOfAnalysis.append((response_analysis.json()["data"][i]["serverKeyId"],
                                          response_analysis.json()["data"][i]["simulationStartTime"]))
+            
+    def switch_icon_play_pause(self):
+        if self.is_playing:
+            icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_play.png"
+        else:
+            icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_stop.png"
+        
+        self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(icon_path))
+        self.is_playing = not self.is_playing
 
     def getAnalysisResults(self, behavior):
         self.show_progress_bar()
