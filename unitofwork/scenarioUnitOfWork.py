@@ -6,7 +6,6 @@ from ..repositories.valveNodeRepository import ValveNodeRepository
 from ..repositories.waterDemandNodeRepository import WateringDemandNodeRepository
 from ..repositories.waterMeterNodeRepository import WaterMeterNodeRepository
 
-
 class scenarioUnitOfWork():
 
     def __init__(self, token, project_path, scenarioFK):
@@ -43,3 +42,10 @@ class scenarioUnitOfWork():
     """ def UpdateFromOfflineToServer(self):
         foreach element in mylist
             element.UpdateFromOfflineToServer() """
+    
+    def DeleteElement(self, id):
+        #print("called to delete reservoir")
+        #print("reservoir: ", self.reservoirNodeRepository)
+        #print("id: ", id)
+        #print("id pure: ", id[0])
+        self.reservoirNodeRepository.deleteElement(id[0])

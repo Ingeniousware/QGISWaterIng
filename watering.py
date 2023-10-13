@@ -419,6 +419,7 @@ class QGISPlugin_WaterIng:
         print(paraminput)
 
     def processDELETERESERVOIR(self, paraminput):
+        self.scenarioUnitOFWork.DeleteElement(paraminput)
         print(paraminput)
         
     

@@ -2,9 +2,10 @@ import requests
 from ..watering_utils import WateringUtils
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
-from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter
+from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
+from qgis.utils import iface
 
 class AbstractRepository():
 
@@ -22,6 +23,7 @@ class AbstractRepository():
         self.Attributes = None
         
     def loadElements(self):
+        print("Am I Creating a layer?")
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         url = WateringUtils.getServerUrl() + self.UrlGet
         response =  requests.get(url, params=params_element, 
@@ -175,20 +177,24 @@ class AbstractRepository():
     def deleteElement(self, id):
         print(f"Deleting existing element in {self.LayerName}: {id}")
         
+        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        
         features_to_delete = [feature.id() for feature in self.Layer.getFeatures() if feature['ID'] == id]
+
         self.Layer.startEditing()
         
         for feature in features_to_delete:
             self.Layer.deleteFeature(feature)
             
         self.Layer.commitChanges()
-    
+        
     def updateElement(self, id):
         
         print(f"Updating existing element in {self.LayerName}: {id}")
+        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
         features = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
-        
+
         self.Layer.startEditing()
         
         for feature in features:
