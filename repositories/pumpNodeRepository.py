@@ -15,6 +15,8 @@ class PumpNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterPump"
         self.StorageShapeFile = os.path.join(project_path, "watering_pumps.shp")
         self.LayerName = "watering_pumps"
+        self.Color = QColor.fromRgb(23, 61, 108)
+        self.StrokeColor = None
         self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Modified", QVariant.String),

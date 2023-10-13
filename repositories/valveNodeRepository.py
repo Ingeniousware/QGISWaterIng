@@ -15,6 +15,8 @@ class ValveNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterValve"
         self.StorageShapeFile = os.path.join(project_path, "watering_valves.shp")
         self.field_definitions = None
+        self.Color = QColor.fromRgb(23, 61, 108)
+        self.StrokeColor = None
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),

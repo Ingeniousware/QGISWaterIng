@@ -23,7 +23,6 @@ class AbstractRepository():
         self.Attributes = None
         
     def loadElements(self):
-        print("Am I Creating a layer?")
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         url = WateringUtils.getServerUrl() + self.UrlGet
         response =  requests.get(url, params=params_element, 
@@ -91,7 +90,9 @@ class AbstractRepository():
         symbol = renderer.symbol()
         symbol.changeSymbolLayer(0, QgsSimpleMarkerSymbolLayer(layer_symbol))
         symbol.setSize(layer_size) 
-        symbol.setColor(QColor.fromRgb(23, 61, 108))
+        symbol.setColor(self.Color)
+        if self.StrokeColor:
+            symbol.symbolLayer(0).setStrokeColor(self.StrokeColor)
         layer.triggerRepaint()
     
     def updateFromServerToOffline(self):  
