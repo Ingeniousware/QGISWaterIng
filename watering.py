@@ -24,7 +24,6 @@ from .watering_utils import WateringUtils
 from .ui.watering_datachannels import WateringDatachannels
 from .file_Converter import fileConverter
 from .ui.watering_INPImport import WateringINPImport
-from .ui.watering_update import WateringUpdate
 
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
