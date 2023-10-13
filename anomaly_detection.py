@@ -64,8 +64,7 @@ class PlotController():
     
     plt.style.use('ggplot')
 
-    def live_plotter(self, x_vec,y1_data,title, yLabel,line1,pause_time=2):
-        
+    def updateLivePlot(self, x_vec,y1_data,title, yLabel,line1):
         
         if line1==[]:
             plt.ion()
@@ -94,7 +93,13 @@ class PlotController():
             ax.set_xlim(new_x_min, new_x_max) """
         if np.min(y1_data)<=line1.axes.get_ylim()[0] or np.max(y1_data)>=line1.axes.get_ylim()[1]:
             plt.ylim([np.min(y1_data)-np.std(y1_data),np.max(y1_data)+np.std(y1_data)])
-        plt.pause(pause_time)
+
+        ax = plt.gca()  # get the current axes
+        ax.relim()      # make sure all the data fits
+        ax.autoscale()  # auto-scale
+        # only needed mpl < 1.5
+        # ax.figure.canvas.draw_idle()       # re-draw the figure
+
         return line1
     
 

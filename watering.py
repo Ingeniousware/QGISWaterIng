@@ -5,7 +5,7 @@ import time
 from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
-from PyQt5.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 
 
@@ -55,7 +55,8 @@ class QGISPlugin_WaterIng:
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
-            QCoreApplication.installTranslator(self.translator)
+            if qVersion() > '4.3.3':
+                QCoreApplication.installTranslator(self.translator)
 
         # Declare instance attributes
         self.actions = []
@@ -81,7 +82,16 @@ class QGISPlugin_WaterIng:
 
         self.scenarioUnitOFWork = None
 
-
+    def tr(self, message):
+        """Get the translation for a string using Qt translation API.
+        We implement this ourselves since we do not inherit QObject.
+        :param message: String for translation.
+        :type message: str, QString
+        :returns: Translated version of message.
+        :rtype: QString
+        """
+        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
+        return QCoreApplication.translate("QGISRed", message)
 
 
 
@@ -177,7 +187,8 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
             icon_path,
-            text=self.tr(u'Water Analysis'),
+            text=self.tr(QCoreApplication.translate("QGISWaterIng", u'Water Network Analysis')),
+            #text=self.tr(u'Water Network Analysis'),
             callback=self.waterAnalysis,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())     
