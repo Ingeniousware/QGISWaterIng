@@ -32,6 +32,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.listOfProjects = []
         self.listOfScenarios = []
         self.myScenarioUnitOfWork = None
+        self.projectPathQgsProject = None
+        self.project_path = None
         self.loadProjects()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
     
@@ -83,8 +85,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
 
             if response == QMessageBox.Yes:
-                iface.actionSaveProjectAs().trigger()
-                project.write()
+                project_path = project.readEntry("watering","project_path","default text")[0]
+                if project_path != "default text":
+                    project.write(project_path)
+                else:
+                    iface.actionSaveProjectAs().trigger()
+                    
                 if project.write():
                     print(f"Project saved at {project.fileName()}")
                     iface.messageBar().pushMessage(self.tr("Error"), self.tr(f"Project saved at {project.fileName()}"), level=1, duration=5)
@@ -101,19 +107,21 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def createNewProject(self):
         #project name
         project = QgsProject.instance()
-        project_name = self.newProjectNameInput.text()
-        project.setFileName("My WaterIng Project" if project_name == "" else project_name)
-        project.write()
+        name = self.newProjectNameInput.text()
+        project_name = "My WaterIng Project" if not name else name
+        self.project_path = self.newShpDirectory.filePath()
+        project.setFileName(project_name)
+        self.projectPathQgsProject = self.project_path + "/" + project_name + ".qgz"
+        project.write(self.projectPathQgsProject)
+        QgsProject.instance().writeEntry("watering", "project_path", self.projectPathQgsProject)
         #load layers
         self.CreateLayers()
     
     def CreateLayers(self):
-        project_path = self.newShpDirectory.filePath()
-
         root = QgsProject.instance().layerTreeRoot()
         shapeGroup = root.addGroup("WaterIng Network Layout")
 
-        self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
+        self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         #print(myScenarioUnitOfWork)
         #pickle
         #serialized_obj = pickle.dumps(myScenarioUnitOfWork)
