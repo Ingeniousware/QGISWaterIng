@@ -19,8 +19,9 @@ class AbstractRepository():
         self.ServerDict = {}
         self.OfflineDict = {}
         self.Response = None
-        self.Fields = None
+        self.FieldDefinitions = None
         self.Attributes = None
+
         
     def loadElements(self):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
@@ -36,39 +37,58 @@ class AbstractRepository():
         return fields
         
 
-    def createElementLayerFromServerResponse(self, element_features, response, fields, fields_definitions):
-        layer = QgsVectorLayer("Point?crs=" + self.destCrs.authid(), "New Layer", "memory")
-        layer.dataProvider().addAttributes(fields)
-        layer.updateFields()
+    def createElementLayerFromServerResponse(self, response):
+
+        fields = self.setElementFields(self.field_definitions)
+        self.currentLayer = QgsVectorLayer("Point?crs=" + self.destCrs.authid(), "New Layer", "memory")
+        self.currentLayer.dataProvider().addAttributes(fields)
+        self.currentLayer.updateFields()
         
         response_data = response.json()["data"]
 
-        for elementJSON in response_data:
-            
-            element = [elementJSON[field] for field in element_features]
+        for elementJSON in response_data:            
+            self.addElementFromJSON(elementJSON)
+                    
+
+
+    def addElementFromJSON(self, elementJSON):
+        try:
+            element = [elementJSON[field] for field in self.features]
             element.extend([0] * 4)
 
-            feature = QgsFeature(layer.fields())
+            feature = QgsFeature(self.currentLayer.fields())
             geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
-            for i in range(len(fields_definitions)):
-                feature.setAttribute(fields_definitions[i][0], element[i+2])
-            layer.dataProvider().addFeature(feature)
-            
-        return layer 
+            for i in range(len(self.field_definitions)):
+                feature.setAttribute(self.field_definitions[i][0], element[i+2])
+            self.currentLayer.dataProvider().addFeature(feature)
+        except ValueError:
+              print("Error->" + ValueError)
+        
+
+
 
         
     def initializeRepository(self):
-        ...
+        #loading element from the API
+        serverResponse = self.loadElements()        
+        #Adding elements to shapefile
+        self.createElementLayerFromServerResponse(serverResponse)              
+        #Write shapefile
+        self.writeShp()
+
+
     
-    def writeShp(self, layer):
-        writer = QgsVectorFileWriter.writeAsVectorFormat(layer, self.StorageShapeFile, "utf-8", layer.crs(), "ESRI Shapefile")
+    def writeShp(self):
+        writer = QgsVectorFileWriter.writeAsVectorFormat(self.currentLayer, self.StorageShapeFile, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
         if writer[0] == QgsVectorFileWriter.NoError:
             print("Shapefile created successfully!")
         else:
             print("Error creating tanks Shapefile!")
         
+
+
     def openLayers(self, layer_symbol, layer_size):
         element_layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
         self.setElementSymbol(element_layer, layer_symbol, layer_size)
@@ -85,6 +105,8 @@ class AbstractRepository():
             #QgsProject.instance().addMapLayer(element_layer)
             print("opened successfully:", element_layer.name())
 
+
+
     def setElementSymbol(self, layer, layer_symbol, layer_size):
         renderer = layer.renderer()
         symbol = renderer.symbol()
@@ -97,7 +119,7 @@ class AbstractRepository():
     
     def updateFromServerToOffline(self):  
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        self.Fields = [t[0] for t in self.field_definitions[1:-4]]
+        self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-4]]
         self.Attributes = self.features[3:]
         self.getServerDict()
         self.getOfflineDict()
@@ -144,7 +166,7 @@ class AbstractRepository():
           
     def getOfflineDict(self):
         for feature in self.Layer.getFeatures():
-            attributes = [feature[self.Fields[i]] for i in range(len(self.Fields))]
+            attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
             
             if not attributes[2]:
                 attributes[2] = ""
@@ -167,32 +189,15 @@ class AbstractRepository():
         self.Layer.startEditing()
         
         
-        for i, field in enumerate(self.Fields):
+        for i, field in enumerate(self.FieldDefinitions):
             feature[field] = self.ServerDict[id][i]
 
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
 
 
-    def addElementFromJSON(self, elementJSONInfo):
-        
-        print(f"Adding element in {self.LayerName}: {elementJSONInfo}")
-        
-        features = [elementJSONInfo[field] for field in element_features]
 
-        feature = QgsFeature(self.Layer.fields())
-        feature["ID"] = id
-        feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
-                                                               self.ServerDict[id][-1][1])))
-        
-        self.Layer.startEditing()
-        
-        
-        for i, field in enumerate(self.Fields):
-            feature[field] = self.ServerDict[id][i]
-
-        self.Layer.addFeature(feature)
-        self.Layer.commitChanges()
+    
 
 
 
@@ -222,8 +227,8 @@ class AbstractRepository():
         self.Layer.startEditing()
         
         for feature in features:
-            for i in range(len(self.Fields)):
-                feature[self.Fields[i]] = self.ServerDict[id][i]
+            for i in range(len(self.FieldDefinitions)):
+                feature[self.FieldDefinitions[i]] = self.ServerDict[id][i]
             
             #update geometry
             feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],

@@ -33,18 +33,11 @@ class ReservoirNodeRepository(AbstractRepository):
         
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
-        
+        self.currentLayer = None        
         self.initializeRepository()
+
      
     def initializeRepository(self):
-        #Reservoirs Loading from API
-        response_reservoirs = self.loadElements()
-        
-        fields = self.setElementFields(self.field_definitions)
-        
-        #Adding reservoirs to shapefile
-        reservoirs_layer = self.createElementLayerFromServerResponse(self.features, response_reservoirs, fields, self.field_definitions)
-              
-        #Write and open shapefile
-        self.writeShp(reservoirs_layer)
+        super(ReservoirNodeRepository, self).initializeRepository()      
+       
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Square, 6)

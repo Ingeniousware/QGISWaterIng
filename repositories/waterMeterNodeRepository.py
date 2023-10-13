@@ -15,8 +15,6 @@ class WaterMeterNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterMeter"
         self.StorageShapeFile = os.path.join(project_path, "watering_waterMeter.shp")
         self.field_definitions = None
-        self.Color = QColor.fromRgb(23, 61, 108)
-        self.StrokeColor = None
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),
@@ -31,19 +29,14 @@ class WaterMeterNodeRepository(AbstractRepository):
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description","meterstate",
                                 "functionalType","lastReadDateTime"]
         
+        self.Color = QColor.fromRgb(23, 61, 108)
+        self.StrokeColor = None
+        self.currentLayer = None
         self.initializeRepository()
 
         
      
     def initializeRepository(self):
-       
-        response_waterMeter = self.loadElements()        
-        fields = self.setElementFields(self.field_definitions)
-        
-        #Adding tanks to shapefile
-        waterMeter_layer = self.createElementLayerFromServerResponse(self.features, response_waterMeter, fields, self.field_definitions)
-        
-        #Write and open shapefile
-        self.writeShp(waterMeter_layer)
+        super(WaterMeterNodeRepository, self).initializeRepository()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Diamond, 6)
     

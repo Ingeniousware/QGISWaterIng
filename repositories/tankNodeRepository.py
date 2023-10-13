@@ -40,20 +40,10 @@ class TankNodeRepository(AbstractRepository):
         
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
-        
+        self.currentLayer = None
         self.initializeRepository()
      
     def initializeRepository(self):
-        #Tanks Loading
-        response_tanks = self.loadElements()
-        
-        fields = self.setElementFields(self.field_definitions)
-        
-        #Adding tanks to shapefile
-        tanks_layer = self.createElementLayerFromServerResponse(self.features, response_tanks, fields, self.field_definitions)
-       
-        
-        #Write and open shapefile
-        self.writeShp(tanks_layer)
+        super(TankNodeRepository, self).initializeRepository() 
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Pentagon, 6)
     

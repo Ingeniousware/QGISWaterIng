@@ -15,8 +15,6 @@ class PumpNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterPump"
         self.StorageShapeFile = os.path.join(project_path, "watering_pumps.shp")
         self.LayerName = "watering_pumps"
-        self.Color = QColor.fromRgb(23, 61, 108)
-        self.StrokeColor = None
         self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
@@ -29,20 +27,14 @@ class PumpNodeRepository(AbstractRepository):
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "relativeSpeed"]
         
+        self.Color = QColor.fromRgb(23, 61, 108)
+        self.StrokeColor = None
+        self.currentLayer = None
         self.initializeRepository()
 
 
      
     def initializeRepository(self):
-        #Tanks Loading
-        response_pumps = self.loadElements()
-        
-        fields = self.setElementFields(self.field_definitions)
-        
-        #Adding tanks to shapefile
-        pumps_layer = self.createElementLayerFromServerResponse(self.features, response_pumps, fields, self.field_definitions)
-        
-        #Write and open shapefile
-        self.writeShp(pumps_layer)
+        super(PumpNodeRepository, self).initializeRepository() 
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.SemiCircle, 6)
     

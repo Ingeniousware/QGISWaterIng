@@ -14,8 +14,7 @@ class WateringDemandNodeRepository(AbstractRepository):
         super(WateringDemandNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/DemandNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
-        self.Color = QColor.fromRgb(255, 255, 255)
-        self.StrokeColor = QColor.fromRgb(23, 61, 108)
+
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),
@@ -34,16 +33,11 @@ class WateringDemandNodeRepository(AbstractRepository):
         self.features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
                                "z","baseDemand","demandPatternFK"]
         
+        self.Color = QColor.fromRgb(255, 255, 255)
+        self.StrokeColor = QColor.fromRgb(23, 61, 108)
+        self.currentLayer = None
         self.initializeRepository()
         
     def initializeRepository(self):
-        #Water Demands Loading
-        response_demandNodes = self.loadElements()             
-        fields = self.setElementFields(self.field_definitions)
-        
-        #Adding reservoirs to shapefile
-        demandNodes_layer = self.createElementLayerFromServerResponse(self.features, response_demandNodes, fields, self.field_definitions)
-        
-        #Write and open shapefile
-        self.writeShp(demandNodes_layer)
+        super(WateringDemandNodeRepository, self).initializeRepository()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
