@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject
+from qgis.core import QgsProject, Qgis
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
@@ -39,6 +39,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.toolInsertNode = iface.mapCanvas().mapTool()
         self.initializeRepository()
         self.BtLoadSolution.clicked.connect(self.loadSolutionSensors)
+        self.BtDeleteSolution.clicked.connect(self.deleteSolution)
         self.BtCreateSolution.clicked.connect(self.createSolution)
         self.BtUploadSolution.clicked.connect(self.uploadSolution)
         self.BtRefreshTable.clicked.connect(self.loadSolutions)
@@ -144,7 +145,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                     
     def loadSolutionSensors(self):
         if (self.RowIndex ==  None or self.SolutionId == None):
-            iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a row!"), level=1, duration=5)
+            iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a solution!"), level=1, duration=5)
         elif len(self.Sensors) == 0:
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("No solutions to load!"), level=1, duration=5)
         else:
@@ -156,6 +157,23 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                         self.insertSensor(feature.geometry().asPoint())
             self.canvas.refresh()
     
+    def deleteSolution(self):
+        if (self.RowIndex ==  None):
+            iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a solution!"), level=1, duration=5)
+        else:
+            model = self.tableView.model()
+            sourcemodel = model.sourceModel()
+            sourcemodel.removeRow(self.RowIndex)
+            self.tableView.reset()
+            url = self.Url + "/" + str(self.SolutionId)
+            response = requests.delete(url, headers={'Authorization': "Bearer {}".format(self.token)})
+            try:
+                response == 200
+                iface.messageBar().pushMessage(self.tr("Solution deleted successfully!"), level=Qgis.Success, duration=5)
+                self.loadSolutions()
+            except:
+                iface.messageBar().pushMessage(self.tr("Error"), self.tr("Unable to delete this solution!"), level=1, duration=5)
+                
     def uploadSolution(self):
         nodesWithSensors = []
         existingSensors = self.getExistingSensors()

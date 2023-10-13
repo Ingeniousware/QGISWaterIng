@@ -65,18 +65,18 @@
      <property name="geometry">
       <rect>
        <x>6</x>
-       <y>40</y>
+       <y>10</y>
        <width>501</width>
-       <height>291</height>
+       <height>321</height>
       </rect>
      </property>
     </widget>
     <widget class="QPushButton" name="BtLoadSolution">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>10</x>
        <y>340</y>
-       <width>511</width>
+       <width>151</width>
        <height>21</height>
       </rect>
      </property>
@@ -87,14 +87,27 @@
     <widget class="QPushButton" name="BtRefreshTable">
      <property name="geometry">
       <rect>
-       <x>0</x>
-       <y>10</y>
-       <width>511</width>
+       <x>350</x>
+       <y>340</y>
+       <width>161</width>
        <height>21</height>
       </rect>
      </property>
      <property name="text">
-      <string>Refresh</string>
+      <string>Refresh Table</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="BtDeleteSolution">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>340</y>
+       <width>151</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Delete Solution</string>
      </property>
     </widget>
    </widget>
