@@ -14,6 +14,7 @@ class ValveNodeRepository(AbstractRepository):
         super(ValveNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/WaterValve"
         self.StorageShapeFile = os.path.join(project_path, "watering_valves.shp")
+        self.field_definitions = None
         self.initializeRepository()
      
     def initializeRepository(self):
@@ -21,7 +22,7 @@ class ValveNodeRepository(AbstractRepository):
         response_valves = self.loadElements()
 
         #Setting shapefile fields 
-        valve_field_definitions = [
+        self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
             ("Name", QVariant.String),
@@ -36,11 +37,11 @@ class ValveNodeRepository(AbstractRepository):
         valve_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z",
                          "diameter"]
         
-        fields = self.setElementFields(valve_field_definitions)
+        fields = self.setElementFields(self.field_definitions)
         
         #Adding tanks to shapefile
         list_of_valves = self.loadElementFeatures(response_valves, valve_features)
-        valves_layer = self.createElementLayer(valve_features, list_of_valves, fields, valve_field_definitions)
+        valves_layer = self.createElementLayer(valve_features, list_of_valves, fields, self.field_definitions)
         
         #Write and open shapefile
         self.writeShp(valves_layer)

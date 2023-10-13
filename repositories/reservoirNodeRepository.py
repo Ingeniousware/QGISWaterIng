@@ -14,18 +14,12 @@ class ReservoirNodeRepository(AbstractRepository):
         super(ReservoirNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/WaterReservoir"
         self.StorageShapeFile = os.path.join(project_path, "watering_reservoirs.shp")
-        self.initializeRepository()
-     
-    def initializeRepository(self):
-        #Reservoirs Loading from API
-        response_reservoirs = self.loadElements()
-        
-        #Setting shapefile fields 
-        reservoirs_field_definitions = [
+        self.LayerName = "watering_reservoirs"
+        self.field_definitions = [
             ("ID", QVariant.String),
-            ("Last Modified", QVariant.String),
+            ("Last Mdf", QVariant.String),
             ("Name", QVariant.String),
-            ("Description", QVariant.String),
+            ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
             ("Head[m]", QVariant.Double),
             ("Pressure", QVariant.Double),
@@ -34,14 +28,20 @@ class ReservoirNodeRepository(AbstractRepository):
             ("Age", QVariant.Double)
         ]
         
-        reservoir_features = ["lng","lat","serverKeyId","lastModified",
-                              "name","description","z","head"]
+        self.features = ["lng","lat","serverKeyId","lastModified",
+                        "name","description","z","head"]
         
-        fields = self.setElementFields(reservoirs_field_definitions)
-                
+        self.initializeRepository()
+     
+    def initializeRepository(self):
+        #Reservoirs Loading from API
+        response_reservoirs = self.loadElements()
+        
+        fields = self.setElementFields(self.field_definitions)
+        
         #Adding reservoirs to shapefile
-        list_of_reservoirs = self.loadElementFeatures(response_reservoirs, reservoir_features)
-        reservoirs_layer = self.createElementLayer(reservoir_features, list_of_reservoirs, fields, reservoirs_field_definitions)
+        list_of_reservoirs = self.loadElementFeatures(response_reservoirs, self.features)
+        reservoirs_layer = self.createElementLayer(self.features, list_of_reservoirs, fields, self.field_definitions)
         
         #Write and open shapefile
         self.writeShp(reservoirs_layer)

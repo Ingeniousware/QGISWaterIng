@@ -3,7 +3,9 @@
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QDockWidget
+from PyQt5.QtWidgets import QDockWidget, QAction
+from PyQt5.QtGui import QIcon
+
 
 import os
 import requests
@@ -28,7 +30,16 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getAnalysisResults(0))
         self.BtGetAnalysisResultsBackward.clicked.connect(lambda: self.getAnalysisResults(1))
         self.BtGetAnalysisResultsForward.clicked.connect(lambda: self.getAnalysisResults(2))
+        self.BtGetAnalysisResultsPlayPause.clicked.connect(lambda: self.playbutton(0))
+
+        self.is_playing = False
+        self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_play.png"))
+        self.BtGetAnalysisResultsPlayPause.clicked.connect(self.switch_icon_play_pause)
+        self.BtGetAnalysisResultsBackward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_backward.png"))
+        self.BtGetAnalysisResultsForward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_forward.png"))
+
         
+    
     def initializeRepository(self):
         self.token = os.environ.get('TOKEN')
         url_analysis = WateringUtils.getServerUrl() + "/api/v1/WaterAnalysis"
@@ -41,6 +52,15 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             self.analysis_box.addItem(response_analysis.json()["data"][i]["name"])
             self.listOfAnalysis.append((response_analysis.json()["data"][i]["serverKeyId"],
                                          response_analysis.json()["data"][i]["simulationStartTime"]))
+            
+    def switch_icon_play_pause(self):
+        if self.is_playing:
+            icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_play.png"
+        else:
+            icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_stop.png"
+        
+        self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(icon_path))
+        self.is_playing = not self.is_playing
 
     def getAnalysisResults(self, behavior):
         self.show_progress_bar()
@@ -52,6 +72,9 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior)
         self.set_progress(100)  
         self.timer_hide_progress_bar()
+
+    def playbutton(self, behavior):
+        print("Pause")
         
     def set_progress(self, progress_value):
         t = time() - self.start

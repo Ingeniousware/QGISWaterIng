@@ -2,6 +2,7 @@
 
 import os
 import requests
+import pickle
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer
@@ -30,8 +31,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.token = os.environ.get('TOKEN')
         self.listOfProjects = []
         self.listOfScenarios = []
-        self.loadProjects()
         self.myScenarioUnitOfWork = None
+        self.loadProjects()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
     
     def loadProjects(self):
@@ -112,8 +113,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         root = QgsProject.instance().layerTreeRoot()
         shapeGroup = root.addGroup("WaterIng Network Layout")
 
-        myScenarioUnitOfWork = scenarioUnitOfWork(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-
+        self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
+        #print(myScenarioUnitOfWork)
+        #pickle
+        #serialized_obj = pickle.dumps(myScenarioUnitOfWork)
+        #os.environ['SCENARIO'] = serialized_obj.hex()
+        
         self.loadMap()
 
         self.writeWateringMetadata()

@@ -11,6 +11,7 @@ from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 
 # Initialize Qt resources from file resources.py
 from .resources import *
+import pickle
 # Import the code for the dialog
 
 from .maptools.insertSensorNodeTool import InsertSensorNodeTool
@@ -75,7 +76,6 @@ class QGISPlugin_WaterIng:
         self.toolbar.setVisible(True)
 
         self.hub_connection = None
-
         # Dock
         self.analysisDockPanel = WateringAnalysis(self.iface)
         self.iface.addDockWidget(Qt.TopDockWidgetArea, self.analysisDockPanel)
@@ -264,9 +264,9 @@ class QGISPlugin_WaterIng:
             self.dlg = WateringLoad()
             self.dlg.show() 
             if (self.dlg.exec_() == 1):
-
                 self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork
-
+                print(self.scenarioUnitOFWork)
+                
                 server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
    
                 self.hub_connection = HubConnectionBuilder()\
@@ -402,6 +402,11 @@ class QGISPlugin_WaterIng:
     def createOnlineConnectionChannels(self):
         print("Entering creation of online connection channels")
         scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        scenarioName = QgsProject.instance().readEntry("watering","scenario_name","default text")[0]
+        
+        print(scenarioFK)
+        print(scenarioName)
+        
         invoresult = self.hub_connection.send("joingroup", [scenarioFK]) 
         print(invoresult.invocation_id)
 
@@ -410,7 +415,7 @@ class QGISPlugin_WaterIng:
         print(paraminput)
 
     def processPOSTRESERVOIR(self, paraminput):
-        #self.scenarioUnitOFWork.reservoirRepository.AddElement(paraminput)
+        self.scenarioUnitOFWork.reservoirRepository.AddElement(paraminput)
         print(paraminput)
 
     def processDELETERESERVOIR(self, paraminput):
@@ -423,8 +428,11 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
         else:
-            
+            #serialized_obj_retrieved = bytes.fromhex(os.environ["SCENARIO"])
+
+            # Deserialize the object
+            #deserialized_obj = pickle.loads(serialized_obj_retrieved)
+
+            #print(deserialized_obj.value)
             self.scenarioUnitOFWork.UpdateFromServerToOffline()
-           
-            #WateringUpdate()
     
