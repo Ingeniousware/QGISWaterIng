@@ -40,9 +40,8 @@ class ReservoirNodeRepository(AbstractRepository):
         fields = self.setElementFields(self.field_definitions)
         
         #Adding reservoirs to shapefile
-        list_of_reservoirs = self.loadElementFeatures(response_reservoirs, self.features)
-        reservoirs_layer = self.createElementLayer(self.features, list_of_reservoirs, fields, self.field_definitions)
-        
+        reservoirs_layer = self.createElementLayerFromServerResponse(self.features, response_reservoirs, fields, self.field_definitions)
+              
         #Write and open shapefile
         self.writeShp(reservoirs_layer)
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Square, 6)

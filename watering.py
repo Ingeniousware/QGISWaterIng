@@ -415,8 +415,9 @@ class QGISPlugin_WaterIng:
         print(paraminput)
 
     def processPOSTRESERVOIR(self, paraminput):
-        self.scenarioUnitOFWork.reservoirRepository.AddElement(paraminput)
         print(paraminput)
+        self.scenarioUnitOFWork.reservoirNodeRepository.AddElement(paraminput)
+        
 
     def processDELETERESERVOIR(self, paraminput):
         self.scenarioUnitOFWork.DeleteElement(paraminput)

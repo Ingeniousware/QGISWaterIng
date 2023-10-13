@@ -36,22 +36,19 @@ class AbstractRepository():
             fields.append(QgsField(name, data_type))
         return fields
         
-    def loadElementFeatures(self, response, element_features):
-        list_of_elements = []
-        print(response)
-        response_data = response.json()["data"]
-        for element in response_data:
-            features = [element[field] for field in element_features]
-            features.extend([0] * 4)
-            list_of_elements.append(features)
-        return list_of_elements
-    
-    def createElementLayer(self, element_features, list_of_elements, fields, fields_definitions):
+
+    def createElementLayerFromServerResponse(self, element_features, response, fields, fields_definitions):
         layer = QgsVectorLayer("Point?crs=" + self.destCrs.authid(), "New Layer", "memory")
         layer.dataProvider().addAttributes(fields)
         layer.updateFields()
         
-        for element in list_of_elements:
+        response_data = response.json()["data"]
+
+        for elementJSON in response_data:
+            
+            element = [elementJSON[field] for field in element_features]
+            element.extend([0] * 4)
+
             feature = QgsFeature(layer.fields())
             geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
@@ -61,6 +58,7 @@ class AbstractRepository():
             layer.dataProvider().addFeature(feature)
             
         return layer 
+
         
     def initializeRepository(self):
         ...
@@ -173,6 +171,31 @@ class AbstractRepository():
 
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
+
+
+    def addElementFromJSON(self, elementJSONInfo):
+        
+        print(f"Adding element in {self.LayerName}: {elementJSONInfo}")
+        
+        features = [elementJSONInfo[field] for field in element_features]
+
+        feature = QgsFeature(self.Layer.fields())
+        feature["ID"] = id
+        feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
+                                                               self.ServerDict[id][-1][1])))
+        
+        self.Layer.startEditing()
+        
+        
+        for i, field in enumerate(self.Fields):
+            feature[field] = self.ServerDict[id][i]
+
+        self.Layer.addFeature(feature)
+        self.Layer.commitChanges()
+
+
+
+
     
     def deleteElement(self, id):
         print(f"Deleting existing element in {self.LayerName}: {id}")

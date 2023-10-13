@@ -14,13 +14,6 @@ class WateringDemandNodeRepository(AbstractRepository):
         super(WateringDemandNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/DemandNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
-        self.field_definitions = None
-        self.initializeRepository()
-        
-    def initializeRepository(self):
-        #Water Demands Loading
-        response_demandNodes = self.loadElements()
-        
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),
@@ -36,14 +29,18 @@ class WateringDemandNodeRepository(AbstractRepository):
             ("Age", QVariant.Double)
         ]
     
-        demandNode_features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
+        self.features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
                                "z","baseDemand","demandPatternFK"]
         
+        self.initializeRepository()
+        
+    def initializeRepository(self):
+        #Water Demands Loading
+        response_demandNodes = self.loadElements()             
         fields = self.setElementFields(self.field_definitions)
         
         #Adding reservoirs to shapefile
-        list_of_demandNodes = self.loadElementFeatures(response_demandNodes, demandNode_features)
-        demandNodes_layer = self.createElementLayer(demandNode_features, list_of_demandNodes, fields, self.field_definitions)
+        demandNodes_layer = self.createElementLayerFromServerResponse(self.features, response_demandNodes, fields, self.field_definitions)
         
         #Write and open shapefile
         self.writeShp(demandNodes_layer)

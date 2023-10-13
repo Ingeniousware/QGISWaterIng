@@ -15,14 +15,6 @@ class PumpNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterPump"
         self.StorageShapeFile = os.path.join(project_path, "watering_pumps.shp")
         self.LayerName = "watering_pumps"
-        self.field_definitions = None
-        self.initializeRepository()
-     
-    def initializeRepository(self):
-        #Tanks Loading
-        response_pumps = self.loadElements()
-
-        #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Modified", QVariant.String),
@@ -33,13 +25,20 @@ class PumpNodeRepository(AbstractRepository):
             ("Relative Speed", QVariant.Double)
         ]
         
-        pump_features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "relativeSpeed"]
+        self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "relativeSpeed"]
+        
+        self.initializeRepository()
+
+
+     
+    def initializeRepository(self):
+        #Tanks Loading
+        response_pumps = self.loadElements()
         
         fields = self.setElementFields(self.field_definitions)
         
         #Adding tanks to shapefile
-        list_of_pumps = self.loadElementFeatures(response_pumps, pump_features)
-        pumps_layer = self.createElementLayer(pump_features, list_of_pumps, fields, self.field_definitions)
+        pumps_layer = self.createElementLayerFromServerResponse(self.features, response_pumps, fields, self.field_definitions)
         
         #Write and open shapefile
         self.writeShp(pumps_layer)

@@ -46,8 +46,8 @@ class TankNodeRepository(AbstractRepository):
         fields = self.setElementFields(self.field_definitions)
         
         #Adding tanks to shapefile
-        list_of_tanks = self.loadElementFeatures(response_tanks, self.features)
-        tanks_layer = self.createElementLayer(self.features, list_of_tanks, fields, self.field_definitions)
+        tanks_layer = self.createElementLayerFromServerResponse(self.features, response_tanks, fields, self.field_definitions)
+       
         
         #Write and open shapefile
         self.writeShp(tanks_layer)
