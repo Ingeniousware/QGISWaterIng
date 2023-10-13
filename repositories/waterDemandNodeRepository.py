@@ -15,6 +15,8 @@ class WateringDemandNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/DemandNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
         self.field_definitions = None
+        self.Color = QColor.fromRgb(255, 255, 255)
+        self.StrokeColor = QColor.fromRgb(23, 61, 108)
         self.initializeRepository()
         
     def initializeRepository(self):
@@ -48,13 +50,3 @@ class WateringDemandNodeRepository(AbstractRepository):
         #Write and open shapefile
         self.writeShp(demandNodes_layer)
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
-
-
-    def setElementSymbol(self, layer, layer_symbol, layer_size):
-        renderer = layer.renderer()
-        symbol = renderer.symbol()
-        symbol.changeSymbolLayer(0, QgsSimpleMarkerSymbolLayer(layer_symbol))
-        symbol.setSize(layer_size) 
-        symbol.setColor(QColor.fromRgb(255, 255, 255))
-        symbol.symbolLayer(0).setStrokeColor(QColor.fromRgb(23, 61, 108))
-        layer.triggerRepaint()

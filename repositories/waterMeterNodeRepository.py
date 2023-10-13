@@ -15,6 +15,8 @@ class WaterMeterNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterMeter"
         self.StorageShapeFile = os.path.join(project_path, "watering_waterMeter.shp")
         self.field_definitions = None
+        self.Color = QColor.fromRgb(23, 61, 108)
+        self.StrokeColor = None
         self.initializeRepository()
      
     def initializeRepository(self):

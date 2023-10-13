@@ -37,6 +37,10 @@ class TankNodeRepository(AbstractRepository):
             ("Demand C", QVariant.Double),
             ("Age", QVariant.Double)
         ]
+        
+        self.Color = QColor.fromRgb(23, 61, 108)
+        self.StrokeColor = None
+        
         self.initializeRepository()
      
     def initializeRepository(self):

@@ -31,6 +31,9 @@ class ReservoirNodeRepository(AbstractRepository):
         self.features = ["lng","lat","serverKeyId","lastModified",
                         "name","description","z","head"]
         
+        self.Color = QColor.fromRgb(23, 61, 108)
+        self.StrokeColor = None
+        
         self.initializeRepository()
      
     def initializeRepository(self):

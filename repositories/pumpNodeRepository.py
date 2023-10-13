@@ -16,6 +16,8 @@ class PumpNodeRepository(AbstractRepository):
         self.StorageShapeFile = os.path.join(project_path, "watering_pumps.shp")
         self.LayerName = "watering_pumps"
         self.field_definitions = None
+        self.Color = QColor.fromRgb(23, 61, 108)
+        self.StrokeColor = None
         self.initializeRepository()
      
     def initializeRepository(self):
