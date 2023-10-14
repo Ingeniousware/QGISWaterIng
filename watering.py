@@ -417,11 +417,11 @@ class QGISPlugin_WaterIng:
         print(paraminput)
         print("preparing")
         print(self.scenarioUnitOFWork.reservoirNodeRepository)
-        self.scenarioUnitOFWork.reservoirNodeRepository.addElementFromJSON(paraminput)
+        self.scenarioUnitOFWork.reservoirNodeRepository.addElementFromSignalR(paraminput[0])
         print("Reservoir inserted")
 
     def processDELETERESERVOIR(self, paraminput):
-        self.scenarioUnitOFWork.DeleteElement(paraminput)
+        self.scenarioUnitOFWork.reservoirNodeRepository.deleteElement(paraminput[0])
         print(paraminput)
         
     

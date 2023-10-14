@@ -14,6 +14,7 @@ class WaterMeterNodeRepository(AbstractRepository):
         super(WaterMeterNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/WaterMeter"
         self.StorageShapeFile = os.path.join(project_path, "watering_waterMeter.shp")
+        self.LayerName = "watering_waterMeter"
         self.field_definitions = None
         #Setting shapefile fields 
         self.field_definitions = [

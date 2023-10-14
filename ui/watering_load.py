@@ -40,9 +40,14 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def loadProjects(self):
         url_projects = WateringUtils.getServerUrl() + "/api/v1/ProjectWaterNetworks"
         
-        response_projects = requests.get(url_projects,
-                                headers={'Authorization': "Bearer {}".format(self.token)})
-            
+        #response_projects = requests.get(url_projects,
+        #                        headers={'Authorization': "Bearer {}".format(self.token)})
+
+        response_projects = WateringUtils.getResponse(url_projects, params=None)
+        
+        if not response_projects:
+            return
+        
         for i in range(0, response_projects.json()["total"]):
             self.projects_box.addItem(response_projects.json()["data"][i]["name"])
             self.listOfProjects.append((response_projects.json()["data"][i]["name"],
@@ -60,9 +65,14 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         showRemoved = False
         params = {'ProjectFK': "{}".format(ProjectFK), 'showRemoved': "{}".format(showRemoved)}
         url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
-        response_scenarios = requests.get(url, params=params,
-                                headers={'Authorization': "Bearer {}".format(self.token)})
-            
+        #response_scenarios = requests.get(url, params=params,
+        #                        headers={'Authorization': "Bearer {}".format(self.token)})
+        
+        response_scenarios = WateringUtils.getResponse(url, params)
+        
+        if not response_scenarios:
+            return
+        
         for i in range(0, response_scenarios.json()["total"]):
             self.scenarios_box.addItem(response_scenarios.json()["data"][i]["name"])
             self.listOfScenarios.append((response_scenarios.json()["data"][i]["name"],
@@ -131,6 +141,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         self.writeWateringMetadata()
         self.setStatusBar()
+        self.close()
         
     def writeWateringMetadata(self):
         QgsProject.instance().writeEntry("watering", "project_name", self.listOfProjects[self.projects_box.currentIndex()][0])

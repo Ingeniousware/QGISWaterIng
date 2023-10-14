@@ -14,6 +14,7 @@ class ValveNodeRepository(AbstractRepository):
         super(ValveNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/WaterValve"
         self.StorageShapeFile = os.path.join(project_path, "watering_valves.shp")
+        self.LayerName = "watering_valves"
         self.field_definitions = None
 
         #Setting shapefile fields 

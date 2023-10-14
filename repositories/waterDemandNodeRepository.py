@@ -14,7 +14,8 @@ class WateringDemandNodeRepository(AbstractRepository):
         super(WateringDemandNodeRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = "/api/v1/DemandNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
-
+        self.LayerName = "watering_demand_nodes"
+        
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),

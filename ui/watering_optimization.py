@@ -170,6 +170,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             try:
                 response == 200
                 iface.messageBar().pushMessage(self.tr("Solution deleted successfully!"), level=Qgis.Success, duration=5)
+                self.RowIndex = None
                 self.loadSolutions()
             except:
                 iface.messageBar().pushMessage(self.tr("Error"), self.tr("Unable to delete this solution!"), level=1, duration=5)

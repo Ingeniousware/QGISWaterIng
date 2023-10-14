@@ -48,9 +48,8 @@ class AbstractRepository():
 
         for elementJSON in response_data:            
             self.addElementFromJSON(elementJSON)
-                    
-
-
+    
+    #When layer does not exists           
     def addElementFromJSON(self, elementJSON):
         try:
             element = [elementJSON[field] for field in self.features]
@@ -65,11 +64,25 @@ class AbstractRepository():
             self.currentLayer.dataProvider().addFeature(feature)
         except ValueError:
               print("Error->" + ValueError)
+
+    #When layer already exists
+    def addElementFromSignalR(self, elementJSON):
+        layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        element = [elementJSON[field] for field in self.features]
+        element.extend([0] * 4)
+
+        layer.startEditing()
+         
+        feature = QgsFeature(layer.fields())
+        geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
+        geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+        feature.setGeometry(geometry)
+        for i in range(len(self.field_definitions)):
+            feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
+        layer.addFeature(feature)
+        layer.commitChanges()
 
-
-
-        
     def initializeRepository(self):
         #loading element from the API
         serverResponse = self.loadElements()        
@@ -78,8 +91,6 @@ class AbstractRepository():
         #Write shapefile
         self.writeShp()
 
-
-    
     def writeShp(self):
         writer = QgsVectorFileWriter.writeAsVectorFormat(self.currentLayer, self.StorageShapeFile, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
         if writer[0] == QgsVectorFileWriter.NoError:
@@ -87,8 +98,6 @@ class AbstractRepository():
         else:
             print("Error creating tanks Shapefile!")
         
-
-
     def openLayers(self, layer_symbol, layer_size):
         element_layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
         self.setElementSymbol(element_layer, layer_symbol, layer_size)
@@ -194,14 +203,6 @@ class AbstractRepository():
 
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
-
-
-
-    
-
-
-
-
     
     def deleteElement(self, id):
         print(f"Deleting existing element in {self.LayerName}: {id}")

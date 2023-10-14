@@ -57,12 +57,11 @@ class WateringUtils():
         try:
             response = requests.get(url, params=params,
                                     headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})
-            print(response)
             if response.status_code == 200:
                     return response
                 
         except requests.ConnectionError:
-            iface.messageBar().pushMessage(("Error"), ("Failed to connect to the WaterIng, check your connection."), level=1, duration=5)
+            iface.messageBar().pushMessage(("Error"), ("Failed to connect to WaterIng Server, check your connection."), level=1, duration=5)
         except requests.Timeout:
                 iface.messageBar().pushMessage(("Error"), ("Request timed out."), level=1, duration=5)
         except:
