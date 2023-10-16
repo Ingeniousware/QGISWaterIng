@@ -34,6 +34,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.myScenarioUnitOfWork = None
         self.projectPathQgsProject = None
         self.project_path = None
+        self.scenario_folder = None
         self.loadProjects()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
     
@@ -124,14 +125,27 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.projectPathQgsProject = self.project_path + "/" + project_name + ".qgz"
         project.write(self.projectPathQgsProject)
         QgsProject.instance().writeEntry("watering", "project_path", self.projectPathQgsProject)
+        
+        #create scenario folder
+        self.createScenarioFolder()
         #load layers
         self.CreateLayers()
+        
+
+    def createScenarioFolder(self):
+        self.writeWateringMetadata(self.project_path)
+        scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        print("Aqui: " + scenarioFK)
+        #Create scenario folder
+        self.scenario_folder = self.project_path + "/" + scenarioFK
+        os.makedirs(self.scenario_folder, exist_ok=True)
+       
     
     def CreateLayers(self):
         root = QgsProject.instance().layerTreeRoot()
         shapeGroup = root.addGroup("WaterIng Network Layout")
 
-        self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.project_path, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
+        self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         #print(myScenarioUnitOfWork)
         #pickle
         #serialized_obj = pickle.dumps(myScenarioUnitOfWork)
@@ -139,15 +153,17 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         self.loadMap()
 
-        self.writeWateringMetadata()
+        
         self.setStatusBar()
         self.close()
         
-    def writeWateringMetadata(self):
+    def writeWateringMetadata(self, projectPath):
         QgsProject.instance().writeEntry("watering", "project_name", self.listOfProjects[self.projects_box.currentIndex()][0])
         QgsProject.instance().writeEntry("watering", "project_id", self.listOfProjects[self.projects_box.currentIndex()][1])
         QgsProject.instance().writeEntry("watering", "scenario_name", self.listOfScenarios[self.scenarios_box.currentIndex()][0])
         QgsProject.instance().writeEntry("watering", "scenario_id", self.listOfScenarios[self.scenarios_box.currentIndex()][1])
+        QgsProject.instance().writeEntry("watering", "project_path", projectPath)
+        
         
     def loadMap(self):
         tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'

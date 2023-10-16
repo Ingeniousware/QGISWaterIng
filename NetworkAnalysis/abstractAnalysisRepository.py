@@ -5,6 +5,7 @@ from qgis.core import QgsStyle, QgsClassificationQuantile, QgsGradientColorRamp
 
 import requests
 from ..watering_utils import WateringUtils
+from ..repositories.getDataRepository import getDataRepository
 
 class AbstractAnalysisRepository():
     
@@ -23,12 +24,15 @@ class AbstractAnalysisRepository():
     
     def elementAnalysisResults(self):     
         response = self.getResponse()
+        filename = self.analysisExecutionId + "_" + self.datetime
         
         element_dict = {}
         for element in response.json()["data"]:
             element_dict[element[self.KeysApi[0]]] = [element[self.KeysApi[1]], element[self.KeysApi[2]], 
                                  element[self.KeysApi[3]], element[self.KeysApi[4]]]
             
+            getDataRepository.analysis_to_csv(self, element, filename)
+               
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
 
         layer.startEditing()

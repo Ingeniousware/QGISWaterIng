@@ -1,20 +1,11 @@
+from qgis.core import QgsProject
 import os
 import requests
-
-from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsLayerTreeLayer
-from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSymbol, edit
-from PyQt5.QtCore import QVariant, QFileInfo
-from PyQt5.QtGui import QColor
-from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject
-from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
-
 import pandas as pd
 import numpy as np
 from datetime import date, timedelta
 import time
-
+import csv
 
 class getDataRepository:
     def __init__(self,token, projectFK):
@@ -25,17 +16,13 @@ class getDataRepository:
 
     def get_date_range(self):
                                      
-        # See the data from the last x days
         dateSelected = self.selectdate_box.currentIndex()
-
         if dateSelected == 0:
             finalDate = date.today()
-            initialDate = finalDate - timedelta(days=30)
-            
+            initialDate = finalDate - timedelta(days=30)    
         elif dateSelected == 1:
             finalDate = date.today()
             initialDate = finalDate - timedelta(days=15)
-        
         else:
             initialDate = self.inicial_dateEdit.date().toPyDate() 
             finalDate = self.final_dateEdit.date().toPyDate()
@@ -66,3 +53,39 @@ class getDataRepository:
         df = pd.DataFrame(data)[selectColumns]
         
         return(df)
+
+    def analysis_to_csv(self, element, filename):
+
+        def write_to_csv(filepath, keys):
+            
+            file_exists = os.path.isfile(filepath)
+            with open(filepath, 'a', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                if not file_exists:
+                    writer.writerow(keys)
+                writer.writerow([element[key] for key in keys])
+
+    
+        project_path = QgsProject.instance().readEntry("watering","project_path","default text")[0]
+        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        
+        #Create scenario folder
+        scenario_folder_path = project_path + "/" + scenario_id
+        #os.makedirs(scenario_folder_path, exist_ok=True)
+
+        #Create Analysis folder
+        analysis_folder_path = scenario_folder_path + "/" + "Analysis"
+        os.makedirs(analysis_folder_path, exist_ok=True)
+
+        pipe_keys = ['serverKeyId', 'pipeKey', 'simulationDateTime', 'pipeCurrentStatus', 'velocity', 'flow', 'headLoss']
+        node_keys = ['serverKeyId', 'nodeKey', 'simulationDateTime', 'pressure', 'waterDemand']
+
+        # File for pipes analysis
+        if all(key in element for key in pipe_keys):
+            pipes_filepath = os.path.join(analysis_folder_path, f"{filename}Pipes.csv")
+            write_to_csv(pipes_filepath, pipe_keys)
+
+        # File for nodes analysis
+        if all(key in element for key in node_keys):
+            nodes_filepath = os.path.join(analysis_folder_path, f"{filename}Nodes.csv")
+            write_to_csv(nodes_filepath, node_keys)

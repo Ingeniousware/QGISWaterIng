@@ -52,15 +52,6 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             self.analysis_box.addItem(response_analysis.json()["data"][i]["name"])
             self.listOfAnalysis.append((response_analysis.json()["data"][i]["serverKeyId"],
                                          response_analysis.json()["data"][i]["simulationStartTime"]))
-            
-    def switch_icon_play_pause(self):
-        if self.is_playing:
-            icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_play.png"
-        else:
-            icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_stop.png"
-        
-        self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(icon_path))
-        self.is_playing = not self.is_playing
 
     def getAnalysisResults(self, behavior):
         self.show_progress_bar()
@@ -72,6 +63,15 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior)
         self.set_progress(100)  
         self.timer_hide_progress_bar()
+
+    def switch_icon_play_pause(self):
+        if self.is_playing:
+            icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_play.png"
+        else:
+            icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_stop.png"
+        
+        self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(icon_path))
+        self.is_playing = not self.is_playing
 
     def playbutton(self, behavior):
         print("Pause")
