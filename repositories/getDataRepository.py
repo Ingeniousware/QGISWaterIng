@@ -65,26 +65,20 @@ class getDataRepository:
                     writer.writerow(keys)
                 writer.writerow([element[key] for key in keys])
 
-    
         project_path = QgsProject.instance().readEntry("watering","project_path","default text")[0]
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        
-        #Create scenario folder
         scenario_folder_path = project_path + "/" + scenario_id
-        #os.makedirs(scenario_folder_path, exist_ok=True)
-
-        #Create Analysis folder
         analysis_folder_path = scenario_folder_path + "/" + "Analysis"
+        
+        #Create Analysis folder
         os.makedirs(analysis_folder_path, exist_ok=True)
 
         pipe_keys = ['serverKeyId', 'pipeKey', 'simulationDateTime', 'pipeCurrentStatus', 'velocity', 'flow', 'headLoss']
         node_keys = ['serverKeyId', 'nodeKey', 'simulationDateTime', 'pressure', 'waterDemand']
-
         # File for pipes analysis
         if all(key in element for key in pipe_keys):
             pipes_filepath = os.path.join(analysis_folder_path, f"{filename}Pipes.csv")
             write_to_csv(pipes_filepath, pipe_keys)
-
         # File for nodes analysis
         if all(key in element for key in node_keys):
             nodes_filepath = os.path.join(analysis_folder_path, f"{filename}Nodes.csv")

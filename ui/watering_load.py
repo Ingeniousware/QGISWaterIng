@@ -134,6 +134,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     def createScenarioFolder(self):
         self.writeWateringMetadata(self.project_path)
+
         scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         print("Aqui: " + scenarioFK)
         #Create scenario folder
@@ -152,8 +153,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         #os.environ['SCENARIO'] = serialized_obj.hex()
         
         self.loadMap()
-
-        
         self.setStatusBar()
         self.close()
         
