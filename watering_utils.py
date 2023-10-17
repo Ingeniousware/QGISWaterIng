@@ -43,7 +43,14 @@ class WateringUtils():
     def isProjectOpened():
         project = QgsProject.instance()
         return bool(project.mapLayers() or project.fileName())
-            
+    
+    def isWateringProject():
+        scenarioId = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        projectId = QgsProject.instance().readEntry("watering","project_id","default text")[0] 
+        token = os.environ.get('TOKEN')
+        
+        return scenarioId != "default text" and projectId != "default text" and token is not None
+             
     def getServerUrl():
         projectServerUrl = "default text"
         defaultUrl = "https://dev.watering.online"

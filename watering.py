@@ -355,16 +355,17 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = None
               
     def updateActionStateOpen(self):
-        self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
-        self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
-        self.toolInsertNode.setAction(self.insertSensorAction)
-        #self.toolSelectNode.setAction(self.selectElementAction)
-        self.readAnalysisAction.setEnabled(True)        
-        self.insertSensorAction.setEnabled(True)
-        self.openOptimizationManagerAction.setEnabled(True)
-        self.readMeasurementsAction.setEnabled(True)
-        self.importFileINP.setEnabled(True)
-        # self.selectElementAction.setEnabled(True)
+        if WateringUtils.isWateringProject():
+            self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
+            self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
+            self.toolInsertNode.setAction(self.insertSensorAction)
+            #self.toolSelectNode.setAction(self.selectElementAction)
+            self.readAnalysisAction.setEnabled(True)        
+            self.insertSensorAction.setEnabled(True)
+            self.openOptimizationManagerAction.setEnabled(True)
+            self.readMeasurementsAction.setEnabled(True)
+            self.importFileINP.setEnabled(True)
+            # self.selectElementAction.setEnabled(True)
     
     def updateActionStateClose(self):
         self.cleanMarkers()
