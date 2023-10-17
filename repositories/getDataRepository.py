@@ -76,8 +76,8 @@ class getDataRepository:
         #Create date folder inside analysis
         os.makedirs(date_folder_path, exist_ok=True)
 
-        pipe_keys = ['serverKeyId', 'pipeKey', 'simulationDateTime', 'pipeCurrentStatus', 'velocity', 'flow', 'headLoss']
-        node_keys = ['serverKeyId', 'nodeKey', 'simulationDateTime', 'pressure', 'waterDemand']
+        pipe_keys = ['serverKeyId', 'simulationDateTime', 'pipeCurrentStatus', 'velocity', 'flow', 'headLoss']
+        node_keys = ['serverKeyId', 'simulationDateTime', 'pressure', 'waterDemand', 'waterAge']
         # File for pipes analysis
         if all(key in element for key in pipe_keys):
             pipes_filepath = os.path.join(date_folder_path, f"{filename}_Pipes.csv")

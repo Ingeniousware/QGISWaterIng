@@ -68,19 +68,29 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.show_progress_bar()
         analysisExecutionId = self.listOfAnalysis[self.analysis_box.currentIndex()][0]
         datetime = self.listOfAnalysis[self.analysis_box.currentIndex()][1]
-        self.set_progress(33)  
+        analysisExecutionId2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][0]
+        datetime2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][1]
+        self.set_progress(20)  
         pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
-        self.set_progress(67)  
-        waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior)
+        self.set_progress(50)  
+        waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
+
+        if self.compareCheckBox.isChecked():
+            self.set_progress(60)  
+            pipeNodeRepository2 = PipeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
+            self.set_progress(80)
+            waterDemandNodeRepository2 = NodeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
+        else:
+            self.set_progress(80)
         self.set_progress(100)  
         self.timer_hide_progress_bar()
+
 
     def switch_icon_play_pause(self):
         if self.is_playing:
             icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_play.png"
         else:
             icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_stop.png"
-        
         self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(icon_path))
         self.is_playing = not self.is_playing
 
