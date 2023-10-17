@@ -77,7 +77,7 @@ class QGISPlugin_WaterIng:
         self.hub_connection = None
         # Dock
         self.analysisDockPanel = WateringAnalysis(self.iface)
-        self.iface.addDockWidget(Qt.TopDockWidgetArea, self.analysisDockPanel)
+        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
 
         self.scenarioUnitOFWork = None
 

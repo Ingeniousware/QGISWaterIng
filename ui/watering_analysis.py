@@ -31,14 +31,14 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.BtGetAnalysisResultsBackward.clicked.connect(lambda: self.getAnalysisResults(1))
         self.BtGetAnalysisResultsForward.clicked.connect(lambda: self.getAnalysisResults(2))
         self.BtGetAnalysisResultsPlayPause.clicked.connect(lambda: self.playbutton(0))
-
+        self.analysis_box2.hide()
+        self.compareCheckBox.clicked.connect(self.checkUserControlState)
         self.is_playing = False
         self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_play.png"))
         self.BtGetAnalysisResultsPlayPause.clicked.connect(self.switch_icon_play_pause)
         self.BtGetAnalysisResultsBackward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_backward.png"))
         self.BtGetAnalysisResultsForward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_forward.png"))
 
-        
     
     def initializeRepository(self):
         self.token = os.environ.get('TOKEN')
@@ -52,6 +52,17 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             self.analysis_box.addItem(response_analysis.json()["data"][i]["name"])
             self.listOfAnalysis.append((response_analysis.json()["data"][i]["serverKeyId"],
                                          response_analysis.json()["data"][i]["simulationStartTime"]))
+        for i in range(0, response_analysis.json()["total"]):
+            self.analysis_box2.addItem(response_analysis.json()["data"][i]["name"])
+            self.listOfAnalysis.append((response_analysis.json()["data"][i]["serverKeyId"],
+                                         response_analysis.json()["data"][i]["simulationStartTime"]))
+            
+    def checkUserControlState(self):
+        if self.compareCheckBox.isChecked():
+            self.analysis_box2.show()
+        else:
+            self.analysis_box2.hide()
+           
 
     def getAnalysisResults(self, behavior):
         self.show_progress_bar()

@@ -24,14 +24,14 @@ class AbstractAnalysisRepository():
     
     def elementAnalysisResults(self):     
         response = self.getResponse()
-        filename = self.analysisExecutionId + "_" + self.datetime
+        filename = self.analysisExecutionId
         
         element_dict = {}
         for element in response.json()["data"]:
             element_dict[element[self.KeysApi[0]]] = [element[self.KeysApi[1]], element[self.KeysApi[2]], 
                                  element[self.KeysApi[3]], element[self.KeysApi[4]]]
             
-            getDataRepository.analysis_to_csv(self, element, filename)
+            getDataRepository.analysis_to_csv(self, element, filename, self.datetime)
                
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
 

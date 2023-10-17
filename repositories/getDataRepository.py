@@ -54,7 +54,7 @@ class getDataRepository:
         
         return(df)
 
-    def analysis_to_csv(self, element, filename):
+    def analysis_to_csv(self, element, filename, date):
 
         def write_to_csv(filepath, keys):
             
@@ -69,17 +69,20 @@ class getDataRepository:
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         scenario_folder_path = project_path + "/" + scenario_id
         analysis_folder_path = scenario_folder_path + "/" + "Analysis"
+        date_folder_path = analysis_folder_path + "/" + date
         
-        #Create Analysis folder
+        #Create analysis folder
         os.makedirs(analysis_folder_path, exist_ok=True)
+        #Create date folder inside analysis
+        os.makedirs(date_folder_path, exist_ok=True)
 
         pipe_keys = ['serverKeyId', 'pipeKey', 'simulationDateTime', 'pipeCurrentStatus', 'velocity', 'flow', 'headLoss']
         node_keys = ['serverKeyId', 'nodeKey', 'simulationDateTime', 'pressure', 'waterDemand']
         # File for pipes analysis
         if all(key in element for key in pipe_keys):
-            pipes_filepath = os.path.join(analysis_folder_path, f"{filename}Pipes.csv")
+            pipes_filepath = os.path.join(date_folder_path, f"{filename}_Pipes.csv")
             write_to_csv(pipes_filepath, pipe_keys)
         # File for nodes analysis
         if all(key in element for key in node_keys):
-            nodes_filepath = os.path.join(analysis_folder_path, f"{filename}Nodes.csv")
+            nodes_filepath = os.path.join(date_folder_path, f"{filename}_Nodes.csv")
             write_to_csv(nodes_filepath, node_keys)

@@ -42,7 +42,6 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.SourceFK = None
         self.listOfDataChannelsInfo = []
         self.listOfDataSourcesKey = []
-        self.hide_progress_bar()
         self.loadDataSource()
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getChannelMeasurementsData(0))
         self.yaxis = WateringUtils()
@@ -111,7 +110,6 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     def getChannelMeasurementsData(self, behavior):
         
         data = getDataRepository.createDataFrame_api(self)
-        
         if data.empty:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Information)
@@ -137,13 +135,11 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
             
         else:
-            
             x_vec = numpyAnomaly[:,1]
             y_vec = numpyAnomaly[:,0]
             line1 = []
             threading.Thread(target=WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel), daemon = True).start()
-            #WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel)
-    
+            #WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel
         self.close()
 
     def updateGraphs(self, behavior):
@@ -151,7 +147,6 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         return refresh_State
 
     def refreshData(self, x_vec, y_vec, line1, title, yLabel):
-
         #line1 = PlotController.live_plotter(self,x_vec,y_vec,title, yLabel,line1)
         counter = 0
 
@@ -179,10 +174,8 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
                 print("Plotting new values")
                 time.sleep(5)
         
-            #print(y_vec,x_vec)
             line1 = PlotController.live_plotter(self, x_vec,y_vec,title, yLabel,line1)
             self.close()
-            #time.sleep(2)
             if counter == 10:
                     print("End of loop")
                     break
@@ -190,7 +183,6 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     def downloadData(self):
 
         dataFrame = getDataRepository.createDataFrame_api(self)
-        
         if dataFrame.empty:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Information)
@@ -199,8 +191,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             message_box.setStandardButtons(QMessageBox.Ok)
 
             message_box.exec_()
-            return
-                
+            return        
         dataFrame['value'],dataFrame['timeStamp'] = dataFrame['value'].astype(str), dataFrame['timeStamp'].astype(str)
         
         i_Date, f_Date = getDataRepository.get_date_range(self)
@@ -215,23 +206,3 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         print(f'DataFrame saved to {file_name[0]}')
 
         self.close()
-                
-    def set_progress(self, progress_value):
-        t = time() - self.start
-        hms = strftime("%H:%M:%S", gmtime(t))
-        self.progressBar.setValue(progress_value)
-        self.progressBar.setFormat(f"{hms} - %p%")
-
-    def timer_hide_progress_bar(self):
-        self.timer = QTimer()
-        self.timer.setSingleShot(True)
-        self.timer.timeout.connect(self.hide_progress_bar)
-        self.timer.start(6000)
-        self.progressBar.setFormat("Loading completed")
-        
-    def hide_progress_bar(self):
-        self.progressBar.setVisible(False)
-
-    def show_progress_bar(self):
-        self.progressBar.setVisible(True)
-        self.start = time()
