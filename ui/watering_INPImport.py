@@ -38,7 +38,6 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
         self.convertINPFile.clicked.connect(lambda: self.selectorFilePath(0))
         self.selectCRSButton.clicked.connect(lambda: self.selctorCRS(0))
         self.convertINPFile.clicked.connect(lambda: self.onConvertINPFile(0))
-        #self.downloadINPFile.clicked.connect(lambda: self.uploadWatering(0))
 
     def selectorFilePath(self, behavior):
         self.file_path = self.newINPDirectory.filePath()

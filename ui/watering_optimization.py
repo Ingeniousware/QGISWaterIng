@@ -43,6 +43,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.BtCreateSolution.clicked.connect(self.createSolution)
         self.BtUploadSolution.clicked.connect(self.uploadSolution)
         self.BtRefreshTable.clicked.connect(self.loadSolutions)
+        #self.BtloadFile.clicked.connect(self.loadFile)
         
     def initializeRepository(self):
         url_optimization = WateringUtils.getServerUrl() + "/api/v1/Optimization"
