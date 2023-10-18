@@ -138,8 +138,9 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             x_vec = numpyAnomaly[:,1]
             y_vec = numpyAnomaly[:,0]
             line1 = []
-            threading.Thread(target=WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel), daemon = True).start()
-            #WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel
+            thread = threading.Thread(target=WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel), daemon = True)
+            thread.start()
+            #WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel)
         self.close()
 
     def updateGraphs(self, behavior):
@@ -147,7 +148,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         return refresh_State
 
     def refreshData(self, x_vec, y_vec, line1, title, yLabel):
-        #line1 = PlotController.live_plotter(self,x_vec,y_vec,title, yLabel,line1)
+        line1 = PlotController.updateLivePlot(self,x_vec,y_vec,title, yLabel,line1)
         counter = 0
 
         while True:
@@ -156,27 +157,24 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             lastValue = df['value'].iloc[-1]
             lastDate = df['timeStamp'].iloc[-1]
 
+            #lastDate = datetime.now()
             previousLastValue = pd.DataFrame(x_vec).iloc[-1]
             print(lastValue,previousLastValue, lastDate)
 
             if lastDate == previousLastValue.iloc[-1]:
                 counter += 1
-                time.sleep(5)
+                #time.sleep(5)
                 print("No new data")
             else:
                 counter +=1
-                #lastDate = datetime.now()
-                """ y_vec[-1] = lastValue
-                x_vec[-1] = lastDate """
                 y_vec = np.append(y_vec,lastValue)
                 x_vec = np.append(x_vec,lastDate)
-                #line1 = PlotController.live_plotter(self, x_vec,y_vec,title, yLabel,line1)
                 print("Plotting new values")
-                time.sleep(5)
+               
         
-            line1 = PlotController.live_plotter(self, x_vec,y_vec,title, yLabel,line1)
+            line1 = PlotController.updateLivePlot(self, x_vec,y_vec,title, yLabel,line1)
             self.close()
-            if counter == 10:
+            if counter == 20:
                     print("End of loop")
                     break
           
