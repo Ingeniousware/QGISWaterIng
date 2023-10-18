@@ -35,6 +35,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.projectPathQgsProject = None
         self.project_path = None
         self.scenario_folder = None
+        self.ProjectFK = None
+        self.ProjectName = None
         self.loadProjects()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
     
@@ -62,9 +64,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.scenarios_box.clear()
         self.listOfScenarios = []
             
-        ProjectFK = self.listOfProjects[value][1]
+        self.ProjectFK = self.listOfProjects[value][1]
         showRemoved = False
-        params = {'ProjectFK': "{}".format(ProjectFK), 'showRemoved': "{}".format(showRemoved)}
+        params = {'ProjectFK': "{}".format(self.ProjectFK), 'showRemoved': "{}".format(showRemoved)}
         url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
         #response_scenarios = requests.get(url, params=params,
         #                        headers={'Authorization': "Bearer {}".format(self.token)})
@@ -83,7 +85,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if self.newShpDirectory.filePath() == "":
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a folder!"), level=1, duration=5)
         elif not WateringUtils.isScenarioNotOpened() or WateringUtils.isProjectOpened():
-            self.saveCurrentProject()
+            if self.ProjectFK != WateringUtils.getProjectId():
+                self.saveCurrentProject()
+            else:
+                QgsProject.instance().clear()
+                self.createNewProject()
         else:
             self.createNewProject()
 
@@ -96,9 +102,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
 
             if response == QMessageBox.Yes:
-                project_path = project.readEntry("watering","project_path","default text")[0]
-                if project_path != "default text":
-                    project.write(project_path)
+                self.project_path = project.readEntry("watering","project_path","default text")[0]
+                if self.project_path != "default text":
+                    project.write(self.project_path)
                 else:
                     iface.actionSaveProjectAs().trigger()
                     
@@ -117,23 +123,30 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             
     def createNewProject(self):
         #project name
-        project = QgsProject.instance()
-        name = self.newProjectNameInput.text()
-        project_name = "My WaterIng Project" if not name else name
-        self.project_path = self.newShpDirectory.filePath()
-        project.setFileName(project_name)
-        self.projectPathQgsProject = self.project_path + "/" + project_name + ".qgz"
-        project.write(self.projectPathQgsProject)
-        QgsProject.instance().writeEntry("watering", "project_path", self.projectPathQgsProject)
-        
+        if WateringUtils.getProjectMetadata("project_name") == "default text":
+            project = QgsProject.instance()
+            name = self.newProjectNameInput.text()
+            project_name = "My WaterIng Project" if not name else name
+            self.project_path = self.newShpDirectory.filePath()
+            project.setFileName(project_name)
+            self.projectPathQgsProject = self.project_path + "/" + project_name + ".qgz"
+            project.write(self.projectPathQgsProject)
+            
+            WateringUtils.setProjectMetadata("project_name", project_name)
+            WateringUtils.setProjectMetadata("project_path", self.project_path)
+            WateringUtils.setProjectMetadata("qgz_file_path", self.projectPathQgsProject)
+        else:
+            self.projectPathQgsProject = WateringUtils.getProjectMetadata("project_path")
+            self.project_path = WateringUtils.getProjectMetadata("project_path")
+            
         #create scenario folder
         self.createScenarioFolder()
+        
         #load layers
         self.CreateLayers()
-        
 
     def createScenarioFolder(self):
-        self.writeWateringMetadata(self.project_path)
+        self.writeWateringMetadata()
 
         scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         print("Aqui: " + scenarioFK)
@@ -156,12 +169,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.setStatusBar()
         self.close()
         
-    def writeWateringMetadata(self, projectPath):
+    def writeWateringMetadata(self):
         QgsProject.instance().writeEntry("watering", "project_name", self.listOfProjects[self.projects_box.currentIndex()][0])
         QgsProject.instance().writeEntry("watering", "project_id", self.listOfProjects[self.projects_box.currentIndex()][1])
         QgsProject.instance().writeEntry("watering", "scenario_name", self.listOfScenarios[self.scenarios_box.currentIndex()][0])
         QgsProject.instance().writeEntry("watering", "scenario_id", self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        QgsProject.instance().writeEntry("watering", "project_path", projectPath)
+        QgsProject.instance().writeEntry("watering", "project_path", self.project_path)
         
         
     def loadMap(self):

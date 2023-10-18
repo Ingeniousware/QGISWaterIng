@@ -37,6 +37,15 @@ class WateringUtils():
     def getScenarioId():
         return QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
     
+    def getProjectId():
+        return QgsProject.instance().readEntry("watering","project_id","default text")[0]
+    
+    def setProjectMetadata(field, value):
+        QgsProject.instance().writeEntry("watering", field, value)
+    
+    def getProjectMetadata(field):
+        return QgsProject.instance().readEntry("watering",field,"default text")[0]
+
     def isScenarioNotOpened():
         return WateringUtils.getScenarioId() == "default text"
     
