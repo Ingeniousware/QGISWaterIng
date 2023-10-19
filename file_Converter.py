@@ -9,6 +9,7 @@ from .inpProcessing.sectionBackdrop import sectionBackdrop
 
 
 import re
+import csv
 
 class fileConverter():
     def __init__(self):
@@ -16,7 +17,7 @@ class fileConverter():
             ...
 
 
-    def fileConvertion(self, file_path, sourceCrs, output_file_path):
+    def fileConvertionINP(self, file_path, sourceCrs, output_file_path):
 
         with open(file_path, 'r', encoding='latin-1') as inp_file, open(output_file_path, 'w') as out_file:
             #processing_coordinates = False
@@ -52,6 +53,4 @@ class fileConverter():
 
         
                 activeSection.ProcessCoordinatesConvertion(out_file, cleanLine)
-
-                
-                
+    

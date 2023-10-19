@@ -60,7 +60,7 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
     def onConvertINPFile(self, behavior):
         try:
             fileConv = fileConverter()
-            fileConv.fileConvertion(self.file_path, self.mCrs, self.output_file_path)
+            fileConv.fileConvertionINP(self.file_path, self.mCrs, self.output_file_path)
             #Post file on watering
             self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
             #url_API = f"https://dev.watering.online/api/v1/ModelFile?scenarioKeyId={self.ScenarioFK}"

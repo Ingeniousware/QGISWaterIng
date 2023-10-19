@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, Qgis
+from qgis.core import QgsProject, Qgis, QgsPointXY, QgsVectorLayer
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
@@ -11,8 +11,11 @@ from PyQt5.QtWidgets import QHeaderView
 
 import numpy as np
 import matplotlib.pyplot as plt
+from ..file_Converter import fileConverter
+from ..repositories.sensorPlacementOptRespository import sensorPlacementFromFile
 
 import os
+import math
 import requests
 from ..watering_utils import WateringUtils
 from ..maptools.insertSensorNodeTool import InsertSensorNodeTool
@@ -43,8 +46,12 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.BtCreateSolution.clicked.connect(self.createSolution)
         self.BtUploadSolution.clicked.connect(self.uploadSolution)
         self.BtRefreshTable.clicked.connect(self.loadSolutions)
-        #self.BtloadFile.clicked.connect(self.loadFile)
-        
+        self.BtOpenLoadFile.clicked.connect(self.openLoadfile)
+        self.newSensorDirectory.hide()
+        self.BtLoadFile.hide()
+        self.BtLoadFile.clicked.connect(self.upLoadSensorFile)
+        self.file_path = None
+
     def initializeRepository(self):
         url_optimization = WateringUtils.getServerUrl() + "/api/v1/Optimization"
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
@@ -72,7 +79,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             self.sensorsUploadTable()
         else:
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("No problems to load!"), level=1, duration=5)
-        
+
     def loadSolutions(self):
         index = self.problem_box.currentIndex()
         numObjectives = len(self.Objectives[self.problem_box.currentIndex()])
@@ -135,7 +142,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 if node.geometry().asPoint() in existingSensors:
                     matrix_table.append([node["Name"],
                                         node["ID"],
-                                        node["Descriptio"]])
+                                        node["Description"]])
                         
             model = TableModel(matrix_table, ["Name", "ID", "Description"])
             proxyModel = QSortFilterProxyModel()
@@ -327,6 +334,30 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         
         self.tableView.clicked.connect(self.tableClickedChart)
     
+    def upLoadSensorFile(self):
+        self.file_path = self.newSensorDirectory.filePath()
+        sensorCalc = sensorPlacementFromFile()
+        try:
+            sensors_names, data_names, d_values  = sensorCalc.read_csv(self.file_path)
+        except Exception as e:
+            print(f"Error reading CSV: {e}")
+            return
+        nodes_dict = {node["Name"]: node for node in self.Layer.getFeatures()}
+        nodes_to_print = []
+        for name in data_names:
+            if name in nodes_dict:
+                point = nodes_dict[name].geometry().asPoint()
+                x, y = point.x(), point.y()
+                if point:
+                    nodes_to_print.append((name, x, y, d_values, sensors_names))
+
+        order_data = sensorCalc.update_data_values(nodes_to_print)
+        sensor_data = sensorCalc.calculate_distances(order_data)
+        for data in sensor_data:
+            self.insertSensor(data)       
+
+        self.close()
+
     def tableClickedChart(self, index):
         if index.isValid():
             row = index.row()
@@ -356,7 +387,12 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                     
                         scatter.set_facecolor(colors)
                         plt.draw()
-        
+    
+    def openLoadfile(self):
+        self.newSensorDirectory.show()
+        self.BtLoadFile.show()
+        self.BtOpenLoadFile.setEnabled(False)
+
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
         super(TableModel, self).__init__()
