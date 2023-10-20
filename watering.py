@@ -355,7 +355,7 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = None
               
     def updateActionStateOpen(self):
-        self.cleanMarkers()
+        #self.cleanMarkers()
         if WateringUtils.isWateringProject():
             self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
             self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
@@ -370,14 +370,15 @@ class QGISPlugin_WaterIng:
     
     def updateActionStateClose(self):
         #self.cleanMarkers()
-        self.readAnalysisAction.setEnabled(False)
-        self.insertSensorAction.setEnabled(False)
-        self.insertSensorAction.setChecked(False)
-        self.openOptimizationManagerAction.setEnabled(False)
-        self.readMeasurementsAction.setEnabled(False)
-        self.importFileINP.setEnabled(False)
-        # self.selectElementAction.setEnabled(False)
-        # self.selectElementAction.setChecked(False)
+        if self.readAnalysisAction.isEnabled():
+            self.readAnalysisAction.setEnabled(False)
+            self.insertSensorAction.setEnabled(False)
+            self.insertSensorAction.setChecked(False)
+            self.openOptimizationManagerAction.setEnabled(False)
+            self.readMeasurementsAction.setEnabled(False)
+            self.importFileINP.setEnabled(False)
+            self.selectElementAction.setEnabled(False)
+            self.selectElementAction.setChecked(False)
         if (self.hub_connection): self.hub_connection.stop()
 
         
