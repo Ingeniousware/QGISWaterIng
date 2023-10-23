@@ -86,29 +86,25 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def saveCurrentProject(self):
         project = QgsProject.instance()
         if project.isDirty():
-            response = QMessageBox.question(None, 
-                                            "Save Project", 
-                                            "The current project has unsaved changes. Do you want to save it before creating a new project?", 
+            response = QMessageBox.question(None,
+                                            "Save Project",
+                                            "The current project has unsaved changes. Do you want to save it before creating a new project?",
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+
 
             if response == QMessageBox.Yes:
                 #self.project_path = project.readEntry("watering","project_path","default text")[0]
                 if WateringUtils.getProjectMetadata("project_path") != "default text":
-                    project.save()
+                    if project.write():
+                        iface.messageBar().pushMessage(self.tr(f"Project saved at {project.fileName()}"), level=Qgis.Success, duration=5)
+                    else:
+                        iface.messageBar().pushMessage(self.tr("Error"), self.tr("Failed to save the project."), level=1, duration=5)
                 else:
                     iface.actionSaveProjectAs().trigger()
-                    
-                if project.write():
-                    print(f"Project saved at {project.fileName()}")
-                    iface.messageBar().pushMessage(self.tr("Error"), self.tr(f"Project saved at {project.fileName()}"), level=1, duration=5)
-                    iface.messageBar().pushMessage(self.tr("Solution deleted successfully!"), level=Qgis.Success, duration=5)
-
-                else:
-                    print("Failed to save the project.")
-                    iface.messageBar().pushMessage(self.tr("Error"), self.tr("Failed to save the project."), level=1, duration=5)
-
+       
             elif response == QMessageBox.Cancel:
                 return
+
 
         project.clear()
         self.createNewProject()
