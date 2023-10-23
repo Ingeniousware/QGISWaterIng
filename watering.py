@@ -344,7 +344,7 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = None
               
     def updateActionStateOpen(self):
-        self.cleanMarkers()
+        #self.cleanMarkers()
         if WateringUtils.isWateringProject():
             self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
             self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
