@@ -24,12 +24,17 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.token = os.environ.get('TOKEN')
         self.listOfProjects = []
         self.listOfScenarios = []
+        self.OfflineScenarios = None
         self.myScenarioUnitOfWork = None
         self.projectPathQgsProject = None
         self.project_path = None
         self.scenario_folder = None
         self.ProjectFK = None
         self.ProjectName = None
+        self.ScenarioFK = None
+        self.ScenarioName = None
+        self.ProjectName = None
+        self.WateringFolder = WateringUtils.get_app_data_path() + "/QGISWatering/"
         self.loadProjects()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
     
@@ -45,9 +50,15 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.projects_box.addItem(response_projects.json()["data"][i]["name"])
             self.listOfProjects.append((response_projects.json()["data"][i]["name"],
                                 response_projects.json()["data"][i]["serverKeyId"]))
-                
+        
         self.loadScenarios(self.projects_box.currentIndex())
         self.projects_box.currentIndexChanged.connect(self.loadScenarios)
+        
+        #initializing procedures
+        self.newShpDirectory.setFilePath(self.WateringFolder)
+        #{}
+        self.getOfflineScenarios()
+        print(self.OfflineScenarios)
         
     def loadScenarios(self, value):
         #Resetting scenarios box in case of changing the selected project.
@@ -56,6 +67,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.newProjectNameInput.setPlaceholderText(self.listOfProjects[value][0])
         
         self.ProjectFK = self.listOfProjects[value][1]
+        self.ProjectName = self.listOfProjects[value][0]
         showRemoved = False
         params = {'ProjectFK': "{}".format(self.ProjectFK), 'showRemoved': "{}".format(showRemoved)}
         url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
@@ -69,10 +81,13 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.scenarios_box.addItem(response_scenarios.json()["data"][i]["name"])
             self.listOfScenarios.append((response_scenarios.json()["data"][i]["name"],
                                          response_scenarios.json()["data"][i]["serverKeyId"]))
-    
+        
+        #length scenarioFK is 36
+        self.ScenarioName = self.listOfScenarios[self.scenarios_box.currentIndex()][0]
+        self.ScenarioFK = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
+        
     def checkExistingProject(self):
-        #if self.newShpDirectory.filePath() == "":
-            #iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a folder!"), level=1, duration=5)
+        #if there is a project opened
         if not WateringUtils.isScenarioNotOpened() or WateringUtils.isProjectOpened():
             if self.ProjectFK != WateringUtils.getProjectId():
                 self.saveCurrentProject()
@@ -111,13 +126,35 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
     def setWateringFolderAppData(self):
         #Creates directory QGISWatering inside Appdata
-        watering_folder = WateringUtils.get_app_data_path() + "/QGISWatering/" + self.ProjectFK
+        watering_folder = self.WateringFolder + self.ProjectFK + self.ProjectName
         
         if not os.path.exists(watering_folder):
             os.makedirs(watering_folder)
         
         self.project_path = watering_folder
-        
+    
+    def getOfflineScenarios(self):
+        self.OfflineScenarios = {folder[:36]: self.getScenarioDataFromFolder(os.path.join(self.WateringFolder + folder)) for folder in self.getSubFolders(self.WateringFolder)}
+    
+    def getScenarioDataFromFolder(self, path):
+        return {d[:36]: d[36:] for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))}
+         
+    def getSubFolders(self, path):
+        return [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+
+    def startProject(self):
+        if (self.OfflineScenarios and 
+            self.OfflineScenarios.get(self.ProjectFK) and 
+            self.ScenarioFK in self.OfflineScenarios[self.ProjectFK]):
+            
+            self.openProjectFolder()
+        else:
+            
+            self.createNewProject()
+            
+    def openProjectFolder():
+        ...
+            
     def createNewProject(self):
         #project name
         if WateringUtils.getProjectMetadata("project_name") == "default text":
@@ -152,7 +189,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
         print("Aqui: " + scenarioFK)
         #Create scenario folder
-        self.scenario_folder = self.project_path + "/" + scenarioFK
+        self.scenario_folder = self.project_path + "/" + scenarioFK + self.ScenarioName
         os.makedirs(self.scenario_folder, exist_ok=True)
        
     
