@@ -81,18 +81,7 @@ class QGISPlugin_WaterIng:
 
         self.scenarioUnitOFWork = None
 
-    def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-        We implement this ourselves since we do not inherit QObject.
-        :param message: String for translation.
-        :type message: str, QString
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate("QGISRed", message)
-
-
+    
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -401,9 +390,12 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
         else:
-            self.dlg = WateringDatachannels(self.iface)
-            self.dlg.show()
-            self.dlg.exec_()
+            try:
+                self.dlg = WateringDatachannels()
+                self.dlg.show()
+                self.dlg.exec_()
+            except:
+                self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("No data source available for the project."), level=1, duration=5)
 
 
     def createOnlineConnectionChannels(self):
