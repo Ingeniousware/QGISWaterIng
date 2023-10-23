@@ -33,13 +33,14 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     
-    def __init__(self,parent=None):
+    def __init__(self, iface, parent=None):
         """Constructor."""
         super(WateringDatachannels, self).__init__(parent)
         self.setupUi(self)
         self.token = os.environ.get('TOKEN')
         self.ProjectFK = None
         self.SourceFK = None
+        self.iface = iface
         self.listOfDataChannelsInfo = []
         self.listOfDataSourcesKey = []
         self.loadDataSource()
@@ -92,19 +93,26 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
     def loadDataChannels(self, indexValue):
         self.datachannels_box.clear()
         self.listOfDataChannelsInfo = []
+
+        if indexValue == -1:
+            self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("No data source available for the project."), level=1, duration=5)
         
         url_DataChannels = WateringUtils.getServerUrl() + "/api/v1/MeasurementChannels"
-        self.SourceFK =  self.listOfDataSourcesKey[indexValue]
-        self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
-        params = {'projectKeyId': "{}".format(self.ProjectFK), 'sourceKeyId': "{}".format(self.SourceFK)}
-        response_analysis = requests.get(url_DataChannels, params=params,
-                                headers={'Authorization': "Bearer {}".format(self.token)})
+        try: 
+            self.SourceFK =  self.listOfDataSourcesKey[indexValue]
+            
+            self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
+            params = {'projectKeyId': "{}".format(self.ProjectFK), 'sourceKeyId': "{}".format(self.SourceFK)}
+            response_analysis = requests.get(url_DataChannels, params=params,
+                                    headers={'Authorization': "Bearer {}".format(self.token)})
 
-        for i in range(0, response_analysis.json()["total"]):
-            self.datachannels_box.addItem(response_analysis.json()["data"][i]["name"])
-            self.listOfDataChannelsInfo.append((response_analysis.json()["data"][i]["serverKeyId"], 
-                                               response_analysis.json()["data"][i]["measurement"],
-                                               response_analysis.json()["data"][i]["units"]))
+            for i in range(0, response_analysis.json()["total"]):
+                self.datachannels_box.addItem(response_analysis.json()["data"][i]["name"])
+                self.listOfDataChannelsInfo.append((response_analysis.json()["data"][i]["serverKeyId"], 
+                                                response_analysis.json()["data"][i]["measurement"],
+                                                response_analysis.json()["data"][i]["units"]))
+        except IndexError:
+            ...
 
 
     def getChannelMeasurementsData(self, behavior):

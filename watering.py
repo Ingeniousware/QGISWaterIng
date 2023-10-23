@@ -394,7 +394,7 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must connect to WaterIng!"), level=1, duration=5)
         else:
-            self.dlg = WateringDatachannels()
+            self.dlg = WateringDatachannels(self.iface)
             self.dlg.show()
             self.dlg.exec_()
 

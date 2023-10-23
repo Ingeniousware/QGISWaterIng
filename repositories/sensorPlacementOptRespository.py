@@ -63,13 +63,10 @@ class sensorPlacementFromFile:
             calculated_distance = math.sqrt((delta_x)**2 + (delta_y)**2)
             delta_x /= calculated_distance
             delta_y /= calculated_distance
-
             x = x1 + delta_x * dist1
             y = y1 + delta_y * dist1
             my_coord = QgsPointXY(x, y)
 
             #distances.append((f"{name1}-{name2}", calculated_distance, dist1))
-            sensor_coordinates.append((my_coord))
-        print(sensor_coordinates)
-            
+            sensor_coordinates.append((my_coord))     
         return sensor_coordinates
