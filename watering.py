@@ -7,7 +7,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
-
+from qgis.utils import iface
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -355,6 +355,7 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = None
               
     def updateActionStateOpen(self):
+        self.cleanMarkers()
         if WateringUtils.isWateringProject():
             self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
             self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
@@ -368,20 +369,26 @@ class QGISPlugin_WaterIng:
             # self.selectElementAction.setEnabled(True)
     
     def updateActionStateClose(self):
-        self.cleanMarkers()
-        self.readAnalysisAction.setEnabled(False)
-        self.insertSensorAction.setEnabled(False)
-        self.insertSensorAction.setChecked(False)
-        self.openOptimizationManagerAction.setEnabled(False)
-        self.readMeasurementsAction.setEnabled(False)
-        self.importFileINP.setEnabled(False)
-        # self.selectElementAction.setEnabled(False)
-        # self.selectElementAction.setChecked(False)
+
+        actions = [self.readAnalysisAction,
+                    self.insertSensorAction,
+                    self.openOptimizationManagerAction,
+                    self.readMeasurementsAction,
+                    self.importFileINP,
+                    self.selectElementAction]
+
+        for action in actions:
+            if action:
+                if action.isEnabled():
+                    action.setEnabled(False)
+                if action.isChecked():
+                    action.setChecked(False) 
+                    
         if (self.hub_connection): self.hub_connection.stop()
 
         
     def cleanMarkers(self):
-        if (self.canvas and self.canvas.scene()):
+        if (iface.mapCanvas() and iface.mapCanvas().scene()):
             vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
             for vertex in vertex_items:
                 self.canvas.scene().removeItem(vertex)

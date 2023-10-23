@@ -138,3 +138,19 @@ class WateringUtils():
             30: "Ampere"
             }
         return conditions.get(status)
+    
+    def get_app_data_path():
+        platform = os.sys.platform
+
+        if platform == "win32":
+            # For Windows
+            return os.environ['APPDATA']
+        elif platform == "darwin":
+            # For macOS
+            return os.path.expanduser('~/Library/Application Support')
+        elif platform == "linux" or platform == "linux2":
+            # For Linux
+            return os.path.expanduser('~/.local/share')
+        else:
+            # Other platforms or an error
+            raise ValueError(f"Unsupported platform: {platform}")

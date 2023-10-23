@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import os
-import appdirs
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer
+from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis
 from qgis.utils import iface
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QLabel
@@ -93,15 +92,17 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
 
             if response == QMessageBox.Yes:
-                self.project_path = project.readEntry("watering","project_path","default text")[0]
-                if self.project_path != "default text":
-                    project.write(self.project_path)
+                #self.project_path = project.readEntry("watering","project_path","default text")[0]
+                if WateringUtils.getProjectMetadata("project_path") != "default text":
+                    project.save()
                 else:
                     iface.actionSaveProjectAs().trigger()
                     
                 if project.write():
                     print(f"Project saved at {project.fileName()}")
                     iface.messageBar().pushMessage(self.tr("Error"), self.tr(f"Project saved at {project.fileName()}"), level=1, duration=5)
+                    iface.messageBar().pushMessage(self.tr("Solution deleted successfully!"), level=Qgis.Success, duration=5)
+
                 else:
                     print("Failed to save the project.")
                     iface.messageBar().pushMessage(self.tr("Error"), self.tr("Failed to save the project."), level=1, duration=5)
@@ -114,16 +115,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
     def setWateringFolderAppData(self):
         #Creates directory QGISWatering inside Appdata
-        app_name = "QGISWatering"
-        company_name = "WaterIng"  
+        watering_folder = WateringUtils.get_app_data_path() + "/QGISWatering/" + self.ProjectFK
         
-        user_data_dir = appdirs.user_data_dir(app_name, company_name)
-        final_path = user_data_dir + "/" + self.ProjectFK
+        if not os.path.exists(watering_folder):
+            os.makedirs(watering_folder)
         
-        if not os.path.exists(final_path):
-            os.makedirs(final_path)
-        
-        self.project_path = final_path
+        self.project_path = watering_folder
         
     def createNewProject(self):
         #project name
@@ -156,7 +153,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def createScenarioFolder(self):
         self.writeWateringMetadata()
 
-        scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
         print("Aqui: " + scenarioFK)
         #Create scenario folder
         self.scenario_folder = self.project_path + "/" + scenarioFK
@@ -194,17 +191,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         scenario_name = project.readEntry("watering", "scenario_name","default text")[0]
         
         message = "Project: " + project_name + " | Scenario: " + scenario_name
-        message_label = QLabel(message)
-        status_bar = iface.mainWindow().statusBar()
-        status_bar.addWidget(message_label)
         
-        #dock
-        # Create a dock widget
-        dock = QDockWidget("Title")
-        dock.setWidget(QLabel("Your message here"))
-
-        # Add the dock widget to the QGIS interface
-        iface.addDockWidget(Qt.RightDockWidgetArea, dock)
-        
-        #iface.mainWindow().statusBar().showMessage(message)        
+        iface.mainWindow().statusBar().showMessage(message)   
+             
         self.done(True)  #self.close()  instead of just closing we call done(true) to return 1 as result of this dialog modal execution
