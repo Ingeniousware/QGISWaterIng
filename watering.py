@@ -358,7 +358,8 @@ class QGISPlugin_WaterIng:
             # self.selectElementAction.setEnabled(True)
     
     def updateActionStateClose(self):
-
+        self.cleanMarkers()
+        
         actions = [self.readAnalysisAction,
                     self.insertSensorAction,
                     self.openOptimizationManagerAction,
@@ -377,7 +378,7 @@ class QGISPlugin_WaterIng:
 
         
     def cleanMarkers(self):
-        if (iface.mapCanvas() and iface.mapCanvas().scene()):
+        if self.canvas and self.canvas.scene() and self.canvas.items():
             vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
             for vertex in vertex_items:
                 self.canvas.scene().removeItem(vertex)
