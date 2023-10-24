@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis
@@ -58,6 +59,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.newShpDirectory.setFilePath(self.WateringFolder)
         #{}
         self.getOfflineScenarios()
+        self.writeOfflineData()
         print(self.OfflineScenarios)
         
     def loadScenarios(self, value):
@@ -124,24 +126,29 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         project.clear()
         self.createNewProject()
         
-    def setWateringFolderAppData(self):
+    def setWateringFolderAppData(self, path):
         #Creates directory QGISWatering inside Appdata
-        watering_folder = self.WateringFolder + self.ProjectFK + self.ProjectName
+        folder = path + self.ProjectFK
         
-        if not os.path.exists(watering_folder):
-            os.makedirs(watering_folder)
+        if not os.path.exists(folder):
+            os.makedirs(folder)
         
-        self.project_path = watering_folder
+        self.project_path = folder
     
     def getOfflineScenarios(self):
-        self.OfflineScenarios = {folder[:36]: self.getScenarioDataFromFolder(os.path.join(self.WateringFolder + folder)) for folder in self.getSubFolders(self.WateringFolder)}
-    
-    def getScenarioDataFromFolder(self, path):
-        return {d[:36]: d[36:] for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))}
-         
+        self.OfflineScenarios = {folder: self.getSubFolders(os.path.join(self.WateringFolder + folder)) for folder in self.getSubFolders(self.WateringFolder)}
+        
     def getSubFolders(self, path):
         return [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
-
+    
+    def writeOfflineData(self):
+        # Ensure the directory exists
+        filepath = self.WateringFolder + "metadata.json"
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        with open(filepath, 'w') as file:
+            json.dump(self.OfflineScenarios, file)
+            
     def startProject(self):
         if (self.OfflineScenarios and 
             self.OfflineScenarios.get(self.ProjectFK) and 
@@ -157,25 +164,19 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             
     def createNewProject(self):
         #project name
-        if WateringUtils.getProjectMetadata("project_name") == "default text":
-            project = QgsProject.instance()
-            name = self.newProjectNameInput.text()
-            project_name = self.newProjectNameInput.placeholderText() if not name else name
+        project = QgsProject.instance()
+        name = self.newProjectNameInput.text()
+        project_name = self.newProjectNameInput.placeholderText() if not name else name
+        
+        #creates the project folder within the chosen folder (Watering folder in appdata by default)
+        self.setWateringFolderAppData(self.newShpDirectory.filePath())
+        project.setFileName(project_name)
+        self.projectPathQgsProject = self.project_path + "/" + project_name + ".qgz"
+        project.write(self.projectPathQgsProject)
             
-            if self.newShpDirectory.filePath():
-                self.project_path = self.newShpDirectory.filePath()
-            else:
-                self.setWateringFolderAppData()
-
-            project.setFileName(project_name)
-            self.projectPathQgsProject = self.project_path + "/" + project_name + ".qgz"
-            project.write(self.projectPathQgsProject)
-            
-            WateringUtils.setProjectMetadata("project_name", project_name)
-            WateringUtils.setProjectMetadata("project_path", self.project_path)
-            WateringUtils.setProjectMetadata("qgz_file_path", self.projectPathQgsProject)
-        else:
-            self.project_path = WateringUtils.getProjectMetadata("project_path")
+        WateringUtils.setProjectMetadata("project_name", project_name)
+        WateringUtils.setProjectMetadata("project_path", self.project_path)
+        WateringUtils.setProjectMetadata("qgz_file_path", self.projectPathQgsProject)
             
         #create scenario folder
         self.createScenarioFolder()
@@ -189,7 +190,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
         print("Aqui: " + scenarioFK)
         #Create scenario folder
-        self.scenario_folder = self.project_path + "/" + scenarioFK + self.ScenarioName
+        self.scenario_folder = self.project_path + "/" + scenarioFK
         os.makedirs(self.scenario_folder, exist_ok=True)
        
     
