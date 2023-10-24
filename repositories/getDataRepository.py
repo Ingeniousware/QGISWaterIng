@@ -65,6 +65,7 @@ class getDataRepository:
                     writer.writerow(keys)
                 writer.writerow([element[key] for key in keys])
 
+        date = date.replace(":", "")
         project_path = QgsProject.instance().readEntry("watering","project_path","default text")[0]
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         scenario_folder_path = project_path + "/" + scenario_id
