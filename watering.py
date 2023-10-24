@@ -84,7 +84,7 @@ class QGISPlugin_WaterIng:
     
 
     # noinspection PyMethodMayBeStatic
-    def tr(self, context, message):
+    def tr(self, message, context = "QGISPlugin_WaterIng"):
         """Get the translation for a string using Qt translation API.
 
         We implement this ourselves since we do not inherit QObject.
@@ -142,7 +142,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_login.png'
         self.add_action(
             icon_path,
-            text=self.tr('QGISPlugin_WaterIng',u'Watering Login'),
+            text=self.tr(u'Watering Login'),
             callback=self.addLogin,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
@@ -150,7 +150,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_load_elements.png'
         self.add_action(
             icon_path,
-            text=self.tr('QGISPlugin_WaterIng',u'Download Elements'),
+            text=self.tr(u'Download Elements'),
             callback=self.addLoad,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
@@ -158,7 +158,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_load_elements.png'
         self.importFileINP = self.add_action(
             icon_path,
-            text=self.tr("QGISPlugin_WaterIng", u'Import INP File'),
+            text=self.tr(u'Import INP File'),
             callback=self.importINPFile,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
@@ -167,7 +167,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_update.png'
         self.add_action(
             icon_path,
-            text=self.tr('QGISPlugin_WaterIng',u'Update Elements'),
+            text=self.tr(u'Update Elements'),
             callback=self.updateElements,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
@@ -175,7 +175,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
             icon_path,
-            text=self.tr("QGISWaterIng", u'Water Network Analysis'),
+            text=self.tr(u'Water Network Analysis',  ),
             #text=self.tr(u'Water Network Analysis'),
             callback=self.waterAnalysis,
             toolbar = self.toolbar,
@@ -196,7 +196,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_optimization.png'
         self.openOptimizationManagerAction = self.add_action(
             icon_path,
-            text=self.tr("QGISPlugin_WaterIng", u'Optimization'),
+            text=self.tr(u'Optimization'),
             callback=self.waterOptimization,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
@@ -205,7 +205,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
         self.insertSensorAction = self.add_action(
             icon_path,
-            text=self.tr("QGISPlugin_WaterIng", u'Add Demand Node'),
+            text=self.tr(u'Add Demand Node'),
             callback=self.activateToolInsertSensor,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
@@ -215,7 +215,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_measurement.png'
         self.readMeasurementsAction = self.add_action(
             icon_path,
-            text=self.tr('QGISPlugin_WaterIng',u'Get Measurements'),
+            text=self.tr(u'Get Measurements'),
             callback=self.getMeasurements,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
@@ -231,7 +231,7 @@ class QGISPlugin_WaterIng:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr('WateringLogin', u'&Watering API Connection'),
+                self.tr(u'&Watering API Connection', 'WateringLogin'),
                 action)
             self.iface.removeToolBarIcon(action)
 
@@ -246,7 +246,7 @@ class QGISPlugin_WaterIng:
     def addLoad(self):
         #self.InitializeProjectToolbar()
         if os.environ.get('TOKEN') == None:
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng", u"You must login to WaterIng first!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must login to WaterIng first!"), level=1, duration=5)
         else:
             print("calling watering load dialog")
             self.dlg = WateringLoad()
@@ -285,7 +285,7 @@ class QGISPlugin_WaterIng:
 
     def importINPFile(self):
         if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         else:
@@ -296,9 +296,9 @@ class QGISPlugin_WaterIng:
                 
     def waterAnalysis(self):
         if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"You must connect to WaterIng!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
             self.analysisDockPanel.initializeRepository()
             self.analysisDockPanel.show()
@@ -306,9 +306,9 @@ class QGISPlugin_WaterIng:
             
     def waterOptimization(self):
         if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"You must connect to WaterIng!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
             self.dlg = WaterOptimization()
             self.dlg.show()
@@ -386,16 +386,16 @@ class QGISPlugin_WaterIng:
 
     def getMeasurements(self):
         if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"You must connect to WaterIng!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
             try:
                 self.dlg = WateringDatachannels()
                 self.dlg.show()
                 self.dlg.exec_()
             except:
-                self.iface.messageBar().pushMessage(self.tr(QCoreApplication.translate('QGISPlugin_WaterIng', u"Error")), self.tr(QCoreApplication.translate('QGISPlugin_WaterIng',u"No data source available for the project.")), level=1, duration=5)
+                self.iface.messageBar().pushMessage(self.tr(QCoreApplication.translate(u"Error")), self.tr(QCoreApplication.translate(u"No data source available for the project.")), level=1, duration=5)
 
 
     def createOnlineConnectionChannels(self):
@@ -427,9 +427,9 @@ class QGISPlugin_WaterIng:
     
     def updateElements(self):
         if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
-            self.iface.messageBar().pushMessage(self.tr("QGISPlugin_WaterIng",u"Error"), self.tr("QGISPlugin_WaterIng",u"You must connect to WaterIng!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
             #serialized_obj_retrieved = bytes.fromhex(os.environ["SCENARIO"])
 
