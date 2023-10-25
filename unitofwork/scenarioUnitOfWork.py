@@ -22,7 +22,6 @@ class scenarioUnitOfWork():
         self.list_of_elements = [self.waterDemandNodeRepository,
                                  self.tankNodeRepository, 
                                  self.reservoirNodeRepository,
-                                 self.pipeNodeRepository,
                                  self.waterMeterNodeRepository,
                                  self.valveNodeRepository,
                                  self.pumpNodeRepository]

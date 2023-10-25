@@ -15,16 +15,19 @@ class WaterMeterNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterMeter"
         self.StorageShapeFile = os.path.join(project_path, "watering_waterMeter.shp")
         self.LayerName = "watering_waterMeter"
-        self.field_definitions = None
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),
-            ("Last Modified", QVariant.String),
+            ("Last Mdf", QVariant.String),
             ("Name", QVariant.String),
-            ("Description", QVariant.String),
-            ("Meterstate", QVariant.Int),
-            ("FunctionalType", QVariant.Int),
-            ("LastReadDateTime", QVariant.String)
+            ("Descript", QVariant.String),
+            ("Meterstate", QVariant.Double),
+            ("FunctType", QVariant.Double),
+            ("LastDate", QVariant.String),
+            ("Pressure", QVariant.Double),
+            ("Demand", QVariant.Double),
+            ("Demand C", QVariant.Double),
+            ("Age", QVariant.Double)
         ]
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description","meterstate",

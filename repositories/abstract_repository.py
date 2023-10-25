@@ -177,14 +177,15 @@ class AbstractRepository():
         for feature in self.Layer.getFeatures():
             attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
             
-            if not attributes[2]:
-                attributes[2] = ""
-                
-            geom = feature.geometry()
-            point = geom.asPoint()
-            attributes.append((point.x(), point.y()))
+            if attributes:
+                if not attributes[2]:
+                    attributes[2] = ""
+                    
+                geom = feature.geometry()
+                point = geom.asPoint()
+                attributes.append((point.x(), point.y()))
 
-            self.OfflineDict[feature["ID"]] = attributes
+                self.OfflineDict[feature["ID"]] = attributes
                 
     def addElement(self, id):
         
