@@ -74,7 +74,7 @@ class AbstractAnalysisRepository():
             layer = QgsVectorLayer(uri, layer_name, "delimitedtext")
             QgsProject.instance().addMapLayer(layer, False)
             if layer.isValid():
-                group.insertChildNode(-1, QgsLayerTreeLayer(layer))
+                group.addChildNode(QgsLayerTreeLayer(layer))
             else:
                 print(f"{layer_name} failed to load! Error: {layer.error().message()}")
             return layer
