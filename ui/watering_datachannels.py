@@ -13,8 +13,6 @@ from ..anomaly_detection import AnomalyDetection
 from ..anomaly_detection import PlotController
 from ..repositories.getDataRepository import getDataRepository
 
-from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
-from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
 from .watering_livegraph import ChartView #delete
 
 # Import libraries for chart measurments

@@ -16,4 +16,4 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.EndColor = QColor(0, 0, 139)
         self.Size = 3
         self.elementAnalysisResults()
-        self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Nodes.csv", "Nodes_analysis")
+        self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Nodes.csv", f"Nodes_{datetime}")

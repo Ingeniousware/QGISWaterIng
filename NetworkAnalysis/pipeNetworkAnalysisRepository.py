@@ -17,4 +17,4 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.EndColor = QColor(0, 0, 139)
         self.Size = 1
         self.elementAnalysisResults()
-        self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Pipes.csv", "Pipes_analysis")
+        self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Pipes.csv", f"Pipes_{datetime}")

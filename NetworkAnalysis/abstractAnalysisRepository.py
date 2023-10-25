@@ -56,10 +56,6 @@ class AbstractAnalysisRepository():
         
         self.changeColor()
 
-    import os
-
-
-
     def addCSVNonSpatialLayerToPanel(self, fileName, layerName):
         root = QgsProject.instance().layerTreeRoot()
         shapeGroup = root.findGroup("Analysis")
@@ -71,7 +67,6 @@ class AbstractAnalysisRepository():
         date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date)
 
         def loadCsvLayer(filepath, layer_name, group):
-            print(f"Loading {layer_name} from {filepath}")
             uri = f"file:///{filepath}?type=csv&delimiter=,&detectTypes=yes&geomType=none"
             layer = QgsVectorLayer(uri, layer_name, "delimitedtext")
             QgsProject.instance().addMapLayer(layer, False)
@@ -80,12 +75,9 @@ class AbstractAnalysisRepository():
             else:
                 print(f"{layer_name} failed to load! Error: {layer.error().message()}")
             return layer
-
+    
         loadCsvLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
-        
-
-
-
+            
     
     def changeColor(self):
         # Set layer name and desired paremeters

@@ -70,7 +70,13 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         datetime = self.listOfAnalysis[self.analysis_box.currentIndex()][1]
         analysisExecutionId2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][0]
         datetime2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][1]
-        self.set_progress(20)  
+        self.set_progress(20)
+
+        root = QgsProject.instance().layerTreeRoot()
+        shapeGroup = root.findGroup("Analysis")
+        if shapeGroup:
+            shapeGroup.removeAllChildren()
+            
         pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
         self.set_progress(50)  
         waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
@@ -80,8 +86,6 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             pipeNodeRepository2 = PipeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
             self.set_progress(80)
             waterDemandNodeRepository2 = NodeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
-        else:
-            self.set_progress(80)
         self.set_progress(100)  
         self.timer_hide_progress_bar()
 
