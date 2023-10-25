@@ -60,6 +60,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         #{}
         self.getOfflineScenarios()
         print(self.OfflineScenarios)
+        self.setComboBoxCurrentProject()
         
     def loadScenarios(self, value):
         #Resetting scenarios box in case of changing the selected project.
@@ -222,9 +223,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         root.insertChildNode(5, QgsLayerTreeLayer(layer))
     
     def setStatusBar(self):
-        project = QgsProject.instance()
-        project_name = project.readEntry("watering","project_name","default text")[0]
-        scenario_name = project.readEntry("watering", "scenario_name","default text")[0]
+        project_name = WateringUtils.getProjectMetadata("project_name")
+        scenario_name = WateringUtils.getProjectMetadata("scenario_name")
         
         message = "Project: " + project_name + " | Scenario: " + scenario_name
         
@@ -248,3 +248,38 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not combined_extent.isEmpty():
             iface.mapCanvas().setExtent(combined_extent)
             iface.mapCanvas().refresh()
+    
+    def setComboBoxCurrentProject(self):
+        project_name = WateringUtils.getProjectMetadata("server_project_name")
+        
+        if project_name != "default text":
+            index_project = -1
+            
+            for i in range(self.projects_box.count()):
+                if self.projects_box.itemText(i) == project_name:
+                    index_project = i
+                    break
+                
+            if index_project != -1:
+                self.projects_box.setCurrentIndex(index_project)
+            else:
+                print(f"Project: {project_name} not found!")
+
+        self.setComboBoxCurrentScenario()
+                
+    def setComboBoxCurrentScenario(self):
+        scenario_name = WateringUtils.getProjectMetadata("scenario_name")
+        
+        if scenario_name != "default text":
+            index_scenario = -1
+            
+            for i in range(self.scenarios_box.count()):
+                if self.scenarios_box.itemText(i) == scenario_name:
+                    index_scenario = i
+                    break
+                    
+            if index_scenario != -1:
+                self.scenarios_box.setCurrentIndex(index_scenario)
+            else:
+                print(f"Scenario: {scenario_name} not found!")
+        
