@@ -16,5 +16,8 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 1
+        self.join_field = 'pipeKey'
+        self.fields_to_add = ["velocity", "flow","headLoss"]
         self.elementAnalysisResults()
         self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Pipes.csv", f"Pipes_{datetime}")
+        self.addAttributes(f"Pipes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)

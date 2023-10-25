@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from qgis.core import QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat
-from qgis.core import QgsStyle, QgsClassificationQuantile, QgsGradientColorRamp, QgsVectorLayer, QgsLayerTreeLayer
-
+from qgis.core import QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat, QgsField
+from qgis.core import QgsStyle, QgsClassificationQuantile, QgsGradientColorRamp, QgsVectorLayer, QgsLayerTreeLayer, QgsVectorLayerJoinInfo
+from PyQt5.QtCore import QVariant
 import requests
 import os
 from ..watering_utils import WateringUtils
@@ -52,7 +52,7 @@ class AbstractAnalysisRepository():
                 
         layer.commitChanges()
         
-        print(self.LayerName, "analysis results done, behavior: ", self.behavior)
+        #print(self.LayerName, "analysis results done, behavior: ", self.behavior)
         
         self.changeColor()
 
@@ -77,8 +77,32 @@ class AbstractAnalysisRepository():
             return layer
     
         loadCsvLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
-            
-    
+
+ 
+    def addAttributes(self, layerName, layerDest, join_field, fields_to_add):
+        source_layer_name = layerName
+        target_layer_name = layerDest
+
+        for layer in QgsProject.instance().mapLayers().values():
+            if layer.name() == source_layer_name:
+                source_layer = layer
+            if layer.name() == target_layer_name:
+                target_layer = layer
+        if not source_layer or not target_layer:
+            raise ValueError("One or both layers not found in the project!")
+       
+        joinObject = QgsVectorLayerJoinInfo()
+        joinObject.setJoinFieldName(join_field)
+        joinObject.setTargetFieldName('ID')
+        joinObject.setJoinLayerId(source_layer.id())
+        joinObject.setUsingMemoryCache(True)
+        joinObject.setJoinLayer(source_layer)
+        joinObject.setJoinFieldNamesSubset(fields_to_add)
+        #joinObject.setPrefix("")
+        target_layer.addJoin(joinObject)
+
+
+
     def changeColor(self):
         # Set layer name and desired paremeters
         num_classes = 10
