@@ -73,7 +73,7 @@ class AbstractAnalysisRepository():
             uri = f"file:///{filepath}?type=csv&delimiter=,&detectTypes=yes&geomType=none"
             layer = QgsVectorLayer(uri, layer_name, "delimitedtext")
             if layer.isValid():
-                group.insertChildNode(-1, QgsLayerTreeLayer(layer))
+                group.insertChildNode(1, QgsLayerTreeLayer(layer))
             else:
                 print(f"{layer_name} failed to load! Error: {layer.error().message()}")
             return layer
