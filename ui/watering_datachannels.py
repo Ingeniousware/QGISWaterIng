@@ -3,7 +3,7 @@
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
 from PyQt5.QtCore import QTimer
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QApplication
 
 import os
 import requests
@@ -15,6 +15,7 @@ from ..repositories.getDataRepository import getDataRepository
 
 from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
 from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
+from .watering_livegraph import ChartView #delete
 
 # Import libraries for chart measurments
 import pandas as pd
@@ -124,7 +125,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         
         data['timeStamp'] = pd.to_datetime(data['timeStamp'])
 
-        anomaly = AnomalyDetection.iqr_anomaly_detector(data)
+        anomaly, lower_threshold, upper_threshold = AnomalyDetection.iqr_anomaly_detector(data)
         title = self.datachannels_box.currentText()
         yLabel = (self.yaxis.translateMeasurements(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) 
                         + " " + "(" + self.yaxis.translateUnits(self.listOfDataChannelsInfo[self.datachannels_box.currentIndex()][1]) + ")")
@@ -137,12 +138,15 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
             PlotController.plot_Anomalies(self,numpyAnomaly, title, yLabel)
             
         else:
-            x_vec = numpyAnomaly[:,1]
+            """ x_vec = numpyAnomaly[:,1]
             y_vec = numpyAnomaly[:,0]
             line1 = []
             thread = threading.Thread(target=WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel), daemon = True)
-            thread.start()
-            #WateringDatachannels.refreshData(self, x_vec, y_vec, line1, title, yLabel)
+            thread.start() """
+            #print(numpyAnomaly)
+            self.liveplot = ChartView(title)
+            self.liveplot.show()
+
         self.close()
 
     def updateGraphs(self, behavior):

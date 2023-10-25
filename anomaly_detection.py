@@ -28,7 +28,7 @@ class AnomalyDetection():
         upper_threshold = quartiles[0.75] + (threshold * iqr)
         #print(f"Lower threshold: {lower_threshold}, \nUpper threshold: {upper_threshold}\n")
         copy_data['Predictions'] = df[column].apply(AnomalyDetection.find_anomalies, args=(lower_threshold, upper_threshold))
-        return copy_data
+        return copy_data, lower_threshold, upper_threshold
     
     def find_anomalies(value, lower_threshold, upper_threshold):
     

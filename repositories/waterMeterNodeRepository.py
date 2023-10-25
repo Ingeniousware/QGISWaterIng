@@ -22,8 +22,8 @@ class WaterMeterNodeRepository(AbstractRepository):
             ("Last Modified", QVariant.String),
             ("Name", QVariant.String),
             ("Description", QVariant.String),
-            ("Meterstate", QVariant.Double),
-            ("FunctionalType", QVariant.Double),
+            ("Meterstate", QVariant.Int),
+            ("FunctionalType", QVariant.Int),
             ("LastReadDateTime", QVariant.String)
         ]
         

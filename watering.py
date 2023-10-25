@@ -60,7 +60,7 @@ class QGISPlugin_WaterIng:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr('QGISPlugin_WaterIng', u'&Watering API Connection')
+        self.menu = self.tr(u'&Watering API Connection')
         self.insertSensorAction = None
         self.selectElementAction = None
         self.readAnalysisAction = None
@@ -175,7 +175,7 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
             icon_path,
-            text=self.tr(u'Water Network Analysis',  ),
+            text=self.tr(u'Water Network Analysis', 'QGISWaterIng'),
             #text=self.tr(u'Water Network Analysis'),
             callback=self.waterAnalysis,
             toolbar = self.toolbar,
@@ -395,7 +395,7 @@ class QGISPlugin_WaterIng:
                 self.dlg.show()
                 self.dlg.exec_()
             except:
-                self.iface.messageBar().pushMessage(self.tr(QCoreApplication.translate(u"Error")), self.tr(QCoreApplication.translate(u"No data source available for the project.")), level=1, duration=5)
+                self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"No data source available for the project."), level=1, duration=5)
 
 
     def createOnlineConnectionChannels(self):
