@@ -17,12 +17,12 @@ class PumpNodeRepository(AbstractRepository):
         self.LayerName = "watering_pumps"
         self.field_definitions = [
             ("ID", QVariant.String),
-            ("Last Modified", QVariant.String),
+            ("Last Mdf", QVariant.String),
             ("Name", QVariant.String),
-            ("Description", QVariant.String),
+            ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
-            ("Pump Model FK", QVariant.String),
-            ("Relative Speed", QVariant.Double)
+            ("Model FK", QVariant.String),
+            ("Rel. Speed", QVariant.Double)
         ]
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "relativeSpeed"]

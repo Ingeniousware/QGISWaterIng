@@ -19,12 +19,12 @@ class WateringDemandNodeRepository(AbstractRepository):
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),
-            ("Last Modified", QVariant.String),
+            ("Last Mdf", QVariant.String),
             ("Name", QVariant.String),
-            ("Description", QVariant.String),
+            ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
-            ("Base Demand [l/s]", QVariant.Double),
-            ("Demand Pattern", QVariant.Bool),
+            ("B. Demand", QVariant.Double),
+            ("Pattern", QVariant.Bool),
             ("Pressure", QVariant.Double),
             ("Demand", QVariant.Double),
             ("Demand C", QVariant.Double),

@@ -20,9 +20,9 @@ class ValveNodeRepository(AbstractRepository):
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),
-            ("Last Modified", QVariant.String),
+            ("Last Mdf", QVariant.String),
             ("Name", QVariant.String),
-            ("Description", QVariant.String),
+            ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
             ("Diameter", QVariant.Double),
             ("minorLossCoef", QVariant.Bool),
