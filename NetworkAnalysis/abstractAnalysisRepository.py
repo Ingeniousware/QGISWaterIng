@@ -58,7 +58,9 @@ class AbstractAnalysisRepository():
 
     import os
 
-    def addLayerToPanel(self):
+
+
+    def addCSVNonSpatialLayerToPanel(self, fileName, layerName):
         root = QgsProject.instance().layerTreeRoot()
         shapeGroup = root.findGroup("Analysis")
         if not shapeGroup:
@@ -79,8 +81,8 @@ class AbstractAnalysisRepository():
                 print(f"{layer_name} failed to load! Error: {layer.error().message()}")
             return layer
 
-        loadCsvLayer(os.path.join(date_folder_path, f"{self.analysisExecutionId}_Pipes.csv"), "Pipes_analysis", shapeGroup)
-        loadCsvLayer(os.path.join(date_folder_path, f"{self.analysisExecutionId}_Nodes.csv"), "Nodes_analysis", shapeGroup)
+        loadCsvLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
+        
 
 
 
