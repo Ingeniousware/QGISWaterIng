@@ -4,7 +4,7 @@ import os
 import json
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis
+from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle
 from qgis.utils import iface
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QLabel
@@ -59,7 +59,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.newShpDirectory.setFilePath(self.WateringFolder)
         #{}
         self.getOfflineScenarios()
-        self.writeOfflineData()
         print(self.OfflineScenarios)
         
     def loadScenarios(self, value):
@@ -137,9 +136,14 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     
     def getOfflineScenarios(self):
         self.OfflineScenarios = {folder: self.getSubFolders(os.path.join(self.WateringFolder + folder)) for folder in self.getSubFolders(self.WateringFolder)}
+        #self.OfflineScenarios[self.ProjectFK]["Name"] = self.ProjectName
+        
+        #self.OfflineScenarios = {folder: {"Name": self.ProjectName, **self.getSubFolders(os.path.join(self.WateringFolder + folder))} for folder in os.listdir(self.WateringFolder) if os.path.isdir(os.path.join(self.WateringFolder, folder))}
+        #print(self.OfflineScenarios)
         
     def getSubFolders(self, path):
-        return [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+        #return [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+        return {d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))}
     
     def writeOfflineData(self):
         # Ensure the directory exists
@@ -174,10 +178,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.projectPathQgsProject = self.project_path + "/" + project_name + ".qgz"
         project.write(self.projectPathQgsProject)
             
-        WateringUtils.setProjectMetadata("project_name", project_name)
+        WateringUtils.setProjectMetadata("local_project_name", project_name)
         WateringUtils.setProjectMetadata("project_path", self.project_path)
-        WateringUtils.setProjectMetadata("qgz_file_path", self.projectPathQgsProject)
-            
+
         #create scenario folder
         self.createScenarioFolder()
         
@@ -201,16 +204,15 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         
         self.loadMap()
+        self.zoomToProject()
         self.setStatusBar()
         self.close()
         
     def writeWateringMetadata(self):
-        QgsProject.instance().writeEntry("watering", "project_name", self.listOfProjects[self.projects_box.currentIndex()][0])
-        QgsProject.instance().writeEntry("watering", "project_id", self.listOfProjects[self.projects_box.currentIndex()][1])
-        QgsProject.instance().writeEntry("watering", "scenario_name", self.listOfScenarios[self.scenarios_box.currentIndex()][0])
-        QgsProject.instance().writeEntry("watering", "scenario_id", self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        QgsProject.instance().writeEntry("watering", "project_path", self.project_path)
-        
+        WateringUtils.setProjectMetadata("server_project_name", self.listOfProjects[self.projects_box.currentIndex()][0])
+        WateringUtils.setProjectMetadata("project_id", self.listOfProjects[self.projects_box.currentIndex()][1])
+        WateringUtils.setProjectMetadata("scenario_name", self.listOfScenarios[self.scenarios_box.currentIndex()][0])
+        WateringUtils.setProjectMetadata("scenario_id", self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         
     def loadMap(self):
         tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
@@ -229,3 +231,20 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         iface.mainWindow().statusBar().showMessage(message)   
              
         self.done(True)  #self.close()  instead of just closing we call done(true) to return 1 as result of this dialog modal execution
+    
+    def zoomToProject(self):
+        root = QgsProject.instance().layerTreeRoot()
+        group = root.findGroup("WaterIng Network Layout")
+        if not group:
+            iface.messageBar().pushMessage(self.tr("Error"), self.tr("Failed to zoom to WaterIng layers."), level=1, duration=5)
+            return
+
+        combined_extent = QgsRectangle()
+
+        for layer in group.findLayers():
+            if layer.layer():
+                combined_extent.combineExtentWith(layer.layer().extent())
+
+        if not combined_extent.isEmpty():
+            iface.mapCanvas().setExtent(combined_extent)
+            iface.mapCanvas().refresh()
