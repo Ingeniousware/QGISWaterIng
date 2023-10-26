@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import QHeaderView
 import numpy as np
 import matplotlib.pyplot as plt
 from ..file_Converter import fileConverter
-from ..repositories.sensorPlacementOptRespository import sensorPlacementFromFile
+from ..repositoriesLocalSHP.sensorPlacementOptRespository import sensorPlacementFromFile
 
 import os
 import math

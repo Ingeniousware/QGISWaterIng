@@ -1,10 +1,10 @@
-from ..repositories.pipeNodeRepository import PipeNodeRepository
-from ..repositories.pumpNodeRepository import PumpNodeRepository
-from ..repositories.reservoirNodeRepository import ReservoirNodeRepository
-from ..repositories.tankNodeRepository import TankNodeRepository
-from ..repositories.valveNodeRepository import ValveNodeRepository
-from ..repositories.waterDemandNodeRepository import WateringDemandNodeRepository
-from ..repositories.waterMeterNodeRepository import WaterMeterNodeRepository
+from ..repositoriesLocalSHP.pipeNodeRepository import PipeNodeRepository
+from ..repositoriesLocalSHP.pumpNodeRepository import PumpNodeRepository
+from ..repositoriesLocalSHP.reservoirNodeRepository import ReservoirNodeRepository
+from ..repositoriesLocalSHP.tankNodeRepository import TankNodeRepository
+from ..repositoriesLocalSHP.valveNodeRepository import ValveNodeRepository
+from ..repositoriesLocalSHP.waterDemandNodeRepository import WateringDemandNodeRepository
+from ..repositoriesLocalSHP.waterMeterNodeRepository import WaterMeterNodeRepository
 
 class scenarioUnitOfWork():
 

@@ -6,7 +6,7 @@ from PyQt5.QtCore import QVariant
 import requests
 import os
 from ..watering_utils import WateringUtils
-from ..repositories.getDataRepository import getDataRepository
+from ..repositoriesLocalSHP.getDataRepository import getDataRepository
 
 class AbstractAnalysisRepository():
     

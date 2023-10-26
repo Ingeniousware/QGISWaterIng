@@ -2,6 +2,7 @@
 
 # Import QGis
 import time
+
 from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
@@ -15,6 +16,7 @@ import pickle
 # Import the code for the dialog
 
 from .maptools.insertSensorNodeTool import InsertSensorNodeTool
+from .maptools.InsertDemandNodeTool import InsertDemandNodeTool
 from .maptools.selectNodeTool import SelectNodeTool
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
@@ -62,6 +64,7 @@ class QGISPlugin_WaterIng:
         self.actions = []
         self.menu = self.tr(u'&Watering API Connection')
         self.insertSensorAction = None
+        self.insertDemandNodeAction = None
         self.selectElementAction = None
         self.readAnalysisAction = None
         self.canvas = iface.mapCanvas()
@@ -205,12 +208,24 @@ class QGISPlugin_WaterIng:
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
         self.insertSensorAction = self.add_action(
             icon_path,
-            text=self.tr(u'Add Demand Node'),
+            text=self.tr(u'Add Sensor'),
             callback=self.activateToolInsertSensor,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.insertSensorAction.setCheckable(True)        
         self.insertSensorAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        self.insertDemandNodeAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Add Demand Node'),
+            callback=self.activateToolInsertDemandNode,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.insertDemandNodeAction.setCheckable(True)        
+        self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_measurement.png'
         self.readMeasurementsAction = self.add_action(
@@ -252,8 +267,9 @@ class QGISPlugin_WaterIng:
             self.dlg = WateringLoad()
             self.dlg.show() 
             if (self.dlg.exec_() == 1):
-                self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork
+                self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork                
                 print(self.scenarioUnitOFWork)
+                self.updateActionScenarioStateOpen()
                 
                 server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
    
@@ -316,17 +332,33 @@ class QGISPlugin_WaterIng:
     
     def activateToolInsertSensor(self):
         if (self.insertSensorAction.isChecked()):
-            print("Setting Map Tool = toolInsertNode")
+            print("Setting Map Tool = toolInsertSensorNode")
             if (self.activeMapTool is not None):
                 if(self.activeMapTool.action() is not None):
                     self.canvas.unsetMapTool(self.activeMapTool)
                     self.activeMapTool.action().setChecked(False) 
-            self.toolInsertNode = InsertSensorNodeTool(self.canvas) 
-            self.canvas.setMapTool(self.toolInsertNode)
-            self.activeMapTool = self.toolInsertNode
+            #this should be happening at updateActionScenarioStateOpen self.toolInsertSensorNode = InsertSensorNodeTool(self.canvas) 
+            self.canvas.setMapTool(self.toolInsertSensorNode)
+            self.activeMapTool = self.toolInsertSensorNode
         else:
-            self.canvas.unsetMapTool(self.toolInsertNode)
+            self.canvas.unsetMapTool(self.toolInsertSensorNode)
             self.activeMapTool = None
+
+    def activateToolInsertDemandNode(self):
+        if (self.insertDemandNodeAction.isChecked()):
+            print("Setting Map Tool = toolInsertDemandNode")
+            if (self.activeMapTool is not None):
+                if(self.activeMapTool.action() is not None):
+                    self.canvas.unsetMapTool(self.activeMapTool)
+                    self.activeMapTool.action().setChecked(False) 
+            #this should be happening at updateActionScenarioStateOpen self.toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository) 
+            self.canvas.setMapTool(self.toolInsertDemandNode)
+            self.activeMapTool = self.toolInsertDemandNode
+        else:
+            self.canvas.unsetMapTool(self.toolInsertDemandNode)
+            self.activeMapTool = None
+
+            
 
     def activateToolSelectMapElement(self):
         if (self.selectElementAction.isChecked()):
@@ -342,21 +374,34 @@ class QGISPlugin_WaterIng:
         else:
             self.canvas.unsetMapTool(self.toolSelectNode)
             self.activeMapTool = None
+
+
+
+    def updateActionScenarioStateOpen(self):
+        print("Activating insert sensor")
+        self.toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository)              
+        self.toolInsertSensorNode.setAction(self.insertSensorAction)
+        self.insertSensorAction.setEnabled(True)
+            
+        print("Activating insert demand node")
+        self.toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository)
+        self.toolInsertDemandNode.setAction(self.insertDemandNodeAction)
+        self.insertDemandNodeAction.setEnabled(True)
+
               
     def updateActionStateOpen(self):
         #self.cleanMarkers()
         if WateringUtils.isWateringProject():
-            self.toolInsertNode = InsertSensorNodeTool(self.canvas)  
             self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
-            self.toolInsertNode.setAction(self.insertSensorAction)
+            
             #self.toolSelectNode.setAction(self.selectElementAction)
-            self.readAnalysisAction.setEnabled(True)        
-            self.insertSensorAction.setEnabled(True)
+            self.readAnalysisAction.setEnabled(True)                            
             self.openOptimizationManagerAction.setEnabled(True)
             self.readMeasurementsAction.setEnabled(True)
             self.importFileINP.setEnabled(True)
             # self.selectElementAction.setEnabled(True)
     
+
     def updateActionStateClose(self):
         self.cleanMarkers()
         
@@ -365,7 +410,8 @@ class QGISPlugin_WaterIng:
                     self.openOptimizationManagerAction,
                     self.readMeasurementsAction,
                     self.importFileINP,
-                    self.selectElementAction]
+                    self.selectElementAction,
+                    self.insertDemandNodeAction]
 
         for action in actions:
             if action:
