@@ -282,19 +282,19 @@ class QGISPlugin_WaterIng:
                         "intervals": [1, 3, 5, 6, 7, 87, 3]
                     }).build()
 
-                #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
-                self.hub_connection.on_open(self.createOnlineConnectionChannels)
-                self.hub_connection.on_close(lambda: print("connection closed"))
-                self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
-                
-                self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
-                self.hub_connection.on("POST_RESERVOIR", self.processPOSTRESERVOIR)
-                self.hub_connection.on("DELETE_RESERVOIR", self.processDELETERESERVOIR)
-                
-                self.hub_connection.start()
+            #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+            self.hub_connection.on_open(self.createOnlineConnectionChannels)
+            self.hub_connection.on_close(lambda: print("connection closed"))
+            self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+            
+            self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+            self.hub_connection.on("POST_RESERVOIR", self.processPOSTRESERVOIR)
+            self.hub_connection.on("DELETE_RESERVOIR", self.processDELETERESERVOIR)
+            
+            self.hub_connection.start()
 
-                print("before updating options")                
-                self.updateActionStateOpen()
+            print("before updating options")                
+            self.updateActionStateOpen()
              
                 
 
