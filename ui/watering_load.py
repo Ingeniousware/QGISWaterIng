@@ -2,6 +2,7 @@
 
 import os
 import json
+import requests
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle
@@ -35,41 +36,62 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.ScenarioFK = None
         self.ScenarioName = None
         self.ProjectName = None
+        self.OfflineProjects = None
+        self.responseProjects = None
         self.WateringFolder = WateringUtils.get_app_data_path() + "/QGISWatering/"
-        self.loadProjects()
+        self.ProjectsJSON= self.WateringFolder + 'projects.json'
+        self.ProjectsJSON_data = None
+        self.initializeRepository()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
     
+    def initializeRepository(self):
+        if os.environ.get('TOKEN') == None:
+            iface.messageBar().pushMessage(("Running Offline."), level=1, duration=5)
+            self.offlineProcedures()
+        else:
+            url_projects = WateringUtils.getServerUrl() + "/api/v1/ProjectWaterNetworks"
+            try:
+                self.responseProjects = requests.get(url_projects, params=None,
+                                        headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})
+                if self.responseProjects.status_code == 200: 
+                    self.loadProjects()
+                    
+            except requests.ConnectionError:
+                iface.messageBar().pushMessage(("Error"), ("No connection. Running offline."), level=1, duration=5)
+                self.offlineProcedures()
+            except requests.Timeout:
+                iface.messageBar().pushMessage(("Error"), ("Request timed out. Running offline."), level=1, duration=5)
+                self.offlineProcedures()
+            except:
+                iface.messageBar().pushMessage(("Error"), ("Unable to connect to WaterIng. Running offline."), level=1, duration=5)
+                self.offlineProcedures()
+                
+        #initializing procedures
+        self.setComboBoxCurrentProject()
+        self.newShpDirectory.setFilePath(self.WateringFolder)
+        
     def loadProjects(self):
-        url_projects = WateringUtils.getServerUrl() + "/api/v1/ProjectWaterNetworks"
-        
-        response_projects = WateringUtils.getResponse(url_projects, params=None)
-        
-        if not response_projects:
+        if not self.responseProjects:
             return
         
-        for i in range(0, response_projects.json()["total"]):
-            self.projects_box.addItem(response_projects.json()["data"][i]["name"])
-            self.listOfProjects.append((response_projects.json()["data"][i]["name"],
-                                response_projects.json()["data"][i]["serverKeyId"]))
+        for i in range(0, self.responseProjects.json()["total"]):
+            self.projects_box.addItem(self.responseProjects.json()["data"][i]["name"])
+            self.listOfProjects.append((self.responseProjects.json()["data"][i]["name"],
+                                self.responseProjects.json()["data"][i]["serverKeyId"]))
         
         self.loadScenarios(self.projects_box.currentIndex())
         self.projects_box.currentIndexChanged.connect(self.loadScenarios)
-        
-        #initializing procedures
-        self.newShpDirectory.setFilePath(self.WateringFolder)
-        #{}
-        self.getOfflineScenarios()
-        print(self.OfflineScenarios)
-        self.setComboBoxCurrentProject()
         
     def loadScenarios(self, value):
         #Resetting scenarios box in case of changing the selected project.
         self.scenarios_box.clear()
         self.listOfScenarios = []
-        self.newProjectNameInput.setPlaceholderText(self.listOfProjects[value][0])
-        
-        self.ProjectFK = self.listOfProjects[value][1]
+
         self.ProjectName = self.listOfProjects[value][0]
+        self.ProjectFK = self.listOfProjects[value][1]
+        
+        self.newProjectNameInput.setPlaceholderText(self.ProjectName)
+        
         showRemoved = False
         params = {'ProjectFK': "{}".format(self.ProjectFK), 'showRemoved': "{}".format(showRemoved)}
         url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
@@ -83,12 +105,32 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.scenarios_box.addItem(response_scenarios.json()["data"][i]["name"])
             self.listOfScenarios.append((response_scenarios.json()["data"][i]["name"],
                                          response_scenarios.json()["data"][i]["serverKeyId"]))
+
+    def offlineProcedures(self):
+        print("You are offline!")
+        with open(self.ProjectsJSON, 'r') as json_file:
+            self.ProjectsJSON_data = json.load(json_file)
         
-        #length scenarioFK is 36
+        if self.ProjectsJSON_data:
+            self.OfflineProjects = self.getOfflineProjects()
+            for i in range(0, len(self.OfflineProjects)):
+                self.projects_box.addItem(self.OfflineProjects[i][1])
+
+            self.setOfflineScenarios()
+            self.projects_box.currentIndexChanged.connect(self.setOfflineScenarios)
+    
+    def setOfflineScenarios(self):
+        self.scenarios_box.clear()
+        project_key = self.OfflineProjects[self.projects_box.currentIndex()][0]
+        self.OfflineScenarios = self.getOfflineScenarios(project_key)
+        
+        for i in range(0, len(self.OfflineScenarios)):
+            self.scenarios_box.addItem(self.OfflineScenarios[i][1])
+            
+    def checkExistingProject(self):
         self.ScenarioName = self.listOfScenarios[self.scenarios_box.currentIndex()][0]
         self.ScenarioFK = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
         
-    def checkExistingProject(self):
         #if there is a project opened
         if not WateringUtils.isScenarioNotOpened() or WateringUtils.isProjectOpened():
             if self.ProjectFK != WateringUtils.getProjectId():
@@ -108,7 +150,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                                             "The current project has unsaved changes. Do you want to save it before creating a new project?",
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
 
-
             if response == QMessageBox.Yes:
                 #self.project_path = project.readEntry("watering","project_path","default text")[0]
                 if WateringUtils.getProjectMetadata("project_path") != "default text":
@@ -121,8 +162,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
        
             elif response == QMessageBox.Cancel:
                 return
-
-
+            
         project.clear()
         self.createNewProject()
         
@@ -134,26 +174,33 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             os.makedirs(folder)
         
         self.project_path = folder
-    
-    def getOfflineScenarios(self):
-        self.OfflineScenarios = {folder: self.getSubFolders(os.path.join(self.WateringFolder + folder)) for folder in self.getSubFolders(self.WateringFolder)}
-        #self.OfflineScenarios[self.ProjectFK]["Name"] = self.ProjectName
-        
-        #self.OfflineScenarios = {folder: {"Name": self.ProjectName, **self.getSubFolders(os.path.join(self.WateringFolder + folder))} for folder in os.listdir(self.WateringFolder) if os.path.isdir(os.path.join(self.WateringFolder, folder))}
-        #print(self.OfflineScenarios)
-        
-    def getSubFolders(self, path):
-        #return [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
-        return {d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))}
-    
-    def writeOfflineData(self):
-        # Ensure the directory exists
-        filepath = self.WateringFolder + "metadata.json"
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
-        with open(filepath, 'w') as file:
-            json.dump(self.OfflineScenarios, file)
+
+    def writeScenarioInProjectsJSON(self):
+        # Load the current content of the JSON file
+        with open(self.ProjectsJSON, 'r') as json_file:
+            data = json.load(json_file)
+
+        if not self.ProjectFK in data:
+            data[self.ProjectFK] = {
+            "name": self.ProjectName,
+            "scenarios": {}
+            }
             
+        data[self.ProjectFK]["scenarios"][self.ScenarioFK] = {"name": self.ScenarioName}
+
+        with open(self.ProjectsJSON, 'w') as json_file:
+            json.dump(data, json_file, indent=4)
+    
+    def getOfflineProjects(self):
+        return [(key, value["name"]) for key, value in self.ProjectsJSON_data.items()]
+    
+    def getOfflineScenarios(self, project_key):
+        if project_key in self.ProjectsJSON_data:
+            scenario_data = self.ProjectsJSON_data[project_key].get("scenarios", {})
+            return [(scenario_key, scenario["name"]) for scenario_key, scenario in scenario_data.items()]
+    
+        return []
+        
     def startProject(self):
         if (self.OfflineScenarios and 
             self.OfflineScenarios.get(self.ProjectFK) and 
@@ -196,7 +243,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         #Create scenario folder
         self.scenario_folder = self.project_path + "/" + scenarioFK
         os.makedirs(self.scenario_folder, exist_ok=True)
-       
     
     def CreateLayers(self):
         root = QgsProject.instance().layerTreeRoot()
@@ -207,6 +253,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.loadMap()
         self.zoomToProject()
         self.setStatusBar()
+        self.writeScenarioInProjectsJSON()
+        self.done(True) #instead of just closing we call done(true) to return 1 as result of this dialog modal execution
         self.close()
         
     def writeWateringMetadata(self):
@@ -228,9 +276,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         message = "Project: " + project_name + " | Scenario: " + scenario_name
         
-        iface.mainWindow().statusBar().showMessage(message)   
-             
-        self.done(True)  #self.close()  instead of just closing we call done(true) to return 1 as result of this dialog modal execution
+        iface.mainWindow().statusBar().showMessage(message)  
     
     def zoomToProject(self):
         root = QgsProject.instance().layerTreeRoot()

@@ -245,40 +245,37 @@ class QGISPlugin_WaterIng:
         
     def addLoad(self):
         #self.InitializeProjectToolbar()
-        if os.environ.get('TOKEN') == None:
-            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must login to WaterIng first!"), level=1, duration=5)
-        else:
-            print("calling watering load dialog")
-            self.dlg = WateringLoad()
-            self.dlg.show() 
-            if (self.dlg.exec_() == 1):
-                self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork
-                print(self.scenarioUnitOFWork)
-                
-                server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
-   
-                self.hub_connection = HubConnectionBuilder()\
-                .with_url(server_url, options={"verify_ssl": False, 
-                                            "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
-                .with_automatic_reconnect({
-                        "type": "interval",
-                        "keep_alive_interval": 10,
-                        "intervals": [1, 3, 5, 6, 7, 87, 3]
-                    }).build()
+        print("calling watering load dialog")
+        self.dlg = WateringLoad()
+        self.dlg.show() 
+        if (self.dlg.exec_() == 1):
+            self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork
+            print(self.scenarioUnitOFWork)
+            
+            server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
-                #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
-                self.hub_connection.on_open(self.createOnlineConnectionChannels)
-                self.hub_connection.on_close(lambda: print("connection closed"))
-                self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
-                
-                self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
-                self.hub_connection.on("POST_RESERVOIR", self.processPOSTRESERVOIR)
-                self.hub_connection.on("DELETE_RESERVOIR", self.processDELETERESERVOIR)
-                
-                self.hub_connection.start()
+            self.hub_connection = HubConnectionBuilder()\
+            .with_url(server_url, options={"verify_ssl": False, 
+                                        "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
+            .with_automatic_reconnect({
+                    "type": "interval",
+                    "keep_alive_interval": 10,
+                    "intervals": [1, 3, 5, 6, 7, 87, 3]
+                }).build()
 
-                print("before updating options")                
-                self.updateActionStateOpen()
+            #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+            self.hub_connection.on_open(self.createOnlineConnectionChannels)
+            self.hub_connection.on_close(lambda: print("connection closed"))
+            self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+            
+            self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+            self.hub_connection.on("POST_RESERVOIR", self.processPOSTRESERVOIR)
+            self.hub_connection.on("DELETE_RESERVOIR", self.processDELETERESERVOIR)
+            
+            self.hub_connection.start()
+
+            print("before updating options")                
+            self.updateActionStateOpen()
              
                 
 
