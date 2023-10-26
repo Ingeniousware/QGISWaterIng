@@ -125,7 +125,8 @@ class AbstractRepository():
     def openLayers(self, layer_symbol, layer_size):
         element_layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
         self.setElementSymbol(element_layer, layer_symbol, layer_size)
-        
+        element_layer.saveNamedStyle(self.FileQml)     
+          
         if not element_layer.isValid():
             print("Error opening:", element_layer.dataProvider().error().message())
         else:

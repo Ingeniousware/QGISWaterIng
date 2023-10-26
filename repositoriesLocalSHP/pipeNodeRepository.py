@@ -15,6 +15,7 @@ class PipeNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterPipe"
         self.StorageShapeFile = os.path.join(project_path, "watering_pipes.shp")
         self.LayerName = "watering_pipes"
+        self.FileQml =  project_path + "/" + self.LayerName + ".qml"
         self.field_definitions = None
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
@@ -77,7 +78,7 @@ class PipeNodeRepository(AbstractRepository):
         symbol_layer.setColor(QColor.fromRgb(13, 42, 174))
         symbol_layer.setWidth(0.7)
         layer.renderer().setSymbol(symbol)
-
+        layer.saveNamedStyle(self.FileQml)
 
         root = QgsProject.instance().layerTreeRoot()
 

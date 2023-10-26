@@ -15,6 +15,7 @@ class TankNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/TankNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_tanks.shp")
         self.LayerName = "watering_tanks"
+        self.FileQml =  project_path + "/" + self.LayerName + ".qml"
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z","initialLevel",
                          "minimumLevel","maximumLevel","minimumVolume", "nominalDiameter","canOverflow"]
         self.Fields = ['Last Mdf', 'Name', 'Descript', 'Z[m]', 'Init. Lvl', 'Min. Lvl', 

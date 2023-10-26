@@ -15,6 +15,7 @@ class PumpNodeRepository(AbstractRepository):
         self.UrlGet = "/api/v1/WaterPump"
         self.StorageShapeFile = os.path.join(project_path, "watering_pumps.shp")
         self.LayerName = "watering_pumps"
+        self.FileQml =  project_path + "/" + self.LayerName + ".qml"
         self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Mdf", QVariant.String),
