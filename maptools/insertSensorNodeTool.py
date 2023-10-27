@@ -5,9 +5,9 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, QEvent, Qt
 
 class InsertSensorNodeTool(InsertNodeAbstractTool):
-    def __init__(self, canvas):
+    def __init__(self, canvas, elementRepository):
         super(InsertSensorNodeTool, self).__init__(canvas)  
-        print("Init at Insert Demand Node")
+        print("Init at Insert Sensor Node")
         if (QgsProject.instance().mapLayersByName("watering_demand_nodes") is not None) and len(QgsProject.instance().mapLayersByName("watering_demand_nodes")) != 0:
           self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
           self.toolFindIdentify = QgsMapToolIdentify(self.canvas)
@@ -22,8 +22,6 @@ class InsertSensorNodeTool(InsertNodeAbstractTool):
         if len(found_features) > 0:
             coord_feature = found_features[0].mFeature.geometry().asPoint()
             if coord_feature not in self.vertexDict:
-                #print(found_features[0].mFeature.attributes())
-                #print(found_features[0].mFeature.geometry().asPoint())
                 m = QgsVertexMarker(self.canvas)
                 m.setCenter(coord_feature)
                 m.setColor(QColor(0,255,0))
@@ -43,4 +41,4 @@ class InsertSensorNodeTool(InsertNodeAbstractTool):
         self.canvas.refresh()
 
     def deactivate(self):
-        print("deactivate insert demand node tool")
+        print("deactivate insert sensor node tool")

@@ -11,7 +11,7 @@ from time import time, gmtime, strftime
 from ..watering_utils import WateringUtils
 from ..anomaly_detection import AnomalyDetection
 from ..anomaly_detection import PlotController
-from ..repositories.getDataRepository import getDataRepository
+from ..repositoriesLocalSHP.getDataRepository import getDataRepository
 
 from .watering_livegraph import ChartView #delete
 

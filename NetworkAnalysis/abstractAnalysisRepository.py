@@ -6,7 +6,7 @@ from PyQt5.QtCore import QVariant
 import requests
 import os
 from ..watering_utils import WateringUtils
-from ..repositories.getDataRepository import getDataRepository
+from ..repositoriesLocalSHP.getDataRepository import getDataRepository
 
 class AbstractAnalysisRepository():
     
@@ -16,6 +16,7 @@ class AbstractAnalysisRepository():
         self.behavior = behavior
         self.analysisExecutionId = analysisExecutionId
         self.datetime = datetime
+
         
     def getResponse(self):
         params = {'analysisExecutionId': "{}".format(self.analysisExecutionId), 'datetime': "{}".format(self.datetime),

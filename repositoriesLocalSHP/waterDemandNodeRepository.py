@@ -7,40 +7,38 @@ from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMark
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 
-class WaterMeterNodeRepository(AbstractRepository):
+class WateringDemandNodeRepository(AbstractRepository):
 
     def __init__(self,token, project_path, scenarioFK):
         """Constructor."""
-        super(WaterMeterNodeRepository, self).__init__(token, scenarioFK)      
-        self.UrlGet = "/api/v1/WaterMeter"
-        self.StorageShapeFile = os.path.join(project_path, "watering_waterMeter.shp")
-        self.LayerName = "watering_waterMeter"
+        super(WateringDemandNodeRepository, self).__init__(token, scenarioFK)      
+        self.UrlGet = "/api/v1/DemandNode"
+        self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
+        self.LayerName = "watering_demand_nodes"
+        self.FileQml =  project_path + "/" + self.LayerName + ".qml"
         #Setting shapefile fields 
         self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Mdf", QVariant.String),
             ("Name", QVariant.String),
             ("Descript", QVariant.String),
-            ("Meterstate", QVariant.Double),
-            ("FunctType", QVariant.Double),
-            ("LastDate", QVariant.String),
+            ("Z[m]", QVariant.Double),
+            ("B. Demand", QVariant.Double),
+            ("Pattern", QVariant.Bool),
             ("Pressure", QVariant.Double),
             ("Demand", QVariant.Double),
             ("Demand C", QVariant.Double),
             ("Age", QVariant.Double)
         ]
+    
+        self.features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
+                               "z","baseDemand","demandPatternFK"]
         
-        self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description","meterstate",
-                                "functionalType","lastReadDateTime"]
-        
-        self.Color = QColor.fromRgb(23, 61, 108)
-        self.StrokeColor = None
+        self.Color = QColor.fromRgb(255, 255, 255)
+        self.StrokeColor = QColor.fromRgb(23, 61, 108)
         self.currentLayer = None
         self.initializeRepository()
-
         
-     
     def initializeRepository(self):
-        super(WaterMeterNodeRepository, self).initializeRepository()   
-        self.openLayers(QgsSimpleMarkerSymbolLayerBase.Diamond, 6)
-    
+        super(WateringDemandNodeRepository, self).initializeRepository()   
+        self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
