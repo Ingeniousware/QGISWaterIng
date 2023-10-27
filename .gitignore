@@ -1,6 +1,10 @@
 /.DS_Store
 .vscode
 /repositories/__pycache__/
+/repositoriesServerREST/__pycache__/
+/repositoryConnectorsSHPREST/__pycache__/
+/syncInfrastructureSHPREST/__pycache__/
+/repositoriesLocalSHP/__pycache__/
 /NetworkAnalysis/__pycache__/
 /NetworkAnalysis/.DS_Store
 /ui/__pycache__/

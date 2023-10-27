@@ -2,7 +2,6 @@
 
 # Import QGis
 import time
-
 from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction

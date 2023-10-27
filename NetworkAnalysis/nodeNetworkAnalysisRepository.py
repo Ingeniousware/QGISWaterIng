@@ -4,7 +4,7 @@ from qgis.PyQt.QtGui import QColor
 
 class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
 
-    def __init__(self,token,analysisExecutionId, datetime, behavior):
+    def __init__(self,token,analysisExecutionId, datetime, behavior, field=None):
         """Constructor."""
         super(NodeNetworkAnalysisRepository, self).__init__(token,analysisExecutionId, datetime, behavior)      
         self.UrlGet = "/api/v1/WaterAnalysisResults/nodes"

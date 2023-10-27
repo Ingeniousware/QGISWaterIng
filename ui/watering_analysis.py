@@ -33,6 +33,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.analysis_box2.hide()
         self.compareCheckBox.clicked.connect(self.checkUserControlState)
         self.is_playing = False
+        self.new_field_name = None
         self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_play.png"))
         self.BtGetAnalysisResultsPlayPause.clicked.connect(self.switch_icon_play_pause)
         self.BtGetAnalysisResultsBackward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_backward.png"))
@@ -79,16 +80,22 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         datetime2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][1]
         self.set_progress(20)
             
-        pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
+        pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior)
         self.set_progress(50)  
         waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
 
         if self.compareCheckBox.isChecked():
             self.set_progress(60)  
             pipeNodeRepository2 = PipeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
+            self.createNewColumns(pipeNodeRepository2.LayerName, "velocity")
+            self.fieldCalculator(pipeNodeRepository, pipeNodeRepository2)
+            
             self.set_progress(80)
             waterDemandNodeRepository2 = NodeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
-
+            self.createNewColumns(waterDemandNodeRepository2.LayerName, "pressure")
+            self.set_progress(90)
+            self.fieldCalculator(waterDemandNodeRepository, waterDemandNodeRepository2)
+            
         self.set_progress(100)  
         self.timer_hide_progress_bar()
 
@@ -102,43 +109,50 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.is_playing = not self.is_playing
 
     def playbutton(self, behavior):
-       """  # Load the 'watering_demand_node' layer
-        layerDest = 'watering_demand_nodes'
+        print("pause...still need code")
+
+    def createNewColumns(self, layerDest, name):
         layer = QgsProject.instance().mapLayersByName(layerDest)[0]
-
-        # Define the columns you want to subtract
-        column_a = "Nodes_2023-01-16T18:47:47.742Z_pressure"  # Replace with the name of the first column
-        column_b = "Nodes_2023-01-18T13:07:06.187Z_pressure"  # Replace with the name of the second column
-        # Define the new field name for the result
-        new_field_name = "difference1"
-        # Check if the field already exists
-        if layer.fields().indexFromName(new_field_name) == -1:
-            # If not, add a new field to store the result
-            layer.dataProvider().addAttributes([QgsField(new_field_name, QVariant.Double)])
+        if not layer:
+            raise Exception(f"Layer '{layerDest}' not found in the project.")
+        self.new_field_name = "d_" + name
+        field_index = layer.fields().indexFromName(self.new_field_name)
+        if field_index != -1:                                   
+            layer.dataProvider().deleteAttributes([field_index])
             layer.updateFields()
-        # Create an expression for the subtraction
-        expression = QgsExpression(f'"{column_b}" - "{column_a}"')
+            layer.commitChanges()
+        layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
+        layer.updateFields()                
+        layer.commitChanges()
+  
 
-        # Start editing the layer
+    def fieldCalculator(self, repository, repository2):
+        layerDest = repository.LayerName
+        column_a = repository.Field
+        column_b = repository2.Field
+
+        layer = QgsProject.instance().mapLayersByName(layerDest)[0]
+        if not layer:
+            raise Exception(f"Layer '{layerDest}' not found in the project.")
+
+        expression = QgsExpression(f'"{column_a}" - "{column_b}"')
+        if expression.hasParserError():
+            raise Exception(expression.parserErrorString())
+
         layer.startEditing()
-
-        # Create a basic expression context
         context = QgsExpressionContext()
-
-        # Iterate over each feature (row) in the layer
+        field_index = layer.fields().indexFromName(self.new_field_name)
+        if field_index == -1:
+            raise Exception(f"Field '{self.new_field_name}' not found in the layer. Ensure it's added correctly.")
         for feature in layer.getFeatures():
-            # Set the feature to the expression context
             context.setFeature(feature)
-            
-            # Evaluate the expression for the current feature
             result = expression.evaluate(context)
-            
-            # Update the feature with the result
-            feature[new_field_name] = result
+            feature.setAttribute(field_index, result)
             layer.updateFeature(feature)
-
-        # Commit the changes
-        layer.commitChanges() """
+        layer.commitChanges()
+    
+        repository.changeColor(self.new_field_name)
+        
         
     def set_progress(self, progress_value):
         t = time() - self.start

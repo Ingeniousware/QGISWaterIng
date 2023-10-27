@@ -78,7 +78,6 @@ class AbstractAnalysisRepository():
                 print(f"{layer_name} failed to load! Error: {layer.error().message()}")
 
     def joinLayersAttributes(self, layerName, layerDest, join_field, fields_to_add):
-        print(layerName)
         for layer in QgsProject.instance().mapLayers().values():
             if layer.name() == layerName:
                 source_layer = layer
@@ -95,12 +94,11 @@ class AbstractAnalysisRepository():
         joinObject.setJoinLayer(source_layer)
         joinObject.setJoinFieldNamesSubset(fields_to_add)
         #joinObject.setPrefix(self.analysisExecutionId)
-        target_layer.addJoin(joinObject)        
+        target_layer.addJoin(joinObject)   
+        self.changeColor(self.Field)
 
-        self.changeColor()
 
-
-    def changeColor(self):
+    def changeColor(self, fieldName):
         # Set layer name and desired paremeters
         num_classes = 10
         classification_method = QgsClassificationQuantile()
@@ -117,7 +115,7 @@ class AbstractAnalysisRepository():
         default_style = QgsStyle().defaultStyle()
         color_ramp = QgsGradientColorRamp(self.StartColor, self.EndColor)
         renderer = QgsGraduatedSymbolRenderer()
-        renderer.setClassAttribute(self.Field)
+        renderer.setClassAttribute(fieldName)
         renderer.setClassificationMethod(classification_method)
         renderer.setLabelFormat(format)
         renderer.updateClasses(layer, num_classes)
