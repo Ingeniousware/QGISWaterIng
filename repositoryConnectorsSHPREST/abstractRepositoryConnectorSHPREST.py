@@ -9,7 +9,23 @@ from qgis.utils import iface
 
 class abstractRepositoryConnectorSHPREST():
 
-    def __init__(self, token, scenarioFK):
+    def __init__(self):
         """Constructor."""
-        self.Token = token
-        self.ScenarioFK = scenarioFK
+        ...
+
+    def getElementsFromServer(self):
+        """ params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
+        url = WateringUtils.getServerUrl() + self.UrlGet
+        response =  requests.get(url, params=params_element, 
+                            headers={'Authorization': "Bearer {}".format(self.Token)})  
+        return response """
+        ...
+    
+    def sendElementToServer(self, feature):
+        ...
+    
+    def updateElementsToServer(self):
+        ...
+    
+    def removeElementsFromServer(self):
+        ...

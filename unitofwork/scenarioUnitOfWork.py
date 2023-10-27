@@ -11,6 +11,7 @@ class scenarioUnitOfWork():
     def __init__(self, token, project_path, scenarioFK):
         """Constructor."""
         self.token = token
+        self.scenarioFK = scenarioFK
         self.waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, scenarioFK)                
         self.tankNodeRepository = TankNodeRepository(self.token, project_path, scenarioFK)    
         self.reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, scenarioFK)

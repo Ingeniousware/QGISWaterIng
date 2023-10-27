@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QAction
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 from qgis.utils import iface
+from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -83,6 +84,7 @@ class QGISPlugin_WaterIng:
         self.iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
 
         self.scenarioUnitOFWork = None
+        self.syncManager = None
 
     
 
@@ -267,6 +269,7 @@ class QGISPlugin_WaterIng:
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork                
             print(self.scenarioUnitOFWork)
             self.updateActionScenarioStateOpen()
+            self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
             
             server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 

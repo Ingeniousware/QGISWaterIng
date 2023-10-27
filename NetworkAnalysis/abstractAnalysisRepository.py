@@ -16,6 +16,7 @@ class AbstractAnalysisRepository():
         self.behavior = behavior
         self.analysisExecutionId = analysisExecutionId
         self.datetime = datetime
+
         
     def getResponse(self):
         params = {'analysisExecutionId': "{}".format(self.analysisExecutionId), 'datetime': "{}".format(self.datetime),

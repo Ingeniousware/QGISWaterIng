@@ -21,6 +21,13 @@ class AbstractRepository():
         self.Response = None
         self.FieldDefinitions = None
         self.Attributes = None
+        self.connectorToServer = None
+
+
+
+    def setConnectorToServer(self, connector):
+        self.connectorToServer = connector
+        self.localRepository = self
 
         
     def loadElements(self):
@@ -104,7 +111,8 @@ class AbstractRepository():
         layer.addFeature(feature)
         layer.commitChanges()
 
-        #TODO here we should try to send the created element to the watering server
+        if self.connectorToServer:
+            self.connectorToServer.sendElementToServer(feature)
         
 
     def initializeRepository(self):

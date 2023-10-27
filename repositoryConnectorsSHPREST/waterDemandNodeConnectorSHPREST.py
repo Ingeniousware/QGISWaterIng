@@ -1,7 +1,7 @@
 import os
 import requests
 
-from repositoryConnectorsSHPREST.abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
+from ..repositoryConnectorsSHPREST.abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
 
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
@@ -11,7 +11,15 @@ from PyQt5.QtGui import QColor
 
 class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
-    def __init__(self,token, project_path, scenarioFK):
+    def __init__(self):
         """Constructor."""
-        super(waterDemandNodeConnectorSHPREST, self).__init__(token, scenarioFK)      
+        super(waterDemandNodeConnectorSHPREST, self).__init__()    
+        self.serverRepository = None  
+        self.localRepository = None
         self.UrlGet = "/api/v1/DemandNode"
+
+    def sendElementToServer(self, feature):
+        #TODO create json and then call the post method of the server repository
+        ...
+
+    

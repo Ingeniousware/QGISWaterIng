@@ -17,6 +17,10 @@ class abstractServerRESTRepository():
         self.Response = None
         self.FieldDefinitions = None
         self.Attributes = None
+        self.connectorToLocal = None
+
+    def setConnectorToLocal(self, connector):
+        self.connector = connector
 
     def getFromServer(self, elementJSON):
         ...
