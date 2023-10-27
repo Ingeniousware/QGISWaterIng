@@ -109,14 +109,13 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.is_playing = not self.is_playing
 
     def playbutton(self, behavior):
-        print("pause")
+        print("pause...still need code")
 
     def createNewColumns(self, layerDest, name):
         layer = QgsProject.instance().mapLayersByName(layerDest)[0]
         if not layer:
             raise Exception(f"Layer '{layerDest}' not found in the project.")
         self.new_field_name = "d_" + name
-        print(self.new_field_name)
         field_index = layer.fields().indexFromName(self.new_field_name)
         if field_index != -1:                                   
             layer.dataProvider().deleteAttributes([field_index])

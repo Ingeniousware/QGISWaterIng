@@ -13,8 +13,7 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.Attributes = ["C Status","Velocity", "Flow","HeadLoss"]
         self.LayerName = "watering_pipes"
         #self.Field = "Velocity"
-        #self.Field = (f"Pipes_{datetime}_velocity")
-        self.Field = field if field else (f"Pipes_{datetime}_velocity")
+        self.Field = (f"Pipes_{datetime}_velocity")
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 1

@@ -78,7 +78,6 @@ class AbstractAnalysisRepository():
                 print(f"{layer_name} failed to load! Error: {layer.error().message()}")
 
     def joinLayersAttributes(self, layerName, layerDest, join_field, fields_to_add):
-        print(layerName)
         for layer in QgsProject.instance().mapLayers().values():
             if layer.name() == layerName:
                 source_layer = layer

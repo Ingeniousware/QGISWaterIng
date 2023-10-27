@@ -12,8 +12,7 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.Attributes = ["Pressure", "Demand","Demand C", "Age"]
         self.LayerName = "watering_demand_nodes"
         #self.Field = "Pressure"
-        #self.Field = (f"Nodes_{datetime}_pressure")
-        self.Field = field if field else (f"Nodes_{datetime}_pressure")
+        self.Field = (f"Nodes_{datetime}_pressure")
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 3
