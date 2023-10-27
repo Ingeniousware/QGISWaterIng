@@ -11,7 +11,8 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.KeysApi = ["nodeKey", "pressure", "waterDemand", "waterDemandCovered", "waterAge"]
         self.Attributes = ["Pressure", "Demand","Demand C", "Age"]
         self.LayerName = "watering_demand_nodes"
-        self.Field = "Pressure"
+        #self.Field = "Pressure"
+        self.Field = (f"Nodes_{datetime}_pressure")
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 3
@@ -19,4 +20,4 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.fields_to_add = ['pressure', 'waterDemand', 'waterAge']
         self.elementAnalysisResults()
         self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Nodes.csv", f"Nodes_{datetime}")
-        self.addAttributes(f"Nodes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)
+        self.joinLayersAttributes(f"Nodes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)
