@@ -13,7 +13,7 @@ class abstractServerRESTRepository():
         """Constructor."""
         self.Token = token
         self.ScenarioFK = scenarioFK
-        self.sourceCrs = QgsCoordinateReferenceSystem(4326)
+        self.currentCRS = QgsCoordinateReferenceSystem(4326)
         self.Response = None
         self.FieldDefinitions = None
         self.Attributes = None
@@ -21,12 +21,20 @@ class abstractServerRESTRepository():
 
     def setConnectorToLocal(self, connector):
         self.connector = connector
+        self.connector.serverRepository = self 
+ 
 
     def getFromServer(self, elementJSON):
         ...
 
+
     def postToServer(self, elementJSON):
-        ...
+        data = {'scenarioKeyId': self.ScenarioFK}
+        headers = {'Authorization': "Bearer {}".format(self.Token)} 
+        response = requests.post(self.UrlPost, params=data, headers=headers, json=elementJSON)
+        return response
+        
+    
 
     def putToServer(self, elementJSON):
         ...

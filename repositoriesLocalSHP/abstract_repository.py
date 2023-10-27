@@ -15,6 +15,7 @@ class AbstractRepository():
         self.ScenarioFK = scenarioFK
         self.sourceCrs = QgsCoordinateReferenceSystem(4326)
         self.destCrs = QgsCoordinateReferenceSystem(3857)
+        self.currentCRS = QgsCoordinateReferenceSystem(3857)
         self.Layer = None
         self.ServerDict = {}
         self.OfflineDict = {}
@@ -27,7 +28,7 @@ class AbstractRepository():
 
     def setConnectorToServer(self, connector):
         self.connectorToServer = connector
-        self.localRepository = self
+        self.connectorToServer.localRepository = self
 
         
     def loadElements(self):
@@ -108,12 +109,16 @@ class AbstractRepository():
         #for i in range(len(self.field_definitions)):
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
+        self.setDefaultValues(feature)
+
         layer.addFeature(feature)
         layer.commitChanges()
 
         if self.connectorToServer:
-            self.connectorToServer.sendElementToServer(feature)
+            self.connectorToServer.addElementToServer(feature)
         
+    def setDefaultValues(self, feature):
+        ...
 
     def initializeRepository(self):
         #loading element from the API

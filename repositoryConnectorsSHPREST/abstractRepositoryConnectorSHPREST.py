@@ -9,9 +9,9 @@ from qgis.utils import iface
 
 class abstractRepositoryConnectorSHPREST():
 
-    def __init__(self):
+    def __init__(self, scenarioFK):
         """Constructor."""
-        ...
+        self.ScenarioFK = scenarioFK
 
     def getElementsFromServer(self):
         """ params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
@@ -21,7 +21,7 @@ class abstractRepositoryConnectorSHPREST():
         return response """
         ...
     
-    def sendElementToServer(self, feature):
+    def addElementToServer(self, feature):
         ...
     
     def updateElementsToServer(self):
