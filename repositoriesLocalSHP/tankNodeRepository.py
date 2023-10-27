@@ -42,8 +42,7 @@ class TankNodeRepository(AbstractRepository):
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
         self.currentLayer = None
-        self.initializeRepository()
-     
+
     def initializeRepository(self):
         super(TankNodeRepository, self).initializeRepository() 
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Pentagon, 6)

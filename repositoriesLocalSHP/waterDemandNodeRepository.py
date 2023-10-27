@@ -37,8 +37,6 @@ class WateringDemandNodeRepository(AbstractRepository):
         self.Color = QColor.fromRgb(255, 255, 255)
         self.StrokeColor = QColor.fromRgb(23, 61, 108)
         self.currentLayer = None
-        self.initializeRepository()
-        
 
     def initializeRepository(self):
         super(WateringDemandNodeRepository, self).initializeRepository()   

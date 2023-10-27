@@ -35,9 +35,7 @@ class ReservoirNodeRepository(AbstractRepository):
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
         self.currentLayer = None        
-        self.initializeRepository()
 
-     
     def initializeRepository(self):
         super(ReservoirNodeRepository, self).initializeRepository()      
        
