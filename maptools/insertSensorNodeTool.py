@@ -5,8 +5,8 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, QEvent, Qt
 
 class InsertSensorNodeTool(InsertNodeAbstractTool):
-    def __init__(self, canvas, elementRepository):
-        super(InsertSensorNodeTool, self).__init__(canvas)  
+    def __init__(self, canvas, elementRepository, actionManager):
+        super(InsertSensorNodeTool, self).__init__(canvas, elementRepository, actionManager)  
         print("Init at Insert Sensor Node")
         if (QgsProject.instance().mapLayersByName("watering_demand_nodes") is not None) and len(QgsProject.instance().mapLayersByName("watering_demand_nodes")) != 0:
           self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]

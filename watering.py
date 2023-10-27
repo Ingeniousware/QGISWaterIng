@@ -27,6 +27,7 @@ from .watering_utils import WateringUtils
 from .ui.watering_datachannels import WateringDatachannels
 from .file_Converter import fileConverter
 from .ui.watering_INPImport import WateringINPImport
+from .ActionManagement.actionManager import actionManager
 
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
@@ -85,6 +86,7 @@ class QGISPlugin_WaterIng:
 
         self.scenarioUnitOFWork = None
         self.syncManager = None
+        self.actionManager = None
 
     
 
@@ -268,26 +270,28 @@ class QGISPlugin_WaterIng:
         if (self.dlg.exec_() == 1):
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork                
             print(self.scenarioUnitOFWork)
-            self.updateActionScenarioStateOpen()
+            self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
             self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
             self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
+            self.updateActionScenarioStateOpen()
+            
             
             server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
             self.hub_connection = HubConnectionBuilder()\
-            .with_url(server_url, options={"verify_ssl": False, 
-                                        "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
-            .with_automatic_reconnect({
-                    "type": "interval",
-                    "keep_alive_interval": 10,
-                    "intervals": [1, 3, 5, 6, 7, 87, 3]
-                }).build()
+                .with_url(server_url, options={"verify_ssl": False, 
+                                            "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
+                .with_automatic_reconnect({
+                        "type": "interval",
+                        "keep_alive_interval": 10,
+                        "intervals": [1, 3, 5, 6, 7, 87, 3]
+                    }).build()
 
             #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
             self.hub_connection.on_open(self.createOnlineConnectionChannels)
             self.hub_connection.on_close(lambda: print("connection closed"))
             self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
-            
+                
             self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
             self.hub_connection.on("POST_RESERVOIR", self.processPOSTRESERVOIR)
             self.hub_connection.on("DELETE_RESERVOIR", self.processDELETERESERVOIR)
@@ -380,12 +384,12 @@ class QGISPlugin_WaterIng:
 
     def updateActionScenarioStateOpen(self):
         print("Activating insert sensor")
-        self.toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository)              
+        self.toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)              
         self.toolInsertSensorNode.setAction(self.insertSensorAction)
         self.insertSensorAction.setEnabled(True)
             
         print("Activating insert demand node")
-        self.toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository)
+        self.toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
         self.toolInsertDemandNode.setAction(self.insertDemandNodeAction)
         self.insertDemandNodeAction.setEnabled(True)
 
@@ -404,6 +408,7 @@ class QGISPlugin_WaterIng:
     
 
     def updateActionStateClose(self):
+        print("Entering updateActionStateClose")
         self.cleanMarkers()
         
         actions = [self.readAnalysisAction,
@@ -422,6 +427,9 @@ class QGISPlugin_WaterIng:
                     action.setChecked(False) 
                     
         if (self.hub_connection): self.hub_connection.stop()
+
+        print("Before stopping the sync manager...............................................")
+        if (self.syncManager): self.syncManager.stop()
 
         
     def cleanMarkers(self):

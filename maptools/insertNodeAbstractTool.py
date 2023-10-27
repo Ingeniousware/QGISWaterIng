@@ -3,12 +3,14 @@ from PyQt5.QtGui import QColor
 
 class InsertNodeAbstractTool(QgsMapTool):
 
-    def __init__(self, canvas):
+    def __init__(self, canvas, elementRepository, actionManager):
         
         #self.action = action
         self.canvas = canvas
         super().__init__(self.canvas)
         self.point = None
+        self.elementRepository = elementRepository
+        self.actionManager = actionManager
             
     def canvasPressEvent(self, e):
         self.point = self.toMapCoordinates(e.pos())

@@ -1,3 +1,4 @@
+from ..ActionManagement.insertNodeAction import insertNodeAction
 from .insertNodeAbstractTool import InsertNodeAbstractTool
 from qgis.gui import QgsVertexMarker, QgsMapTool, QgsMapToolIdentify
 from qgis.core import QgsProject
@@ -5,13 +6,12 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, QEvent, Qt
 
 class InsertDemandNodeTool(InsertNodeAbstractTool):
-    def __init__(self, canvas, elementRepository):
-        super(InsertDemandNodeTool, self).__init__(canvas)  
+    def __init__(self, canvas, elementRepository, actionManager):
+        super(InsertDemandNodeTool, self).__init__(canvas, elementRepository, actionManager)  
         print("Init at Insert Demand Node")
         if (QgsProject.instance().mapLayersByName("watering_demand_nodes") is not None) and len(QgsProject.instance().mapLayersByName("watering_demand_nodes")) != 0:
           self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
           self.toolFindIdentify = QgsMapToolIdentify(self.canvas)
-          self.elementRepository = elementRepository
 
           
     def canvasPressEvent(self, e):
@@ -24,7 +24,11 @@ class InsertDemandNodeTool(InsertNodeAbstractTool):
         #if len(found_features) > 0:
                 #element has been found
         #        ...
-        self.elementRepository.AddNewElementFromMapInteraction(self.point.x(), self.point.y())
+
+        #TODO eliminate the direct call to the AddNewElementFromMapInteraction in the next line when the action and action manager are implemented and working
+        #self.elementRepository.AddNewElementFromMapInteraction(self.point.x(), self.point.y())
+        action = insertNodeAction(self.elementRepository, self.point.x(), self.point.y())         
+        self.actionManager.execute(action)
             
 
 

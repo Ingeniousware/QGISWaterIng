@@ -24,8 +24,8 @@ class abstractRepositoryConnectorSHPREST():
     def addElementToServer(self, feature):
         ...
     
-    def updateElementsToServer(self):
+    def updateElementToServer(self):
         ...
     
-    def removeElementsFromServer(self):
+    def removeElementFromServer(self):
         ...

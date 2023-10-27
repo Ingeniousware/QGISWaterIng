@@ -116,6 +116,17 @@ class AbstractRepository():
 
         if self.connectorToServer:
             self.connectorToServer.addElementToServer(feature)
+
+        return feature
+
+
+    def deleteFeatureFromMapInteraction(self, feature):
+        self.Layer.startEditing()
+        self.Layer.deleteFeature(feature)
+        self.Layer.commitChanges()
+        if self.connectorToServer:
+            self.connectorToServer.removeElementFromServer(feature)
+
         
     def setDefaultValues(self, feature):
         ...
@@ -243,6 +254,9 @@ class AbstractRepository():
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
     
+
+    
+
     def deleteElement(self, id):
         print(f"Deleting existing element in {self.LayerName}: {id}")
         
@@ -256,6 +270,7 @@ class AbstractRepository():
             self.Layer.deleteFeature(feature)
             
         self.Layer.commitChanges()
+
         
     def updateElement(self, id):
         
