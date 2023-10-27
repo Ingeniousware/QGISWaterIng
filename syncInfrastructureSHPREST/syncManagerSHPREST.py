@@ -14,13 +14,17 @@ class syncManagerSHPREST():
 
     def connectScenarioUnitOfWorkToServer(self, scenarioUnitOfWork):
         self.scenarioUnitOfWork = scenarioUnitOfWork
-        
-        self.waterDemandNodeServerRESTRepository = waterDemandNodeServerRESTRepository(self.Token, self.ScenarioFK)
-        
-        self.waterDemandNodeConnector = waterDemandNodeConnectorSHPREST()
 
+        #creation of connectors
+        self.waterDemandNodeConnector = waterDemandNodeConnectorSHPREST(self.ScenarioFK)
+        
+        #creation of server repositories
+        self.waterDemandNodeServerRESTRepository = waterDemandNodeServerRESTRepository(self.Token, self.ScenarioFK)
+
+        #linking connectors and server repositories
         self.waterDemandNodeServerRESTRepository.setConnectorToLocal(self.waterDemandNodeConnector)
 
+        #linking connectors and local repositories from unitofwork
         self.scenarioUnitOfWork.waterDemandNodeRepository.setConnectorToServer(self.waterDemandNodeConnector)
         
 

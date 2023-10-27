@@ -39,6 +39,19 @@ class WateringDemandNodeRepository(AbstractRepository):
         self.currentLayer = None
         self.initializeRepository()
         
+
     def initializeRepository(self):
         super(WateringDemandNodeRepository, self).initializeRepository()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
+
+
+    def setDefaultValues(self, feature):
+        name = "nodeName"
+        description = "node form QGIS"
+        baseDemand = 5
+        z = 0
+
+        feature.setAttribute("Name", name)
+        feature.setAttribute("Descript", description)
+        feature.setAttribute("B. Demand", baseDemand)
+        feature.setAttribute("Z[m]", z)        
