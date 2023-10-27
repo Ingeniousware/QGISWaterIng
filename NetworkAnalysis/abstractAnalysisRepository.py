@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from qgis.core import QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat, QgsField
+from qgis.core import QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat
 from qgis.core import QgsStyle, QgsClassificationQuantile, QgsGradientColorRamp, QgsVectorLayer, QgsLayerTreeLayer, QgsVectorLayerJoinInfo
 from PyQt5.QtCore import QVariant
 import requests
@@ -34,7 +34,7 @@ class AbstractAnalysisRepository():
                                  element[self.KeysApi[3]], element[self.KeysApi[4]]]
             
             getDataRepository.analysis_to_csv(self, element, filename, self.datetime)
-               
+        """       
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
 
         layer.startEditing()
@@ -42,7 +42,7 @@ class AbstractAnalysisRepository():
         idx_att2 = layer.fields().indexOf(self.Attributes[1])
         idx_att3 = layer.fields().indexOf(self.Attributes[2])
         idx_att4 = layer.fields().indexOf(self.Attributes[3])
-        
+
         for feature in layer.getFeatures():
             if feature['ID'] in element_dict:
                 element = element_dict[feature['ID']]
@@ -53,9 +53,8 @@ class AbstractAnalysisRepository():
                 
         layer.commitChanges()
         
-        #print(self.LayerName, "analysis results done, behavior: ", self.behavior)
-        
-        self.changeColor()
+        print(self.LayerName, "analysis results done, behavior: ", self.behavior)
+        self.changeColor() """
 
     def addCSVNonSpatialLayerToPanel(self, fileName, layerName):
         root = QgsProject.instance().layerTreeRoot()
@@ -67,7 +66,9 @@ class AbstractAnalysisRepository():
         project_path, scenario_id = QgsProject.instance().readEntry("watering", "project_path", "default text")[0], QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
         date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date)
 
-        def loadCsvLayer(filepath, layer_name, group):
+        self.loadCsvLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
+
+    def loadCsvLayer(self, filepath, layer_name, group):
             uri = f"file:///{filepath}?type=csv&delimiter=,&detectTypes=yes&geomType=none"
             layer = QgsVectorLayer(uri, layer_name, "delimitedtext")
             QgsProject.instance().addMapLayer(layer, False)
@@ -75,23 +76,17 @@ class AbstractAnalysisRepository():
                 group.addChildNode(QgsLayerTreeLayer(layer))
             else:
                 print(f"{layer_name} failed to load! Error: {layer.error().message()}")
-            return layer
-    
-        loadCsvLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
 
- 
-    def addAttributes(self, layerName, layerDest, join_field, fields_to_add):
-        source_layer_name = layerName
-        target_layer_name = layerDest
-
+    def joinLayersAttributes(self, layerName, layerDest, join_field, fields_to_add):
+        print(layerName)
         for layer in QgsProject.instance().mapLayers().values():
-            if layer.name() == source_layer_name:
+            if layer.name() == layerName:
                 source_layer = layer
-            if layer.name() == target_layer_name:
+            if layer.name() == layerDest:
                 target_layer = layer
         if not source_layer or not target_layer:
             raise ValueError("One or both layers not found in the project!")
-       
+        
         joinObject = QgsVectorLayerJoinInfo()
         joinObject.setJoinFieldName(join_field)
         joinObject.setTargetFieldName('ID')
@@ -99,9 +94,10 @@ class AbstractAnalysisRepository():
         joinObject.setUsingMemoryCache(True)
         joinObject.setJoinLayer(source_layer)
         joinObject.setJoinFieldNamesSubset(fields_to_add)
-        #joinObject.setPrefix("")
-        target_layer.addJoin(joinObject)
+        #joinObject.setPrefix(self.analysisExecutionId)
+        target_layer.addJoin(joinObject)        
 
+        self.changeColor()
 
 
     def changeColor(self):

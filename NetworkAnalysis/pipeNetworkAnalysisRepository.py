@@ -12,7 +12,8 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.KeysApi = ["pipeKey","pipeCurrentStatus", "velocity", "flow", "headLoss"]
         self.Attributes = ["C Status","Velocity", "Flow","HeadLoss"]
         self.LayerName = "watering_pipes"
-        self.Field = "Velocity"
+        #self.Field = "Velocity"
+        self.Field = (f"Pipes_{datetime}_velocity")
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 1
@@ -20,4 +21,4 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.fields_to_add = ["velocity", "flow","headLoss"]
         self.elementAnalysisResults()
         self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Pipes.csv", f"Pipes_{datetime}")
-        self.addAttributes(f"Pipes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)
+        self.joinLayersAttributes(f"Pipes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject
-from PyQt5.QtCore import QTimer
+from qgis.core import QgsProject, QgsExpression, QgsField, QgsExpressionContext
+from PyQt5.QtCore import QTimer, QVariant
 from PyQt5.QtWidgets import QDockWidget, QAction
 from PyQt5.QtGui import QIcon
-
 
 import os
 import requests
@@ -65,17 +64,20 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
            
 
     def getAnalysisResults(self, behavior):
+        root = QgsProject.instance().layerTreeRoot()
+        shapeGroup = root.findGroup("Analysis")
+        if shapeGroup:
+            layer_ids = [layer.layerId() for layer in shapeGroup.findLayers()]
+            root.removeChildNode(shapeGroup)
+            for layer_id in layer_ids:
+                QgsProject.instance().removeMapLayer(layer_id)
+    
         self.show_progress_bar()
         analysisExecutionId = self.listOfAnalysis[self.analysis_box.currentIndex()][0]
         datetime = self.listOfAnalysis[self.analysis_box.currentIndex()][1]
         analysisExecutionId2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][0]
         datetime2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][1]
         self.set_progress(20)
-
-        root = QgsProject.instance().layerTreeRoot()
-        shapeGroup = root.findGroup("Analysis")
-        if shapeGroup:
-            shapeGroup.removeAllChildren()
             
         pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
         self.set_progress(50)  
@@ -86,6 +88,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             pipeNodeRepository2 = PipeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
             self.set_progress(80)
             waterDemandNodeRepository2 = NodeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
+
         self.set_progress(100)  
         self.timer_hide_progress_bar()
 
@@ -99,7 +102,43 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.is_playing = not self.is_playing
 
     def playbutton(self, behavior):
-        print("Pause")
+       """  # Load the 'watering_demand_node' layer
+        layerDest = 'watering_demand_nodes'
+        layer = QgsProject.instance().mapLayersByName(layerDest)[0]
+
+        # Define the columns you want to subtract
+        column_a = "Nodes_2023-01-16T18:47:47.742Z_pressure"  # Replace with the name of the first column
+        column_b = "Nodes_2023-01-18T13:07:06.187Z_pressure"  # Replace with the name of the second column
+        # Define the new field name for the result
+        new_field_name = "difference1"
+        # Check if the field already exists
+        if layer.fields().indexFromName(new_field_name) == -1:
+            # If not, add a new field to store the result
+            layer.dataProvider().addAttributes([QgsField(new_field_name, QVariant.Double)])
+            layer.updateFields()
+        # Create an expression for the subtraction
+        expression = QgsExpression(f'"{column_b}" - "{column_a}"')
+
+        # Start editing the layer
+        layer.startEditing()
+
+        # Create a basic expression context
+        context = QgsExpressionContext()
+
+        # Iterate over each feature (row) in the layer
+        for feature in layer.getFeatures():
+            # Set the feature to the expression context
+            context.setFeature(feature)
+            
+            # Evaluate the expression for the current feature
+            result = expression.evaluate(context)
+            
+            # Update the feature with the result
+            feature[new_field_name] = result
+            layer.updateFeature(feature)
+
+        # Commit the changes
+        layer.commitChanges() """
         
     def set_progress(self, progress_value):
         t = time() - self.start
