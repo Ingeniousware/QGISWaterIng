@@ -5,7 +5,7 @@ from qgis.PyQt.QtGui import QColor
 
 class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
 
-    def __init__(self,token, analysisExecutionId, datetime, behavior):
+    def __init__(self,token, analysisExecutionId, datetime, behavior, field=None):
         """Constructor."""
         super(PipeNetworkAnalysisRepository, self).__init__(token, analysisExecutionId, datetime ,behavior)      
         self.UrlGet = "/api/v1/WaterAnalysisResults/pipes"
@@ -13,7 +13,8 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.Attributes = ["C Status","Velocity", "Flow","HeadLoss"]
         self.LayerName = "watering_pipes"
         #self.Field = "Velocity"
-        self.Field = (f"Pipes_{datetime}_velocity")
+        #self.Field = (f"Pipes_{datetime}_velocity")
+        self.Field = field if field else (f"Pipes_{datetime}_velocity")
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 1
