@@ -235,7 +235,7 @@ class AbstractRepository():
     def getOfflineDict(self):
         for feature in self.Layer.getFeatures():
             attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
-            
+
             if attributes:
                 if not attributes[2]:
                     attributes[2] = ""

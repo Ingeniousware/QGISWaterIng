@@ -28,7 +28,8 @@ class ValveNodeRepository(AbstractRepository):
             ("Diameter", QVariant.Double),
             ("minorLossCoef", QVariant.Bool),
             ("initialStatus", QVariant.Double),
-            ("typeValvule", QVariant.Double)
+            ("typeValvule", QVariant.Double),
+            ("Temp Field", QVariant.Double)
         ]
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z",
