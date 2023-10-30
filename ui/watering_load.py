@@ -108,6 +108,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                                          response_scenarios.json()["data"][i]["serverKeyId"]))
 
     def offlineProcedures(self):
+        self.projects_box.clear()
         self.Offline = True
         if os.path.exists(self.ProjectsJSON):
             with open(self.ProjectsJSON, 'r') as json_file:
@@ -198,19 +199,18 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         iface.messageBar().pushMessage(self.tr("Error"), self.tr(f"Cannot open {self.ProjectName}-{self.ScenarioName} offline."), level=1, duration=5)
         
         if self.ProjectFK in self.ProjectsJSON_data:
-            
-            if "scenarios" in self.ProjectsJSON_data[self.ProjectFK] is not None:
-                
+            if self.ProjectsJSON_data[self.ProjectFK]["scenarios"] != {}:
                 if self.ScenarioFK in self.ProjectsJSON_data[self.ProjectFK]["scenarios"]:
-                    
-                    self.ProjectsJSON_data.pop(self.ProjectFK["scenarios"][self.ScenarioFK]) 
-                
+                    del self.ProjectsJSON_data[self.ProjectFK]["scenarios"][self.ScenarioFK]
+                    #self.ProjectsJSON_data.pop(self.ProjectsJSON_data[self.ProjectFK]["scenarios"][self.ScenarioFK], None) 
+            # If there is no scenario in projects.json[ProjectFK], delete this project
             else:
-                
                 del self.ProjectsJSON_data[self.ProjectFK]
                 
         with open(self.ProjectsJSON, 'w') as file:
             json.dump(self.ProjectsJSON_data, file)
+            
+        self.offlineProcedures()
                 
     def isOfflineScenarioVersion(self):
         scenarioInMetadata = False
