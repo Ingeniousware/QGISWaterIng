@@ -11,11 +11,11 @@ from PyQt5.QtGui import QColor
 import queue
 import uuid
 
-class waterTankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
+class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def __init__(self, scenarioFK, connectionHub):
         """Constructor."""
-        super(waterTankNodeConnectorSHPREST, self).__init__(scenarioFK)    
+        super(tankNodeConnectorSHPREST, self).__init__(scenarioFK)    
         self.serverRepository = None  
         self.localRepository = None
         connectionHub.on("POST_TANK", self.processPOSTElementToLocal)

@@ -1,7 +1,7 @@
 import os
 import requests
 
-from ..repositoryConnectorsSHPREST.abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
+from .abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
 
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
@@ -11,28 +11,29 @@ from PyQt5.QtGui import QColor
 import queue
 import uuid
 
-class reservoirNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
+class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def __init__(self, scenarioFK, connectionHub):
         """Constructor."""
-        super(reservoirNodeConnectorSHPREST, self).__init__(scenarioFK)    
+        super(valveNodeConnectorSHPREST, self).__init__(scenarioFK)    
         self.serverRepository = None  
         self.localRepository = None
-        connectionHub.on("POST_RESERVOIR", self.processPOSTElementToLocal)
-        connectionHub.on("DELETE_RESERVOIR", self.processDELETEElementToLocal)
+        connectionHub.on("POST_VALVE", self.processPOSTElementToLocal)
+        connectionHub.on("DELETE_VALVE", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
 
 
     def processPOSTElementToLocal(self, paraminput):
-        print("Entering processPOSTElementToLocal")        
-        #print(paraminput[0])
+        print("Entering processPOSTElementToLocal____Valve ")        
+        print(paraminput)
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
-        print(serverKeyId)
+        print("valve serverkeyid - ", serverKeyId)
         if not (serverKeyId in self.lastAddedElements):
+            print("Just before creating valve from server push")
             self.localRepository.addElementFromSignalR(paraminput[0])
-            print("Water Reservoir Node inserted after push from server")
+            print("Water Valve Node inserted after push from server")
             print("dict-> ", self.lastAddedElements)
         else:
             print("Key found -> ", serverKeyId)
@@ -40,7 +41,7 @@ class reservoirNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def processDELETEElementToLocal(self, paraminput):
         self.localRepository.deleteElement(paraminput[0])
-        print("Water Reservoir Node removed after push from server")
+        print("Water Valve Node removed after push from server")
 
 
     def addElementToServer(self, feature):
@@ -53,10 +54,15 @@ class reservoirNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
 
+
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
-        head = feature["Head[m]"]
+        diameter = feature["Diameter"]
+        typeV = feature["typeValvul"]
+        minorLossCoef = feature["minorLossC"]
+        initial = feature["initialSta"]
+
 
         serverKeyId = uuid.uuid4()
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
@@ -66,7 +72,10 @@ class reservoirNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'lng': "{}".format(x), 
                        'lat': "{}".format(y), 
                        'z': "{}".format(z), 
-                       'head': "{}".format(head)
+                       'diameter': "{}".format(diameter),
+                       'typeValvule': "{}".format(typeV), 
+                       'minorLossCoef':"{}".format(minorLossCoef),
+                       'initialStatus': "{}".format(initial)
                         }
         
 
@@ -79,7 +88,7 @@ class reservoirNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         serverResponse = self.serverRepository.postToServer(elementJSON)
         
         if serverResponse.status_code == 200:
-            print("Water Reservoir Node was sent succesfully to the server")
+            print("Water Valve Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
             serverKeyId = serverResponse.json()["serverKeyId"]
             print(serverKeyId)       
@@ -91,7 +100,7 @@ class reservoirNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
         else: 
-            print("Failed on sendig Water Reservoir Node to the server")
+            print("Failed on sendig Valve Tank Node to the server")
 
     
 

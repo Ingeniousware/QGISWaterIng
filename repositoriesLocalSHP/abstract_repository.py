@@ -84,12 +84,14 @@ class AbstractRepository():
         feature = QgsFeature(layer.fields())
         geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
         geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+
         feature.setGeometry(geometry)
         for i in range(len(self.field_definitions)):
             feature.setAttribute(self.field_definitions[i][0], element[i+2])
-        
+
         layer.addFeature(feature)
         layer.commitChanges()
+
 
 
 
