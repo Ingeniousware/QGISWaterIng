@@ -47,3 +47,24 @@ class TankNodeRepository(AbstractRepository):
         super(TankNodeRepository, self).initializeRepository() 
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Pentagon, 6)
     
+
+    def setDefaultValues(self, feature):
+        name = "tankName"
+        description = "tank form QGIS"
+        z = 0
+        initialLevel = 3
+        minimumLevel = 1
+        maximumLevel = 9
+        minimumVolume = 2
+        nominalDiameter = 25
+        canOverflow = True
+
+        feature.setAttribute("Name", name)
+        feature.setAttribute("Descript", description)
+        feature.setAttribute("Z[m]", z)
+        feature.setAttribute("Init. Lvl", initialLevel)
+        feature.setAttribute("Min. Lvl", minimumLevel) 
+        feature.setAttribute("Max. Lvl", maximumLevel) 
+        feature.setAttribute("Min. Vol.", minimumVolume) 
+        feature.setAttribute("Diameter", nominalDiameter)
+        feature.setAttribute("Overflow", canOverflow)  
