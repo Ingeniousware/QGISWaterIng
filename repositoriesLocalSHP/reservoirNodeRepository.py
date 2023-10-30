@@ -40,3 +40,15 @@ class ReservoirNodeRepository(AbstractRepository):
         super(ReservoirNodeRepository, self).initializeRepository()      
        
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Square, 6)
+
+    def setDefaultValues(self, feature):
+        name = "reservorName"
+        description = "reservoir form QGIS"
+        z = 0
+        head = 0
+
+        feature.setAttribute("Name", name)
+        feature.setAttribute("Descript", description)
+        feature.setAttribute("Z[m]", z)
+        feature.setAttribute("Head[m]", head)      
+

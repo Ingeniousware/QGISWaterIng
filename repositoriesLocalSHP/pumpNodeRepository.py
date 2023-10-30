@@ -23,7 +23,10 @@ class PumpNodeRepository(AbstractRepository):
             ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
             ("Model FK", QVariant.String),
-            ("Rel. Speed", QVariant.Double)
+            ("Rel. Speed", QVariant.Double),
+            ("Pressure", QVariant.Double),
+            ("Demand", QVariant.Double),
+            ("Demand C", QVariant.Double)
         ]
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "relativeSpeed"]
