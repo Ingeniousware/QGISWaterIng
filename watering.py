@@ -71,6 +71,7 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction = None
         self.insertDemandNodeAction = None
         self.insertTankNodeAction = None
+        self.insertReservoirNodeAction = None
         self.selectElementAction = None
         self.readAnalysisAction = None
         self.canvas = iface.mapCanvas()
@@ -283,11 +284,11 @@ class QGISPlugin_WaterIng:
         self.insertReservoirNodeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Reservoir Node'),
-            callback=self.activateToolInsertDemandNode,
+            callback=self.activateToolInsertReservoirNode,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
-        self.insertDemandNodeAction.setCheckable(True)        
-        self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.insertReservoirNodeAction.setCheckable(True)        
+        self.insertReservoirNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         
 
@@ -353,8 +354,7 @@ class QGISPlugin_WaterIng:
             self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
                 
             self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
-            self.hub_connection.on("POST_RESERVOIR", self.processPOSTRESERVOIR)
-            self.hub_connection.on("DELETE_RESERVOIR", self.processDELETERESERVOIR)
+
             
             self.hub_connection.start()
 
@@ -431,7 +431,7 @@ class QGISPlugin_WaterIng:
                 if(self.activeMapTool.action() is not None):
                     self.canvas.unsetMapTool(self.activeMapTool)
                     self.activeMapTool.action().setChecked(False)
-            #this should be happening at updateActionScenarioStateOpen self.toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository) 
+            #this should be happening at updateActionScenarioStateOpen self.toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.tankNodeRepository) 
             self.canvas.setMapTool(self.toolInsertTankNode)
             self.activeMapTool = self.toolInsertTankNode
         else:
@@ -450,6 +450,21 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = self.toolInsertWaterPipe
         else:
             self.canvas.unsetMapTool(self.toolInsertWaterPipe)
+            self.activeMapTool = None
+    
+
+    def activateToolInsertReservoirNode(self):
+        if (self.insertReservoirNodeAction.isChecked()):
+            print("Setting Map Tool = toolInsertReservoirNode")
+            if (self.activeMapTool is not None):
+                if(self.activeMapTool.action() is not None):
+                    self.canvas.unsetMapTool(self.activeMapTool)
+                    self.activeMapTool.action().setChecked(False)
+            #this should be happening at updateActionScenarioStateOpen self.toolInsertReservoirNode = InsertReservoirNodeTool(self.canvas, self.scenarioUnitOFWork.reservoirNodeRepository) 
+            self.canvas.setMapTool(self.toolInsertReservoirNode)
+            self.activeMapTool = self.toolInsertReservoirNode
+        else:
+            self.canvas.unsetMapTool(self.toolInsertReservoirNode)
             self.activeMapTool = None
 
 
@@ -490,6 +505,10 @@ class QGISPlugin_WaterIng:
         self.toolInsertTankNode.setAction(self.insertTankNodeAction)
         self.insertTankNodeAction.setEnabled(True)
 
+        self.toolInsertReservoirNode = InsertReservoirNodeTool(self.canvas, self.scenarioUnitOFWork.reservoirNodeRepository, self.actionManager)
+        self.toolInsertReservoirNode.setAction(self.insertReservoirNodeAction)
+        self.insertReservoirNodeAction.setEnabled(True)
+
         self.toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.actionManager)
         self.toolInsertWaterPipe.setAction(self.insertWaterPipeAction)
         self.insertWaterPipeAction.setEnabled(True)
@@ -519,7 +538,8 @@ class QGISPlugin_WaterIng:
                     self.importFileINP,
                     self.selectElementAction,
                     self.insertDemandNodeAction,
-                    self.insertTankNodeAction]
+                    self.insertTankNodeAction,
+                    self.insertReservoirNodeAction]
 
         for action in actions:
             if action:
