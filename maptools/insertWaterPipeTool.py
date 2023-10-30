@@ -1,3 +1,5 @@
+from ..ActionManagement.insertPipeAction import insertPipeAction
+from ..ActionManagement.insertNodeAction import insertNodeAction
 from .insertAbstractTool import InsertAbstractTool
 from qgis.gui import QgsVertexMarker, QgsMapTool, QgsRubberBand, Qgis
 from qgis.core import QgsPoint, QgsGeometry
@@ -7,16 +9,17 @@ from PyQt5.QtCore import Qt
 
 class InsertWaterPipeTool(InsertAbstractTool):
 
-    def __init__(self, canvas, elementRepository, actionManager):
+    def __init__(self, canvas, elementRepository, elementNodesRepository, actionManager):
         super(InsertWaterPipeTool, self).__init__(canvas, elementRepository, actionManager)          
         self.canvas = canvas
         self.point = None
-        self.elementRepository = elementRepository
-        self.actionManager = actionManager
+        self.elementNodesRepository = elementNodesRepository
         self.rubberBand1 = None
         self.rubberBand2 = None
         self.clickedQgsPoints = [] 
         self.lastPoint = None 
+        self.upnode = None
+        self.downnode = None
 
 
     def initialize(self):
@@ -37,17 +40,29 @@ class InsertWaterPipeTool(InsertAbstractTool):
             if not (self.lastPoint == None): 
                 print('Adding vertex now')
                 self.createFixedPartOfPipe(self.clickedQgsPoints)                
-        elif len(self.clickedQgsPoints) > 1:
+        else:
+            #insert a demand node at the point where the user clicked
+            action = insertNodeAction(self.elementNodesRepository, pointTemp.x(), pointTemp.y())         
+            self.actionManager.execute(action)
+            self.downnode = action.feature
+            
+            if len(self.clickedQgsPoints) > 1:
             #create a new pipe here
-            print('Creating pipe now')
-            if self.rubberBand1 is not None:
-                self.canvas.scene().removeItem(self.rubberBand1)
-            if self.rubberBand2 is not None:
-                self.canvas.scene().removeItem(self.rubberBand2)
-            self.clickedQgsPoints.clear()
-            self.clickedQgsPoints.append(point)
+                print('Creating pipe now')
+                if self.rubberBand1 is not None:
+                    self.canvas.scene().removeItem(self.rubberBand1)
+                if self.rubberBand2 is not None:
+                    self.canvas.scene().removeItem(self.rubberBand2)
 
+                actionPipe = insertPipeAction(self.elementRepository, self.clickedQgsPoints, self.upnode, self.downnode)         
+                self.actionManager.execute(actionPipe)
 
+                self.upnode = point
+                self.clickedQgsPoints.clear()
+                self.clickedQgsPoints.append(point)
+            else: 
+                self.upnode = action.feature
+            
         self.lastPoint = point
 
 
@@ -59,6 +74,12 @@ class InsertWaterPipeTool(InsertAbstractTool):
             self.createMovingPartOfPipe(self.lastPoint, point)
 
     
+    
+    def keyReleaseEvent (self, e):
+        if e.key() == Qt.Key.Key_Escape:
+            print("Esc pressed....insert pipe should be deactivated")
+
+
 
     def deactivate(self):
         print("deactivate insert pipe tool")

@@ -122,18 +122,24 @@ class AbstractRepository():
 
     def deleteFeatureFromMapInteraction(self, feature):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        
         self.Layer.startEditing()
+        
         print("About to delete the feature ", feature.id(), " from ", self.LayerName)
         self.Layer.deleteFeature(feature.id())
+        
         self.Layer.commitChanges()
-        self.Layer.triggerRepaint()
+
         print("Changes after deleting feature are now done")
         if self.connectorToServer:
             self.connectorToServer.removeElementFromServer(feature)
 
         
+
     def setDefaultValues(self, feature):
         ...
+        
+
 
     def initializeRepository(self):
         #loading element from the API
@@ -229,7 +235,7 @@ class AbstractRepository():
     def getOfflineDict(self):
         for feature in self.Layer.getFeatures():
             attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
-            
+
             if attributes:
                 if not attributes[2]:
                     attributes[2] = ""
