@@ -3,6 +3,7 @@
 # Import QGis
 import time
 
+
 from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
@@ -16,6 +17,7 @@ from .resources import *
 import pickle
 # Import the code for the dialog
 
+from .maptools.toolbarToolManager import toolbarToolManager
 from .maptools.insertSensorNodeTool import InsertSensorNodeTool
 from .maptools.InsertDemandNodeTool import InsertDemandNodeTool
 from .maptools.insertTankNodeTool import InsertTankNodeTool
@@ -91,6 +93,7 @@ class QGISPlugin_WaterIng:
         self.scenarioUnitOFWork = None
         self.syncManager = None
         self.actionManager = None
+        self.toolbarToolManager = None
 
     
 
@@ -148,10 +151,13 @@ class QGISPlugin_WaterIng:
         return action
 
     def initGui(self):
+
+        self.toolbarToolManager = toolbarToolManager()
+
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_login.png'
-        self.add_action(
+        self.toolbarToolManager.add_action(
             icon_path,
             text=self.tr(u'Watering Login'),
             callback=self.addLogin,
@@ -225,10 +231,11 @@ class QGISPlugin_WaterIng:
 
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
-        self.insertDemandNodeAction = self.add_action(
+        self.insertDemandNodeAction = self.toolbarToolManager.add_action(
             icon_path,
             text=self.tr(u'Add Demand Node'),
             callback=self.activateToolInsertDemandNode,
+            param = self.toolInsertDemandNode
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.insertDemandNodeAction.setCheckable(True)        
