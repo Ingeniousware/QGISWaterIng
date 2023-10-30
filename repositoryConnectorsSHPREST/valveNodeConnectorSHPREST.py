@@ -25,11 +25,9 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
 
     def processPOSTElementToLocal(self, paraminput):
-        print("Entering processPOSTElementToLocal____Valve ")        
-        print(paraminput)
+        print("Entering processPOSTElementToLocal")        
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
-        print("valve serverkeyid - ", serverKeyId)
         if not (serverKeyId in self.lastAddedElements):
             print("Just before creating valve from server push")
             self.localRepository.addElementFromSignalR(paraminput[0])
