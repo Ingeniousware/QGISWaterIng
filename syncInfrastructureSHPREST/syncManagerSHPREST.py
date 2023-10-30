@@ -1,7 +1,10 @@
 import os
+
 from ..watering_utils import WateringUtils
 from ..repositoriesServerREST.waterDemandNodeServerRESTRepository import waterDemandNodeServerRESTRepository
 from ..repositoryConnectorsSHPREST.waterDemandNodeConnectorSHPREST import waterDemandNodeConnectorSHPREST
+from ..repositoriesServerREST.tankNodeServerRESTRepository import waterTankNodeServerRESTRepository
+from ..repositoryConnectorsSHPREST.tankNodeConnectorSHPREST import waterTankNodeConnectorSHPREST
 
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
@@ -14,7 +17,9 @@ class syncManagerSHPREST():
         self.ScenarioFK = scenarioFK
         self.scenarioUnitOfWork = None
         self.waterDemandNodeConnector = None
+        self.tankNodeConnector = None
         self.waterDemandNodeServerRESTRepository = None
+        self.waterTankNodeServerRESTRepository = None
         server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
         self.hub_connection = HubConnectionBuilder()\
@@ -46,15 +51,19 @@ class syncManagerSHPREST():
 
         #creation of connectors
         self.waterDemandNodeConnector = waterDemandNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
+        self.tankNodeConnector = waterTankNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
         
         #creation of server repositories
         self.waterDemandNodeServerRESTRepository = waterDemandNodeServerRESTRepository(self.Token, self.ScenarioFK)
+        self.waterTankNodeServerRESTRepository = waterTankNodeServerRESTRepository(self.Token, self.ScenarioFK)
 
         #linking connectors and server repositories
         self.waterDemandNodeServerRESTRepository.setConnectorToLocal(self.waterDemandNodeConnector)
+        self.waterTankNodeServerRESTRepository.setConnectorToLocal(self.tankNodeConnector)
 
         #linking connectors and local repositories from unitofwork
         self.scenarioUnitOfWork.waterDemandNodeRepository.setConnectorToServer(self.waterDemandNodeConnector)
+        self.scenarioUnitOfWork.tankNodeRepository.setConnectorToServer(self.tankNodeConnector)
 
         self.hub_connection.start()
 

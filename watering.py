@@ -2,7 +2,7 @@
 
 # Import QGis
 import time
-from .maptools.insertWaterPipeTool import InsertWaterPipeTool
+
 from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
@@ -18,6 +18,9 @@ import pickle
 
 from .maptools.insertSensorNodeTool import InsertSensorNodeTool
 from .maptools.InsertDemandNodeTool import InsertDemandNodeTool
+from .maptools.insertTankNodeTool import InsertTankNodeTool
+from .maptools.insertReservoirNodeTool import InsertReservoirNodeTool
+from .maptools.insertWaterPipeTool import InsertWaterPipeTool
 from .maptools.selectNodeTool import SelectNodeTool
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
@@ -67,6 +70,7 @@ class QGISPlugin_WaterIng:
         self.menu = self.tr(u'&Watering API Connection')
         self.insertSensorAction = None
         self.insertDemandNodeAction = None
+        self.insertTankNodeAction = None
         self.selectElementAction = None
         self.readAnalysisAction = None
         self.canvas = iface.mapCanvas()
@@ -231,6 +235,17 @@ class QGISPlugin_WaterIng:
         self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        self.insertTankNodeAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Add Tank Node'),
+            callback=self.activateToolInsertTankNode,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.insertTankNodeAction.setCheckable(True)        
+        self.insertTankNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_backward.png'
         self.undoAction = self.add_action(
             icon_path,
@@ -262,6 +277,17 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         self.insertWaterPipeAction.setCheckable(True)        
         self.insertWaterPipeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        self.insertReservoirNodeAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Add Reservoir Node'),
+            callback=self.activateToolInsertDemandNode,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.insertDemandNodeAction.setCheckable(True)        
+        self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         
 
@@ -397,6 +423,21 @@ class QGISPlugin_WaterIng:
             self.canvas.unsetMapTool(self.toolInsertDemandNode)
             self.activeMapTool = None
 
+    
+    def activateToolInsertTankNode(self):
+        if (self.insertTankNodeAction.isChecked()):
+            print("Setting Map Tool = toolInsertTankNode")
+            if (self.activeMapTool is not None):
+                if(self.activeMapTool.action() is not None):
+                    self.canvas.unsetMapTool(self.activeMapTool)
+                    self.activeMapTool.action().setChecked(False)
+            #this should be happening at updateActionScenarioStateOpen self.toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository) 
+            self.canvas.setMapTool(self.toolInsertTankNode)
+            self.activeMapTool = self.toolInsertTankNode
+        else:
+            self.canvas.unsetMapTool(self.toolInsertTankNode)
+            self.activeMapTool = None
+
 
     def activateToolInsertWaterPipe(self):
         if (self.insertWaterPipeAction.isChecked()):
@@ -445,6 +486,10 @@ class QGISPlugin_WaterIng:
         self.toolInsertDemandNode.setAction(self.insertDemandNodeAction)
         self.insertDemandNodeAction.setEnabled(True)
 
+        self.toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.tankNodeRepository, self.actionManager)
+        self.toolInsertTankNode.setAction(self.insertTankNodeAction)
+        self.insertTankNodeAction.setEnabled(True)
+
         self.toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.actionManager)
         self.toolInsertWaterPipe.setAction(self.insertWaterPipeAction)
         self.insertWaterPipeAction.setEnabled(True)
@@ -473,7 +518,8 @@ class QGISPlugin_WaterIng:
                     self.readMeasurementsAction,
                     self.importFileINP,
                     self.selectElementAction,
-                    self.insertDemandNodeAction]
+                    self.insertDemandNodeAction,
+                    self.insertTankNodeAction]
 
         for action in actions:
             if action:
