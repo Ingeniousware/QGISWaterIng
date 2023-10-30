@@ -121,9 +121,13 @@ class AbstractRepository():
 
 
     def deleteFeatureFromMapInteraction(self, feature):
+        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.Layer.startEditing()
-        self.Layer.deleteFeature(feature)
+        print("About to delete the feature ", feature.id(), " from ", self.LayerName)
+        self.Layer.deleteFeature(feature.id())
         self.Layer.commitChanges()
+        self.Layer.triggerRepaint()
+        print("Changes after deleting feature are now done")
         if self.connectorToServer:
             self.connectorToServer.removeElementFromServer(feature)
 

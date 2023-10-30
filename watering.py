@@ -2,6 +2,7 @@
 
 # Import QGis
 import time
+from .maptools.insertWaterPipeTool import InsertWaterPipeTool
 from qgis.core import QgsProject
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
@@ -228,6 +229,40 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         self.insertDemandNodeAction.setCheckable(True)        
         self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_backward.png'
+        self.undoAction = self.add_action(
+            icon_path,
+            text=self.tr(u'unDo'),
+            callback=self.executeUnDoAction,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.undoAction.setCheckable(False)        
+        self.undoAction.setEnabled(False)
+
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_forward.png'
+        self.redoAction = self.add_action(
+            icon_path,
+            text=self.tr(u'reDo'),
+            callback=self.executeReDoAction,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.redoAction.setCheckable(False)        
+        self.redoAction.setEnabled(False)
+
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        self.insertWaterPipeAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Add Water Pipe'),
+            callback=self.activateToolInsertWaterPipe,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.insertWaterPipeAction.setCheckable(True)        
+        self.insertWaterPipeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
         
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_measurement.png'
@@ -269,7 +304,7 @@ class QGISPlugin_WaterIng:
         if (self.dlg.exec_() == 1):
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork                
             print(self.scenarioUnitOFWork)
-            self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
+            self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo)
             self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
             self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
             self.updateActionScenarioStateOpen()
@@ -362,7 +397,20 @@ class QGISPlugin_WaterIng:
             self.canvas.unsetMapTool(self.toolInsertDemandNode)
             self.activeMapTool = None
 
-            
+
+    def activateToolInsertWaterPipe(self):
+        if (self.insertWaterPipeAction.isChecked()):
+            print("Setting Map Tool = insertWaterPipeAction")
+            if (self.activeMapTool is not None):
+                if(self.activeMapTool.action() is not None):
+                    self.canvas.unsetMapTool(self.activeMapTool)
+                    self.activeMapTool.action().setChecked(False) 
+            self.canvas.setMapTool(self.toolInsertWaterPipe)
+            self.activeMapTool = self.toolInsertWaterPipe
+        else:
+            self.canvas.unsetMapTool(self.toolInsertWaterPipe)
+            self.activeMapTool = None
+
 
     def activateToolSelectMapElement(self):
         if (self.selectElementAction.isChecked()):
@@ -381,17 +429,26 @@ class QGISPlugin_WaterIng:
 
 
 
+    def executeUnDoAction(self):
+        self.actionManager.undoAction()
+
+    def executeReDoAction(self):
+        self.actionManager.redoAction()
+
+
     def updateActionScenarioStateOpen(self):
-        print("Activating insert sensor")
         self.toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)              
         self.toolInsertSensorNode.setAction(self.insertSensorAction)
         self.insertSensorAction.setEnabled(True)
             
-        print("Activating insert demand node")
         self.toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
         self.toolInsertDemandNode.setAction(self.insertDemandNodeAction)
         self.insertDemandNodeAction.setEnabled(True)
 
+        self.toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.actionManager)
+        self.toolInsertWaterPipe.setAction(self.insertWaterPipeAction)
+        self.insertWaterPipeAction.setEnabled(True)
+        
               
     def updateActionStateOpen(self):
         #self.cleanMarkers()
@@ -493,4 +550,12 @@ class QGISPlugin_WaterIng:
 
             #print(deserialized_obj.value)
             self.scenarioUnitOFWork.UpdateFromServerToOffline()
+
+
+    def setActiveStateUndo(self, activeState):
+        print("Entering the activation of undo button")
+        self.undoAction.setEnabled(activeState)
+    
+    def setActiveStateRedo(self, activeState):
+        self.redoAction.setEnabled(activeState)
     

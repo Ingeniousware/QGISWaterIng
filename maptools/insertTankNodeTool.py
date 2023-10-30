@@ -1,7 +1,7 @@
-from .insertNodeAbstractTool import InsertNodeAbstractTool
+from .insertAbstractTool import InsertAbstractTool
 
 
-class InsertTankNodeTool(InsertNodeAbstractTool):
+class InsertTankNodeTool(InsertAbstractTool):
     
     def __init__(self, canvas):
-        super(InsertNodeAbstractTool, self).__init__(canvas)      
+        super(InsertAbstractTool, self).__init__(canvas)      

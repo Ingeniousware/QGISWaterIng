@@ -18,4 +18,5 @@ class insertNodeAction(abstractAction):
         self.execute()
 
     def unDo(self):
+        print("Getting inside the undo of insert node")
         self.elementRepository.deleteFeatureFromMapInteraction(self.feature)

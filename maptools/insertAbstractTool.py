@@ -1,7 +1,7 @@
 from qgis.gui import QgsVertexMarker, QgsMapTool
 from PyQt5.QtGui import QColor
 
-class InsertNodeAbstractTool(QgsMapTool):
+class InsertAbstractTool(QgsMapTool):
 
     def __init__(self, canvas, elementRepository, actionManager):
         

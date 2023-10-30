@@ -1,10 +1,10 @@
-from .insertNodeAbstractTool import InsertNodeAbstractTool
+from .insertAbstractTool import InsertAbstractTool
 from qgis.gui import QgsVertexMarker, QgsMapTool, QgsMapToolIdentify
 from qgis.core import QgsProject
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, QEvent, Qt
 
-class InsertSensorNodeTool(InsertNodeAbstractTool):
+class InsertSensorNodeTool(InsertAbstractTool):
     def __init__(self, canvas, elementRepository, actionManager):
         super(InsertSensorNodeTool, self).__init__(canvas, elementRepository, actionManager)  
         print("Init at Insert Sensor Node")

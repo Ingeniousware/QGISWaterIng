@@ -1,11 +1,11 @@
 from ..ActionManagement.insertNodeAction import insertNodeAction
-from .insertNodeAbstractTool import InsertNodeAbstractTool
+from .insertAbstractTool import InsertAbstractTool
 from qgis.gui import QgsVertexMarker, QgsMapTool, QgsMapToolIdentify
 from qgis.core import QgsProject
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, QEvent, Qt
 
-class InsertDemandNodeTool(InsertNodeAbstractTool):
+class InsertDemandNodeTool(InsertAbstractTool):
     def __init__(self, canvas, elementRepository, actionManager):
         super(InsertDemandNodeTool, self).__init__(canvas, elementRepository, actionManager)  
         print("Init at Insert Demand Node")
