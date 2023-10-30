@@ -36,7 +36,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.ProjectName = None
         self.ScenarioFK = None
         self.ScenarioName = None
-        self.ProjectName = None
         self.OfflineProjects = None
         self.responseProjects = None
         self.WateringFolder = WateringUtils.get_app_data_path() + "/QGISWatering/"
@@ -131,7 +130,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.OfflineScenarios = self.getOfflineScenarios(self.ProjectFK)
         
         for i in range(0, len(self.OfflineScenarios)):
-            self.scenarios_box.addItem(self.OfflineScenarios[i][1])
+            self.scenarios_box.addItem(self.OfflineScenarios[i][0])
             
     def checkExistingProject(self):
         #if there is a project opened
@@ -170,28 +169,74 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.startProject()
     
     def startProject(self):
-        if self.Offline == False:
-            self.ScenarioName = self.listOfScenarios[self.scenarios_box.currentIndex()][0]
-            self.ScenarioFK = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
-            
-            if self.isOfflineScenarioVersion():
-                self.openAndUpdate()
-            else:
-                self.createNewProjectFromServer()
-        else:
-            self.ScenarioName = self.OfflineScenarios[self.scenarios_box.currentIndex()][1]
-            self.ScenarioFK = self.OfflineScenarios[self.scenarios_box.currentIndex()][0]
+        current_index = self.scenarios_box.currentIndex()
+        scenarios = self.OfflineScenarios if self.Offline else self.listOfScenarios
 
+        if scenarios and 0 <= current_index < len(scenarios):
+            self.ScenarioName, self.ScenarioFK = scenarios[current_index][0], scenarios[current_index][1]
+            
+            if self.Offline:
+                self.handleOfflineScenario()
+            else:
+                self.handleOnlineScenario()
+        else:
+            self.handleInvalidScenario()
+
+    def handleOfflineScenario(self):
+        if self.isOfflineScenarioVersion():
             self.openProjectFromFolder()
-     
-    def isOfflineScenarioVersion(self):
-        with open(self.ProjectsJSON, 'r') as json_file:
-            self.ProjectsJSON_data = json.load(json_file)        
-               
-        if self.ProjectsJSON_data:
-            if self.ProjectFK in self.ProjectsJSON_data:
+        else:
+            self.handleInvalidScenario()
+
+    def handleOnlineScenario(self):
+        if self.isOfflineScenarioVersion():
+            self.openAndUpdate()
+        else:
+            self.createNewProjectFromServer()
+
+    def handleInvalidScenario(self):
+        iface.messageBar().pushMessage(self.tr("Error"), self.tr(f"Cannot open {self.ProjectName}-{self.ScenarioName} offline."), level=1, duration=5)
+        
+        if self.ProjectFK in self.ProjectsJSON_data:
+            
+            if "scenarios" in self.ProjectsJSON_data[self.ProjectFK] is not None:
+                
                 if self.ScenarioFK in self.ProjectsJSON_data[self.ProjectFK]["scenarios"]:
-                    return True
+                    
+                    self.ProjectsJSON_data.pop(self.ProjectFK["scenarios"][self.ScenarioFK]) 
+                
+            else:
+                
+                del self.ProjectsJSON_data[self.ProjectFK]
+                
+        with open(self.ProjectsJSON, 'w') as file:
+            json.dump(self.ProjectsJSON_data, file)
+                
+    def isOfflineScenarioVersion(self):
+        scenarioInMetadata = False
+        scenarioInFolder = False
+        folder_project = os.path.join(self.WateringFolder, self.ProjectFK)
+        scenario_folder = os.path.join(folder_project, self.ScenarioFK)
+        
+        if not os.path.exists(self.ProjectsJSON):
+            with open(self.ProjectsJSON, 'w') as json_file:
+                json.dump({}, json_file)
+            self.ProjectsJSON_data = {}
+        else:
+            with open(self.ProjectsJSON, 'r') as json_file:
+                self.ProjectsJSON_data = json.load(json_file)
+
+        # Check scenario in metadata
+        if self.ProjectFK in self.ProjectsJSON_data:
+            if self.ScenarioFK in self.ProjectsJSON_data[self.ProjectFK]["scenarios"]:
+                scenarioInMetadata = True
+        
+        # Check scenario in folder
+        if os.path.exists(folder_project) and os.path.exists(scenario_folder):
+            scenarioInFolder = True
+
+        if scenarioInMetadata and scenarioInFolder:
+            return True
 
         return False
 
@@ -245,7 +290,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def getOfflineScenarios(self, project_key):
         if project_key in self.ProjectsJSON_data:
             scenario_data = self.ProjectsJSON_data[project_key].get("scenarios", {})
-            return [(scenario_key, scenario["name"]) for scenario_key, scenario in scenario_data.items()]
+            return [(scenario["name"], scenario_key) for scenario_key, scenario in scenario_data.items()]
     
         return []
         
@@ -352,11 +397,15 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         WateringUtils.setProjectMetadata("scenario_id", self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         
     def loadMap(self):
-        tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-        layer = QgsRasterLayer(tms,'OSM', 'wms')
-        QgsProject.instance().addMapLayer(layer, False)
-        root = QgsProject.instance().layerTreeRoot()
-        root.insertChildNode(5, QgsLayerTreeLayer(layer))
+        map_layer = "Open Street Maps"
+        if not any(layer.name() == map_layer for layer in QgsProject.instance().mapLayers().values()):
+            tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+            layer = QgsRasterLayer(tms,'Open Street Maps', 'wms')
+            QgsProject.instance().addMapLayer(layer, False)
+            root = QgsProject.instance().layerTreeRoot()
+            root.insertChildNode(5, QgsLayerTreeLayer(layer))
+        else:
+            print("Map already loaded")
     
     def setStatusBar(self):
         project_name = WateringUtils.getProjectMetadata("project_name")
