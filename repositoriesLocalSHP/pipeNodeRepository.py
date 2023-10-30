@@ -92,3 +92,24 @@ class PipeNodeRepository(AbstractRepository):
         shapeGroup.insertChildNode(1, QgsLayerTreeLayer(layer))
 
         QgsProject.instance().addMapLayer(layer, False)
+
+
+
+    def AddNewElementFromMapInteraction(self, vertexs, upnode, downnode):
+        layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        layer.startEditing()
+
+        feature = QgsFeature(layer.fields())
+        points = [QgsPointXY(vertex.x(), vertex.y()) for vertex in vertexs]
+        g = QgsGeometry.fromPolylineXY(points)
+        feature.setGeometry(g)
+
+        self.setDefaultValues(feature)
+
+        layer.addFeature(feature)
+        layer.commitChanges()
+
+        if self.connectorToServer:
+            self.connectorToServer.addElementToServer(feature)
+
+        return feature
