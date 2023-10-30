@@ -490,7 +490,7 @@ class QGISPlugin_WaterIng:
         self.toolInsertTankNode.setAction(self.insertTankNodeAction)
         self.insertTankNodeAction.setEnabled(True)
 
-        self.toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.actionManager)
+        self.toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
         self.toolInsertWaterPipe.setAction(self.insertWaterPipeAction)
         self.insertWaterPipeAction.setEnabled(True)
         
