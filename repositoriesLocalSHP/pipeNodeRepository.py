@@ -19,8 +19,7 @@ class PipeNodeRepository(AbstractRepository):
         self.field_definitions = None
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
-        self.initializeRepository()
-
+        
     def initializeRepository(self):
         #Pipes loading
         response_pipes = self.loadElements()

@@ -27,7 +27,12 @@ class scenarioUnitOfWork():
                                  self.valveNodeRepository,
                                  self.pumpNodeRepository]
 
-
-    def UpdateFromServerToOffline(self):
+    def loadAll(self):
+        self.list_of_elements.append(self.pipeNodeRepository)
+        print(self.list_of_elements)
+        for element in self.list_of_elements:
+            element.initializeRepository()
+            
+    def updateAll(self):
         for element in self.list_of_elements:
             element.updateFromServerToOffline()
