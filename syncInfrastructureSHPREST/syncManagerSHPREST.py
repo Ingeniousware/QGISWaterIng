@@ -7,9 +7,10 @@ from ..repositoriesServerREST.tankNodeServerRESTRepository import tankNodeServer
 from ..repositoryConnectorsSHPREST.tankNodeConnectorSHPREST import tankNodeConnectorSHPREST
 from ..repositoriesServerREST.reservoirNodeServerRESTRepository import reservoirNodeServerRESTRepository
 from ..repositoryConnectorsSHPREST.reservoirNodeConnectorSHPREST import reservoirNodeConnectorSHPREST
-
 from ..repositoriesServerREST.valveNodeServerRESTRepository import valveNodeServerRESTRepository
 from ..repositoryConnectorsSHPREST.valveNodeConnectorSHPREST import valveNodeConnectorSHPREST
+from ..repositoriesServerREST.pumpNodeServerRESTRepository import pumpNodeServerRESTRepository
+from ..repositoryConnectorsSHPREST.pumpNodeConnectorSHPREST import pumpNodeConnectorSHPREST
 
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
@@ -25,10 +26,12 @@ class syncManagerSHPREST():
         self.tankNodeConnector = None
         self.reservoirNodeConnector= None
         self.valveNodeConnector= None
+        self.pumpNodeConnector= None
         self.waterDemandNodeServerRESTRepository = None
         self.tankNodeServerRESTRepository = None
         self.reservoirNodeServerRESTRepository = None
         self.valveNodeServerRESTRepository = None
+        self.pumpNodeServerRESTRepository = None
         
         server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
@@ -64,24 +67,28 @@ class syncManagerSHPREST():
         self.tankNodeConnector = tankNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
         self.reservoirNodeConnector = reservoirNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
         self.valveNodeConnector = valveNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
+        self.pumpNodeConnector = pumpNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
         
         #creation of server repositories
         self.waterDemandNodeServerRESTRepository = waterDemandNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.tankNodeServerRESTRepository = tankNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.reservoirNodeServerRESTRepository = reservoirNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.valveNodeServerRESTRepository = valveNodeServerRESTRepository(self.Token, self.ScenarioFK)
+        self.pumpNodeServerRESTRepository = pumpNodeServerRESTRepository(self.Token, self.ScenarioFK)
 
         #linking connectors and server repositories
         self.waterDemandNodeServerRESTRepository.setConnectorToLocal(self.waterDemandNodeConnector)
         self.tankNodeServerRESTRepository.setConnectorToLocal(self.tankNodeConnector)
         self.reservoirNodeServerRESTRepository.setConnectorToLocal(self.reservoirNodeConnector)
         self.valveNodeServerRESTRepository.setConnectorToLocal(self.valveNodeConnector)
+        self.pumpNodeServerRESTRepository.setConnectorToLocal(self.pumpNodeConnector)
 
         #linking connectors and local repositories from unitofwork
         self.scenarioUnitOfWork.waterDemandNodeRepository.setConnectorToServer(self.waterDemandNodeConnector)
         self.scenarioUnitOfWork.tankNodeRepository.setConnectorToServer(self.tankNodeConnector)
         self.scenarioUnitOfWork.reservoirNodeRepository.setConnectorToServer(self.reservoirNodeConnector)
         self.scenarioUnitOfWork.valveNodeRepository.setConnectorToServer(self.valveNodeConnector)
+        self.scenarioUnitOfWork.pumpNodeRepository.setConnectorToServer(self.pumpNodeConnector)
 
         self.hub_connection.start()
 

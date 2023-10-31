@@ -38,4 +38,24 @@ class PumpNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(PumpNodeRepository, self).initializeRepository() 
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.SemiCircle, 6)
+
+    def setDefaultValues(self, feature):
+        name = "pumpName"
+        description = "pump form QGIS"
+        z = 0
+        model = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        speed = 0
+        pressure = 0
+        demand = 0
+        demandC = 0
+
+        feature.setAttribute("Name", name)
+        feature.setAttribute("Descript", description)
+        feature.setAttribute("Z[m]", z)
+        feature.setAttribute("Model FK", model)
+        feature.setAttribute("Rel. Speed", speed)
+        feature.setAttribute("Pressure", pressure)
+        feature.setAttribute("Demand", demand)
+        feature.setAttribute("Demand C", demandC)
+    
     
