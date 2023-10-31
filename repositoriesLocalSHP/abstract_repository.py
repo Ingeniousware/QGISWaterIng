@@ -65,14 +65,13 @@ class AbstractRepository():
     def addElementFromJSON(self, elementJSON):
         try:
             element = [elementJSON[field] for field in self.features]
-            element.extend([0] * 4)
 
             feature = QgsFeature(self.currentLayer.fields())
             geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
 
-
+            print(element)
             for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
                 feature.setAttribute(self.field_definitions[i][0], element[i+2])
             
@@ -256,7 +255,7 @@ class AbstractRepository():
         for feature in self.Layer.getFeatures():
             attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
 
-            if not attributes[2]:
+            if len(attributes) > 2 and (not attributes[2]):
                 attributes[2] = None
                 
             geom = feature.geometry()

@@ -37,9 +37,6 @@ class PipeNodeRepository(AbstractRepository):
             ("Up-Node", QVariant.String),
             ("Down-Node", QVariant.String),
             ("C Status", QVariant.Double),
-            ("Velocity", QVariant.Double),
-            ("Flow", QVariant.Double),
-            ("HeadLoss", QVariant.Double),
             ("lastupdated", QVariant.DateTime)
         ]
         

@@ -24,9 +24,6 @@ class PumpNodeRepository(AbstractRepository):
             ("Z[m]", QVariant.Double),
             ("Model FK", QVariant.String),
             ("Rel. Speed", QVariant.Double),
-            ("Pressure", QVariant.Double),
-            ("Demand", QVariant.Double),
-            ("Demand C", QVariant.Double),
             ("lastupdated", QVariant.DateTime)
         ]
         

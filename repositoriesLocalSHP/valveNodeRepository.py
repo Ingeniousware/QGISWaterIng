@@ -29,12 +29,12 @@ class ValveNodeRepository(AbstractRepository):
             ("minorLossC", QVariant.Double),
             ("initialSta", QVariant.Double),
             ("typeValvul", QVariant.Double),
-            ("Temp Field", QVariant.Double),
+            ("setting", QVariant.Double),
             ("lastupdated", QVariant.DateTime)
         ]
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z",
-                         "diameter"]
+                         "diameter", "minorLossCoef", "initialStatus", "typeValvule", "setting"]
         
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None

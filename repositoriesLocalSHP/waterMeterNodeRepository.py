@@ -25,10 +25,6 @@ class WaterMeterNodeRepository(AbstractRepository):
             ("Meterstate", QVariant.Double),
             ("FunctType", QVariant.Double),
             ("LastDate", QVariant.String),
-            ("Pressure", QVariant.Double),
-            ("Demand", QVariant.Double),
-            ("Demand C", QVariant.Double),
-            ("Age", QVariant.Double),
             ("lastupdated", QVariant.DateTime)
         ]
         
