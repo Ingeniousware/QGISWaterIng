@@ -36,7 +36,8 @@ class TankNodeRepository(AbstractRepository):
             ("Pressure", QVariant.Double),
             ("Demand", QVariant.Double),
             ("Demand C", QVariant.Double),
-            ("Age", QVariant.Double)
+            ("Age", QVariant.Double),
+            ("lastupdated", QVariant.DateTime)
         ]
         
         self.Color = QColor.fromRgb(23, 61, 108)

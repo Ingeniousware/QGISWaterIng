@@ -39,7 +39,8 @@ class PipeNodeRepository(AbstractRepository):
             ("C Status", QVariant.Double),
             ("Velocity", QVariant.Double),
             ("Flow", QVariant.Double),
-            ("HeadLoss", QVariant.Double)
+            ("HeadLoss", QVariant.Double),
+            ("lastupdated", QVariant.DateTime)
         ]
         
         pipe_attributes = ["serverKeyId", "lastModified", "name", "description", "diameterInt",

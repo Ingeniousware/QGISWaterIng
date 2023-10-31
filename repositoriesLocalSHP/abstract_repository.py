@@ -213,11 +213,11 @@ class AbstractRepository():
 
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
-            #loop through all features
-            #  if feature["lastUpdated"] > lastUpdatedToServer               
-                    #self.connectorToServer.addElementToServer(feature)
-            ...
-           
+            features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdated'] > lastUpdatedToServer]      
+            #TODO order by feature['lastUpdated'] increasing          
+            for feature in features:                                                    
+                self.connectorToServer.addElementToServer(feature)
+
 
     def updateAll(self):
         print("Update tool has been activated")

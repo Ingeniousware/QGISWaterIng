@@ -6,6 +6,8 @@ from ..repositoriesLocalSHP.valveNodeRepository import ValveNodeRepository
 from ..repositoriesLocalSHP.waterDemandNodeRepository import WateringDemandNodeRepository
 from ..repositoriesLocalSHP.waterMeterNodeRepository import WaterMeterNodeRepository
 
+from datetime import datetime
+
 class scenarioUnitOfWork():
 
     def __init__(self, token, project_path, scenarioFK):
@@ -39,12 +41,11 @@ class scenarioUnitOfWork():
             
     def updateAll(self):
 
-        #TODO self.lastUpdatedFromServer = now
+        self.lastUpdatedFromServer = datetime.now()
         for element in self.list_of_elements:
             element.updateFromServerToOffline(self.lastUpdatedToServer)
 
-
-        #TODO self.lastUpdatedFromServer = now
+        self.lastUpdatedFromServer = datetime.now()
         for element in self.list_of_elements:
             element.updateFromOfflineToServer(self.lastUpdatedFromServer)
 
