@@ -23,10 +23,6 @@ class ReservoirNodeRepository(AbstractRepository):
             ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
             ("Head[m]", QVariant.Double),
-            ("Pressure", QVariant.Double),
-            ("Demand", QVariant.Double),
-            ("Demand C", QVariant.Double),
-            ("Age", QVariant.Double),
             ("lastupdated", QVariant.DateTime)
         ]
         

@@ -25,10 +25,6 @@ class WateringDemandNodeRepository(AbstractRepository):
             ("Z[m]", QVariant.Double),
             ("B. Demand", QVariant.Double),
             ("Pattern", QVariant.Bool),
-            ("Pressure", QVariant.Double),
-            ("Demand", QVariant.Double),
-            ("Demand C", QVariant.Double),
-            ("Age", QVariant.Double),
             ("lastupdated", QVariant.DateTime)
         ]
     

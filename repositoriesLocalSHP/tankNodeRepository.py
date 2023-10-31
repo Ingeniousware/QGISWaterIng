@@ -33,10 +33,6 @@ class TankNodeRepository(AbstractRepository):
             ("Min. Vol.", QVariant.Double),
             ("Diameter", QVariant.Double),
             ("Overflow", QVariant.Bool),
-            ("Pressure", QVariant.Double),
-            ("Demand", QVariant.Double),
-            ("Demand C", QVariant.Double),
-            ("Age", QVariant.Double),
             ("lastupdated", QVariant.DateTime)
         ]
         
