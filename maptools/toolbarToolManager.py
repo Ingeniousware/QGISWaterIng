@@ -1,5 +1,8 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
+from functools import partial
+
+from ..maptools.toolbarAction import toolbarAction
 
 class toolbarToolManager():
 
@@ -7,7 +10,7 @@ class toolbarToolManager():
         """Constructor."""
         ...
 
-    def add_action(
+    def addMapToolButtonAction(
         self,
         icon_path,
         text,
@@ -21,8 +24,8 @@ class toolbarToolManager():
         parent=None):
 
         icon = QIcon(icon_path)
-        action = QAction(icon, text, parent)
-        action.triggered.connect(callback)
+        action = toolbarAction(icon, text, parent)
+        action.triggered.connect(partial(callback, action))
         action.setEnabled(enabled_flag)
 
         if status_tip is not None:
