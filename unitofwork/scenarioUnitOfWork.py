@@ -26,8 +26,9 @@ class scenarioUnitOfWork():
                                  self.tankNodeRepository, 
                                  self.reservoirNodeRepository,
                                  self.waterMeterNodeRepository,
-                                 self.valveNodeRepository,
-                                 self.pumpNodeRepository]
+                                 self.valveNodeRepository,                                 
+                                 self.pumpNodeRepository,
+                                 self.pipeNodeRepository]
         
         self.lastUpdatedToServer = None
         self.lastUpdatedFromServer = None
@@ -45,8 +46,9 @@ class scenarioUnitOfWork():
         for element in self.list_of_elements:
             element.updateFromServerToOffline(self.lastUpdatedToServer)
 
-        self.lastUpdatedFromServer = datetime.now()
+        """self.lastUpdatedFromServer = datetime.now()
         for element in self.list_of_elements:
-            element.updateFromOfflineToServer(self.lastUpdatedFromServer)
+            element.updateFromOfflineToServer(self.lastUpdatedFromServer) """
+
 
         

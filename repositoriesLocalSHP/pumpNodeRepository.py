@@ -27,7 +27,7 @@ class PumpNodeRepository(AbstractRepository):
             ("lastupdated", QVariant.DateTime)
         ]
         
-        self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "relativeSpeed"]
+        self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "pumpModelFK", "relativeSpeed"]
         
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None

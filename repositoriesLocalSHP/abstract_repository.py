@@ -84,7 +84,6 @@ class AbstractRepository():
     def addElementFromSignalR(self, elementJSON):
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         element = [elementJSON[field] for field in self.features]
-        element.extend([0] * 4)
 
         layer.startEditing()
          
@@ -199,8 +198,12 @@ class AbstractRepository():
     
     def updateFromServerToOffline(self, lastUpdatedFromServer):  
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-4]]
-        self.Attributes = self.features[3:]
+        self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
+
+        print(self.LayerName)
+        print(self.FieldDefinitions)
+
+        self.Attributes = self.features[1:]
         self.getServerDict()
         self.getOfflineDict()
         
@@ -247,9 +250,10 @@ class AbstractRepository():
         data = self.Response.json()["data"]
         for element in data:
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
-            attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))
-    
+            attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
             self.ServerDict[element["serverKeyId"]] = attributes
+
+
           
     def getOfflineDict(self):
         for feature in self.Layer.getFeatures():
@@ -263,7 +267,9 @@ class AbstractRepository():
             attributes.append((point.x(), point.y()))
 
             self.OfflineDict[feature["ID"]] = attributes
-                
+
+
+
     def addElement(self, id):
         
         print(f"Adding element in {self.LayerName}: {id}")
