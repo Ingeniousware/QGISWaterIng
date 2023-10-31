@@ -187,7 +187,7 @@ class AbstractRepository():
             symbol.symbolLayer(0).setStrokeColor(self.StrokeColor)
         layer.triggerRepaint()
     
-    def updateFromServerToOffline(self):  
+    def updateFromServerToOffline(self, lastUpdatedFromServer):  
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-4]]
         self.Attributes = self.features[3:]
@@ -210,9 +210,15 @@ class AbstractRepository():
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
                 self.updateElement(element_id)
     
-    def updateFromOfflineToServer(self):
-        ...
+
+    def updateFromOfflineToServer(self, lastUpdatedToServer):
+        if self.connectorToServer:
+            #loop through all features
+            #  if feature["lastUpdated"] > lastUpdatedToServer               
+                    #self.connectorToServer.addElementToServer(feature)
+            ...
            
+
     def updateAll(self):
         print("Update tool has been activated")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]

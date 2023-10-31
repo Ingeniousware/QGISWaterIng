@@ -145,6 +145,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         else:
             self.startProject()
 
+
+        
+
     def saveCurrentProject(self):
         project = QgsProject.instance()
         if project.isDirty():
@@ -182,6 +185,13 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 self.handleOnlineScenario()
         else:
             self.handleInvalidScenario()
+
+
+        self.done(True) #instead of just closing we call done(true) to return 1 as result of this dialog modal execution
+        self.close()
+        
+
+
 
     def handleOfflineScenario(self):
         if self.isOfflineScenarioVersion():
