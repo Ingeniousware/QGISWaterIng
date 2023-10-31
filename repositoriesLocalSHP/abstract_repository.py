@@ -84,12 +84,14 @@ class AbstractRepository():
         feature = QgsFeature(layer.fields())
         geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
         geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+
         feature.setGeometry(geometry)
         for i in range(len(self.field_definitions)):
             feature.setAttribute(self.field_definitions[i][0], element[i+2])
-        
+
         layer.addFeature(feature)
         layer.commitChanges()
+
 
 
 
@@ -236,15 +238,14 @@ class AbstractRepository():
         for feature in self.Layer.getFeatures():
             attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
 
-            if attributes:
-                if not attributes[2]:
-                    attributes[2] = ""
-                    
-                geom = feature.geometry()
-                point = geom.asPoint()
-                attributes.append((point.x(), point.y()))
+            if not attributes[2]:
+                attributes[2] = None
+                
+            geom = feature.geometry()
+            point = geom.asPoint()
+            attributes.append((point.x(), point.y()))
 
-                self.OfflineDict[feature["ID"]] = attributes
+            self.OfflineDict[feature["ID"]] = attributes
                 
     def addElement(self, id):
         

@@ -10,13 +10,13 @@ from ..watering_utils import WateringUtils
 
 from .abstractServerRESTRepository import abstractServerRESTRepository
 
-class tankNodeServerRESTRepository(abstractServerRESTRepository):
+class valveNodeServerRESTRepository(abstractServerRESTRepository):
 
     def __init__(self,token, scenarioFK):
         """Constructor."""
-        super(tankNodeServerRESTRepository, self).__init__(token, scenarioFK)      
-        self.UrlGet = WateringUtils.getServerUrl() + "/api/v1/TankNode"
-        self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/TankNode"
+        super(valveNodeServerRESTRepository, self).__init__(token, scenarioFK)      
+        self.UrlGet = WateringUtils.getServerUrl() + "/api/v1/WaterValve"
+        self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterValve"
         
 
 

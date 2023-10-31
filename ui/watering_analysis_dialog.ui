@@ -158,7 +158,7 @@
       </widget>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
-        <string>Tab 2</string>
+        <string>Executions</string>
        </attribute>
       </widget>
      </widget>
