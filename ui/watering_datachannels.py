@@ -2,7 +2,7 @@
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, QDateTime
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QApplication
 
 import os
@@ -57,6 +57,8 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.selectdate_box.currentIndexChanged.connect(self.checkUserControlState)
         self.DownloadDataToFile.clicked.connect(self.downloadData)
         self.RefreshGraphs.clicked.connect(self.updateGraphs)
+        self.inicial_dateEdit.setDateTime(QDateTime.currentDateTime())
+        self.final_dateEdit.setDateTime(QDateTime.currentDateTime())
     
 
     def checkUserControlState(self):

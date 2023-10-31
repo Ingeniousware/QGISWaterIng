@@ -2,12 +2,14 @@
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsExpression, QgsField, QgsExpressionContext
-from PyQt5.QtCore import QTimer, QVariant
-from PyQt5.QtWidgets import QDockWidget, QAction
+from PyQt5.QtCore import QTimer, QVariant, QDateTime
+from PyQt5.QtWidgets import QDockWidget, QMessageBox
 from PyQt5.QtGui import QIcon
 
 import os
 import requests
+import uuid
+from datetime import datetime
 from time import time, gmtime, strftime
 from ..watering_utils import WateringUtils
 
@@ -25,6 +27,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.setupUi(self)
         self.ScenarioFK = None
         self.listOfAnalysis = []
+        self.listOfSimulators = []
         self.hide_progress_bar()
         self.BtGetAnalysisResultsCurrent.clicked.connect(lambda: self.getAnalysisResults(0))
         self.BtGetAnalysisResultsBackward.clicked.connect(lambda: self.getAnalysisResults(1))
@@ -38,9 +41,20 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.BtGetAnalysisResultsPlayPause.clicked.connect(self.switch_icon_play_pause)
         self.BtGetAnalysisResultsBackward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_backward.png"))
         self.BtGetAnalysisResultsForward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/icon_forward.png"))
+        self.BoxSelectType.addItem("What If")
+        self.BoxSelectType.addItem("Replay")
+        self.BTExecute.clicked.connect(self.readIndexOnComboBox)
+        self.startDateTime.setDateTime(QDateTime.currentDateTime())
 
     
     def initializeRepository(self):
+        # Clear combo boxes and lists
+        self.analysis_box.clear()
+        self.analysis_box2.clear()
+        self.BoxSimulator.clear()
+        self.listOfAnalysis = []
+        self.listOfSimulators = []
+
         self.token = os.environ.get('TOKEN')
         url_analysis = WateringUtils.getServerUrl() + "/api/v1/WaterAnalysis"
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
@@ -57,6 +71,15 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             self.listOfAnalysis.append((response_analysis.json()["data"][i]["serverKeyId"],
                                          response_analysis.json()["data"][i]["simulationStartTime"]))
             
+        #For simulator combo box in executions    
+        url_simulators = url_analysis + "/simulators"
+        response_simulators = requests.get(url_simulators, params=params,
+                                headers={'Authorization': "Bearer {}".format(self.token)})
+        for i in range(0, response_simulators.json()["total"]):
+            self.BoxSimulator.addItem(response_simulators.json()["data"][i]["name"])
+            self.listOfSimulators.append((response_simulators.json()["data"][i]["name"], 
+                                          response_simulators.json()["data"][i]["serverKeyId"]))
+        
     def checkUserControlState(self):
         if self.compareCheckBox.isChecked():
             self.analysis_box2.show()
@@ -152,6 +175,72 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         layer.commitChanges()
     
         repository.changeColor(self.new_field_name)
+
+    def readIndexOnComboBox(self):
+        # Fetch values from ComboBox and other widgets
+        selectedSimulator = self.BoxSimulator.currentText()
+        simulatorIndex = self.BoxSimulator.currentIndex()
+        simulatorFK = self.listOfSimulators[simulatorIndex][1]
+        selectedType = self.BoxSelectType.currentText()
+        duration = int(self.durationSpinBox.value())
+        timeStep = int(self.timeStepSpinBox.value())
+        
+        # Format date and time from QDateTimeEdit widget
+        dateTime = self.startDateTime.dateTime()
+        formatted_date = dateTime.toString("yyyy-MM-ddTHH:mm:ss.zzzZ")
+        
+        # Get current date and time in different formats
+        now_utc = datetime.utcnow()
+        formatted_now_utc = now_utc.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+        dateForName = datetime.now().strftime('%d.%m.%Y, %H:%M:%S')
+        name = f"Execution - {dateForName}"
+        
+        # Generate a new GUID
+        new_guid = str(uuid.uuid4())
+        
+        # Post the collected data to the API
+        self.postToAnalysisAPI(name, formatted_date, duration, formatted_now_utc, new_guid, selectedSimulator, simulatorFK, timeStep)
+
+    def postToAnalysisAPI(self, name, startDate, duration, formatted_now, new_guid, selectedSimulator, simulatorFK, timeStep):
+        
+        def show_message(title, text, icon):
+            """Display a QMessageBox with given attributes."""
+            message_box = QMessageBox()
+            message_box.setIcon(icon)
+            message_box.setWindowTitle(title)
+            message_box.setText(text)
+            message_box.setStandardButtons(QMessageBox.Ok)
+            message_box.exec_()
+        
+        data_json = {
+            "serverKeyId": new_guid,
+            "scenarioKeyId": self.ScenarioFK,
+            "name": name,
+            "description": "example",
+            "clientRequestDateTime": formatted_now,
+            "simulationStartTime": startDate,
+            "duration": duration,
+            "timeStep": timeStep,
+            "simulatorFK": simulatorFK,
+            "simulatorName": selectedSimulator,
+            "executionState": 0
+        }
+        
+        url = f"{WateringUtils.getServerUrl()}/api/v1/WaterAnalysis"
+        params = {'scenarioFK': self.ScenarioFK}
+        headers = {'Authorization': f"Bearer {self.token}"}
+        
+        try:
+            response = requests.post(url, params=params, headers=headers, json=data_json)
+            if response.status_code == 200:
+                print("Anañysis uploaded successfully!")
+                show_message("Water Analysis", "Analysis Executed Correctly", QMessageBox.Information)
+            else:
+                show_message("Water Analysis", "Analysis Not Executed", QMessageBox.Warning)
+                
+        except requests.RequestException as e:  # Catch specific exception related to requests.
+            print(f"Error: {e}")
+            show_message("Water Analysis", "Analysis Not Executed", QMessageBox.Warning)
         
         
     def set_progress(self, progress_value):
