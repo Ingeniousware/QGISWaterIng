@@ -6,6 +6,7 @@ from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointX
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 from qgis.utils import iface
+from datetime import datetime
 
 class AbstractRepository():
 
@@ -23,6 +24,7 @@ class AbstractRepository():
         self.FieldDefinitions = None
         self.Attributes = None
         self.connectorToServer = None
+        self.numberLocalFieldsOnly = 1
 
 
 
@@ -57,6 +59,8 @@ class AbstractRepository():
         for elementJSON in response_data:            
             self.addElementFromJSON(elementJSON)
     
+
+
     #When layer does not exists           
     def addElementFromJSON(self, elementJSON):
         try:
@@ -67,8 +71,12 @@ class AbstractRepository():
             geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
-            for i in range(len(self.field_definitions)):
+
+
+            for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
                 feature.setAttribute(self.field_definitions[i][0], element[i+2])
+            
+            feature['lastUpdated'] = datetime.now()
             self.currentLayer.dataProvider().addFeature(feature)
         except ValueError:
               print("Error->" + ValueError)
@@ -88,6 +96,8 @@ class AbstractRepository():
         feature.setGeometry(geometry)
         for i in range(len(self.field_definitions)):
             feature.setAttribute(self.field_definitions[i][0], element[i+2])
+
+        feature['lastUpdated'] = datetime.now()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -112,6 +122,7 @@ class AbstractRepository():
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
         self.setDefaultValues(feature)
+        feature['lastUpdated'] = datetime.now()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -213,10 +224,10 @@ class AbstractRepository():
 
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
-            features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdated'] > lastUpdatedToServer]      
-            #TODO order by feature['lastUpdated'] increasing          
+            features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdated'] > lastUpdatedToServer].sort(key=lambda element: element['lastUpdated'])          
             for feature in features:                                                    
                 self.connectorToServer.addElementToServer(feature)
+
 
 
     def updateAll(self):
@@ -230,6 +241,7 @@ class AbstractRepository():
         
         self.updateFromServerToOffline()
         self.updateFromOfflineToServer()
+
     
     def getServerDict(self):
         self.Response = self.loadElements()
@@ -299,7 +311,7 @@ class AbstractRepository():
         self.Layer.startEditing()
         
         for feature in features:
-            for i in range(len(self.FieldDefinitions)):
+            for i in range(len(self.FieldDefinitions)-self.numberLocalFieldsOnly):
                 feature[self.FieldDefinitions[i]] = self.ServerDict[id][i]
             
             #update geometry
