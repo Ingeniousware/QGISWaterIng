@@ -33,7 +33,7 @@ class TankNodeRepository(AbstractRepository):
             ("Min. Vol.", QVariant.Double),
             ("Diameter", QVariant.Double),
             ("Overflow", QVariant.Bool),
-            ("lastupdated", QVariant.DateTime)
+            ("lastUpdate", QVariant.DateTime)
         ]
         
         self.Color = QColor.fromRgb(23, 61, 108)

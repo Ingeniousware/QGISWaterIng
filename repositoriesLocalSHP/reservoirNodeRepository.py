@@ -23,7 +23,7 @@ class ReservoirNodeRepository(AbstractRepository):
             ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
             ("Head[m]", QVariant.Double),
-            ("lastupdated", QVariant.DateTime)
+            ("lastUpdate", QVariant.DateTime)
         ]
         
         self.features = ["lng","lat","serverKeyId","lastModified",

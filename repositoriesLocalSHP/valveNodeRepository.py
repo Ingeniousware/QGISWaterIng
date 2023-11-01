@@ -30,7 +30,7 @@ class ValveNodeRepository(AbstractRepository):
             ("initialSta", QVariant.Double),
             ("typeValvul", QVariant.Double),
             ("setting", QVariant.Double),
-            ("lastupdated", QVariant.DateTime)
+            ("lastUpdate", QVariant.DateTime)
         ]
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z",

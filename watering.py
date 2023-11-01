@@ -709,7 +709,7 @@ class QGISPlugin_WaterIng:
             #deserialized_obj = pickle.loads(serialized_obj_retrieved)
 
             #print(deserialized_obj.value)
-            self.scenarioUnitOFWork.UpdateFromServerToOffline()
+            self.scenarioUnitOFWork.updateAll()
 
 
     def setActiveStateUndo(self, activeState):

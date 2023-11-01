@@ -26,13 +26,10 @@ class AbstractRepository():
         self.connectorToServer = None
         self.numberLocalFieldsOnly = 1
 
-
-
     def setConnectorToServer(self, connector):
         self.connectorToServer = connector
         self.connectorToServer.localRepository = self
 
-        
     def loadElements(self):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         url = WateringUtils.getServerUrl() + self.UrlGet
@@ -45,10 +42,8 @@ class AbstractRepository():
         for name, data_type in fields_definitions:
             fields.append(QgsField(name, data_type))
         return fields
-        
 
     def createElementLayerFromServerResponse(self, response):
-
         fields = self.setElementFields(self.field_definitions)
         self.currentLayer = QgsVectorLayer("Point?crs=" + self.destCrs.authid(), "New Layer", "memory")
         self.currentLayer.dataProvider().addAttributes(fields)
@@ -59,8 +54,6 @@ class AbstractRepository():
         for elementJSON in response_data:            
             self.addElementFromJSON(elementJSON)
     
-
-
     #When layer does not exists           
     def addElementFromJSON(self, elementJSON):
         try:
@@ -75,7 +68,7 @@ class AbstractRepository():
             for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
                 feature.setAttribute(self.field_definitions[i][0], element[i+2])
             
-            feature['lastUpdated'] = datetime.now()
+            feature['lastUpdate'] = datetime.now()
             self.currentLayer.dataProvider().addFeature(feature)
         except ValueError:
               print("Error->" + ValueError)
@@ -95,13 +88,10 @@ class AbstractRepository():
         for i in range(len(self.field_definitions)):
             feature.setAttribute(self.field_definitions[i][0], element[i+2])
 
-        feature['lastUpdated'] = datetime.now()
+        feature['lastUpdate'] = datetime.now()
 
         layer.addFeature(feature)
         layer.commitChanges()
-
-
-
 
     def AddNewElementFromMapInteraction(self, x, y):
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -120,7 +110,7 @@ class AbstractRepository():
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
         self.setDefaultValues(feature)
-        feature['lastUpdated'] = datetime.now()
+        feature['lastUpdate'] = datetime.now()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -129,7 +119,6 @@ class AbstractRepository():
             self.connectorToServer.addElementToServer(feature)
 
         return feature
-
 
     def deleteFeatureFromMapInteraction(self, feature):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -163,7 +152,7 @@ class AbstractRepository():
     def writeShp(self):
         writer = QgsVectorFileWriter.writeAsVectorFormat(self.currentLayer, self.StorageShapeFile, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
         if writer[0] == QgsVectorFileWriter.NoError:
-            print("Shapefile created successfully!")
+            print(f"Shapefile for {self.LayerName} created successfully!")
         else:
             print("Error creating tanks Shapefile!")
         
@@ -183,8 +172,6 @@ class AbstractRepository():
 
             #QgsProject.instance().addMapLayer(element_layer)
             print("opened successfully:", element_layer.name())
-
-
 
     def setElementSymbol(self, layer, layer_symbol, layer_size):
         renderer = layer.renderer()
@@ -226,7 +213,7 @@ class AbstractRepository():
 
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
-            features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdated'] > lastUpdatedToServer].sort(key=lambda element: element['lastUpdated'])          
+            features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdate'] > lastUpdatedToServer].sort(key=lambda element: element['lastUpdate'])          
             for feature in features:                                                    
                 self.connectorToServer.addElementToServer(feature)
 

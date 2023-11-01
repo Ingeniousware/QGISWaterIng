@@ -25,7 +25,7 @@ class WateringDemandNodeRepository(AbstractRepository):
             ("Z[m]", QVariant.Double),
             ("B. Demand", QVariant.Double),
             ("Pattern", QVariant.Bool),
-            ("lastupdated", QVariant.DateTime)
+            ("lastUpdate", QVariant.DateTime)
         ]
     
         self.features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
