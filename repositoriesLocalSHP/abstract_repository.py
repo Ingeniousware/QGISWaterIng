@@ -24,6 +24,7 @@ class AbstractRepository():
         self.FieldDefinitions = None
         self.Attributes = None
         self.connectorToServer = None
+        self.currentLayer = None
         self.numberLocalFieldsOnly = 1
 
     def setConnectorToServer(self, connector):
@@ -53,6 +54,8 @@ class AbstractRepository():
 
         for elementJSON in response_data:            
             self.addElementFromJSON(elementJSON)
+            
+        self.currentLayer.updateExtents()
     
     #When layer does not exists           
     def addElementFromJSON(self, elementJSON):
