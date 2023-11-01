@@ -3,7 +3,7 @@ from ..watering_utils import WateringUtils
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
-from PyQt5.QtCore import QVariant, QFileInfo
+from PyQt5.QtCore import QVariant, QFileInfo, QDateTime
 from PyQt5.QtGui import QColor
 from qgis.utils import iface
 from datetime import datetime
@@ -18,13 +18,13 @@ class AbstractRepository():
         self.destCrs = QgsCoordinateReferenceSystem(3857)
         self.currentCRS = QgsCoordinateReferenceSystem(3857)
         self.Layer = None
+        self.currentLayer = None
         self.ServerDict = {}
         self.OfflineDict = {}
         self.Response = None
         self.FieldDefinitions = None
         self.Attributes = None
-        self.connectorToServer = None
-        self.currentLayer = None
+        self.connectorToServer = None        
         self.numberLocalFieldsOnly = 1
 
     def setConnectorToServer(self, connector):
@@ -57,6 +57,12 @@ class AbstractRepository():
             
         self.currentLayer.updateExtents()
     
+
+    def getDateTimeNow(self):
+        current_datetime = datetime.now()
+        qdatetime = QDateTime(current_datetime)
+        return QVariant(qdatetime)
+
     #When layer does not exists           
     def addElementFromJSON(self, elementJSON):
         try:
@@ -67,12 +73,18 @@ class AbstractRepository():
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
 
+            self.currentLayer.startEditing()
+
             print(element)
             for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
-                feature.setAttribute(self.field_definitions[i][0], element[i+2])
+                feature.setAttribute(self.field_definitions[i][0], element[i+2])  
             
-            feature['lastUpdate'] = datetime.now()
-            self.currentLayer.dataProvider().addFeature(feature)
+            feature.setAttribute("lastUpdate", self.getDateTimeNow())            
+            self.currentLayer.addFeature(feature)
+            #self.currentLayer.dataProvider().addFeature(feature)
+
+            self.currentLayer.commitChanges()
+
         except ValueError:
               print("Error->" + ValueError)
 
@@ -91,7 +103,7 @@ class AbstractRepository():
         for i in range(len(self.field_definitions)):
             feature.setAttribute(self.field_definitions[i][0], element[i+2])
 
-        feature['lastUpdate'] = datetime.now()
+        feature['lastUpdate'] = self.getDateTimeNow()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -113,7 +125,7 @@ class AbstractRepository():
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
         self.setDefaultValues(feature)
-        feature['lastUpdate'] = datetime.now()
+        feature['lastUpdate'] = self.getDateTimeNow()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -155,11 +167,13 @@ class AbstractRepository():
         
 
     def writeShp(self):
+        #TODO check the use of writeAsVectorFormatV3 because writeAsVectorFormat has been depreciated
         writer = QgsVectorFileWriter.writeAsVectorFormat(self.currentLayer, self.StorageShapeFile, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
         if writer[0] == QgsVectorFileWriter.NoError:
             print(f"Shapefile for {self.LayerName} created successfully!")
         else:
-            print("Error creating tanks Shapefile!")
+            print("Error creating tanks Shapefile! ") #, QgsVectorFileWriter.errorMessage())
+
         
     def openLayers(self, layer_symbol, layer_size):
         element_layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")

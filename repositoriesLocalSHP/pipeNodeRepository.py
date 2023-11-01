@@ -109,12 +109,17 @@ class PipeNodeRepository(AbstractRepository):
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
 
+            self.currentLayer.startEditing()
+
             print(element)
             for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
                 feature.setAttribute(self.field_definitions[i][0], element[i])
-            feature['lastUpdate'] = datetime.now()
-            
-            self.currentLayer.dataProvider().addFeature(feature)
+
+            feature.setAttribute("lastUpdate", self.getDateTimeNow())            
+            self.currentLayer.addFeature(feature)
+
+            self.currentLayer.commitChanges()
+
         except ValueError:
               print("Error->" + ValueError)
 

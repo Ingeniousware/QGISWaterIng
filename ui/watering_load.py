@@ -392,7 +392,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         self.myScenarioUnitOfWork.loadAll()
-        self.myScenarioUnitOfWork.updateAll()
         
         self.loadMap()
         self.zoomToProject()
