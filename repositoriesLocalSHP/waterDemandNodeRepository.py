@@ -1,6 +1,7 @@
 import os
 import requests
 from .abstract_repository import AbstractRepository
+from .abstract_repository import AttributeChangeHandler
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
@@ -38,7 +39,9 @@ class WateringDemandNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(WateringDemandNodeRepository, self).initializeRepository()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
-
+        
+        layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        handler = AttributeChangeHandler(layer)
 
     def setDefaultValues(self, feature):
         name = "nodeName"
