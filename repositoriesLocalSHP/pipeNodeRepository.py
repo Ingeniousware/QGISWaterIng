@@ -168,7 +168,7 @@ class PipeNodeRepository(AbstractRepository):
 
     def updateElement(self, id):
         
-        print(f"Updating existing element in {self.LayerName}: {id}")
+        #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
         features = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
@@ -279,7 +279,7 @@ class PipeNodeRepository(AbstractRepository):
         self.Layer.commitChanges()
     
     def updateExistingPipe(self, id):
-        print(f"Updating existing element in {self.LayerName}: {id}")
+        #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
         features = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]

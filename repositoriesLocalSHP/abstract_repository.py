@@ -183,13 +183,7 @@ class AbstractRepository():
         if not element_layer.isValid():
             print("Error opening:", element_layer.dataProvider().error().message())
         else:
-            root = QgsProject.instance().layerTreeRoot()
-            shapeGroup = root.findGroup("WaterIng Network Layout")
-            shapeGroup.insertChildNode(1, QgsLayerTreeLayer(element_layer))
-
             QgsProject.instance().addMapLayer(element_layer, False)
-
-            #QgsProject.instance().addMapLayer(element_layer)
             print("opened successfully:", element_layer.name())
 
 
@@ -315,7 +309,7 @@ class AbstractRepository():
         
     def updateElement(self, id):
         
-        print(f"Updating existing element in {self.LayerName}: {id}")
+        #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
         features = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]

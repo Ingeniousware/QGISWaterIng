@@ -175,24 +175,23 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         if scenarios and 0 <= current_index < len(scenarios):
             self.ScenarioName, self.ScenarioFK = scenarios[current_index][0], scenarios[current_index][1]
-            self.handleValidScenario()
+            self.openProjectScenario()
         else:
-            self.handleInvalidScenario()
+            self.handleCanNotOpenProjectScenario()
         
         isThereConnectionAtDialog = self.Offline
         self.done(True) #instead of just closing we call done(true) to return 1 as result of this dialog modal execution
         self.close()
         
-    def handleValidScenario(self):
-        if self.isOfflineScenarioVersion():
-            self.openExistingWaterIngProject()
-        else:
-            if self.Offline:
-                self.handleInvalidScenario()
-            else:
-                self.createNewProjectFromServer()
 
-    def handleInvalidScenario(self):
+    def openProjectScenario(self):
+        existScenarioOffline = self.isOfflineScenarioVersion()
+        if (not existScenarioOffline): existScenarioOffline = self.createNewProjectFromServer()
+        if existScenarioOffline: self.openExistingWaterIngProject()
+        else: self.handleCanNotOpenProjectScenario()
+
+
+    def handleCanNotOpenProjectScenario(self):
         iface.messageBar().pushMessage(self.tr("Error"), self.tr(f"Cannot open {self.ProjectName}-{self.ScenarioName} offline."), level=1, duration=5)
         
         if self.ProjectFK in self.ProjectsJSON_data:
@@ -242,7 +241,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.openProjectFromFolder()
         if not self.Offline:
             self.updateProject()
-        self.loadMap()
+        self.loadOpenStreetMapLayer()
         self.zoomToProject()
     
     def updateProject(self):
@@ -296,6 +295,29 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.loadOfflineScenario()  
         iface.mapCanvas().refresh()
     
+
+
+    def checkCreateInitializeGroup(self, project, groupName):
+        root = project.layerTreeRoot()
+
+        # Find the root group by name
+        group = root.findGroup(groupName)
+
+        # If the group doesn't exist, create it
+        if not group:
+            group = root.addGroup(groupName)
+
+        # Remove all layers from the group
+        for child in group.children():
+            if isinstance(child, QgsLayerTreeGroup):
+                group.removeChildNode(child)
+            else:
+                project.removeMapLayer(child.layerId())
+
+        return group
+
+
+
     def loadOfflineScenario(self):
         project = QgsProject.instance()
         
@@ -306,34 +328,25 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             print(f"Project {project_path} successfully loaded.")
         else:
             print(f"Failed to load project {project_path}.")
-        root = project.layerTreeRoot()
 
-        # Find the root group by name
-        group = root.findGroup("WaterIng Network Layout")
+        group = self.checkCreateInitializeGroup(project, "WaterIng Network Layout")
+        groupMonitoring =self.checkCreateInitializeGroup(project, "Sensors")
         
-        # If the group doesn't exist, create it
-        if not group:
-            group = root.addGroup("WaterIng Network Layout")
-
-        # Remove all layers from the group
-        for child in group.children():
-            if isinstance(child, QgsLayerTreeGroup):
-                group.removeChildNode(child)
-            else:
-                project.removeMapLayer(child.layerId())
 
         # Get Scenario Data
         scenario_path = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
         
         # Shp files in the order they are going to be loaded
         shp_files = ['watering_demand_nodes.shp', 
-                     'watering_waterMeter.shp', 
                      'watering_reservoirs.shp', 
                      'watering_tanks.shp', 
                      'watering_pumps.shp', 
                      'watering_valves.shp',                   
                      'watering_pipes.shp']
         
+        shp_filesMonitoring = ['watering_waterMeter.shp']
+        
+
         # Load all .shp files from the directory and add them to WaterIng root group
         for element_layer in shp_files:
             layer_path = os.path.join(scenario_path, element_layer)
@@ -343,8 +356,27 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             if layer.isValid():
                 project.addMapLayer(layer, False)
                 group.addLayer(layer)
+                #group.insertChildNode(1, QgsLayerTreeLayer(layer))
+            else: 
+                print("Layer not valid: ",element_layer)
+
+        for element_layer in shp_filesMonitoring:
+            layer_path = os.path.join(scenario_path, element_layer)
+            layer_name = os.path.splitext(element_layer)[0]
+            layer = QgsVectorLayer(layer_path, layer_name, "ogr")
+
+            if layer.isValid():
+                project.addMapLayer(layer, False)
+                groupMonitoring.addLayer(layer)
+                #groupMonitoring.insertChildNode(1, QgsLayerTreeLayer(layer))
+            else: 
+                print("Layer not valid: ",element_layer)
+
+
 
     def createNewProjectFromServer(self):
+        if self.Offline: return False
+
         #project name
         project = QgsProject.instance()
         name = self.newProjectNameInput.text()
@@ -365,6 +397,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         #load layers
         self.CreateLayers()
 
+        return True
+    
+
     def createScenarioFolder(self):
         self.writeWateringMetadata()
         scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
@@ -374,14 +409,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         os.makedirs(self.scenario_folder, exist_ok=True)
     
     def CreateLayers(self):
-        root = QgsProject.instance().layerTreeRoot()
-        shapeGroup = root.addGroup("WaterIng Network Layout")
-
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         self.myScenarioUnitOfWork.loadAll()
         
-        self.loadMap()
-        self.zoomToProject()
+        self.loadOpenStreetMapLayer()
         self.setStatusBar()
         self.writeScenarioInProjectsJSON()
         self.done(True) #instead of just closing we call done(true) to return 1 as result of this dialog modal execution
@@ -393,7 +424,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         WateringUtils.setProjectMetadata("scenario_name", self.listOfScenarios[self.scenarios_box.currentIndex()][0])
         WateringUtils.setProjectMetadata("scenario_id", self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         
-    def loadMap(self):
+    def loadOpenStreetMapLayer(self):
         map_layer = "Open Street Maps"
         if not any(layer.name() == map_layer for layer in QgsProject.instance().mapLayers().values()):
             tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
