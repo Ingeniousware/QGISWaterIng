@@ -42,17 +42,21 @@ class PipeNodeRepository(AbstractRepository):
         self.PipeServerDict = {}
         self.PipeOfflineDict = {}
         
-    def creatPipesLayer(self):
-        self.Response = self.loadElements()
-        self.createElementLayerFromServerResponse()
-        
+   
+
+    def initializeRepository(self):
+        super(PipeNodeRepository, self).initializeRepository() 
+        self.openLayers(None, 0.7) 
+
+
     def setElementSymbol(self, layer, layer_symbol, layer_size):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
         symbol_layer = symbol.symbolLayer(0)
         symbol_layer.setColor(QColor.fromRgb(13, 42, 174))
-        symbol_layer.setWidth(0.7)
+        symbol_layer.setWidth(layer_size)
         layer.renderer().setSymbol(symbol)
         layer.saveNamedStyle(self.FileQml)
+        layer.triggerRepaint()
 
    
     def getServerDict(self):
@@ -82,20 +86,18 @@ class PipeNodeRepository(AbstractRepository):
             self.OfflineDict[feature["ID"]] = attributes
 
 
-    def createElementLayerFromServerResponse(self):
+    def createElementLayerFromServerResponse(self, serverResponse):
         print("CREATING PIPES")
         fields = self.setElementFields(self.field_definitions)
         self.currentLayer = QgsVectorLayer("LineString?crs=" + self.destCrs.authid(), "Line Layer", "memory")
         self.currentLayer.dataProvider().addAttributes(fields)
         self.currentLayer.updateFields()
         
-        response_data = self.Response.json()["data"]
+        response_data = serverResponse.json()["data"]
 
         for elementJSON in response_data:            
             self.addElementFromJSON(elementJSON)
 
-        self.writeShp()
-        self.setSymbolAndOpenPipesLayer()
             
     def addElementFromJSON(self, elementJSON):
         try:
@@ -291,6 +293,8 @@ class PipeNodeRepository(AbstractRepository):
         
         self.Layer.commitChanges()
         
+
+
     def getPipeTransformedCrs(self, point):
         source_crs = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS 84
         dest_crs = QgsCoordinateReferenceSystem("EPSG:3857")   # Web Mercator
@@ -301,17 +305,3 @@ class PipeNodeRepository(AbstractRepository):
         
         return QgsPointXY(point.x(), point.y())
     
-    def setSymbolAndOpenPipesLayer(self):
-        layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
-        symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-        symbol_layer = symbol.symbolLayer(0)
-        symbol_layer.setColor(QColor.fromRgb(13, 42, 174))
-        symbol_layer.setWidth(0.7)
-        layer.renderer().setSymbol(symbol)
-        layer.saveNamedStyle(self.FileQml)
-
-        root = QgsProject.instance().layerTreeRoot()
-        shapeGroup = root.findGroup("WaterIng Network Layout")
-        shapeGroup.insertChildNode(1, QgsLayerTreeLayer(layer))
-
-        QgsProject.instance().addMapLayer(layer, False)

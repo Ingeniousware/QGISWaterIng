@@ -149,6 +149,8 @@ class AbstractRepository():
         #Write shapefile
         self.writeShp()
 
+        
+
     def writeShp(self):
         writer = QgsVectorFileWriter.writeAsVectorFormat(self.currentLayer, self.StorageShapeFile, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
         if writer[0] == QgsVectorFileWriter.NoError:
@@ -172,6 +174,7 @@ class AbstractRepository():
 
             #QgsProject.instance().addMapLayer(element_layer)
             print("opened successfully:", element_layer.name())
+
 
     def setElementSymbol(self, layer, layer_symbol, layer_size):
         renderer = layer.renderer()

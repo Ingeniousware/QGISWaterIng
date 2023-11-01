@@ -27,7 +27,8 @@ class scenarioUnitOfWork():
                                  self.reservoirNodeRepository,
                                  self.waterMeterNodeRepository,
                                  self.valveNodeRepository,                                 
-                                 self.pumpNodeRepository]
+                                 self.pumpNodeRepository,
+                                 self.pipeNodeRepository]
         
         self.lastUpdatedToServer = None
         self.lastUpdatedFromServer = None
@@ -36,18 +37,19 @@ class scenarioUnitOfWork():
     def loadAll(self):
         for element in self.list_of_elements:
             element.initializeRepository()
-            
-        self.pipeNodeRepository.creatPipesLayer()
+
         
     def updateAll(self):
 
         self.lastUpdatedFromServer = datetime.now()
+
         for element in self.list_of_elements:
-            element.updateFromServerToOffline(self.lastUpdatedToServer)
-        self.pipeNodeRepository.updatePipes(self.lastUpdatedToServer)
+            element.updateFromServerToOffline(self.lastUpdatedFromServer)
+    
+        
         """self.lastUpdatedFromServer = datetime.now()
         for element in self.list_of_elements:
-            element.updateFromOfflineToServer(self.lastUpdatedFromServer) """
+            element.updateFromOfflineToServer(self.lastUpdatedToServer) """
 
 
         
