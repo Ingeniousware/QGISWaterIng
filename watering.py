@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 
 # Import QGis
-import time
-
-
-from qgis.core import QgsProject
+from qgis.core import QgsProject, Qgis
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QAction, QMessageBox
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 from qgis.utils import iface
@@ -15,6 +12,10 @@ from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
 # Initialize Qt resources from file resources.py
 from .resources import *
 import pickle
+import time
+import shutil
+import json
+
 # Import the code for the dialog
 
 from .maptools.toolbarToolManager import toolbarToolManager
@@ -337,6 +338,14 @@ class QGISPlugin_WaterIng:
         self.toolIdentify = QgsMapToolIdentify(self.canvas)
         self.toolIdentify.setAction(self.iface.actionIdentify())
         self.toolbar.addAction(self.iface.actionIdentify())
+        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_cache.png'
+        self.deleteCacheFromWaterIng = self.add_action(
+            icon_path,
+            text=self.tr(u'Clean cache'),
+            callback=self.cleanCacheMessageBox,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
 
         
     def unload(self):
@@ -361,34 +370,35 @@ class QGISPlugin_WaterIng:
         self.dlg = WateringLoad()
         self.dlg.show() 
         if (self.dlg.exec_() == 1):
-            self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork                
-            print(self.scenarioUnitOFWork)
-            self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo)
-            self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
-            self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
-            self.updateActionScenarioStateOpen()
-            
-            
-            server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
-
-            self.hub_connection = HubConnectionBuilder()\
-                .with_url(server_url, options={"verify_ssl": False, 
-                                            "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
-                .with_automatic_reconnect({
-                        "type": "interval",
-                        "keep_alive_interval": 10,
-                        "intervals": [1, 3, 5, 6, 7, 87, 3]
-                    }).build()
-
-            #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
-            self.hub_connection.on_open(self.createOnlineConnectionChannels)
-            self.hub_connection.on_close(lambda: print("connection closed"))
-            self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+            self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork   
+            if not self.dlg.Offline:          
+                print(self.scenarioUnitOFWork)
+                self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo)
+                self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
+                self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
+                self.updateActionScenarioStateOpen()
                 
-            self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+                
+                server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
-            
-            self.hub_connection.start()
+                self.hub_connection = HubConnectionBuilder()\
+                    .with_url(server_url, options={"verify_ssl": False, 
+                                                "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
+                    .with_automatic_reconnect({
+                            "type": "interval",
+                            "keep_alive_interval": 10,
+                            "intervals": [1, 3, 5, 6, 7, 87, 3]
+                        }).build()
+
+                #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+                self.hub_connection.on_open(self.createOnlineConnectionChannels)
+                self.hub_connection.on_close(lambda: print("connection closed"))
+                self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+                    
+                self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+
+                
+                self.hub_connection.start()
 
             print("before updating options")                
             self.updateActionStateOpen()
@@ -441,9 +451,6 @@ class QGISPlugin_WaterIng:
         else:
             self.canvas.unsetMapTool(self.toolInsertSensorNode)
             self.activeMapTool = None  
-
-
-
 
     def activateMapTool(self, mapToolButtonAction):
         if (mapToolButtonAction.isChecked()):
@@ -703,14 +710,37 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None:
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
-            #serialized_obj_retrieved = bytes.fromhex(os.environ["SCENARIO"])
-
-            # Deserialize the object
-            #deserialized_obj = pickle.loads(serialized_obj_retrieved)
-
-            #print(deserialized_obj.value)
             self.scenarioUnitOFWork.updateAll()
 
+
+    def cleanCache(self):
+        watering_appdata_folder = WateringUtils.get_app_data_path() + "/QGISWatering/"
+        
+        for item in os.listdir(watering_appdata_folder):
+            item_path = os.path.join(watering_appdata_folder, item)
+            if os.path.isfile(item_path):
+                os.remove(item_path)  # remove file
+            elif os.path.isdir(item_path):
+                shutil.rmtree(item_path)  # remove directory
+
+        projectsJSON_path = watering_appdata_folder + 'projects.json'
+        
+        data = {}  
+        with open(projectsJSON_path, 'w') as json_file:
+            json.dump(data, json_file)
+            
+        iface.messageBar().pushMessage(self.tr("WaterIng projects from cache memory cleared successfully!"), level=Qgis.Success, duration=5)
+
+    def cleanCacheMessageBox(self):
+        project = QgsProject.instance()
+        response = QMessageBox.question(None,
+                                        "Clean cache",
+                                        "Are you sure you want to delete all WaterIng projects from the cache memory?",
+                                        QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+
+        if response == QMessageBox.Yes: self.cleanCache()
+        
+        if project: project.clear()
 
     def setActiveStateUndo(self, activeState):
         print("Entering the activation of undo button")
@@ -718,4 +748,5 @@ class QGISPlugin_WaterIng:
     
     def setActiveStateRedo(self, activeState):
         self.redoAction.setEnabled(activeState)
+    
     

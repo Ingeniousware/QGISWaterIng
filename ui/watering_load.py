@@ -145,9 +145,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         else:
             self.startProject()
 
-
-        
-
     def saveCurrentProject(self):
         project = QgsProject.instance()
         if project.isDirty():
@@ -178,32 +175,22 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         if scenarios and 0 <= current_index < len(scenarios):
             self.ScenarioName, self.ScenarioFK = scenarios[current_index][0], scenarios[current_index][1]
-            
-            if self.Offline:
-                self.handleOfflineScenario()
-            else:
-                self.handleOnlineScenario()
+            self.handleValidScenario()
         else:
             self.handleInvalidScenario()
-
-
+        
+        isThereConnectionAtDialog = self.Offline
         self.done(True) #instead of just closing we call done(true) to return 1 as result of this dialog modal execution
         self.close()
         
-
-
-
-    def handleOfflineScenario(self):
+    def handleValidScenario(self):
         if self.isOfflineScenarioVersion():
-            self.openProjectFromFolder()
+            self.openExistingWaterIngProject()
         else:
-            self.handleInvalidScenario()
-
-    def handleOnlineScenario(self):
-        if self.isOfflineScenarioVersion():
-            self.openAndUpdate()
-        else:
-            self.createNewProjectFromServer()
+            if self.Offline:
+                self.handleInvalidScenario()
+            else:
+                self.createNewProjectFromServer()
 
     def handleInvalidScenario(self):
         iface.messageBar().pushMessage(self.tr("Error"), self.tr(f"Cannot open {self.ProjectName}-{self.ScenarioName} offline."), level=1, duration=5)
@@ -212,7 +199,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             if self.ProjectsJSON_data[self.ProjectFK]["scenarios"] != {}:
                 if self.ScenarioFK in self.ProjectsJSON_data[self.ProjectFK]["scenarios"]:
                     del self.ProjectsJSON_data[self.ProjectFK]["scenarios"][self.ScenarioFK]
-                    #self.ProjectsJSON_data.pop(self.ProjectsJSON_data[self.ProjectFK]["scenarios"][self.ScenarioFK], None) 
             # If there is no scenario in projects.json[ProjectFK], delete this project
             else:
                 del self.ProjectsJSON_data[self.ProjectFK]
@@ -250,11 +236,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         return False
 
-    def openAndUpdate(self):
+    def openExistingWaterIngProject(self):
         self.OfflineProjects = self.getOfflineProjects()
         self.OfflineScenarios = self.getOfflineScenarios(self.ProjectFK)
         self.openProjectFromFolder()
-        self.updateProject()
+        if not self.Offline:
+            self.updateProject()
         self.loadMap()
         self.zoomToProject()
     
