@@ -18,13 +18,15 @@ class AbstractRepository():
         self.destCrs = QgsCoordinateReferenceSystem(3857)
         self.currentCRS = QgsCoordinateReferenceSystem(3857)
         self.Layer = None
-        self.currentLayer = None
         self.ServerDict = {}
         self.OfflineDict = {}
         self.Response = None
         self.FieldDefinitions = None
         self.Attributes = None
-        self.connectorToServer = None        
+        self.toAddFeatures = None
+        self.pr = None
+        self.connectorToServer = None
+        self.currentLayer = None
         self.numberLocalFieldsOnly = 1
 
     def setConnectorToServer(self, connector):
@@ -47,22 +49,30 @@ class AbstractRepository():
     def createElementLayerFromServerResponse(self, response):
         fields = self.setElementFields(self.field_definitions)
         self.currentLayer = QgsVectorLayer("Point?crs=" + self.destCrs.authid(), "New Layer", "memory")
-        self.currentLayer.dataProvider().addAttributes(fields)
+        self.pr = self.currentLayer.dataProvider()
+        self.pr.addAttributes(fields)
         self.currentLayer.updateFields()
         
         response_data = response.json()["data"]
 
+        self.toAddFeatures = []
         for elementJSON in response_data:            
             self.addElementFromJSON(elementJSON)
-            
+        
+        self.pr.addFeatures(self.toAddFeatures)
         self.currentLayer.updateExtents()
-    
+        
+        features = self.currentLayer.getFeatures()
+        
+        #PRINT FEATURES
+        print("FEATURES")
+        # Iterate through the features and print their attributes and geometry
+        for feature in features:
+            print(f'Feature ID: {feature.id()}')
+            print(f'Attributes: {feature.attributes()}')
+            print(f'Geometry: {feature.geometry().asWkt()}')  # Print geometry as Well-Known Text (WKT)
 
-    def getDateTimeNow(self):
-        current_datetime = datetime.now()
-        qdatetime = QDateTime(current_datetime)
-        return QVariant(qdatetime)
-
+        
     #When layer does not exists           
     def addElementFromJSON(self, elementJSON):
         try:
@@ -73,18 +83,15 @@ class AbstractRepository():
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
 
-            self.currentLayer.startEditing()
-
             print(element)
             for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
-                feature.setAttribute(self.field_definitions[i][0], element[i+2])  
+                print("ATTTRIBUTE: ", self.field_definitions[i][0], "EEMTN", element[i+2])
+                feature.setAttribute(self.field_definitions[i][0], element[i+2])
             
-            feature.setAttribute("lastUpdate", self.getDateTimeNow())            
-            self.currentLayer.addFeature(feature)
+            print("Datetime: ", datetime.now())
+            feature.setAttribute('lastUpdate', self.getDateTimeNow())
             #self.currentLayer.dataProvider().addFeature(feature)
-
-            self.currentLayer.commitChanges()
-
+            self.toAddFeatures.append(feature)
         except ValueError:
               print("Error->" + ValueError)
 
@@ -167,13 +174,11 @@ class AbstractRepository():
         
 
     def writeShp(self):
-        #TODO check the use of writeAsVectorFormatV3 because writeAsVectorFormat has been depreciated
         writer = QgsVectorFileWriter.writeAsVectorFormat(self.currentLayer, self.StorageShapeFile, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
         if writer[0] == QgsVectorFileWriter.NoError:
             print(f"Shapefile for {self.LayerName} created successfully!")
         else:
-            print("Error creating tanks Shapefile! ") #, QgsVectorFileWriter.errorMessage())
-
+            print("Error creating tanks Shapefile!")
         
     def openLayers(self, layer_symbol, layer_size):
         element_layer = QgsVectorLayer(self.StorageShapeFile, QFileInfo(self.StorageShapeFile).baseName(), "ogr")
@@ -343,3 +348,18 @@ class AbstractRepository():
         point = geom.asPoint()
         
         return (point.x(), point.y())
+    
+    def getDateTimeNow(self):
+        current_datetime = datetime.now()
+        qdatetime = QDateTime(current_datetime)
+        return QVariant(qdatetime)
+        
+class AttributeChangeHandler:
+    def __init__(self, layer):
+        self.layer = layer
+        self.layer.attributeValueChanged.connect(self.onChangesInAttribute)
+        
+    def onChangesInAttribute(self, feature_id, attribute_index, new_value):
+        print(f"Feature ID: {feature_id}")
+        print(f"Attribute Index: {attribute_index}")
+        print(f"New Value: {new_value}")
