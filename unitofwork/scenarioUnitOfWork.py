@@ -43,10 +43,8 @@ class scenarioUnitOfWork():
     def updateAll(self):
 
         self.lastUpdatedFromServer = datetime.now()
-
-        """ for element in self.list_of_elements:
-            element.updateFromServerToOffline(self.lastUpdatedFromServer) """
-    
+        for element in self.list_of_elements:
+            element.updateFromServerToOffline(self.lastUpdatedFromServer)
         
         self.lastUpdatedToServer = datetime.now()
         for element in self.list_of_elements:

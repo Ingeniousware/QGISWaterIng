@@ -187,10 +187,18 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
 
     def openProjectScenario(self):
+        justCreated = False
         existScenarioOffline = self.isOfflineScenarioVersion()
-        if (not existScenarioOffline): existScenarioOffline = self.createNewProjectFromServer()
-        if existScenarioOffline: self.openExistingWaterIngProject()
-        else: self.handleCanNotOpenProjectScenario()
+        
+        if (not existScenarioOffline): 
+            existScenarioOffline = self.createNewProjectFromServer()
+            justCreated = True
+        
+        if existScenarioOffline: self.openExistingWaterIngProject(justCreated)
+        else: 
+            self.handleCanNotOpenProjectScenario()
+            return
+
 
 
     def handleCanNotOpenProjectScenario(self):
@@ -237,19 +245,19 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         return False
 
-    def openExistingWaterIngProject(self):
+    def openExistingWaterIngProject(self, justCreated):
         self.OfflineProjects = self.getOfflineProjects()
         self.OfflineScenarios = self.getOfflineScenarios(self.ProjectFK)
         self.openProjectFromFolder()
         if not self.Offline:
-            self.updateProject()
+            self.updateProject(justCreated)
         self.loadOpenStreetMapLayer()
         self.zoomToProject()
     
-    def updateProject(self):
+    def updateProject(self, justCreated):
         self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        self.myScenarioUnitOfWork.updateAll()
+        if (not justCreated): self.myScenarioUnitOfWork.updateAll()
         
     def setWateringFolderAppData(self, path):
         #Creates directory QGISWatering inside Appdata
