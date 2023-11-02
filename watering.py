@@ -226,7 +226,7 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         self.openOptimizationManagerAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
+        """ icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
         self.insertSensorAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Sensor Optimization'),
@@ -234,7 +234,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.insertSensorAction.setCheckable(True)        
-        self.insertSensorAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.insertSensorAction.setEnabled(not WateringUtils.isScenarioNotOpened()) """
 
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.png'
@@ -608,9 +608,9 @@ class QGISPlugin_WaterIng:
 
 
     def updateActionScenarioStateOpen(self):
-        self.toolInsertSensorNodePlacement = InsertSensorNodeToolPlacement(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)              
+        """ self.toolInsertSensorNodePlacement = InsertSensorNodeToolPlacement(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)              
         self.toolInsertSensorNodePlacement.setAction(self.insertSensorAction)
-        self.insertSensorAction.setEnabled(True)
+        self.insertSensorAction.setEnabled(True) """
             
         self.toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
         self.toolInsertDemandNode.setAction(self.insertDemandNodeAction)
