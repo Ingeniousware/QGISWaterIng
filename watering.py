@@ -179,7 +179,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_load_elements.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Import.png'
         self.importFileINP = self.add_action(
             icon_path,
             text=self.tr(u'Import INP File'),
