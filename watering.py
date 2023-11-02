@@ -240,7 +240,7 @@ class QGISPlugin_WaterIng:
         self.insertDemandNodeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Demand Node'),
-            callback=self.activateMapTool,
+            callback=self.activateToolInsertDemandNode,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.insertDemandNodeAction.setCheckable(True)        

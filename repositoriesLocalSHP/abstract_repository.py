@@ -236,11 +236,13 @@ class AbstractRepository():
         if self.connectorToServer:
             print("Entering updateFromOfflineToServer")
             self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-            stringLastUpdatedToServer = str(lastUpdatedToServer)
-            features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdate'] > stringLastUpdatedToServer].sort(key=lambda element: element['lastUpdate'])          
-            for feature in features:       
-                print("Updating feature from offline to server")                                             
-                self.connectorToServer.addElementToServer(feature)
+            stringLastUpdatedToServer = (str(lastUpdatedToServer)).replace("-", "/")
+            #features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdate'] > stringLastUpdatedToServer].sort(key=lambda element: element['lastUpdate'])          
+            #TODO fix this to sort the features before going to the next loop
+            for feature in self.Layer.getFeatures():    
+                if feature['lastUpdate'] > stringLastUpdatedToServer:   
+                    print("Updating feature from offline to server ", feature['lastUpdate'], "  ", stringLastUpdatedToServer)                                             
+                    self.connectorToServer.addElementToServer(feature)
 
 
 

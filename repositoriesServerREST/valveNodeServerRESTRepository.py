@@ -17,6 +17,7 @@ class valveNodeServerRESTRepository(abstractServerRESTRepository):
         super(valveNodeServerRESTRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = WateringUtils.getServerUrl() + "/api/v1/WaterValve"
         self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterValve"
+        self.UrlPut = WateringUtils.getServerUrl() + "/api/v1/WaterValve"
         
 
 

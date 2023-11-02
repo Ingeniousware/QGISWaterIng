@@ -17,6 +17,7 @@ class tankNodeServerRESTRepository(abstractServerRESTRepository):
         super(tankNodeServerRESTRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = WateringUtils.getServerUrl() + "/api/v1/TankNode"
         self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/TankNode"
+        self.UrlPut = WateringUtils.getServerUrl() + "/api/v1/TankNode"
         
 
 

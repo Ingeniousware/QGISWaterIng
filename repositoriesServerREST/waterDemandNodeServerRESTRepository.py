@@ -18,6 +18,7 @@ class waterDemandNodeServerRESTRepository(abstractServerRESTRepository):
         super(waterDemandNodeServerRESTRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = WateringUtils.getServerUrl() + "/api/v1/DemandNode"
         self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/DemandNode"
+        self.UrlPut = WateringUtils.getServerUrl() + "/api/v1/DemandNode"
         
 
 

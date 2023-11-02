@@ -54,13 +54,18 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         y = transGeometry.asPoint().y()
 
 
+        id = feature["ID"]
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
         baseDemand = feature["B. Demand"]
 
-
-        serverKeyId = uuid.uuid4()
+        isNew = False
+        if (id == None): 
+            serverKeyId = uuid.uuid4()
+            isNew = True
+        else: serverKeyId = uuid.UUID(id)
+        
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
@@ -77,7 +82,10 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-        serverResponse = self.serverRepository.postToServer(elementJSON)
+
+        if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
+        else: serverResponse = self.serverRepository.putToServer(elementJSON)
+
         
         if serverResponse.status_code == 200:
             print("Water Demand Node was sent succesfully to the server")
@@ -92,7 +100,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
         else: 
-            print("Failed on sendig Water Demand Node to the server")
+            print("Failed on sendig Water Demand Node to the server: ", serverResponse.status_code)
 
     
 

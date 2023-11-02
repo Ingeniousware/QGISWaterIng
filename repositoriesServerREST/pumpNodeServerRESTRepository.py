@@ -17,6 +17,7 @@ class pumpNodeServerRESTRepository(abstractServerRESTRepository):
         super(pumpNodeServerRESTRepository, self).__init__(token, scenarioFK)      
         self.UrlGet = WateringUtils.getServerUrl() + "/api/v1/WaterPump"
         self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterPump"
+        self.UrlPut = WateringUtils.getServerUrl() + "/api/v1/WaterPump"
         
 
 
