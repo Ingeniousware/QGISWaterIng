@@ -259,7 +259,7 @@ class QGISPlugin_WaterIng:
         self.insertTankNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/pipe.png'
         self.insertWaterPipeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Water Pipe'),

@@ -31,6 +31,7 @@
         <file>images/zoomAll.png</file>
         <file>images/selection.png</file>
         <file>images/Import.png</file>
+        <file>images/pipe.png</file>
 
     </qresource>
 </RCC>
