@@ -354,7 +354,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                      'watering_valves.shp',                   
                      'watering_pipes.shp']
         
-        shp_filesMonitoring = ['watering_waterMeter.shp']
+        shp_filesMonitoring = ['watering_waterMeter.shp',
+                               'watering_sensors.shp']
         
 
         # Load all .shp files from the directory and add them to WaterIng root group

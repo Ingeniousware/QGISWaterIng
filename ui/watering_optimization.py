@@ -18,7 +18,7 @@ import os
 import math
 import requests
 from ..watering_utils import WateringUtils
-from ..maptools.insertSensorNodeTool import InsertSensorNodeTool
+from ..maptools.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacement
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_optimization_dialog.ui'))
@@ -130,7 +130,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.cleanMarkers()
         self.statusText.setText("Creating")
         self.statusText.setStyleSheet("color: lightyellow")
-        self.toolInsertNode = InsertSensorNodeTool(self.canvas)
+        self.toolInsertNode = InsertSensorNodeToolPlacement(self.canvas)
         self.canvas.setMapTool(self.toolInsertNode)
         self.close()
         

@@ -1,5 +1,6 @@
 
 from ..repositoriesLocalSHP.pipeNodeRepository import PipeNodeRepository
+from ..repositoriesLocalSHP.sensorNodeRepository import SensorNodeRepository
 from ..repositoriesLocalSHP.pumpNodeRepository import PumpNodeRepository
 from ..repositoriesLocalSHP.reservoirNodeRepository import ReservoirNodeRepository
 from ..repositoriesLocalSHP.tankNodeRepository import TankNodeRepository
@@ -21,7 +22,8 @@ class scenarioUnitOfWork():
         self.pipeNodeRepository = PipeNodeRepository(self.token, project_path, scenarioFK)
         self.waterMeterNodeRepository = WaterMeterNodeRepository(self.token, project_path, scenarioFK)
         self.valveNodeRepository = ValveNodeRepository(self.token, project_path, scenarioFK)  
-        self.pumpNodeRepository = PumpNodeRepository(self.token, project_path, scenarioFK) 
+        self.pumpNodeRepository = PumpNodeRepository(self.token, project_path, scenarioFK)
+        self.sensorNodeRepository = SensorNodeRepository(self.token, project_path, scenarioFK)
 
         self.list_of_elements = [self.waterDemandNodeRepository,
                                  self.tankNodeRepository, 
@@ -29,7 +31,9 @@ class scenarioUnitOfWork():
                                  self.waterMeterNodeRepository,
                                  self.valveNodeRepository,                                 
                                  self.pumpNodeRepository,
-                                 self.pipeNodeRepository]
+                                 self.pipeNodeRepository,
+                                 self.sensorNodeRepository
+                                ]
         
         self.lastUpdatedToServer = None
         self.lastUpdatedFromServer = None
