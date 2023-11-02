@@ -84,7 +84,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
 
         if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
-        else: serverResponse = self.serverRepository.putToServer(elementJSON)
+        else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
 
         
         if serverResponse.status_code == 200:

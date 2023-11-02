@@ -29,9 +29,9 @@ class abstractServerRESTRepository():
 
 
     def postToServer(self, elementJSON):
-        print("posting -> ", elementJSON)
+        """ print("posting -> ", elementJSON)
         print(self.ScenarioFK)
-        print(self.Token)
+        print(self.Token) """
         data = {'scenarioKeyId': self.ScenarioFK}
         headers = {'Authorization': "Bearer {}".format(self.Token)} 
         response = requests.post(self.UrlPost, params=data, headers=headers, json=elementJSON)
@@ -39,13 +39,13 @@ class abstractServerRESTRepository():
         
     
 
-    def putToServer(self, elementJSON):
-        print("putting -> ", elementJSON)
+    def putToServer(self, elementJSON, serverKeyId):
+        """  print("putting -> ", elementJSON)
         print(self.ScenarioFK)
-        print(self.Token)
+        print(self.Token) """
         data = {'scenarioKeyId': self.ScenarioFK}
         headers = {'Authorization': "Bearer {}".format(self.Token)} 
-        response = requests.put(self.UrlPut, params=data, headers=headers, json=elementJSON)
+        response = requests.put(self.UrlPut + "/" + str(serverKeyId), params=data, headers=headers, json=elementJSON)
         return response
         
 
