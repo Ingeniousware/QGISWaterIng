@@ -209,7 +209,7 @@ class AbstractRepository():
         print(self.LayerName)
         print(self.FieldDefinitions)
 
-        self.Attributes = self.features[1:]
+        self.Attributes = self.features[3:]
         self.getServerDict()
         self.getOfflineDict()
         
@@ -230,15 +230,21 @@ class AbstractRepository():
                 self.updateElement(element_id)
     
 
+
+
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
-            features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdate'] > lastUpdatedToServer].sort(key=lambda element: element['lastUpdate'])          
-            for feature in features:                                                    
+            print("Entering updateFromOfflineToServer")
+            self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+            stringLastUpdatedToServer = str(lastUpdatedToServer)
+            features = [feature for feature in self.Layer.getFeatures() if feature['lastUpdate'] > stringLastUpdatedToServer].sort(key=lambda element: element['lastUpdate'])          
+            for feature in features:       
+                print("Updating feature from offline to server")                                             
                 self.connectorToServer.addElementToServer(feature)
 
 
 
-    def updateAll(self):
+    """ def updateAll(self):
         print("Update tool has been activated")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
@@ -248,7 +254,7 @@ class AbstractRepository():
         self.getOfflineDict()
         
         self.updateFromServerToOffline()
-        self.updateFromOfflineToServer()
+        self.updateFromOfflineToServer() """
 
     
     def getServerDict(self):

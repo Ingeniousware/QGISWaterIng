@@ -375,7 +375,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 groupMonitoring.addLayer(layer)
 
                 layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
-                layer.attributeValueChanged.connect(self.onChangesInAttribute)             
+                layer.attributeValueChanged.connect(self.onChangesInAttribute)     
+                #TODO disconnect this events when closing the project scenario        
 
             else: 
                 print("Layer not valid: ",element_layer)
