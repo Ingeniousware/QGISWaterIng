@@ -188,6 +188,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     def openProjectScenario(self):
         justCreated = False
+        self.writeWateringMetadata()
         existScenarioOffline = self.isOfflineScenarioVersion()
         
         if (not existScenarioOffline): 
@@ -354,7 +355,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                      'watering_valves.shp',                   
                      'watering_pipes.shp']
         
-        shp_filesMonitoring = ['watering_waterMeter.shp']
+        shp_filesMonitoring = ['watering_waterMeter.shp',
+                               'watering_sensors.shp']
         
 
         # Load all .shp files from the directory and add them to WaterIng root group
@@ -428,14 +430,16 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         return True
     
+    
 
     def createScenarioFolder(self):
-        self.writeWateringMetadata()
         scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
         
         #Create scenario folder
         self.scenario_folder = self.project_path + "/" + scenarioFK
         os.makedirs(self.scenario_folder, exist_ok=True)
+
+
     
     def CreateLayers(self):
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])

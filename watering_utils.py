@@ -57,7 +57,9 @@ class WateringUtils():
         scenarioId = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         projectId = QgsProject.instance().readEntry("watering","project_id","default text")[0] 
         token = os.environ.get('TOKEN')
-        
+        print("scenario" + scenarioId)
+        print("project" + projectId)
+        print("token" + token)
         return scenarioId != "default text" and projectId != "default text" and token is not None
              
     def getServerUrl():
