@@ -59,8 +59,6 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         z = feature["Z[m]"]
         model = feature["Model FK"]
         speed = feature["Rel. Speed"]
-        demand = feature["Demand"]
-        demandC = feature["Demand C"]
 
 
         serverKeyId = uuid.uuid4()

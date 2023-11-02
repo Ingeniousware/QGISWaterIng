@@ -61,5 +61,4 @@ class ValveNodeRepository(AbstractRepository):
         feature.setAttribute("minorLossC", minorLossCoef)
         feature.setAttribute("initialSta", initialStatus)
         feature.setAttribute("typeValvul", typeValve)
-        feature.setAttribute("Temp Field", temp)
     
