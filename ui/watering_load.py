@@ -12,6 +12,8 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QDockWidget, QLabel
 from PyQt5.QtCore import Qt
+from functools import partial
+
 
 from ..unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
 from ..watering_utils import WateringUtils
@@ -355,8 +357,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
             if layer.isValid():
                 project.addMapLayer(layer, False)
-                group.addLayer(layer)
-                #group.insertChildNode(1, QgsLayerTreeLayer(layer))
+                group.addLayer(layer)          
+
+                layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
+                layer.attributeValueChanged.connect(self.onChangesInAttribute)             
+
             else: 
                 print("Layer not valid: ",element_layer)
 
@@ -368,9 +373,24 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             if layer.isValid():
                 project.addMapLayer(layer, False)
                 groupMonitoring.addLayer(layer)
-                #groupMonitoring.insertChildNode(1, QgsLayerTreeLayer(layer))
+
+                layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
+                layer.attributeValueChanged.connect(self.onChangesInAttribute)             
+
             else: 
                 print("Layer not valid: ",element_layer)
+
+
+  
+
+    def layerEditionStarted(self, layer_name):
+        print("Edition started at layer ", layer_name)
+
+    def onChangesInAttribute(self, feature_id, attribute_index, new_value):
+        print(f"Feature ID: {feature_id}")
+        print(f"Attribute Index: {attribute_index}")
+        print(f"New Value: {new_value}")
+
 
 
 

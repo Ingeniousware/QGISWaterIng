@@ -65,12 +65,12 @@ class AbstractRepository():
         features = self.currentLayer.getFeatures()
         
         #PRINT FEATURES
-        print("FEATURES")
+        #print("FEATURES")
         # Iterate through the features and print their attributes and geometry
-        for feature in features:
-            print(f'Feature ID: {feature.id()}')
-            print(f'Attributes: {feature.attributes()}')
-            print(f'Geometry: {feature.geometry().asWkt()}')  # Print geometry as Well-Known Text (WKT)
+        #for feature in features:
+            #print(f'Feature ID: {feature.id()}')
+            #print(f'Attributes: {feature.attributes()}')
+            #print(f'Geometry: {feature.geometry().asWkt()}')  # Print geometry as Well-Known Text (WKT)
 
         
     #When layer does not exists           
@@ -83,12 +83,12 @@ class AbstractRepository():
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
 
-            print(element)
+            #print(element)
             for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
-                print("ATTTRIBUTE: ", self.field_definitions[i][0], "EEMTN", element[i+2])
+                #print("ATTTRIBUTE: ", self.field_definitions[i][0], "EEMTN", element[i+2])
                 feature.setAttribute(self.field_definitions[i][0], element[i+2])
             
-            print("Datetime: ", datetime.now())
+            #print("Datetime: ", datetime.now())
             feature.setAttribute('lastUpdate', self.getDateTimeNow())
             #self.currentLayer.dataProvider().addFeature(feature)
             self.toAddFeatures.append(feature)
@@ -348,12 +348,3 @@ class AbstractRepository():
         qdatetime = QDateTime(current_datetime)
         return QVariant(qdatetime)
         
-class AttributeChangeHandler:
-    def __init__(self, layer):
-        self.layer = layer
-        self.layer.attributeValueChanged.connect(self.onChangesInAttribute)
-        
-    def onChangesInAttribute(self, feature_id, attribute_index, new_value):
-        print(f"Feature ID: {feature_id}")
-        print(f"Attribute Index: {attribute_index}")
-        print(f"New Value: {new_value}")
