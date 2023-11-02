@@ -30,6 +30,7 @@
         <file>images/Monitoring.png</file>
         <file>images/zoomAll.png</file>
         <file>images/selection.png</file>
+        <file>images/Import.png</file>
 
     </qresource>
 </RCC>
