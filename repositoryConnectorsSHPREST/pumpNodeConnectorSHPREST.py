@@ -26,7 +26,7 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def processPOSTElementToLocal(self, paraminput):
         print("Entering processPOSTElementToLocal")
-        print(paraminput)        
+           
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
         if not (serverKeyId in self.lastAddedElements):

@@ -16,5 +16,20 @@
         <file>images/icon_backward.png</file>
         <file>images/icon_forward.png</file>
         <file>images/icon_cache.png</file>
+        <file>images/Tank.png</file>
+        <file>images/Valve.png</file>
+        <file>images/WaterMeter.png</file>
+        <file>images/Reservoir.png</file>
+        <file>images/Pump.png</file>
+        <file>images/node.png</file>
+        <file>images/sensor.png</file>
+        <file>images/stop.png</file>
+        <file>images/start.png</file>
+        <file>images/Backward.png</file>
+        <file>images/Forward.png</file>
+        <file>images/Monitoring.png</file>
+        <file>images/zoomAll.png</file>
+        <file>images/selection.png</file>
+
     </qresource>
 </RCC>

@@ -237,7 +237,7 @@ class QGISPlugin_WaterIng:
         self.insertSensorAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.png'
         self.insertDemandNodeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Demand Node'),
@@ -248,7 +248,7 @@ class QGISPlugin_WaterIng:
         self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Tank.png'
         self.insertTankNodeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Tank Node'),
@@ -257,28 +257,6 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         self.insertTankNodeAction.setCheckable(True)        
         self.insertTankNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-
-
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_backward.png'
-        self.undoAction = self.add_action(
-            icon_path,
-            text=self.tr(u'unDo'),
-            callback=self.executeUnDoAction,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-        self.undoAction.setCheckable(False)        
-        self.undoAction.setEnabled(False)
-
-
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_forward.png'
-        self.redoAction = self.add_action(
-            icon_path,
-            text=self.tr(u'reDo'),
-            callback=self.executeReDoAction,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-        self.redoAction.setCheckable(False)        
-        self.redoAction.setEnabled(False)
 
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
@@ -292,7 +270,7 @@ class QGISPlugin_WaterIng:
         self.insertWaterPipeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Reservoir.png'
         self.insertReservoirNodeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Reservoir Node'),
@@ -303,7 +281,7 @@ class QGISPlugin_WaterIng:
         self.insertReservoirNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Valve.png'
         self.insertValveNodeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Valve Node'),
@@ -314,7 +292,7 @@ class QGISPlugin_WaterIng:
         self.insertValveNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Pump.png'
         self.insertPumpNodeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Pump Node'),
@@ -325,7 +303,7 @@ class QGISPlugin_WaterIng:
         self.insertPumpNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_add_node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
         self.insertSensorNodeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Sensor Node'),
@@ -336,7 +314,29 @@ class QGISPlugin_WaterIng:
         self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_measurement.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Backward.png'
+        self.undoAction = self.add_action(
+            icon_path,
+            text=self.tr(u'unDo'),
+            callback=self.executeUnDoAction,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.undoAction.setCheckable(False)        
+        self.undoAction.setEnabled(False)
+
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Forward.png'
+        self.redoAction = self.add_action(
+            icon_path,
+            text=self.tr(u'reDo'),
+            callback=self.executeReDoAction,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.redoAction.setCheckable(False)        
+        self.redoAction.setEnabled(False)
+
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Monitoring.png'
         self.readMeasurementsAction = self.add_action(
             icon_path,
             text=self.tr(u'Get Measurements'),
@@ -346,6 +346,8 @@ class QGISPlugin_WaterIng:
         self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
                                                        
         #adding a standard action to our toolbar
+        self.iface.actionIdentify().setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/selection.png'))
+
         self.toolIdentify = QgsMapToolIdentify(self.canvas)
         self.toolIdentify.setAction(self.iface.actionIdentify())
         self.toolbar.addAction(self.iface.actionIdentify())
@@ -642,15 +644,17 @@ class QGISPlugin_WaterIng:
               
     def updateActionStateOpen(self):
         #self.cleanMarkers()
+        print("before entering if")
         if WateringUtils.isWateringProject():
             self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
-            
+            print("before setting to true")
             #self.toolSelectNode.setAction(self.selectElementAction)
             self.readAnalysisAction.setEnabled(True)                            
             self.openOptimizationManagerAction.setEnabled(True)
             self.readMeasurementsAction.setEnabled(True)
             self.importFileINP.setEnabled(True)
             # self.selectElementAction.setEnabled(True)
+            print("After setting to true")
     
 
     def updateActionStateClose(self):

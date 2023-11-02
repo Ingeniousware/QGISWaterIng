@@ -188,6 +188,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     def openProjectScenario(self):
         justCreated = False
+        self.writeWateringMetadata()
         existScenarioOffline = self.isOfflineScenarioVersion()
         
         if (not existScenarioOffline): 
@@ -429,14 +430,16 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         return True
     
+    
 
     def createScenarioFolder(self):
-        self.writeWateringMetadata()
         scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
         
         #Create scenario folder
         self.scenario_folder = self.project_path + "/" + scenarioFK
         os.makedirs(self.scenario_folder, exist_ok=True)
+
+
     
     def CreateLayers(self):
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
