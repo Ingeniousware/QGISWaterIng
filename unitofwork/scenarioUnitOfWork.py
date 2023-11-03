@@ -35,24 +35,46 @@ class scenarioUnitOfWork():
                                  self.sensorNodeRepository
                                 ]
         
-        self.lastUpdatedToServer = WateringUtils.getDateTimeNow()
-        self.lastUpdatedFromServer = WateringUtils.getDateTimeNow()
-
+        self.lastUpdatedToServer = self.getLastUpdatedToServer()
+        self.lastUpdatedFromServer = self.getLastUpdatedFromServer()
 
     def loadAll(self):
         for element in self.list_of_elements:
             element.initializeRepository()
 
     def updateAll(self):
-
-        """self.lastUpdatedFromServer = WateringUtils.getDateTimeNow()
-        for element in self.list_of_elements:
-            element.updateFromServerToOffline(self.lastUpdatedFromServer)"""
+        now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
         
-        tempLastUpdatedToServer = WateringUtils.getDateTimeNow()
-        #print("Scenario unity of work last updated: ", self.lastUpdatedToServer.value().toString("yyyy/MM/dd HH:mm:ss.zzz"))
+        """for element in self.list_of_elements:
+            element.updateFromServerToOffline(self.lastUpdatedFromServer)
+        self.lastUpdatedFromServer = now"""
+        
         for element in self.list_of_elements:
             element.updateFromOfflineToServer(self.lastUpdatedToServer)
-        self.lastUpdatedFromServer = tempLastUpdatedToServer
+        self.lastUpdatedToServer = now
 
+        self.updateProjectMetadata(now)
         
+    def getLastUpdatedToServer(self):
+        date = WateringUtils.getProjectMetadata("lastUpdatedToServer")
+        
+        if date != "default text":
+            return date
+        else:
+            now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+            WateringUtils.setProjectMetadata("lastUpdatedToServer", now)
+            return now
+        
+    def getLastUpdatedFromServer(self):
+        date = WateringUtils.getProjectMetadata("lastUpdatedFromServer")
+        
+        if date != "default text":
+            return date
+        else:
+            now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+            WateringUtils.setProjectMetadata("lastUpdatedFromServer", now)
+            return now
+        
+    def updateProjectMetadata(self, now):
+        WateringUtils.setProjectMetadata("lastUpdatedToServer", now)
+        WateringUtils.setProjectMetadata("lastUpdatedFromServer", now)
