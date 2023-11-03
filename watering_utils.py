@@ -7,6 +7,7 @@ from qgis.utils import iface
 from qgis.core import Qgis, QgsProject
 from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtCore import QVariant, QDateTime
+from PyQt5.QtWidgets import QAction, QMessageBox
 
 from PyQt5.QtCore import QTimer
 from time import time, gmtime, strftime
@@ -58,11 +59,30 @@ class WateringUtils():
         scenarioId = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         projectId = QgsProject.instance().readEntry("watering","project_id","default text")[0] 
         token = os.environ.get('TOKEN')
-        print("scenario" + scenarioId)
-        print("project" + projectId)
-        print("token" + token)
+        
         return scenarioId != "default text" and projectId != "default text" and token is not None
-             
+    
+    def saveProjectBox():
+        project = QgsProject.instance()
+        if project.isDirty():
+            response = QMessageBox.question(None,
+                                            "Save Project",
+                                            "The current project has unsaved changes. Do you want to save it before creating a new project?",
+                                            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
+
+            if response == QMessageBox.Yes:
+                #self.project_path = project.readEntry("watering","project_path","default text")[0]
+                if WateringUtils.getProjectMetadata("project_path") != "default text":
+                    if project.write():
+                        iface.messageBar().pushMessage(self.tr(f"Project saved at {project.fileName()}"), level=Qgis.Success, duration=5)
+                    else:
+                        iface.messageBar().pushMessage(self.tr("Error"), self.tr("Failed to save the project."), level=1, duration=5)
+                else:
+                    iface.actionSaveProjectAs().trigger()
+       
+            elif response == QMessageBox.Cancel:
+                return
+            
     def getServerUrl():
         projectServerUrl = "default text"
         defaultUrl = "https://dev.watering.online"
