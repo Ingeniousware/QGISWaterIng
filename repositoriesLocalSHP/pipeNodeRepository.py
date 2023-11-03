@@ -1,12 +1,12 @@
 import os
 import requests
 from .abstract_repository import AbstractRepository
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsLayerTreeLayer
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSymbol, edit
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
-from datetime import datetime
 
 class PipeNodeRepository(AbstractRepository):
 
@@ -115,7 +115,7 @@ class PipeNodeRepository(AbstractRepository):
             for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
                 feature.setAttribute(self.field_definitions[i][0], element[i])
 
-            feature.setAttribute("lastUpdate", self.getDateTimeNow())            
+            feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())            
             self.currentLayer.addFeature(feature)
 
             self.currentLayer.commitChanges()
@@ -141,7 +141,7 @@ class PipeNodeRepository(AbstractRepository):
         for i in range(len(self.field_definitions)):
             feature.setAttribute(self.field_definitions[i][0], element[i+2])
 
-        feature['lastUpdate'] = datetime.now()
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -213,7 +213,7 @@ class PipeNodeRepository(AbstractRepository):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-1]]
         self.Attributes = self.features[1:]
-        self.timeAtUpdate = datetime.now()
+        self.timeAtUpdate = WateringUtils.getDateTimeNow()
         self.getPipeServerDict()
         self.getPipeOfflineDict()
         

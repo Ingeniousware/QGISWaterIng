@@ -43,6 +43,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.WateringFolder = WateringUtils.get_app_data_path() + "/QGISWatering/"
         self.ProjectsJSON= self.WateringFolder + 'projects.json'
         self.ProjectsJSON_data = None
+        self.block = False
         self.Offline = False
         self.initializeRepository()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
@@ -306,8 +307,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.loadOfflineScenario()  
         iface.mapCanvas().refresh()
     
-
-
     def checkCreateInitializeGroup(self, project, groupName):
         root = project.layerTreeRoot()
 
@@ -391,19 +390,36 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             else: 
                 print("Layer not valid: ",element_layer)
 
-
-  
-
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
 
     def onChangesInAttribute(self, feature_id, attribute_index, new_value):
+        sender_layer = iface.activeLayer()
+        
+        if self.block: return
+        
+        self.block = True
+        print("----CHANGING FEATURE----")
+        print(f"Layer: {sender_layer.name()}")
         print(f"Feature ID: {feature_id}")
         print(f"Attribute Index: {attribute_index}")
         print(f"New Value: {new_value}")
 
+        fields = sender_layer.fields()
+        lastUpdate_index = fields.indexFromName('lastUpdate')
+        
+        sender_layer.startEditing()
 
-
+        if sender_layer.changeAttributeValue(feature_id, lastUpdate_index, WateringUtils.getDateTimeNow()):
+            print(f"datetime updated for {feature_id} in {sender_layer.name()}")
+        else:
+            print("datetime not updated")
+            
+        sender_layer.commitChanges()
+        
+        self.block = False
+        
+        self.myScenarioUnitOfWork.updateAll()
 
     def createNewProjectFromServer(self):
         if self.Offline: return False

@@ -6,10 +6,11 @@ from qgis.PyQt import uic
 from qgis.utils import iface
 from qgis.core import Qgis, QgsProject
 from qgis.PyQt.QtWidgets import QProgressBar
-from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtCore import QVariant, QDateTime
 
 from PyQt5.QtCore import QTimer
 from time import time, gmtime, strftime
+from datetime import datetime
 import requests
 import os
 
@@ -156,3 +157,8 @@ class WateringUtils():
         else:
             # Other platforms or an error
             raise ValueError(f"Unsupported platform: {platform}")
+        
+    def getDateTimeNow():
+        current_datetime = datetime.now()
+        qdatetime = QDateTime(current_datetime)
+        return QVariant(qdatetime)

@@ -3,10 +3,9 @@ from ..watering_utils import WateringUtils
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
-from PyQt5.QtCore import QVariant, QFileInfo, QDateTime
+from PyQt5.QtCore import QFileInfo
 from PyQt5.QtGui import QColor
 from qgis.utils import iface
-from datetime import datetime
 
 class AbstractRepository():
 
@@ -89,7 +88,7 @@ class AbstractRepository():
                 feature.setAttribute(self.field_definitions[i][0], element[i+2])
             
             #print("Datetime: ", datetime.now())
-            feature.setAttribute('lastUpdate', self.getDateTimeNow())
+            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
             #self.currentLayer.dataProvider().addFeature(feature)
             self.toAddFeatures.append(feature)
         except ValueError:
@@ -110,7 +109,7 @@ class AbstractRepository():
         for i in range(len(self.field_definitions)):
             feature.setAttribute(self.field_definitions[i][0], element[i+2])
 
-        feature['lastUpdate'] = self.getDateTimeNow()
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -132,7 +131,7 @@ class AbstractRepository():
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
         self.setDefaultValues(feature)
-        feature['lastUpdate'] = self.getDateTimeNow()
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -350,9 +349,4 @@ class AbstractRepository():
         point = geom.asPoint()
         
         return (point.x(), point.y())
-    
-    def getDateTimeNow(self):
-        current_datetime = datetime.now()
-        qdatetime = QDateTime(current_datetime)
-        return QVariant(qdatetime)
         
