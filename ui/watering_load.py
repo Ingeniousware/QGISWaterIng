@@ -396,9 +396,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def onChangesInAttribute(self, feature_id, attribute_index, new_value):
         sender_layer = iface.activeLayer()
         
-        if self.block: return
-        
-        self.block = True
         print("----CHANGING FEATURE----")
         print(f"Layer: {sender_layer.name()}")
         print(f"Feature ID: {feature_id}")
@@ -408,18 +405,16 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         fields = sender_layer.fields()
         lastUpdate_index = fields.indexFromName('lastUpdate')
         
-        sender_layer.startEditing()
+        if lastUpdate_index == attribute_index: return 
 
-        if sender_layer.changeAttributeValue(feature_id, lastUpdate_index, WateringUtils.getDateTimeNow()):
-            print(f"datetime updated for {feature_id} in {sender_layer.name()}")
+        new_datetime = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        
+        if sender_layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
+            print(f"Last updated datetime updated for {feature_id} in {sender_layer.name()}")
         else:
-            print("datetime not updated")
+            print("Datetime could not be updated")
             
         sender_layer.commitChanges()
-        
-        self.block = False
-        
-        self.myScenarioUnitOfWork.updateAll()
 
     def createNewProjectFromServer(self):
         if self.Offline: return False

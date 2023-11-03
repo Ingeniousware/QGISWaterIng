@@ -35,24 +35,24 @@ class scenarioUnitOfWork():
                                  self.sensorNodeRepository
                                 ]
         
-        self.lastUpdatedToServer = None
-        self.lastUpdatedFromServer = None
+        self.lastUpdatedToServer = WateringUtils.getDateTimeNow()
+        self.lastUpdatedFromServer = WateringUtils.getDateTimeNow()
 
 
     def loadAll(self):
         for element in self.list_of_elements:
             element.initializeRepository()
 
-        
     def updateAll(self):
 
         """self.lastUpdatedFromServer = WateringUtils.getDateTimeNow()
         for element in self.list_of_elements:
             element.updateFromServerToOffline(self.lastUpdatedFromServer)"""
         
-        self.lastUpdatedToServer = WateringUtils.getDateTimeNow()
+        tempLastUpdatedToServer = WateringUtils.getDateTimeNow()
+        #print("Scenario unity of work last updated: ", self.lastUpdatedToServer.value().toString("yyyy/MM/dd HH:mm:ss.zzz"))
         for element in self.list_of_elements:
             element.updateFromOfflineToServer(self.lastUpdatedToServer)
-
+        self.lastUpdatedFromServer = tempLastUpdatedToServer
 
         
