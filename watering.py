@@ -729,6 +729,12 @@ class QGISPlugin_WaterIng:
 
 
     def cleanCache(self):
+        project = QgsProject.instance()
+        
+        if WateringUtils.isWateringProject():
+            WateringUtils.saveProjectBox()
+            if project: project.clear()
+            
         watering_appdata_folder = WateringUtils.get_app_data_path() + "/QGISWatering/"
         
         for item in os.listdir(watering_appdata_folder):
@@ -747,15 +753,12 @@ class QGISPlugin_WaterIng:
         iface.messageBar().pushMessage(self.tr("WaterIng projects from cache memory cleared successfully!"), level=Qgis.Success, duration=5)
 
     def cleanCacheMessageBox(self):
-        project = QgsProject.instance()
         response = QMessageBox.question(None,
                                         "Clean cache",
                                         "Are you sure you want to delete all WaterIng projects from the cache memory?",
                                         QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
 
         if response == QMessageBox.Yes: self.cleanCache()
-        
-        if project: project.clear()
 
     def setActiveStateUndo(self, activeState):
         print("Entering the activation of undo button")
