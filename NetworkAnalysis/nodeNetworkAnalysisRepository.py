@@ -19,5 +19,6 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.join_field = 'nodeKey'
         self.fields_to_add = ['pressure', 'waterDemand', 'waterAge']
         self.elementAnalysisResults()
+        print("before entering addCSVNonSpatialLayerToPanel in NodeNetworkAnalysisRepository")
         self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Nodes.csv", f"Nodes_{datetime}")
         self.joinLayersAttributes(f"Nodes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)

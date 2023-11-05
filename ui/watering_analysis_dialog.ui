@@ -191,23 +191,26 @@
           </property>
          </widget>
         </item>
-        <item row="1" column="1" colspan="4">
+        <item row="0" column="1" colspan="4">
          <widget class="QComboBox" name="BoxSelectType"/>
         </item>
+
         <item row="0" column="0">
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Simulator:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
          <widget class="QLabel" name="labelSelectType">
           <property name="text">
            <string>Type of Analysis:</string>
           </property>
          </widget>
         </item>
+
+        <item row="1" column="0">
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Simulator:</string>
+          </property>
+         </widget>
+        </item>
+        
         <item row="2" column="0">
          <widget class="QLabel" name="labelStartTime">
           <property name="text">
@@ -215,7 +218,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="1" colspan="4">
+        <item row="1" column="1" colspan="4">
          <widget class="QComboBox" name="BoxSimulator"/>
         </item>
         <item row="6" column="1">

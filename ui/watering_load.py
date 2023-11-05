@@ -121,6 +121,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 self.OfflineProjects = self.getOfflineProjects()
                 for i in range(0, len(self.OfflineProjects)):
                     self.projects_box.addItem(self.OfflineProjects[i][1])
+                    self.listOfProjects.append((self.OfflineProjects[i][1],
+                                                self.OfflineProjects[i][0]))
+                    
 
                 self.setOfflineScenarios()
                 self.projects_box.currentIndexChanged.connect(self.setOfflineScenarios)
@@ -135,6 +138,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         for i in range(0, len(self.OfflineScenarios)):
             self.scenarios_box.addItem(self.OfflineScenarios[i][0])
+            self.listOfScenarios.append((self.OfflineScenarios[i][0],
+                                         self.OfflineScenarios[i][1]))
             
     def checkExistingProject(self):
         #if there is a project opened
@@ -190,6 +195,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def openProjectScenario(self):
         justCreated = False
         self.writeWateringMetadata()
+        WateringUtils.setProjectMetadata("project_path", self.WateringFolder + self.ProjectFK)
+
         existScenarioOffline = self.isOfflineScenarioVersion()
         
         if (not existScenarioOffline): 
@@ -431,7 +438,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         project.write(self.projectPathQgsProject)
             
         WateringUtils.setProjectMetadata("local_project_name", project_name)
-        WateringUtils.setProjectMetadata("project_path", self.project_path)
 
         #create scenario folder
         self.createScenarioFolder()

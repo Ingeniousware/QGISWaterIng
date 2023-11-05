@@ -6,7 +6,7 @@ from qgis.PyQt import uic
 from qgis.utils import iface
 from qgis.core import Qgis, QgsProject
 from qgis.PyQt.QtWidgets import QProgressBar
-from PyQt5.QtCore import QVariant, QDateTime
+from PyQt5.QtCore import QVariant, QDateTime, QCoreApplication
 
 from PyQt5.QtCore import QTimer
 from time import time, gmtime, strftime
@@ -41,6 +41,9 @@ class WateringUtils():
     def getProjectId():
         return QgsProject.instance().readEntry("watering","project_id","default text")[0]
     
+    def getProjectPath():
+        return QgsProject.instance().readEntry("watering","project_path","default text")[0]
+    
     def setProjectMetadata(field, value):
         QgsProject.instance().writeEntry("watering", field, value)
     
@@ -60,7 +63,6 @@ class WateringUtils():
         token = os.environ.get('TOKEN')
         print("scenario" + scenarioId)
         print("project" + projectId)
-        print("token" + token)
         return scenarioId != "default text" and projectId != "default text" and token is not None
              
     def getServerUrl():
@@ -162,3 +164,19 @@ class WateringUtils():
         current_datetime = datetime.now()
         qdatetime = QDateTime(current_datetime)
         return QVariant(qdatetime)
+    
+
+        # noinspection PyMethodMayBeStatic
+    def tr(message, context = "QGISPlugin_WaterIng"):
+        """Get the translation for a string using Qt translation API.
+
+        We implement this ourselves since we do not inherit QObject.
+
+        :param message: String for translation.
+        :type message: str, QString
+
+        :returns: Translated version of message.
+        :rtype: QString
+        """
+        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
+        return QCoreApplication.translate(context, message)

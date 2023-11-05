@@ -2,13 +2,35 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 from functools import partial
 
+from ..watering_utils import WateringUtils
+
 from ..maptools.toolbarAction import toolbarAction
 
 class toolbarToolManager():
 
-    def __init__(self):
+    def __init__(self, toolbar, parentWindow, canvas):
         """Constructor."""
-        ...
+        self.activeMapTool = None
+        self.canvas = canvas
+        self.toolbar = toolbar
+        self.parentWindow = parentWindow
+
+        self.insertDemandNodeAction = None
+        
+
+
+    def initializeToolbarButtonActions(self):
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.png'
+        self.insertDemandNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Demand Node'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.insertDemandNodeAction.setCheckable(True)        
+        self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+
 
     def addMapToolButtonAction(
         self,
@@ -46,3 +68,21 @@ class toolbarToolManager():
         #actions.append(action)
 
         return action
+
+
+
+    
+    def activateMapTool(self, mapToolButtonAction):
+        if (mapToolButtonAction.isChecked()):
+            print("Setting Map Tool = ", mapToolButtonAction)
+            if (self.activeMapTool is not None):
+                if(self.activeMapTool.action() is not None):
+                    self.canvas.unsetMapTool(self.activeMapTool)
+                    self.activeMapTool.action().setChecked(False) 
+            #this should be happening at updateActionScenarioStateOpen self.toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository) 
+            print("maptool -> ", mapToolButtonAction.MapTool)
+            self.canvas.setMapTool(mapToolButtonAction.MapTool)
+            self.activeMapTool = mapToolButtonAction.MapTool
+        else:
+            self.canvas.unsetMapTool(mapToolButtonAction.MapTool)
+            self.activeMapTool = None

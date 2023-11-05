@@ -7,6 +7,8 @@ from datetime import date, timedelta
 import time
 import csv
 
+from ..watering_utils import WateringUtils
+
 class getDataRepository:
     def __init__(self,token, projectFK):
         """Constructor."""
@@ -66,11 +68,12 @@ class getDataRepository:
                 writer.writerow([element[key] for key in keys])
 
         date = date.replace(":", "")
-        project_path = QgsProject.instance().readEntry("watering","project_path","default text")[0]
+        project_path = WateringUtils.getProjectPath()
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         scenario_folder_path = project_path + "/" + scenario_id
         analysis_folder_path = scenario_folder_path + "/" + "Analysis"
         date_folder_path = analysis_folder_path + "/" + date
+
         
         #Create analysis folder
         os.makedirs(analysis_folder_path, exist_ok=True)
