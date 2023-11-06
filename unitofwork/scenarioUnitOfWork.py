@@ -86,8 +86,8 @@ class scenarioUnitOfWork():
         WateringUtils.setProjectMetadata(self.keyFromServer, now)
     
     def scenarioKeyLastToServer(self):
-        return self.project_path + self.scenarioFK + "to_server"
+        return self.scenarioFK + "to_server"
     
     def scenarioKeyLastFromServer(self):
-        return self.project_path + self.scenarioFK + "from_server"
+        return self.scenarioFK + "from_server"
     
