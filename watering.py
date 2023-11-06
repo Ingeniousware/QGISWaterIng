@@ -28,6 +28,7 @@ from .maptools.insertValveNodeTool import InsertValveNodeTool
 from .maptools.insertPumpNodeTool import InsertPumpNodeTool
 from .maptools.insertSensorNodeTool import InsertSensorNodeTool
 from .maptools.selectNodeTool import SelectNodeTool
+from .maptools.deleteElementTool import DeleteElementTool
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
 from .ui.watering_analysis import WateringAnalysis
@@ -79,6 +80,7 @@ class QGISPlugin_WaterIng:
         self.insertValveNodeAction = None
         self.insertPumpNodeAction = None
         self.insertSensorNodeAction = None
+        self.toolDeleteElementAction = None
         self.selectElementAction = None
         self.readAnalysisAction = None
         self.canvas = iface.mapCanvas()
@@ -332,6 +334,15 @@ class QGISPlugin_WaterIng:
         self.redoAction.setCheckable(False)        
         self.redoAction.setEnabled(False)
 
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/trash.png'
+        self.toolDeleteElementAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Delete Element'),
+            callback=self.activateToolDeleteElement,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.toolDeleteElementAction.setCheckable(True)        
+        self.toolDeleteElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/Monitoring.png'
         self.readMeasurementsAction = self.add_action(
@@ -548,8 +559,21 @@ class QGISPlugin_WaterIng:
         else:
             self.canvas.unsetMapTool(self.toolInsertPumpNode)
             self.activeMapTool = None
-
     
+    def activateToolDeleteElement(self):
+        if (self.toolDeleteElementAction.isChecked()):
+            print("Setting Map Tool = toolDeleteElement")
+            if (self.activeMapTool is not None):
+                if(self.activeMapTool.action() is not None):
+                    self.canvas.unsetMapTool(self.activeMapTool)
+                    self.activeMapTool.action().setChecked(False)
+            #this should be happening at updateActionScenarioStateOpen self.toolInsertPumpNode = InsertPumpNodeTool(self.canvas, self.scenarioUnitOFWork.pumpNodeRepository) 
+            self.canvas.setMapTool(self.toolDeleteElement)
+            self.activeMapTool = self.toolDeleteElement
+        else:
+            self.canvas.unsetMapTool(self.toolDeleteElement)
+            self.activeMapTool = None
+            
     def activateToolInsertSensorNode(self):
         if (self.insertSensorNodeAction.isChecked()):
             print("Setting Map Tool = toolInsertSensorNode")
@@ -624,6 +648,9 @@ class QGISPlugin_WaterIng:
         self.toolInsertSensorNode.setAction(self.insertSensorNodeAction)
         self.insertSensorNodeAction.setEnabled(True)
         
+        self.toolDeleteElement = DeleteElementTool(self.canvas)
+        self.toolDeleteElement.setAction(self.toolDeleteElementAction)
+        self.toolDeleteElementAction.setEnabled(True)
               
     def updateActionStateOpen(self):
         #self.cleanMarkers()
@@ -655,7 +682,8 @@ class QGISPlugin_WaterIng:
                     self.insertReservoirNodeAction,
                     self.insertValveNodeAction,
                     self.insertPumpNodeAction,
-                    self.insertSensorNodeAction]
+                    self.insertSensorNodeAction,
+                    self.toolDeleteElementAction]
 
         for action in actions:
             if action:
@@ -766,5 +794,8 @@ class QGISPlugin_WaterIng:
     
     def setActiveStateRedo(self, activeState):
         self.redoAction.setEnabled(activeState)
+    
+    def deleteElement(self):
+        print("Deleted")
     
     
