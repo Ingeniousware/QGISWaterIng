@@ -235,10 +235,8 @@ class AbstractRepository():
         if self.connectorToServer:
             print("Entering updateFromOfflineToServer")
             self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-            lastUpdatedToServerStringFormat = lastUpdatedToServer.value().toString("yyyy/MM/dd HH:mm:ss.zzz")
-            #TODO fix this to sort the features before going to the next loop
             for feature in self.Layer.getFeatures():   
-                if feature['lastUpdate'] > lastUpdatedToServerStringFormat: 
+                if feature['lastUpdate'] > lastUpdatedToServer: 
                     print("Updating feature: ", feature.id())                                           
                     self.connectorToServer.addElementToServer(feature)
 

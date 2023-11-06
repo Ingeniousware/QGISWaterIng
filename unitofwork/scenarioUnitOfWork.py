@@ -16,6 +16,11 @@ class scenarioUnitOfWork():
         """Constructor."""
         self.token = token
         self.scenarioFK = scenarioFK
+        self.project_path = project_path
+        
+        self.keyToServer = self.scenarioKeyLastToServer()
+        self.keyFromServer = self.scenarioKeyLastFromServer()
+        
         self.waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, scenarioFK)                
         self.tankNodeRepository = TankNodeRepository(self.token, project_path, scenarioFK)    
         self.reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, scenarioFK)
@@ -56,25 +61,33 @@ class scenarioUnitOfWork():
         self.updateProjectMetadata(now)
         
     def getLastUpdatedToServer(self):
-        date = WateringUtils.getProjectMetadata("lastUpdatedToServer")
+        date = WateringUtils.getProjectMetadata(self.keyToServer)
         
         if date != "default text":
             return date
         else:
             now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
-            WateringUtils.setProjectMetadata("lastUpdatedToServer", now)
+            
+            WateringUtils.setProjectMetadata(self.keyToServer, now)
             return now
         
     def getLastUpdatedFromServer(self):
-        date = WateringUtils.getProjectMetadata("lastUpdatedFromServer")
+        date = WateringUtils.getProjectMetadata(self.keyFromServer)
         
         if date != "default text":
             return date
         else:
             now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
-            WateringUtils.setProjectMetadata("lastUpdatedFromServer", now)
+            WateringUtils.setProjectMetadata(self.keyFromServer, now)
             return now
         
     def updateProjectMetadata(self, now):
-        WateringUtils.setProjectMetadata("lastUpdatedToServer", now)
-        WateringUtils.setProjectMetadata("lastUpdatedFromServer", now)
+        WateringUtils.setProjectMetadata(self.keyToServer, now)
+        WateringUtils.setProjectMetadata(self.keyFromServer, now)
+    
+    def scenarioKeyLastToServer(self):
+        return self.project_path + self.scenarioFK + "to_server"
+    
+    def scenarioKeyLastFromServer(self):
+        return self.project_path + self.scenarioFK + "from_server"
+    
