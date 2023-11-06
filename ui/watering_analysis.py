@@ -256,8 +256,9 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         try:
             response = requests.post(url, params=params, headers=headers, json=data_json)
             if response.status_code == 200:
-                print("Anañysis uploaded successfully!")
+                print("Analysis uploaded successfully!")
                 self.show_message("Water Analysis", "Analysis Executed Correctly", QMessageBox.Information)
+                self.close()
             else:
                 self.show_message("Water Analysis", "Analysis Not Executed", QMessageBox.Warning)
                 
