@@ -359,7 +359,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                      'watering_tanks.shp', 
                      'watering_pumps.shp', 
                      'watering_valves.shp',                   
-                     'watering_pipes.shp']
+                     'watering_pipes.shp', 
+                     'watering_backup.shp']
         
         shp_filesMonitoring = ['watering_waterMeter.shp',
                                'watering_sensors.shp']
@@ -371,7 +372,13 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             layer_name = os.path.splitext(element_layer)[0]
             layer = QgsVectorLayer(layer_path, layer_name, "ogr")
 
-            if layer.isValid():
+            project.addMapLayer(layer, False)
+            group.addLayer(layer)          
+
+            layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
+            layer.attributeValueChanged.connect(self.onChangesInAttribute) 
+            
+            """if layer.isValid():
                 project.addMapLayer(layer, False)
                 group.addLayer(layer)          
 
@@ -379,7 +386,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 layer.attributeValueChanged.connect(self.onChangesInAttribute)             
 
             else: 
-                print("Layer not valid: ",element_layer)
+                print("Layer not valid: ",element_layer)"""
 
         for element_layer in shp_filesMonitoring:
             layer_path = os.path.join(scenario_path, element_layer)

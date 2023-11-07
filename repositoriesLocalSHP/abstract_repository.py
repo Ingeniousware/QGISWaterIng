@@ -28,6 +28,14 @@ class AbstractRepository():
         self.currentLayer = None
         self.numberLocalFieldsOnly = 1
 
+    def initializeRepository(self):
+        #loading element from the API
+        serverResponse = self.loadElements()        
+        #Adding elements to shapefile
+        self.createElementLayerFromServerResponse(serverResponse)              
+        #Write shapefile
+        self.writeShp()
+        
     def setConnectorToServer(self, connector):
         self.connectorToServer = connector
         self.connectorToServer.localRepository = self
@@ -159,16 +167,6 @@ class AbstractRepository():
 
     def setDefaultValues(self, feature):
         ...
-        
-
-
-    def initializeRepository(self):
-        #loading element from the API
-        serverResponse = self.loadElements()        
-        #Adding elements to shapefile
-        self.createElementLayerFromServerResponse(serverResponse)              
-        #Write shapefile
-        self.writeShp()
 
         
 
