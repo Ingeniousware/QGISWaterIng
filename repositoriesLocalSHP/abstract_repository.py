@@ -356,7 +356,7 @@ class AbstractRepository():
         
         fields = self.setElementFields(self.field_definitions)
         backup_layer = QgsVectorLayer(self.LayerType + self.destCrs.authid(), "New Layer", "memory")
-        pr = self.currentLayer.dataProvider()
+        pr = backup_layer.dataProvider()
         pr.addAttributes(fields)
         backup_layer.updateFields()
         
@@ -364,13 +364,17 @@ class AbstractRepository():
         if writer[0] == QgsVectorFileWriter.NoError:
             print(f"Shapefile for {self.LayerName} created successfully!")
         else:
-            print("Error creating {self.LayerName} Shapefile!")
+            print(f"Error creating {self.LayerName} Shapefile!")
         
-        element_layer = QgsVectorLayer(backup_layer_path, name, "ogr") 
+        key = "backup_layer_path" + self.LayerName
+        WateringUtils.setProjectMetadata(key, backup_layer_path)
+        
+        #open backup_layer
+        """element_layer = QgsVectorLayer(backup_layer_path, name, "ogr") 
           
         if not element_layer.isValid():
             print("Error opening:", element_layer.dataProvider().error().message())
         else:
             QgsProject.instance().addMapLayer(element_layer, False)
-            print("opened successfully:", element_layer.name())
+            print("opened successfully:", element_layer.name())"""
             

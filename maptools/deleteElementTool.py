@@ -1,16 +1,10 @@
 #DeleteElementTool
+from ..watering_utils import WateringUtils
 
-from qgis.gui import QgsMapToolEmitPoint, QgsAttributeTableView, QgsMapTool, QgsMapToolEmitPoint, QgsMapToolIdentifyFeature,QgsMapToolIdentify
-from PyQt5.QtGui import QColor
-from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsGeometry, QgsVectorLayer, QgsPointXY, QgsProject, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSymbol, edit
+from qgis.gui import QgsMapTool, QgsMapToolIdentify
 from qgis.utils import iface
-from qgis.core import QgsProject, QgsFeatureRequest, QgsVectorLayer
+from qgis.core import QgsProject, QgsFeature, QgsVectorLayer
 from qgis.gui import QgsMapTool
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt.QtWidgets import QMessageBox
-from qgis.gui import QgsMapCanvas
-from qgis.core import QgsLayerTreeLayer
 
 class DeleteElementTool(QgsMapTool):
 
@@ -33,7 +27,36 @@ class DeleteElementTool(QgsMapTool):
             print("Clicled layer: ", self.layer)
             print(found_features[0].mFeature.attributes())
             feature_ids = [f.mFeature.id() for f in found_features]
+            
+            backup_layer_name = self.layer.name() + "_backup"
+            key = "backup_layer_path" + self.layer.name()
+            backup_layer_path = WateringUtils.getProjectMetadata(key)
+            
+            backup_layer = QgsVectorLayer(backup_layer_path, backup_layer_name, "ogr") 
+            
+            #backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
 
+            backup_layer.startEditing()
+            
+            for ident in found_features:
+                # 'ident' is a QgsFeatureIdentifyResult
+                feature = ident.mFeature
+
+                # Create a new feature for the target layer
+                new_feat = QgsFeature(backup_layer.fields())
+                new_feat.setGeometry(feature.geometry())
+                new_feat.setAttributes(feature.attributes())
+
+                # Add the new feature to the target layer
+                backup_layer.addFeature(new_feat)
+                
+                print(f"adding feature {new_feat} to {backup_layer}")
+                
+            backup_layer.commitChanges()
+            
+            """#adding backup layer
+            QgsProject.instance().addMapLayer(backup_layer)"""
+            
             # Start an undo block in case we want to revert this operation
             self.layer.startEditing()
 
