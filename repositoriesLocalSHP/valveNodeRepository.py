@@ -36,6 +36,8 @@ class ValveNodeRepository(AbstractRepository):
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z",
                          "diameter", "minorLossCoef", "initialStatus", "typeValvule", "setting"]
         
+        self.LayerType = "Point?crs="
+        
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
         self.currentLayer = None
@@ -43,7 +45,8 @@ class ValveNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(ValveNodeRepository, self).initializeRepository()  
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Cross2, 6)
-
+        self.createBackupLayer()
+        
     def setDefaultValues(self, feature):
         name = "valveName"
         description = "valve form QGIS"

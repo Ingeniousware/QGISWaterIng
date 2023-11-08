@@ -30,6 +30,8 @@ class WateringDemandNodeRepository(AbstractRepository):
     
         self.features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
                                "z","baseDemand","demandPatternFK"]
+
+        self.LayerType = "Point?crs="
         
         self.Color = QColor.fromRgb(255, 255, 255)
         self.StrokeColor = QColor.fromRgb(23, 61, 108)
@@ -38,7 +40,7 @@ class WateringDemandNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(WateringDemandNodeRepository, self).initializeRepository()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
-        
+        self.createBackupLayer()
 
     def setDefaultValues(self, feature):
         name = "nodeName"

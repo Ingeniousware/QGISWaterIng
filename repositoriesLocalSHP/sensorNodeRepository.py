@@ -28,6 +28,7 @@ class SensorNodeRepository(AbstractRepository):
     
         self.features = ["lng", "lat", "serverKeyId", "lastModified","name", "description", "z"]
         
+        self.LayerType = "Point?crs="
         self.Color = QColor.fromRgb(255, 255, 255)
         self.StrokeColor = QColor.fromRgb(23, 61, 108)
         self.currentLayer = None
@@ -35,7 +36,7 @@ class SensorNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(SensorNodeRepository, self).initializeRepository()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
-        
+        self.createBackupLayer()
 
     def setDefaultValues(self, feature):
         name = "sensorName"

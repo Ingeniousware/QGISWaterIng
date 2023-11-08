@@ -29,6 +29,7 @@ class PumpNodeRepository(AbstractRepository):
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description", "z", "pumpModelFK", "relativeSpeed"]
         
+        self.LayerType = "Point?crs="
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
         self.currentLayer = None
@@ -36,7 +37,8 @@ class PumpNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(PumpNodeRepository, self).initializeRepository() 
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.SemiCircle, 6)
-
+        self.createBackupLayer()
+        
     def setDefaultValues(self, feature):
         name = "pumpName"
         description = "pump form QGIS"

@@ -30,7 +30,7 @@ class scenarioUnitOfWork():
         self.valveNodeRepository = ValveNodeRepository(self.token, project_path, scenarioFK)  
         self.pumpNodeRepository = PumpNodeRepository(self.token, project_path, scenarioFK)
         self.sensorNodeRepository = SensorNodeRepository(self.token, project_path, scenarioFK)
-        self.backupRepository = BackupRepository(self.token, project_path, scenarioFK)
+        #self.backupRepository = BackupRepository(self.token, project_path, scenarioFK)
 
         self.list_of_elements = [self.waterDemandNodeRepository,
                                  self.tankNodeRepository, 
@@ -39,8 +39,7 @@ class scenarioUnitOfWork():
                                  self.valveNodeRepository,                                 
                                  self.pumpNodeRepository,
                                  self.pipeNodeRepository,
-                                 self.sensorNodeRepository,
-                                 self.backupRepository]
+                                 self.sensorNodeRepository]
         
         self.lastUpdatedToServer = self.getLastUpdatedToServer()
         self.lastUpdatedFromServer = self.getLastUpdatedFromServer()

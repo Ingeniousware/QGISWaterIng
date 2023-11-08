@@ -1,4 +1,5 @@
 import requests
+import os
 from ..watering_utils import WateringUtils
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
@@ -345,3 +346,31 @@ class AbstractRepository():
         
         return (point.x(), point.y())
         
+
+    def createBackupLayer(self):
+        print("creating backup layer")
+        name = self.LayerName + "_backup"
+        backup_layer_path = os.path.dirname(self.StorageShapeFile) + "/" + name + ".shp"
+        
+        print("path backup: ", backup_layer_path)
+        
+        fields = self.setElementFields(self.field_definitions)
+        backup_layer = QgsVectorLayer(self.LayerType + self.destCrs.authid(), "New Layer", "memory")
+        pr = self.currentLayer.dataProvider()
+        pr.addAttributes(fields)
+        backup_layer.updateFields()
+        
+        writer = QgsVectorFileWriter.writeAsVectorFormat(backup_layer, backup_layer_path, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
+        if writer[0] == QgsVectorFileWriter.NoError:
+            print(f"Shapefile for {self.LayerName} created successfully!")
+        else:
+            print("Error creating {self.LayerName} Shapefile!")
+        
+        element_layer = QgsVectorLayer(backup_layer_path, name, "ogr") 
+          
+        if not element_layer.isValid():
+            print("Error opening:", element_layer.dataProvider().error().message())
+        else:
+            QgsProject.instance().addMapLayer(element_layer, False)
+            print("opened successfully:", element_layer.name())
+            

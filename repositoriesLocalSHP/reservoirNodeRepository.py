@@ -29,6 +29,7 @@ class ReservoirNodeRepository(AbstractRepository):
         self.features = ["lng","lat","serverKeyId","lastModified",
                         "name","description","z","head"]
         
+        self.LayerType = "Point?crs="
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
         self.currentLayer = None        
@@ -37,7 +38,8 @@ class ReservoirNodeRepository(AbstractRepository):
         super(ReservoirNodeRepository, self).initializeRepository()      
        
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Square, 6)
-
+        self.createBackupLayer()
+        
     def setDefaultValues(self, feature):
         name = "reservorName"
         description = "reservoir form QGIS"

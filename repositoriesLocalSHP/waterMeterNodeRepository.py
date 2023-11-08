@@ -31,6 +31,9 @@ class WaterMeterNodeRepository(AbstractRepository):
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description","meterstate",
                                 "functionalType","lastReadDateTime"]
         
+        self.LayerType = "Point?crs="
+        
+        
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
         self.currentLayer = None
@@ -38,4 +41,4 @@ class WaterMeterNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(WaterMeterNodeRepository, self).initializeRepository()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Diamond, 6)
-    
+        self.createBackupLayer()

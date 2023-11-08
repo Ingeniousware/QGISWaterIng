@@ -36,6 +36,7 @@ class TankNodeRepository(AbstractRepository):
             ("lastUpdate", QVariant.DateTime)
         ]
         
+        self.LayerType = "Point?crs="
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
         self.currentLayer = None
@@ -43,7 +44,7 @@ class TankNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(TankNodeRepository, self).initializeRepository() 
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Pentagon, 6)
-    
+        self.createBackupLayer()
 
     def setDefaultValues(self, feature):
         name = "tankName"

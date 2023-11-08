@@ -19,7 +19,7 @@ class BackupRepository(AbstractRepository):
         self.LayerName = "watering_backup"
         self.FileQml =  project_path + "/" + self.LayerName + ".qml"
         #Setting shapefile fields
-        self.field_definitions = []
+        self.field_definitions = [("ID", QVariant.String)]
         self.features = []
         self.currentLayer = None
 
@@ -28,6 +28,7 @@ class BackupRepository(AbstractRepository):
 
         provider = self.currentLayer.dataProvider()
 
+        self.field_definitions = [("ID", QVariant.String)]
         provider.addAttributes(self.field_definitions)
 
         self.currentLayer.updateFields()

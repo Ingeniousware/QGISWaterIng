@@ -346,64 +346,52 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         else:
             print(f"Failed to load project {project_path}.")
 
-        group = self.checkCreateInitializeGroup(project, "WaterIng Network Layout")
-        groupMonitoring =self.checkCreateInitializeGroup(project, "Sensors")
-        
+        group_elements = self.checkCreateInitializeGroup(project, "WaterIng Network Layout")
+        group_sensors =self.checkCreateInitializeGroup(project, "Sensors")
+        group_backup = self.checkCreateInitializeGroup(project, "Backup")
 
         # Get Scenario Data
         scenario_path = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
         
         # Shp files in the order they are going to be loaded
-        shp_files = ['watering_demand_nodes.shp', 
+        shp_element_files = ['watering_demand_nodes.shp', 
                      'watering_reservoirs.shp', 
                      'watering_tanks.shp', 
                      'watering_pumps.shp', 
                      'watering_valves.shp',                   
-                     'watering_pipes.shp', 
-                     'watering_backup.shp']
+                     'watering_pipes.shp']
         
         shp_filesMonitoring = ['watering_waterMeter.shp',
                                'watering_sensors.shp']
         
+        shp_backupFiles = ['watering_demand_nodes_backup.shp', 
+                           'watering_reservoirs_backup.shp', 
+                           'watering_tanks_backup.shp', 
+                           'watering_pumps_backup.shp', 
+                           'watering_valves_backup.shp',
+                           'watering_pipes_backup.shp']
 
-        # Load all .shp files from the directory and add them to WaterIng root group
-        for element_layer in shp_files:
-            layer_path = os.path.join(scenario_path, element_layer)
-            layer_name = os.path.splitext(element_layer)[0]
-            layer = QgsVectorLayer(layer_path, layer_name, "ogr")
-
-            project.addMapLayer(layer, False)
-            group.addLayer(layer)          
-
-            layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
-            layer.attributeValueChanged.connect(self.onChangesInAttribute) 
-            
-            """if layer.isValid():
-                project.addMapLayer(layer, False)
-                group.addLayer(layer)          
-
-                layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
-                layer.attributeValueChanged.connect(self.onChangesInAttribute)             
-
-            else: 
-                print("Layer not valid: ",element_layer)"""
-
-        for element_layer in shp_filesMonitoring:
+        self.openGroup(shp_element_files, group_elements, scenario_path)
+        self.openGroup(shp_filesMonitoring, group_sensors, scenario_path)
+        self.openGroup(shp_backupFiles, group_backup, scenario_path)
+        
+    def openGroup(self, group_list, group, scenario_path):
+        
+        for element_layer in group_list:
             layer_path = os.path.join(scenario_path, element_layer)
             layer_name = os.path.splitext(element_layer)[0]
             layer = QgsVectorLayer(layer_path, layer_name, "ogr")
 
             if layer.isValid():
-                project.addMapLayer(layer, False)
-                groupMonitoring.addLayer(layer)
+                QgsProject.instance().addMapLayer(layer, False)
+                group.addLayer(layer)
 
                 layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
-                layer.attributeValueChanged.connect(self.onChangesInAttribute)     
-                #TODO disconnect this events when closing the project scenario        
+                layer.attributeValueChanged.connect(self.onChangesInAttribute)           
 
             else: 
                 print("Layer not valid: ",element_layer)
-
+                
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
 

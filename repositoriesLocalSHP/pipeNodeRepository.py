@@ -35,6 +35,7 @@ class PipeNodeRepository(AbstractRepository):
         self.features = ["serverKeyId", "lastModified", "name", "description", "diameterInt",
                            "length", "roughnessAbsolute", "roughnessCoefficient", "nodeUpName", "nodeDownName"]
         
+        self.LayerType = "LineString?crs="
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
         
@@ -47,7 +48,7 @@ class PipeNodeRepository(AbstractRepository):
     def initializeRepository(self):
         super(PipeNodeRepository, self).initializeRepository() 
         self.openLayers(None, 0.7) 
-
+        self.createBackupLayer()
 
     def setElementSymbol(self, layer, layer_symbol, layer_size):
         symbol = QgsSymbol.defaultSymbol(layer.geometryType())
