@@ -7,7 +7,6 @@ from ..repositoriesLocalSHP.tankNodeRepository import TankNodeRepository
 from ..repositoriesLocalSHP.valveNodeRepository import ValveNodeRepository
 from ..repositoriesLocalSHP.waterDemandNodeRepository import WateringDemandNodeRepository
 from ..repositoriesLocalSHP.waterMeterNodeRepository import WaterMeterNodeRepository
-from ..repositoriesLocalSHP.backupRepository import BackupRepository
 
 from ..watering_utils import WateringUtils
 
@@ -30,7 +29,6 @@ class scenarioUnitOfWork():
         self.valveNodeRepository = ValveNodeRepository(self.token, project_path, scenarioFK)  
         self.pumpNodeRepository = PumpNodeRepository(self.token, project_path, scenarioFK)
         self.sensorNodeRepository = SensorNodeRepository(self.token, project_path, scenarioFK)
-        #self.backupRepository = BackupRepository(self.token, project_path, scenarioFK)
 
         self.list_of_elements = [self.waterDemandNodeRepository,
                                  self.tankNodeRepository, 

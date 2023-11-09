@@ -348,7 +348,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         group_elements = self.checkCreateInitializeGroup(project, "WaterIng Network Layout")
         group_sensors =self.checkCreateInitializeGroup(project, "Sensors")
-        group_backup = self.checkCreateInitializeGroup(project, "Backup")
+        #group_backup = self.checkCreateInitializeGroup(project, "Backup")
 
         # Get Scenario Data
         scenario_path = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
