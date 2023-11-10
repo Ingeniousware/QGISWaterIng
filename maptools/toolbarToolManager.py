@@ -17,9 +17,17 @@ class toolbarToolManager():
 
         self.insertDemandNodeAction = None
         self.insertTankNodeAction = None
-
+        self.insertWaterPipeAction = None
+        self.insertReservoirNodeAction = None
+        self.insertValveNodeAction = None
+        self.insertPumpNodeAction = None
+        self.insertSensorNodeAction = None
+        self.toolDeleteElementAction = None
+        self.selectElementAction = None
 
     def initializeToolbarButtonActions(self):
+        
+        # Demand Nodes
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.png'
         self.insertDemandNodeAction = self.addMapToolButtonAction(
             icon_path,
@@ -30,6 +38,7 @@ class toolbarToolManager():
         self.insertDemandNodeAction.setCheckable(True)        
         self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
+        # Tanks
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/Tank.png'
         self.insertTankNodeAction = self.addMapToolButtonAction(
             icon_path,
@@ -40,8 +49,103 @@ class toolbarToolManager():
         self.insertTankNodeAction.setCheckable(True)        
         self.insertTankNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
+        # Pipes
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/pipe.png'
+        self.insertWaterPipeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Water Pipe'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.insertWaterPipeAction.setCheckable(True)        
+        self.insertWaterPipeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
+        # Reservoirs
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Reservoir.png'
+        self.insertReservoirNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Reservoir Node'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.insertReservoirNodeAction.setCheckable(True)        
+        self.insertReservoirNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
+        # Valves
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Valve.png'
+        self.insertValveNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Valve Node'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.insertValveNodeAction.setCheckable(True)        
+        self.insertValveNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # Pumps
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Pump.png'
+        self.insertPumpNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Pump Node'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.insertPumpNodeAction.setCheckable(True)        
+        self.insertPumpNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # Sensors
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
+        self.insertSensorNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Sensor Node'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.insertSensorNodeAction.setCheckable(True)        
+        self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        """# Undo
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Backward.png'
+        self.undoAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'unDo'),
+            callback=self.executeUnDoAction,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.undoAction.setCheckable(False)        
+        self.undoAction.setEnabled(False)
+
+        # Redo
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Forward.png'
+        self.redoAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'reDo'),
+            callback=self.executeReDoAction,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.redoAction.setCheckable(False)        
+        self.redoAction.setEnabled(False)"""
+
+        # Delete Element
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/trash.png'
+        self.toolDeleteElementAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Delete Element'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.toolDeleteElementAction.setCheckable(True)        
+        self.toolDeleteElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
+        self.selectElementAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Select Element'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.selectElementAction.setCheckable(True)
+        self.selectElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
     def addMapToolButtonAction(
         self,

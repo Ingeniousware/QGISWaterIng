@@ -74,13 +74,13 @@ class QGISPlugin_WaterIng:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Watering API Connection')
-        self.insertSensorAction = None        
+        """self.insertSensorAction = None        
         self.insertReservoirNodeAction = None
         self.insertValveNodeAction = None
         self.insertPumpNodeAction = None
         self.insertSensorNodeAction = None
         self.toolDeleteElementAction = None
-        self.selectElementAction = None
+        self.selectElementAction = None"""
         self.readAnalysisAction = None
         self.canvas = iface.mapCanvas()
         QgsProject.instance().cleared.connect(self.updateActionStateClose)
@@ -248,7 +248,7 @@ class QGISPlugin_WaterIng:
 
        
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/pipe.png'
+        """icon_path = ':/plugins/QGISPlugin_WaterIng/images/pipe.png'
         self.insertWaterPipeAction = self.add_action(
             icon_path,
             text=self.tr(u'Add Water Pipe'),
@@ -300,7 +300,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.insertSensorNodeAction.setCheckable(True)        
-        self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())"""
 
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/Backward.png'
@@ -324,7 +324,7 @@ class QGISPlugin_WaterIng:
         self.redoAction.setCheckable(False)        
         self.redoAction.setEnabled(False)
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/trash.png'
+        """icon_path = ':/plugins/QGISPlugin_WaterIng/images/trash.png'
         self.toolDeleteElementAction = self.add_action(
             icon_path,
             text=self.tr(u'Delete Element'),
@@ -332,7 +332,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.toolDeleteElementAction.setCheckable(True)        
-        self.toolDeleteElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.toolDeleteElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())"""
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/Monitoring.png'
         self.readMeasurementsAction = self.add_action(
@@ -447,7 +447,7 @@ class QGISPlugin_WaterIng:
             self.dlg.exec_()
 
     
-    def activateToolInsertSensorPlacement(self):
+    """def activateToolInsertSensorPlacement(self):
         if (self.insertSensorAction.isChecked()):
             print("Setting Map Tool = toolInsertSensorNodePlacement")
             if (self.activeMapTool is not None):
@@ -459,10 +459,10 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = self.toolInsertSensorNodePlacement
         else:
             self.canvas.unsetMapTool(self.toolInsertSensorNodePlacement)
-            self.activeMapTool = None  
+            self.activeMapTool = None  """
 
 
-        """  def activateToolInsertDemandNode(self):
+    """  def activateToolInsertDemandNode(self):
         if (self.insertDemandNodeAction.isChecked()):
             print("Setting Map Tool = toolInsertDemandNode")
             if (self.activeMapTool is not None):
@@ -477,7 +477,7 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = None """
 
     
-        """  def activateToolInsertTankNode(self):
+    """  def activateToolInsertTankNode(self):
         if (self.insertTankNodeAction.isChecked()):
             print("Setting Map Tool = toolInsertTankNode")
             if (self.activeMapTool is not None):
@@ -492,7 +492,7 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = None
         """
 
-    def activateToolInsertWaterPipe(self):
+    """def activateToolInsertWaterPipe(self):
         if (self.insertWaterPipeAction.isChecked()):
             print("Setting Map Tool = insertWaterPipeAction")
             if (self.activeMapTool is not None):
@@ -576,10 +576,10 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = self.toolInsertSensorNode
         else:
             self.canvas.unsetMapTool(self.toolInsertSensorNode)
-            self.activeMapTool = None
+            self.activeMapTool = None"""
 
 
-    def activateToolSelectMapElement(self):
+    """def activateToolSelectMapElement(self):
         #For sensors optimization
         if (self.selectElementAction.isChecked()):
             print("Setting Map Tool = toolSelectNode")
@@ -593,7 +593,7 @@ class QGISPlugin_WaterIng:
             self.insertSensorAction.setChecked(False)  
         else:
             self.canvas.unsetMapTool(self.toolSelectNode)
-            self.activeMapTool = None
+            self.activeMapTool = None"""
 
 
 
@@ -619,31 +619,35 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.insertTankNodeAction.setCurrentTool(toolInsertDemandNode)
         self.toolbarToolManager.insertTankNodeAction.setEnabled(True)
 
+        toolInsertReservoirNode = InsertReservoirNodeTool(self.canvas, self.scenarioUnitOFWork.reservoirNodeRepository, self.actionManager)
+        toolInsertReservoirNode.setAction(self.toolbarToolManager.insertReservoirNodeAction)
+        self.toolbarToolManager.insertReservoirNodeAction.setCurrentTool(toolInsertReservoirNode)
+        self.toolbarToolManager.insertReservoirNodeAction.setEnabled(True)
 
+        toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
+        toolInsertWaterPipe.setAction(self.toolbarToolManager.insertWaterPipeAction)
+        self.toolbarToolManager.insertWaterPipeAction.setCurrentTool(toolInsertWaterPipe)
+        self.toolbarToolManager.insertWaterPipeAction.setEnabled(True)
 
-        self.toolInsertReservoirNode = InsertReservoirNodeTool(self.canvas, self.scenarioUnitOFWork.reservoirNodeRepository, self.actionManager)
-        self.toolInsertReservoirNode.setAction(self.insertReservoirNodeAction)
-        self.insertReservoirNodeAction.setEnabled(True)
+        toolInsertValveNode = InsertValveNodeTool(self.canvas, self.scenarioUnitOFWork.valveNodeRepository, self.actionManager)
+        toolInsertValveNode.setAction(self.toolbarToolManager.insertValveNodeAction)
+        self.toolbarToolManager.insertValveNodeAction.setCurrentTool(toolInsertValveNode)
+        self.toolbarToolManager.insertValveNodeAction.setEnabled(True)
 
-        self.toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
-        self.toolInsertWaterPipe.setAction(self.insertWaterPipeAction)
-        self.insertWaterPipeAction.setEnabled(True)
+        toolInsertPumpNode = InsertPumpNodeTool(self.canvas, self.scenarioUnitOFWork.pumpNodeRepository, self.actionManager)
+        toolInsertPumpNode.setAction(self.toolbarToolManager.insertPumpNodeAction)
+        self.toolbarToolManager.insertPumpNodeAction.setCurrentTool(toolInsertPumpNode)
+        self.toolbarToolManager.insertPumpNodeAction.setEnabled(True)
 
-        self.toolInsertValveNode = InsertValveNodeTool(self.canvas, self.scenarioUnitOFWork.valveNodeRepository, self.actionManager)
-        self.toolInsertValveNode.setAction(self.insertValveNodeAction)
-        self.insertValveNodeAction.setEnabled(True)
-
-        self.toolInsertPumpNode = InsertPumpNodeTool(self.canvas, self.scenarioUnitOFWork.pumpNodeRepository, self.actionManager)
-        self.toolInsertPumpNode.setAction(self.insertPumpNodeAction)
-        self.insertPumpNodeAction.setEnabled(True)
-
-        self.toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.sensorNodeRepository, self.actionManager)
-        self.toolInsertSensorNode.setAction(self.insertSensorNodeAction)
-        self.insertSensorNodeAction.setEnabled(True)
+        toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.sensorNodeRepository, self.actionManager)
+        toolInsertSensorNode.setAction(self.toolbarToolManager.insertSensorNodeAction)
+        self.toolbarToolManager.insertSensorNodeAction.setCurrentTool(toolInsertSensorNode)
+        self.toolbarToolManager.insertSensorNodeAction.setEnabled(True)
         
-        self.toolDeleteElement = DeleteElementTool(self.canvas)
-        self.toolDeleteElement.setAction(self.toolDeleteElementAction)
-        self.toolDeleteElementAction.setEnabled(True)
+        toolDeleteElement = DeleteElementTool(self.canvas)
+        toolDeleteElement.setAction(self.toolbarToolManager.toolDeleteElementAction)
+        self.toolbarToolManager.toolDeleteElementAction.setCurrentTool(toolDeleteElement)
+        self.toolbarToolManager.toolDeleteElementAction.setEnabled(True)
               
     def updateActionStateOpen(self):
         #self.cleanMarkers()
@@ -665,18 +669,18 @@ class QGISPlugin_WaterIng:
         self.cleanMarkers()
         
         actions = [self.readAnalysisAction,
-                    self.insertSensorAction,
+                    self.toolbarToolManager.insertSensorNodeAction,
                     self.openOptimizationManagerAction,
                     self.readMeasurementsAction,
                     self.importFileINP,
-                    self.selectElementAction,
+                    self.toolbarToolManager.selectElementAction,
                     self.toolbarToolManager.insertDemandNodeAction,
-                    self.insertTankNodeAction,
-                    self.insertReservoirNodeAction,
-                    self.insertValveNodeAction,
-                    self.insertPumpNodeAction,
-                    self.insertSensorNodeAction,
-                    self.toolDeleteElementAction]
+                    self.toolbarToolManager.insertTankNodeAction,
+                    self.toolbarToolManager.insertReservoirNodeAction,
+                    self.toolbarToolManager.insertValveNodeAction,
+                    self.toolbarToolManager.insertPumpNodeAction,
+                    self.toolbarToolManager.insertSensorNodeAction,
+                    self.toolbarToolManager.toolDeleteElementAction]
 
         for action in actions:
             if action:

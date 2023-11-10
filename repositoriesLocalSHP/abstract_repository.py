@@ -413,9 +413,12 @@ class AbstractRepository():
         else:
             print(f"Error creating {self.LayerName} Shapefile!")
         
-        key = "backup_layer_path" + self.LayerName
+        key = self.LayerName
+        print("KEY IN CREATION", key)
         WateringUtils.setProjectMetadata(key, backup_layer_path)
         
+        value = WateringUtils.getProjectMetadata(key)
+        print("VAUE: ", value)
         #open backup_layer
         """element_layer = QgsVectorLayer(backup_layer_path, name, "ogr") 
           
