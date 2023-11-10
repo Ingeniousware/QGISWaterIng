@@ -26,6 +26,13 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         """Constructor."""
         super(WateringLoad, self).__init__(parent)
         self.setupUi(self)
+        # Ui elements
+        self.new_project_name.hide()
+        self.new_scenario_name.hide()
+        self.newProjectCheckBox.clicked.connect(self.checkUserControlState)
+        self.newScenarioCheckBox.clicked.connect(self.checkUserControlState)
+        
+        #Variables 
         self.token = os.environ.get('TOKEN')
         self.listOfProjects = []
         self.listOfScenarios = []
@@ -94,7 +101,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.ProjectName = self.listOfProjects[value][0]
         self.ProjectFK = self.listOfProjects[value][1]
         
-        self.newProjectNameInput.setPlaceholderText(self.ProjectName)
+        self.new_project_name.setPlaceholderText(self.ProjectName)
         
         showRemoved = False
         params = {'ProjectFK': "{}".format(self.ProjectFK), 'showRemoved': "{}".format(showRemoved)}
@@ -423,8 +430,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         #project name
         project = QgsProject.instance()
-        name = self.newProjectNameInput.text()
-        project_name = self.newProjectNameInput.placeholderText() if not name else name
+        name = self.new_project_name.text()
+        project_name = self.new_project_name.placeholderText() if not name else name
         
         #creates the project folder within the chosen folder (Watering folder in appdata by default)
         self.setWateringFolderAppData(self.newShpDirectory.filePath())
@@ -538,4 +545,22 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 self.scenarios_box.setCurrentIndex(index_scenario)
             else:
                 print(f"Scenario: {scenario_name} not found!")
+                
+    def checkUserControlState(self):
+        # Projects
+        if self.newProjectCheckBox.isChecked():
+            self.projects_box.hide()
+            self.new_project_name.show()
+        else: 
+            self.projects_box.show()
+            self.new_project_name.hide()
+        
+        # Scenarios
+        if self.newScenarioCheckBox.isChecked():
+            self.scenarios_box.hide()
+            self.new_scenario_name.show()
+        else:
+            self.scenarios_box.show()
+            self.new_scenario_name.hide()
+        
         
