@@ -243,7 +243,7 @@ class QGISPlugin_WaterIng:
 
 
         self.toolbarToolManager.initializeToolbarButtonActions()
-        
+        self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
 
 
        
@@ -303,7 +303,7 @@ class QGISPlugin_WaterIng:
         self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())"""
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Backward.png'
+        """icon_path = ':/plugins/QGISPlugin_WaterIng/images/Backward.png'
         self.undoAction = self.add_action(
             icon_path,
             text=self.tr(u'unDo'),
@@ -311,10 +311,10 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.undoAction.setCheckable(False)        
-        self.undoAction.setEnabled(False)
+        self.undoAction.setEnabled(False)"""
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Forward.png'
+        """icon_path = ':/plugins/QGISPlugin_WaterIng/images/Forward.png'
         self.redoAction = self.add_action(
             icon_path,
             text=self.tr(u'reDo'),
@@ -322,7 +322,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         self.redoAction.setCheckable(False)        
-        self.redoAction.setEnabled(False)
+        self.redoAction.setEnabled(False)"""
 
         """icon_path = ':/plugins/QGISPlugin_WaterIng/images/trash.png'
         self.toolDeleteElementAction = self.add_action(
@@ -608,7 +608,7 @@ class QGISPlugin_WaterIng:
         """ self.toolInsertSensorNodePlacement = InsertSensorNodeToolPlacement(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)              
         self.toolInsertSensorNodePlacement.setAction(self.insertSensorAction)
         self.insertSensorAction.setEnabled(True) """
-            
+    
         toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
         toolInsertDemandNode.setAction(self.toolbarToolManager.insertDemandNodeAction)
         self.toolbarToolManager.insertDemandNodeAction.setCurrentTool(toolInsertDemandNode)
@@ -787,10 +787,10 @@ class QGISPlugin_WaterIng:
 
     def setActiveStateUndo(self, activeState):
         print("Entering the activation of undo button")
-        self.undoAction.setEnabled(activeState)
+        self.toolbarToolManager.undoAction.setEnabled(activeState)
     
     def setActiveStateRedo(self, activeState):
-        self.redoAction.setEnabled(activeState)
+        self.toolbarToolManager.redoAction.setEnabled(activeState)
     
     def deleteElement(self):
         print("Deleted")
