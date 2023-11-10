@@ -16,7 +16,7 @@ class toolbarToolManager():
         self.parentWindow = parentWindow
 
         self.insertDemandNodeAction = None
-        
+        self.insertTankNodeAction = None
 
 
     def initializeToolbarButtonActions(self):
@@ -29,6 +29,17 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.insertDemandNodeAction.setCheckable(True)        
         self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Tank.png'
+        self.insertTankNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Tank Node'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.insertTankNodeAction.setCheckable(True)        
+        self.insertTankNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
 
 
 

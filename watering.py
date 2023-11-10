@@ -74,8 +74,7 @@ class QGISPlugin_WaterIng:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Watering API Connection')
-        self.insertSensorAction = None
-        self.insertTankNodeAction = None
+        self.insertSensorAction = None        
         self.insertReservoirNodeAction = None
         self.insertValveNodeAction = None
         self.insertPumpNodeAction = None
@@ -247,16 +246,7 @@ class QGISPlugin_WaterIng:
         
 
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Tank.png'
-        self.insertTankNodeAction = self.add_action(
-            icon_path,
-            text=self.tr(u'Add Tank Node'),
-            callback=self.activateToolInsertTankNode,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-        self.insertTankNodeAction.setCheckable(True)        
-        self.insertTankNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-
+       
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/pipe.png'
         self.insertWaterPipeAction = self.add_action(
@@ -487,7 +477,7 @@ class QGISPlugin_WaterIng:
             self.activeMapTool = None """
 
     
-    def activateToolInsertTankNode(self):
+        """  def activateToolInsertTankNode(self):
         if (self.insertTankNodeAction.isChecked()):
             print("Setting Map Tool = toolInsertTankNode")
             if (self.activeMapTool is not None):
@@ -500,7 +490,7 @@ class QGISPlugin_WaterIng:
         else:
             self.canvas.unsetMapTool(self.toolInsertTankNode)
             self.activeMapTool = None
-
+        """
 
     def activateToolInsertWaterPipe(self):
         if (self.insertWaterPipeAction.isChecked()):
@@ -624,9 +614,12 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.insertDemandNodeAction.setCurrentTool(toolInsertDemandNode)
         self.toolbarToolManager.insertDemandNodeAction.setEnabled(True)
 
-        self.toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.tankNodeRepository, self.actionManager)
-        self.toolInsertTankNode.setAction(self.insertTankNodeAction)
-        self.insertTankNodeAction.setEnabled(True)
+        toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.tankNodeRepository, self.actionManager)
+        toolInsertTankNode.setAction(self.toolbarToolManager.insertTankNodeAction)
+        self.toolbarToolManager.insertTankNodeAction.setCurrentTool(toolInsertDemandNode)
+        self.toolbarToolManager.insertTankNodeAction.setEnabled(True)
+
+
 
         self.toolInsertReservoirNode = InsertReservoirNodeTool(self.canvas, self.scenarioUnitOFWork.reservoirNodeRepository, self.actionManager)
         self.toolInsertReservoirNode.setAction(self.insertReservoirNodeAction)
