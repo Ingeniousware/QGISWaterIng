@@ -28,12 +28,13 @@ class DeleteElementTool(QgsMapTool):
             print(found_features[0].mFeature.attributes())
             feature_ids = [f.mFeature.id() for f in found_features]
             
+            
             backup_layer_name = self.layer.name() + "_backup"
             key = "backup_layer_path" + self.layer.name()
             backup_layer_path = WateringUtils.getProjectMetadata(key)
             
-            backup_layer = QgsVectorLayer(backup_layer_path, backup_layer_name, "ogr") 
-            
+            #backup_layer = QgsVectorLayer(backup_layer_path, backup_layer_name, "ogr") 
+            backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
             #backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
 
             backup_layer.startEditing()

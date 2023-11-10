@@ -105,8 +105,9 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
     
 
     def removeElementFromServer(self, serverKeyId):
+        print(f"removing {serverKeyId} from server")
         elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 
                        'serverKeyId': "{}".format(serverKeyId)}
         
         serverResponse = self.serverRepository.deleteFromServer(elementJSON)
-    
+        print(serverResponse)

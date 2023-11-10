@@ -348,7 +348,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         group_elements = self.checkCreateInitializeGroup(project, "WaterIng Network Layout")
         group_sensors =self.checkCreateInitializeGroup(project, "Sensors")
-        #group_backup = self.checkCreateInitializeGroup(project, "Backup")
+        group_backup = self.checkCreateInitializeGroup(project, "Backup")
 
         # Get Scenario Data
         scenario_path = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
@@ -364,16 +364,16 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         shp_filesMonitoring = ['watering_waterMeter.shp',
                                'watering_sensors.shp']
         
-        """shp_backupFiles = ['watering_demand_nodes_backup.shp', 
+        shp_backupFiles = ['watering_demand_nodes_backup.shp', 
                            'watering_reservoirs_backup.shp', 
                            'watering_tanks_backup.shp', 
                            'watering_pumps_backup.shp', 
                            'watering_valves_backup.shp',
-                           'watering_pipes_backup.shp']"""
+                           'watering_pipes_backup.shp']
 
         self.openGroup(shp_element_files, group_elements, scenario_path)
         self.openGroup(shp_filesMonitoring, group_sensors, scenario_path)
-        #self.openGroup(shp_backupFiles, group_backup, scenario_path)
+        self.openGroup(shp_backupFiles, group_backup, scenario_path)
         
     def openGroup(self, group_list, group, scenario_path):
         

@@ -238,8 +238,55 @@ class AbstractRepository():
                 if feature['lastUpdate'] > lastUpdatedToServer: 
                     print("Updating feature: ", feature.id())                                           
                     self.connectorToServer.addElementToServer(feature)
+            
+            self.deleteElementsInBackupLayers()
+         #def removeElementFromServer(self, serverKeyId):
 
+    def deleteElementsInBackupLayers(self):
+        to_delete_ids = []
+        
+        backup_layer_name = self.LayerName + "_backup.shp"
+        
+        """shp_backupFiles = ['watering_demand_nodes_backup.shp', 
+                           'watering_reservoirs_backup.shp', 
+                           'watering_tanks_backup.shp', 
+                           'watering_pumps_backup.shp', 
+                           'watering_valves_backup.shp',
+                           'watering_pipes_backup.shp']"""
 
+        #for shp_file in shp_backupFiles:
+        backup_file_path = os.path.dirname(self.StorageShapeFile) + "/" + backup_layer_name
+        layer = QgsVectorLayer(backup_file_path, "layer", "ogr")
+        if not layer.isValid():
+            print(f"Failed to load layer: {backup_layer_name}")
+            return 
+        # Get and store IDs
+        to_delete_ids.extend(self.getElementsIdsFromLayer(layer))
+            
+        for id in to_delete_ids:
+            self.connectorToServer.removeElementFromServer(id)
+            
+        # Clean layer
+        self.cleanLayer(layer)
+    
+    def getElementsIdsFromLayer(self, layer):
+        ids = []
+        for feature in layer.getFeatures():
+            ids.append(feature["ID"])
+        return ids
+
+    def cleanLayer(self, layer):
+        layer.startEditing()
+        all_feature_ids = [feature.id() for feature in layer.getFeatures()]
+
+        success = layer.dataProvider().deleteFeatures(all_feature_ids)
+    
+        if success:
+            layer.commitChanges()
+            print("All features deleted and changes committed.")
+        else:
+            layer.rollback()
+            print("Changes were rolled back.")
 
     """ def updateAll(self):
         print("Update tool has been activated")
