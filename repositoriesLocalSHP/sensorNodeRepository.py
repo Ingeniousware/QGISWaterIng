@@ -3,7 +3,7 @@ import requests
 from .abstract_repository import AbstractRepository
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
-from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
+from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsAnimatedMarkerSymbolLayer
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 
@@ -35,7 +35,7 @@ class SensorNodeRepository(AbstractRepository):
 
     def initializeRepository(self):
         super(SensorNodeRepository, self).initializeRepository()   
-        self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
+        self.openLayers(':/plugins/QGISPlugin_WaterIng/images/output3.gif', 30)
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
@@ -46,3 +46,16 @@ class SensorNodeRepository(AbstractRepository):
         feature.setAttribute("Name", name)
         feature.setAttribute("Descript", description)
         feature.setAttribute("Z[m]", z)        
+    
+    def setElementSymbol(self, layer, path_to_gif, layer_size):
+        renderer = layer.renderer()
+        symbol = renderer.symbol()
+
+        symbol_layer = QgsAnimatedMarkerSymbolLayer(path_to_gif, layer_size)
+        symbol_layer.setFrameRate(1)
+        symbol.changeSymbolLayer(0, symbol_layer)
+
+        symbol.setColor(self.Color)
+        if self.StrokeColor:
+            symbol.symbolLayer(0).setStrokeColor(self.StrokeColor)
+        layer.triggerRepaint()
