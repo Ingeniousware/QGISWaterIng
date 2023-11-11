@@ -34,5 +34,6 @@
         <file>images/pipe.png</file>
         <file>images/trash.png</file>
         <file>images/output3.gif</file>
+        <file>images/Edit.png</file>
     </qresource>
 </RCC>

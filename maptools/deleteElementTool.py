@@ -31,8 +31,11 @@ class DeleteElementTool(QgsMapTool):
             
             backup_layer_name = self.layer.name() + "_backup"
             key = "backup_layer_path" + self.layer.name()
-            backup_layer_path = WateringUtils.getProjectMetadata(key)
             
+            backup_layer_path = WateringUtils.getProjectMetadata(key)
+            val = WateringUtils.getProjectMetadata("backup_layer_pathwatering_demand_nodes")
+            print("SECOND ATTEMPT: ", val)
+            print("BAKCUP LAYER PATH: ", backup_layer_path, "key: ",key, "backup_layer_name: ", backup_layer_name)
             #backup_layer = QgsVectorLayer(backup_layer_path, backup_layer_name, "ogr") 
             backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
             #backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
