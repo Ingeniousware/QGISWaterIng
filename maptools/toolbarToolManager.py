@@ -234,7 +234,12 @@ class toolbarToolManager():
         
         action_method = self.toolbar.addAction if checked else self.toolbar.removeAction
         
-        for tool in editTools:
-            action_method(tool)
-        
+        if checked:
+            for tool in editTools:
+                self.toolbar.addAction(tool)
+        else:
+            for tool in editTools:
+                self.toolbar.removeAction(tool)
+                self.canvas.unsetMapTool(tool.MapTool)
+                tool.setChecked(False) 
         #for tool in editTools:
