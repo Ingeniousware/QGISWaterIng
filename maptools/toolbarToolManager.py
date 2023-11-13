@@ -1,9 +1,10 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 from functools import partial
+import os
 
 from ..watering_utils import WateringUtils
-
+from ..ui.watering_optimization import WaterOptimization
 from ..maptools.toolbarAction import toolbarAction
 
 class toolbarToolManager():
@@ -11,6 +12,7 @@ class toolbarToolManager():
     def __init__(self, toolbar, parentWindow, canvas):
         """Constructor."""
         self.activeMapTool = None
+        self.activeToolController = None
         self.canvas = canvas
         self.toolbar = toolbar
         self.parentWindow = parentWindow
@@ -25,22 +27,35 @@ class toolbarToolManager():
         self.insertSensorNodeAction = None
         self.toolDeleteElementAction = None
         self.selectElementAction = None
+        self.openOptimizationManagerAction = None
+        self.teste = None
         self.undoAction = None
         self.redoAction = None
 
     def initializeToolbarButtonActions(self):
-        
         # Edit
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/Edit.png'
         self.editElementsAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Edit Elements'),
-            callback=self.activateMapTool,
+            callback=self.activeControllerTool,
             toolbar = self.toolbar,
             parent=self.parentWindow)
         self.editElementsAction.setCheckable(True)        
         #self.editElementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         self.editElementsAction.toggled.connect(self.activateEditTool)
+        
+        # Optimization Tools        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimizationManager.png'
+        self.optimizationToolsAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Optimization Tools'),
+            callback=self.activeControllerTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.optimizationToolsAction.setCheckable(True)        
+        #self.editElementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.optimizationToolsAction.toggled.connect(self.activateOptimizationTool)
         
         # Demand Nodes
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.png'
@@ -107,18 +122,7 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.insertPumpNodeAction.setCheckable(True)        
         self.insertPumpNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-
-        # Sensors
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
-        self.insertSensorNodeAction = self.addMapToolButtonAction(
-            icon_path,
-            text=WateringUtils.tr(u'Add Sensor Node'),
-            callback=self.activateMapTool,
-            toolbar = self.toolbar,
-            parent=self.parentWindow)
-        self.insertSensorNodeAction.setCheckable(True)        
-        self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-
+        
         # Undo
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/Backward.png'
         self.undoAction = self.addMapToolButtonAction(
@@ -162,6 +166,27 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.selectElementAction.setCheckable(True)
         self.selectElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # Optimization
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_optimization.png'
+        self.openOptimizationManagerAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Optimization'),
+            callback=self.waterOptimization,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.openOptimizationManagerAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # Sensors
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
+        self.insertSensorNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Sensor Node'),
+            callback=self.activateMapTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.insertSensorNodeAction.setCheckable(True)        
+        self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
     def addMapToolButtonAction(
         self,
@@ -218,21 +243,26 @@ class toolbarToolManager():
         else:
             self.canvas.unsetMapTool(mapToolButtonAction.MapTool)
             self.activeMapTool = None
-            
-    def activateEditTool(self, checked):
+    
+    def activeControllerTool(self, toolControllerAction):
+        if (toolControllerAction.isChecked()):
+            if(self.activeToolController is not None):
+                self.activeToolController.setChecked(False) 
+            self.activeToolController = toolControllerAction
+        else:
+            self.activeToolController = None
         
+            
+    def activateEditTool(self, checked):    
         editTools = [self.insertDemandNodeAction,
                          self.insertTankNodeAction,
                          self.insertWaterPipeAction,
                          self.insertReservoirNodeAction,
                          self.insertValveNodeAction,
                          self.insertPumpNodeAction,
-                         self.insertSensorNodeAction,
                          self.toolDeleteElementAction, 
                          self.undoAction,
                          self.redoAction]
-        
-        action_method = self.toolbar.addAction if checked else self.toolbar.removeAction
         
         if checked:
             for tool in editTools:
@@ -240,6 +270,35 @@ class toolbarToolManager():
         else:
             for tool in editTools:
                 self.toolbar.removeAction(tool)
-                self.canvas.unsetMapTool(tool.MapTool)
-                tool.setChecked(False) 
-        #for tool in editTools:
+                
+                tool.setChecked(False)
+                
+                if tool.MapTool:
+                    self.canvas.unsetMapTool(tool.MapTool)
+                
+    def activateOptimizationTool(self, checked):
+                
+        optimizationTools = [self.openOptimizationManagerAction,
+                            self.insertSensorNodeAction,]
+        
+        if checked:
+            for tool in optimizationTools:
+                self.toolbar.addAction(tool)
+        else:
+            for tool in optimizationTools:
+                self.toolbar.removeAction(tool)
+                
+                tool.setChecked(False)
+                
+                if tool.MapTool:
+                    self.canvas.unsetMapTool(tool.MapTool)
+
+    def waterOptimization(self):
+        if WateringUtils.isScenarioNotOpened():
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+        else:
+            self.dlg = WaterOptimization()
+            self.dlg.show()
+            self.dlg.exec_()

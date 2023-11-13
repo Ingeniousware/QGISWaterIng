@@ -32,7 +32,7 @@ from .maptools.deleteElementTool import DeleteElementTool
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
 from .ui.watering_analysis import WateringAnalysis
-from .ui.watering_optimization import WaterOptimization
+#from .ui.watering_optimization import WaterOptimization
 from .watering_utils import WateringUtils
 from .ui.watering_datachannels import WateringDatachannels
 from .ui.watering_INPImport import WateringINPImport
@@ -220,14 +220,14 @@ class QGISPlugin_WaterIng:
         self.selectElementAction.setCheckable(True)
         self.selectElementAction.setEnabled(not WateringUtils.isScenarioNotOpened()) """
                 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_optimization.png'
+        """icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_optimization.png'
         self.openOptimizationManagerAction = self.add_action(
             icon_path,
             text=self.tr(u'Optimization'),
             callback=self.waterOptimization,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
-        self.openOptimizationManagerAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.openOptimizationManagerAction.setEnabled(not WateringUtils.isScenarioNotOpened())"""
         
         """ icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
         self.insertSensorAction = self.add_action(
@@ -244,7 +244,11 @@ class QGISPlugin_WaterIng:
 
         self.toolbarToolManager.initializeToolbarButtonActions()
         self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
-
+        self.toolbarToolManager.optimizationToolsAction.toggled.connect(self.toolbarToolManager.activateOptimizationTool)
+        """self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
+        self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
+        self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
+"""
 
        
 
@@ -436,7 +440,7 @@ class QGISPlugin_WaterIng:
             self.analysisDockPanel.show()
             #self.dlg.exec_()
             
-    def waterOptimization(self):
+    """def waterOptimization(self):
         if WateringUtils.isScenarioNotOpened():
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
@@ -444,7 +448,7 @@ class QGISPlugin_WaterIng:
         else:
             self.dlg = WaterOptimization()
             self.dlg.show()
-            self.dlg.exec_()
+            self.dlg.exec_()"""
 
     
     """def activateToolInsertSensorPlacement(self):
