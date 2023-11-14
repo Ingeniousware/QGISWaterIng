@@ -31,10 +31,10 @@ from .maptools.selectNodeTool import SelectNodeTool
 from .maptools.deleteElementTool import DeleteElementTool
 from .ui.watering_load import WateringLoad
 from .ui.watering_login import WateringLogin
-from .ui.watering_analysis import WateringAnalysis
+#from .ui.watering_analysis import WateringAnalysis
 #from .ui.watering_optimization import WaterOptimization
 from .watering_utils import WateringUtils
-from .ui.watering_datachannels import WateringDatachannels
+#from .ui.watering_datachannels import WateringDatachannels
 from .ui.watering_INPImport import WateringINPImport
 from .ActionManagement.actionManager import actionManager
 
@@ -81,13 +81,13 @@ class QGISPlugin_WaterIng:
         self.insertSensorNodeAction = None
         self.toolDeleteElementAction = None
         self.selectElementAction = None"""
-        self.readAnalysisAction = None
+        #self.readAnalysisAction = None
         self.canvas = iface.mapCanvas()
         QgsProject.instance().cleared.connect(self.updateActionStateClose)
         QgsProject.instance().readProject.connect(self.updateActionStateOpen)
 
 
-        self.readMeasurementsAction = None
+        #self.readMeasurementsAction = None
                                                   
         # Toolbar
         self.activeMapTool = None
@@ -97,8 +97,8 @@ class QGISPlugin_WaterIng:
 
         self.hub_connection = None
         # Dock
-        self.analysisDockPanel = WateringAnalysis(self.iface)
-        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
+        #self.analysisDockPanel = WateringAnalysis(self.iface)
+        #self.iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
 
         self.scenarioUnitOFWork = None
         self.syncManager = None
@@ -199,7 +199,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
+        """icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.add_action(
             icon_path,
             text=self.tr(u'Water Network Analysis', 'QGISWaterIng'),
@@ -207,7 +207,7 @@ class QGISPlugin_WaterIng:
             callback=self.waterAnalysis,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())     
-        self.readAnalysisAction.setEnabled(not WateringUtils.isScenarioNotOpened())   
+        self.readAnalysisAction.setEnabled(not WateringUtils.isScenarioNotOpened())   """
 
         """ for the moment we are not going to use this select
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
@@ -245,10 +245,9 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.initializeToolbarButtonActions()
         self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
         self.toolbarToolManager.optimizationToolsAction.toggled.connect(self.toolbarToolManager.activateOptimizationTool)
-        """self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
-        self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
-        self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
-"""
+        self.toolbarToolManager.readMeasurementsAction.toggled.connect(self.toolbarToolManager.activateMeasurementTool)
+        self.toolbarToolManager.readAnalysisAction.toggled.connect(self.toolbarToolManager.activateWaterAnalysisTool)
+       
 
        
 
@@ -338,14 +337,14 @@ class QGISPlugin_WaterIng:
         self.toolDeleteElementAction.setCheckable(True)        
         self.toolDeleteElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())"""
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Monitoring.png'
+        """icon_path = ':/plugins/QGISPlugin_WaterIng/images/Monitoring.png'
         self.readMeasurementsAction = self.add_action(
             icon_path,
             text=self.tr(u'Get Measurements'),
             callback=self.getMeasurements,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
-        self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())"""
                                                        
         #adding a standard action to our toolbar
         self.iface.actionIdentify().setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/selection.png'))
@@ -430,7 +429,7 @@ class QGISPlugin_WaterIng:
             self.dlg.exec_()
 
                 
-    def waterAnalysis(self):
+    """def waterAnalysis(self):
         if WateringUtils.isScenarioNotOpened():
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
@@ -438,7 +437,7 @@ class QGISPlugin_WaterIng:
         else:
             self.analysisDockPanel.initializeRepository()
             self.analysisDockPanel.show()
-            #self.dlg.exec_()
+            #self.dlg.exec_()"""
             
     """def waterOptimization(self):
         if WateringUtils.isScenarioNotOpened():
@@ -660,9 +659,9 @@ class QGISPlugin_WaterIng:
             self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
             print("before setting to true")
             #self.toolSelectNode.setAction(self.selectElementAction)
-            self.readAnalysisAction.setEnabled(True)                            
-            self.openOptimizationManagerAction.setEnabled(True)
-            self.readMeasurementsAction.setEnabled(True)
+            self.toolbarToolManager.readAnalysisAction.setEnabled(True)                            
+            self.toolbarToolManager.openOptimizationManagerAction.setEnabled(True)
+            self.toolbarToolManager.readMeasurementsAction.setEnabled(True)
             self.importFileINP.setEnabled(True)
             # self.selectElementAction.setEnabled(True)
             print("After setting to true")
@@ -672,10 +671,10 @@ class QGISPlugin_WaterIng:
         print("Entering updateActionStateClose")
         self.cleanMarkers()
         
-        actions = [self.readAnalysisAction,
+        actions = [self.toolbarToolManager.readAnalysisAction,
                     self.toolbarToolManager.insertSensorNodeAction,
-                    self.openOptimizationManagerAction,
-                    self.readMeasurementsAction,
+                    self.toolbarToolManager.openOptimizationManagerAction,
+                    self.toolbarToolManager.readMeasurementsAction,
                     self.importFileINP,
                     self.toolbarToolManager.selectElementAction,
                     self.toolbarToolManager.insertDemandNodeAction,
@@ -706,7 +705,7 @@ class QGISPlugin_WaterIng:
                 self.canvas.scene().removeItem(vertex)
             self.canvas.refresh()  
 
-
+    """
     def getMeasurements(self):
         if WateringUtils.isScenarioNotOpened():
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
@@ -718,7 +717,7 @@ class QGISPlugin_WaterIng:
                 self.dlg.show()
                 self.dlg.exec_()
             except:
-                self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"No data source available for the project."), level=1, duration=5)
+                self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"No data source available for the project."), level=1, duration=5)"""
 
 
     def createOnlineConnectionChannels(self):

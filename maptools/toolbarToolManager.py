@@ -1,10 +1,15 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
+from qgis.utils import iface
+from PyQt5.QtCore import Qt
+
 from functools import partial
 import os
 
 from ..watering_utils import WateringUtils
+from ..ui.watering_datachannels import WateringDatachannels
 from ..ui.watering_optimization import WaterOptimization
+from ..ui.watering_analysis import WateringAnalysis
 from ..maptools.toolbarAction import toolbarAction
 
 class toolbarToolManager():
@@ -17,6 +22,7 @@ class toolbarToolManager():
         self.toolbar = toolbar
         self.parentWindow = parentWindow
 
+        # Actions
         self.editElementsAction = None
         self.insertDemandNodeAction = None
         self.insertTankNodeAction = None
@@ -28,9 +34,14 @@ class toolbarToolManager():
         self.toolDeleteElementAction = None
         self.selectElementAction = None
         self.openOptimizationManagerAction = None
-        self.teste = None
+        self.readAnalysisAction = None
+        self.readMeasurementsAction = None
         self.undoAction = None
         self.redoAction = None
+        
+        # Dock
+        self.analysisDockPanel = WateringAnalysis(iface)
+        iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
 
     def initializeToolbarButtonActions(self):
         # Edit
@@ -57,6 +68,31 @@ class toolbarToolManager():
         #self.editElementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         self.optimizationToolsAction.toggled.connect(self.activateOptimizationTool)
         
+        # Analysis
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
+        self.readAnalysisAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Water Network Analysis', 'QGISWaterIng'),
+            #text=self.tr(u'Water Network Analysis'),
+            callback=self.activeControllerTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)     
+        self.readAnalysisAction.setEnabled(not WateringUtils.isScenarioNotOpened())   
+        self.readAnalysisAction.setCheckable(True)        
+        self.readAnalysisAction.toggled.connect(self.activateWaterAnalysisTool)
+        
+        # Measurements
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Monitoring.png'
+        self.readMeasurementsAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Get Measurements'),
+            callback=self.activeControllerTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.readMeasurementsAction.setCheckable(True)        
+        self.readMeasurementsAction.toggled.connect(self.activateMeasurementTool)
+           
         # Demand Nodes
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.png'
         self.insertDemandNodeAction = self.addMapToolButtonAction(
@@ -295,10 +331,32 @@ class toolbarToolManager():
 
     def waterOptimization(self):
         if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
-            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
             self.dlg = WaterOptimization()
             self.dlg.show()
             self.dlg.exec_()
+            
+    def activateMeasurementTool(self):
+        if WateringUtils.isScenarioNotOpened():
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+        else:
+            try:
+                self.dlg = WateringDatachannels()
+                self.dlg.show()
+                self.dlg.exec_()
+            except:
+                iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"No data source available for the project."), level=1, duration=5)
+    
+    def activateWaterAnalysisTool(self):
+        if WateringUtils.isScenarioNotOpened():
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+        else:
+            self.analysisDockPanel.initializeRepository()
+            self.analysisDockPanel.show()
