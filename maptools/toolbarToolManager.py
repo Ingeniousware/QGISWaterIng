@@ -65,7 +65,7 @@ class toolbarToolManager():
             toolbar = self.toolbar,
             parent=self.parentWindow)
         self.optimizationToolsAction.setCheckable(True)        
-        #self.editElementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        #self.optimizationToolsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         self.optimizationToolsAction.toggled.connect(self.activateOptimizationTool)
         
         # Analysis
@@ -335,9 +335,9 @@ class toolbarToolManager():
         if os.environ.get('TOKEN') == None:
             iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
-            self.dlg = WaterOptimization()
-            self.dlg.show()
-            self.dlg.exec_()
+            dlg = WaterOptimization()
+            dlg.show()
+            dlg.exec_()
             
     def activateMeasurementTool(self):
         if WateringUtils.isScenarioNotOpened():

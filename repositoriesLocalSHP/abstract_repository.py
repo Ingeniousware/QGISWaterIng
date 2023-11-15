@@ -118,7 +118,7 @@ class AbstractRepository():
         for i in range(len(self.field_definitions)):
             feature.setAttribute(self.field_definitions[i][0], element[i+2])
 
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -140,7 +140,7 @@ class AbstractRepository():
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
         self.setDefaultValues(feature)
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -233,42 +233,37 @@ class AbstractRepository():
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
             print("Entering updateFromOfflineToServer")
+            print("in update lastUpdatedToServer", lastUpdatedToServer)
             self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
             for feature in self.Layer.getFeatures():   
                 if feature['lastUpdate'] > lastUpdatedToServer: 
                     print("Updating feature: ", feature.id())                                           
                     self.connectorToServer.addElementToServer(feature)
             
-            self.deleteElementsInBackupLayers()
+            self.deleteElementsInBackupLayers(lastUpdatedToServer)
          #def removeElementFromServer(self, serverKeyId):
 
-    def deleteElementsInBackupLayers(self):
-        to_delete_ids = []
+    def deleteElementsInBackupLayers(self, lastUpdatedToServer):
         
         backup_layer_name = self.LayerName + "_backup.shp"
         
-        """shp_backupFiles = ['watering_demand_nodes_backup.shp', 
-                           'watering_reservoirs_backup.shp', 
-                           'watering_tanks_backup.shp', 
-                           'watering_pumps_backup.shp', 
-                           'watering_valves_backup.shp',
-                           'watering_pipes_backup.shp']"""
-
-        #for shp_file in shp_backupFiles:
         backup_file_path = os.path.dirname(self.StorageShapeFile) + "/" + backup_layer_name
         layer = QgsVectorLayer(backup_file_path, "layer", "ogr")
+        
         if not layer.isValid():
             print(f"Failed to load layer: {backup_layer_name}")
             return 
-        # Get and store IDs
-        to_delete_ids.extend(self.getElementsIdsFromLayer(layer))
-            
-        for id in to_delete_ids:
-            self.connectorToServer.removeElementFromServer(id)
-            
-        # Clean layer
-        self.cleanLayer(layer)
-    
+
+        current_time = WateringUtils.getDateTimeNow()
+        for feature in layer.getFeatures():
+            if feature['lastUpdate'] > lastUpdatedToServer: 
+                print("Updating feature: ", feature.id()) 
+                print("its is: ", feature['lastUpdate'], "last update: ", lastUpdatedToServer)
+                layer.changeAttributeValue(feature.id(), layer.fields().indexFromName('lastUpdate'), current_time)
+                self.connectorToServer.removeElementFromServer(feature["ID"])
+            else:
+                print("its is not: ", feature['lastUpdate'], "last update: ", lastUpdatedToServer)
+                
     def getElementsIdsFromLayer(self, layer):
         ids = []
         for feature in layer.getFeatures():

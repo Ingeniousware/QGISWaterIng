@@ -34,8 +34,8 @@ class DeleteElementTool(QgsMapTool):
             
             backup_layer_path = WateringUtils.getProjectMetadata(key)
             val = WateringUtils.getProjectMetadata("backup_layer_pathwatering_demand_nodes")
-            print("SECOND ATTEMPT: ", val)
-            print("BAKCUP LAYER PATH: ", backup_layer_path, "key: ",key, "backup_layer_name: ", backup_layer_name)
+            #print("SECOND ATTEMPT: ", val)
+            #print("BAKCUP LAYER PATH: ", backup_layer_path, "key: ",key, "backup_layer_name: ", backup_layer_name)
             #backup_layer = QgsVectorLayer(backup_layer_path, backup_layer_name, "ogr") 
             backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
             #backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
@@ -50,7 +50,8 @@ class DeleteElementTool(QgsMapTool):
                 new_feat = QgsFeature(backup_layer.fields())
                 new_feat.setGeometry(feature.geometry())
                 new_feat.setAttributes(feature.attributes())
-
+                lastUpdateIndex = new_feat.fields().indexFromName('lastUpdate')
+                new_feat.setAttribute(lastUpdateIndex, WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz"))
                 # Add the new feature to the target layer
                 backup_layer.addFeature(new_feat)
                 

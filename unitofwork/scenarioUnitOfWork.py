@@ -53,14 +53,16 @@ class scenarioUnitOfWork():
             element.updateFromServerToOffline(self.lastUpdatedFromServer)
         self.lastUpdatedFromServer = now"""
         
+        print("before self.lastUpdatedToServer", self.lastUpdatedToServer)
         for element in self.list_of_elements:
             element.updateFromOfflineToServer(self.lastUpdatedToServer)
         self.lastUpdatedToServer = now
-
+        print("after self.lastUpdatedToServer", self.lastUpdatedToServer)
         self.updateProjectMetadata(now)
         
     def getLastUpdatedToServer(self):
         date = WateringUtils.getProjectMetadata(self.keyToServer)
+        print("Date last update", date)
         
         if date != "default text":
             return date
