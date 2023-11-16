@@ -105,7 +105,7 @@ class toolbarToolManager():
         self.insertDemandNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Tanks
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Tank.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/tank.svg'
         self.insertTankNodeAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Add Tank Node'),

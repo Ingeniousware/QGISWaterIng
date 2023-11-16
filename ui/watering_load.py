@@ -159,6 +159,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 self.startProject()
         else:
             self.startProject()
+            
+        for dock_widget in iface.mainWindow().findChildren(QDockWidget):
+            if iface.mainWindow().dockWidgetArea(dock_widget) == Qt.RightDockWidgetArea:
+                dock_widget.close()
 
     def saveCurrentProject(self):
         project = QgsProject.instance()

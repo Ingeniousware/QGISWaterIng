@@ -36,5 +36,6 @@
         <file>images/output3.gif</file>
         <file>images/Edit.png</file>
         <file>images/optimizationManager.png</file>
+        <file>images/tank.svg</file>
     </qresource>
 </RCC>
