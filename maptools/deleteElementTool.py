@@ -77,5 +77,5 @@ class DeleteElementTool(QgsMapTool):
                                   
     def deactivate(self):
         print("Clicked to unselect button of deleting element.")
-        self.layer.removeSelection()
+        #self.layer.removeSelection()
     
