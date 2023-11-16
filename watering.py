@@ -612,37 +612,37 @@ class QGISPlugin_WaterIng:
         self.toolInsertSensorNodePlacement.setAction(self.insertSensorAction)
         self.insertSensorAction.setEnabled(True) """
     
-        toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
+        toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertDemandNode.setAction(self.toolbarToolManager.insertDemandNodeAction)
         self.toolbarToolManager.insertDemandNodeAction.setCurrentTool(toolInsertDemandNode)
         self.toolbarToolManager.insertDemandNodeAction.setEnabled(True)
 
-        toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.tankNodeRepository, self.actionManager)
+        toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.tankNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertTankNode.setAction(self.toolbarToolManager.insertTankNodeAction)
         self.toolbarToolManager.insertTankNodeAction.setCurrentTool(toolInsertTankNode)
         self.toolbarToolManager.insertTankNodeAction.setEnabled(True)
 
-        toolInsertReservoirNode = InsertReservoirNodeTool(self.canvas, self.scenarioUnitOFWork.reservoirNodeRepository, self.actionManager)
+        toolInsertReservoirNode = InsertReservoirNodeTool(self.canvas, self.scenarioUnitOFWork.reservoirNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertReservoirNode.setAction(self.toolbarToolManager.insertReservoirNodeAction)
         self.toolbarToolManager.insertReservoirNodeAction.setCurrentTool(toolInsertReservoirNode)
         self.toolbarToolManager.insertReservoirNodeAction.setEnabled(True)
 
-        toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)
+        toolInsertWaterPipe = InsertWaterPipeTool(self.canvas, self.scenarioUnitOFWork.pipeNodeRepository, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertWaterPipe.setAction(self.toolbarToolManager.insertWaterPipeAction)
         self.toolbarToolManager.insertWaterPipeAction.setCurrentTool(toolInsertWaterPipe)
         self.toolbarToolManager.insertWaterPipeAction.setEnabled(True)
 
-        toolInsertValveNode = InsertValveNodeTool(self.canvas, self.scenarioUnitOFWork.valveNodeRepository, self.actionManager)
+        toolInsertValveNode = InsertValveNodeTool(self.canvas, self.scenarioUnitOFWork.valveNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertValveNode.setAction(self.toolbarToolManager.insertValveNodeAction)
         self.toolbarToolManager.insertValveNodeAction.setCurrentTool(toolInsertValveNode)
         self.toolbarToolManager.insertValveNodeAction.setEnabled(True)
 
-        toolInsertPumpNode = InsertPumpNodeTool(self.canvas, self.scenarioUnitOFWork.pumpNodeRepository, self.actionManager)
+        toolInsertPumpNode = InsertPumpNodeTool(self.canvas, self.scenarioUnitOFWork.pumpNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertPumpNode.setAction(self.toolbarToolManager.insertPumpNodeAction)
         self.toolbarToolManager.insertPumpNodeAction.setCurrentTool(toolInsertPumpNode)
         self.toolbarToolManager.insertPumpNodeAction.setEnabled(True)
 
-        toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.sensorNodeRepository, self.actionManager)
+        toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.sensorNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertSensorNode.setAction(self.toolbarToolManager.insertSensorNodeAction)
         self.toolbarToolManager.insertSensorNodeAction.setCurrentTool(toolInsertSensorNode)
         self.toolbarToolManager.insertSensorNodeAction.setEnabled(True)
