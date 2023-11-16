@@ -1,5 +1,6 @@
 from qgis.gui import QgsVertexMarker, QgsMapTool
 from PyQt5.QtGui import QColor
+from PyQt5.QtCore import QObject, QEvent, Qt
 
 class InsertAbstractTool(QgsMapTool):
 
@@ -25,6 +26,5 @@ class InsertAbstractTool(QgsMapTool):
         m.setPenWidth(3)
     
     def deactivate(self):
-        print("deactivate insert demand node tool")
-        
+        print("deactivate abstract tool")
     

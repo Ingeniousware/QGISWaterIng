@@ -7,8 +7,9 @@ from PyQt5.QtCore import QObject, QEvent, Qt
 
 class InsertSensorNodeTool(InsertAbstractTool):
     
-    def __init__(self, canvas, elementRepository, actionManager):
-        super(InsertSensorNodeTool, self).__init__(canvas, elementRepository, actionManager)  
+    def __init__(self, canvas, elementRepository, actionManager, toolbarManager):
+        super(InsertSensorNodeTool, self).__init__(canvas, elementRepository, actionManager) 
+        self.toolbarManager =  toolbarManager
         print("Init at Insert Sensor Node")
         if (QgsProject.instance().mapLayersByName("watering_sensors") is not None) and len(QgsProject.instance().mapLayersByName("watering_sensors")) != 0:
           self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
@@ -32,6 +33,10 @@ class InsertSensorNodeTool(InsertAbstractTool):
         self.actionManager.execute(action)
             
 
-
+    def keyReleaseEvent(self, e):
+        if e.key() == Qt.Key.Key_Escape:
+            self.deactivate()
+            
     def deactivate(self):
         print("deactivate insert demand node tool")   
+        self.canvas.unsetMapTool(self.canvas.mapTool())

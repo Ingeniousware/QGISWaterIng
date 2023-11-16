@@ -6,8 +6,9 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, QEvent, Qt
 
 class InsertPumpNodeTool(InsertAbstractTool):
-    def __init__(self, canvas, elementRepository, actionManager):
+    def __init__(self, canvas, elementRepository, actionManager, toolbarManager):
         super(InsertPumpNodeTool, self).__init__(canvas, elementRepository, actionManager)  
+        self.toolbarManager =  toolbarManager
         print("Init at Insert Demand Node")
         if (QgsProject.instance().mapLayersByName("watering_pumps") is not None) and len(QgsProject.instance().mapLayersByName("watering_pumps")) != 0:
           self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_pumps")[0]
@@ -31,9 +32,12 @@ class InsertPumpNodeTool(InsertAbstractTool):
         self.actionManager.execute(action)
             
 
-
+    def keyReleaseEvent(self, e):
+        if e.key() == Qt.Key.Key_Escape:
+            self.deactivate()
+            
     def deactivate(self):
         print("deactivate insert demand node tool")
-
+        self.canvas.unsetMapTool(self.canvas.mapTool())
 
     

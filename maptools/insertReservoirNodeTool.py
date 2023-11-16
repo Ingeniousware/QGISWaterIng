@@ -8,8 +8,9 @@ from PyQt5.QtCore import QObject, QEvent, Qt
 
 class InsertReservoirNodeTool(InsertAbstractTool):
     
-    def __init__(self, canvas, elementRepository, actionManager):
+    def __init__(self, canvas, elementRepository, actionManager, toolbarManager):
         super(InsertReservoirNodeTool, self).__init__(canvas, elementRepository, actionManager)  
+        self.toolbarManager =  toolbarManager
         print("Init at Insert Reservoir Node")
         if (QgsProject.instance().mapLayersByName("watering_reservoirs") is not None) and len(QgsProject.instance().mapLayersByName("watering_reservoirs")) != 0:
             self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_reservoirs")[0]
@@ -32,8 +33,11 @@ class InsertReservoirNodeTool(InsertAbstractTool):
         action = insertNodeAction(self.elementRepository, self.point.x(), self.point.y())         
         self.actionManager.execute(action)
             
-
+    def keyReleaseEvent(self, e):
+        if e.key() == Qt.Key.Key_Escape:
+            self.deactivate()
 
     def deactivate(self):
         print("deactivate insert demand node tool")
+        self.canvas.unsetMapTool(self.canvas.mapTool())
         
