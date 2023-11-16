@@ -619,7 +619,7 @@ class QGISPlugin_WaterIng:
 
         toolInsertTankNode = InsertTankNodeTool(self.canvas, self.scenarioUnitOFWork.tankNodeRepository, self.actionManager)
         toolInsertTankNode.setAction(self.toolbarToolManager.insertTankNodeAction)
-        self.toolbarToolManager.insertTankNodeAction.setCurrentTool(toolInsertDemandNode)
+        self.toolbarToolManager.insertTankNodeAction.setCurrentTool(toolInsertTankNode)
         self.toolbarToolManager.insertTankNodeAction.setEnabled(True)
 
         toolInsertReservoirNode = InsertReservoirNodeTool(self.canvas, self.scenarioUnitOFWork.reservoirNodeRepository, self.actionManager)
