@@ -16,12 +16,9 @@
         <file>images/icon_backward.png</file>
         <file>images/icon_forward.png</file>
         <file>images/icon_cache.png</file>
-        <file>images/Tank.png</file>
         <file>images/Valve.png</file>
         <file>images/WaterMeter.png</file>
-        <file>images/Reservoir.png</file>
         <file>images/Pump.png</file>
-        <file>images/node.png</file>
         <file>images/sensor.png</file>
         <file>images/stop.png</file>
         <file>images/start.png</file>
@@ -31,12 +28,15 @@
         <file>images/zoomAll.png</file>
         <file>images/selection.png</file>
         <file>images/Import.png</file>
-        <file>images/pipe.png</file>
+        <file>images/pipe.svg</file>
         <file>images/trash.png</file>
         <file>images/output3.gif</file>
         <file>images/Edit.png</file>
         <file>images/optimizationManager.png</file>
         <file>images/tank.svg</file>
         <file>images/tankLayer.svg</file>
+        <file>images/node.svg</file>
+        <file>images/reservoir.svg</file>
+        <file>images/reservoirLayer.svg</file>
     </qresource>
 </RCC>

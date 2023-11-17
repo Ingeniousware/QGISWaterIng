@@ -94,7 +94,7 @@ class toolbarToolManager():
         self.readMeasurementsAction.toggled.connect(self.activateMeasurementTool)
            
         # Demand Nodes
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.svg'
         self.insertDemandNodeAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Add Demand Node'),
@@ -116,7 +116,7 @@ class toolbarToolManager():
         self.insertTankNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Pipes
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/pipe.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/pipe.svg'
         self.insertWaterPipeAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Add Water Pipe'),
@@ -127,7 +127,7 @@ class toolbarToolManager():
         self.insertWaterPipeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Reservoirs
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Reservoir.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/reservoir.svg'
         self.insertReservoirNodeAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Add Reservoir Node'),
