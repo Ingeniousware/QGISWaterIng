@@ -2,7 +2,7 @@ from ..ActionManagement.insertPipeAction import insertPipeAction
 from ..ActionManagement.insertNodeAction import insertNodeAction
 from .insertAbstractTool import InsertAbstractTool
 from qgis.gui import QgsVertexMarker, QgsMapTool, QgsRubberBand, Qgis
-from qgis.core import QgsPoint, QgsGeometry, QgsProject, QgsPointXY
+from qgis.core import QgsPoint, QgsGeometry, QgsProject, QgsPointXY, QgsWkbTypes
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 
@@ -64,13 +64,12 @@ class InsertWaterPipeTool(InsertAbstractTool):
                 self.upnode = point
                 self.clickedQgsPoints.clear()
                 self.clickedQgsPoints.append(point)
-                self.allPoints.append(point)
+                if not point in self.allPoints:
+                    self.allPoints.append(point)
             else: 
                 self.upnode = action.feature
             
         self.lastPoint = point
-
-
 
     def canvasMoveEvent(self, e):
         if not (self.lastPoint == None): 
@@ -82,38 +81,60 @@ class InsertWaterPipeTool(InsertAbstractTool):
         if e.key() == Qt.Key.Key_Escape:
             print("Esc pressed....insert pipe should be deactivated")
             if self.lastPoint == None:
+                print("Fully deactivating pipes")
                 self.deactivate()
             else:
-                self.cleanCurrentPipeAdding()
+                print("Restart pipes insertion")
+                self.clearDemandNodes()             
+                self.clearWaterPipes()
+                self.clearVariables()
 
-    def cleanCurrentPipeAdding(self):
+   
         
-        self.clearVariables()
-            
-        layer_name = "watering_demand_nodes"
-        layer = QgsProject.instance().mapLayersByName(layer_name)[0]
-        print(self.clickedQgsPoints)
-        # Convert the clicked points to a set of tuples for faster comparison
+    
+    def clearDemandNodes(self):
+        layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+        
         clicked_points_set = set((point.x(), point.y()) for point in self.allPoints)
 
+        layer.startEditing()
+
+        for feature in layer.getFeatures():
+            feature_point = (feature.geometry().asPoint().x(), feature.geometry().asPoint().y())
+
+            if feature_point in clicked_points_set:
+                layer.deleteFeature(feature.id())
+
+        layer.commitChanges()
+        
+    def clearWaterPipes(self):
+        layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]    
+        
         # Start an edit session
         layer.startEditing()
 
         # Iterate over features in the layer
         for feature in layer.getFeatures():
-            # Convert the feature geometry to a tuple
-            feature_point = (feature.geometry().asPoint().x(), feature.geometry().asPoint().y())
+            points_in_pipe = []
+            lines = feature.geometry().asMultiPolyline()
+            flat_list = [(point.x(), point.y())  for sublist in lines for point in sublist]
+            
+            for line in feature.geometry().asMultiPolyline():
 
-            # Check if the feature's point is in the set of clicked points
-            if feature_point in clicked_points_set:
-                # Delete the feature
-                layer.deleteFeature(feature.id())
+                for point in line:
+                    points_in_pipe.append((point.x(), point.y()))
+                    
+                if points_in_pipe == flat_list:
+                    # Delete the feature
+                    layer.deleteFeature(feature.id())
+                    break  # Break out of the inner loop if a match is found
 
         # Commit changes
         layer.commitChanges()
-    
+
     def clearVariables(self):
         self.clickedQgsPoints.clear()
+        self.allPoints.clear()
         self.lastPoint = None
         self.canvas.scene().removeItem(self.rubberBand1)
         self.canvas.scene().removeItem(self.rubberBand2)
@@ -129,7 +150,6 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.lastPoint = None 
 
 
-
     def createFixedPartOfPipe(self, pointsFixedLine):
         if self.rubberBand1 is not None:
             self.canvas.scene().removeItem(self.rubberBand1)
@@ -138,8 +158,6 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.rubberBand1.setColor(QColor(240, 40, 40))
         self.rubberBand1.setWidth(1)
         self.rubberBand1.setLineStyle(Qt.SolidLine)
-
-
     
     def createMovingPartOfPipe(self, lastPoint, movingPoint):
         pointsMovingLine = []
