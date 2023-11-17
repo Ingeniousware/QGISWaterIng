@@ -73,6 +73,8 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         url_analysis = WateringUtils.getServerUrl() + "/api/v1/WaterAnalysis"
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         params = {'ScenarioFK': "{}".format(self.ScenarioFK)}
+
+        """
         response_analysis = requests.get(url_analysis, params=params,
                                 headers={'Authorization': "Bearer {}".format(self.token)})
 
@@ -93,6 +95,31 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             self.BoxSimulator.addItem(response_simulators.json()["data"][i]["name"])
             self.listOfSimulators.append((response_simulators.json()["data"][i]["name"], 
                                           response_simulators.json()["data"][i]["serverKeyId"]))
+        """
+            
+        try:
+            # Get water analysis
+            response_analysis = requests.get(url_analysis, params=params, headers={'Authorization': "Bearer {}".format(self.token)})
+            response_analysis.raise_for_status()
+
+            analysis_data = response_analysis.json()["data"]
+            self.analysis_box.addItems([item["name"] for item in analysis_data])
+            self.analysis_box2.addItems([item["name"] for item in analysis_data])
+
+            self.listOfAnalysis = [(item["serverKeyId"], item["simulationStartTime"]) for item in analysis_data]
+
+            #For simulator combo box in executions
+            url_simulators = url_analysis + "/simulators"
+            response_simulators = requests.get(url_simulators, params=params, headers={'Authorization': "Bearer {}".format(self.token)})
+            response_simulators.raise_for_status()
+
+            simulator_data = response_simulators.json()["data"]
+            self.BoxSimulator.addItems([item["name"] for item in simulator_data])
+
+            self.listOfSimulators = [(item["name"], item["serverKeyId"]) for item in simulator_data]
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error in initializeRepository: {e}")
         
     def checkUserControlState(self):
         if self.compareCheckBox.isChecked():
