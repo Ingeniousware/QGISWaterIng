@@ -104,7 +104,8 @@ class InsertWaterPipeTool(InsertAbstractTool):
 
             if feature_point in clicked_points_set:
                 layer.deleteFeature(feature.id())
-
+                self.elementRepository.deleteFeatureFromMapInteraction(feature)
+                
         layer.commitChanges()
         
     def clearWaterPipes(self):
@@ -127,6 +128,7 @@ class InsertWaterPipeTool(InsertAbstractTool):
                 if points_in_pipe == flat_list:
                     # Delete the feature
                     layer.deleteFeature(feature.id())
+                    self.elementRepository.deleteFeatureFromMapInteraction(feature)
                     break  # Break out of the inner loop if a match is found
 
         # Commit changes
@@ -145,9 +147,16 @@ class InsertWaterPipeTool(InsertAbstractTool):
         print("deactivate insert pipe tool")
         self.toolbarManager.insertWaterPipeAction.setChecked(False)
         self.canvas.unsetMapTool(self.canvas.mapTool())
-        self.clickedQgsPoints = []        
-        self.rubberBand1 = None
-        self.rubberBand2 = None
+        self.clickedQgsPoints = []  
+        
+        if self.rubberBand1:  
+            self.canvas.scene().removeItem(self.rubberBand1)
+            self.rubberBand1 = None
+
+        if self.rubberBand2:
+            self.canvas.scene().removeItem(self.rubberBand2)     
+            self.rubberBand2 = None
+            
         self.lastPoint = None 
 
 
