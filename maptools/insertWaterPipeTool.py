@@ -85,8 +85,8 @@ class InsertWaterPipeTool(InsertAbstractTool):
                 self.deactivate()
             else:
                 print("Restart pipes insertion")
-                self.clearDemandNodes()             
-                self.clearWaterPipes()
+                #self.clearDemandNodes()             
+                #self.clearWaterPipes()
                 self.clearVariables()
 
    
@@ -138,10 +138,14 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.clickedQgsPoints.clear()
         self.allPoints.clear()
         self.lastPoint = None
-        self.canvas.scene().removeItem(self.rubberBand1)
-        self.canvas.scene().removeItem(self.rubberBand2)
-        self.rubberBand1 = None
-        self.rubberBand2 = None
+        
+        if self.rubberBand1:  
+            self.canvas.scene().removeItem(self.rubberBand1)
+            self.rubberBand1 = None
+
+        if self.rubberBand2:
+            self.canvas.scene().removeItem(self.rubberBand2)     
+            self.rubberBand2 = None
         
     def deactivate(self):
         print("deactivate insert pipe tool")
