@@ -39,5 +39,6 @@ class InsertReservoirNodeTool(InsertAbstractTool):
 
     def deactivate(self):
         print("deactivate insert demand node tool")
+        self.toolbarManager.insertReservoirNodeAction.setChecked(False)
         self.canvas.unsetMapTool(self.canvas.mapTool())
         

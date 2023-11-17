@@ -38,4 +38,5 @@ class InsertTankNodeTool(InsertAbstractTool):
 
     def deactivate(self):
         print("deactivate insert demand node tool")   
+        self.toolbarManager.insertTankNodeAction.setChecked(False)
         self.canvas.unsetMapTool(self.canvas.mapTool())

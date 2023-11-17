@@ -38,5 +38,6 @@ class InsertSensorNodeTool(InsertAbstractTool):
             self.deactivate()
             
     def deactivate(self):
-        print("deactivate insert demand node tool")   
+        print("deactivate insert sensor node tool")   
+        self.toolbarManager.insertSensorNodeAction.setChecked(False)
         self.canvas.unsetMapTool(self.canvas.mapTool())
