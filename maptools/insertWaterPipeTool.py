@@ -143,6 +143,7 @@ class InsertWaterPipeTool(InsertAbstractTool):
         
     def deactivate(self):
         print("deactivate insert pipe tool")
+        self.toolbarManager.insertWaterPipeAction.setChecked(False)
         self.canvas.unsetMapTool(self.canvas.mapTool())
         self.clickedQgsPoints = []        
         self.rubberBand1 = None
