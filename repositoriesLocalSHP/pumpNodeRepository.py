@@ -3,7 +3,7 @@ import requests
 from .abstract_repository import AbstractRepository
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
-from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
+from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSvgMarkerSymbolLayer
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 
@@ -36,7 +36,7 @@ class PumpNodeRepository(AbstractRepository):
      
     def initializeRepository(self):
         super(PumpNodeRepository, self).initializeRepository() 
-        self.openLayers(QgsSimpleMarkerSymbolLayerBase.SemiCircle, 6)
+        self.openLayers(":/plugins/QGISPlugin_WaterIng/images/pumpLayer.svg", 12)
         self.createBackupLayer()
         
     def setDefaultValues(self, feature):
@@ -52,4 +52,16 @@ class PumpNodeRepository(AbstractRepository):
         feature.setAttribute("Model FK", model)
         feature.setAttribute("Rel. Speed", speed)
     
+    def setElementSymbol(self, layer, path_to_gif, layer_size):
+        renderer = layer.renderer()
+        symbol = renderer.symbol()
+
+        symbol_layer = QgsSvgMarkerSymbolLayer(path_to_gif, layer_size)
+        #symbol_layer.setFrameRate(1)
+        symbol.changeSymbolLayer(0, symbol_layer)
+
+        symbol.setColor(self.Color)
+        if self.StrokeColor:
+            symbol.symbolLayer(0).setStrokeColor(self.StrokeColor)
+        layer.triggerRepaint()
     

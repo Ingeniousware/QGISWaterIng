@@ -1,42 +1,31 @@
 <RCC>
     <qresource prefix="/plugins/QGISPlugin_WaterIng" >
-        <file>images/icon.png</file>
-        <file>images/icon_load_elements.png</file>
         <file>images/watering_logo.png</file>
-        <file>images/icon_analysis.png</file>
-        <file>images/icon_select.png</file>
-        <file>images/icon_add_node.png</file>
-        <file>images/icon_login.png</file>
-        <file>images/sensor.png</file>
-        <file>images/icon_optimization.png</file>
-        <file>images/icon_measurement.png</file>
-        <file>images/icon_update.png</file>
-        <file>images/icon_play.png</file>
-        <file>images/icon_stop.png</file>
-        <file>images/icon_backward.png</file>
-        <file>images/icon_forward.png</file>
-        <file>images/icon_cache.png</file>
-        <file>images/Valve.png</file>
-        <file>images/WaterMeter.png</file>
-        <file>images/Pump.png</file>
-        <file>images/sensor.png</file>
-        <file>images/stop.png</file>
-        <file>images/start.png</file>
-        <file>images/Backward.png</file>
-        <file>images/Forward.png</file>
-        <file>images/Monitoring.png</file>
-        <file>images/zoomAll.png</file>
-        <file>images/selection.png</file>
-        <file>images/Import.png</file>
-        <file>images/pipe.svg</file>
-        <file>images/trash.png</file>
-        <file>images/output3.gif</file>
-        <file>images/Edit.png</file>
-        <file>images/optimizationManager.png</file>
+        <file>images/sensorLayer.gif</file>
         <file>images/tank.svg</file>
+        <file>images/pipe.svg</file>
+        <file>images/sensor.svg</file>
         <file>images/tankLayer.svg</file>
         <file>images/node.svg</file>
         <file>images/reservoir.svg</file>
         <file>images/reservoirLayer.svg</file>
+        <file>images/pump.svg</file>
+        <file>images/pumpLayer.svg</file>
+        <file>images/valve.svg</file>
+        <file>images/valveLayer.svg</file>
+        <file>images/login.svg</file>
+        <file>images/loadElements.svg</file>
+        <file>images/import.svg</file>
+        <file>images/refresh.svg</file>
+        <file>images/editElements.svg</file>
+        <file>images/clean.svg</file>
+        <file>images/select.svg</file>
+        <file>images/optimizationTools.svg</file>
+        <file>images/monitoring.svg</file>
+        <file>images/analysisChart.svg</file>
+        <file>images/optimization.svg</file>
+        <file>images/trash.svg</file>
+        <file>images/forward.svg</file>
+        <file>images/backward.svg</file>
     </qresource>
 </RCC>

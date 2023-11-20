@@ -166,7 +166,7 @@ class QGISPlugin_WaterIng:
 
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_login.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/login.svg'
         self.add_action(
             icon_path,
             text=self.tr(u'Watering Login'),
@@ -174,7 +174,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_load_elements.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/loadElements.svg'
         self.add_action(
             icon_path,
             text=self.tr(u'Download Elements'),
@@ -182,7 +182,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Import.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/import.svg'
         self.importFileINP = self.add_action(
             icon_path,
             text=self.tr(u'Import INP File'),
@@ -191,7 +191,7 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         self.importFileINP.setEnabled(not WateringUtils.isScenarioNotOpened())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_update.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/refresh.svg'
         self.add_action(
             icon_path,
             text=self.tr(u'Update Elements'),
@@ -347,13 +347,13 @@ class QGISPlugin_WaterIng:
         self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())"""
                                                        
         #adding a standard action to our toolbar
-        self.iface.actionIdentify().setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/selection.png'))
+        self.iface.actionIdentify().setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/select.svg'))
 
         self.toolIdentify = QgsMapToolIdentify(self.canvas)
         self.toolIdentify.setAction(self.iface.actionIdentify())
         self.toolbar.addAction(self.iface.actionIdentify())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_cache.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/clean.svg'
         self.deleteCacheFromWaterIng = self.add_action(
             icon_path,
             text=self.tr(u'Clean cache'),
