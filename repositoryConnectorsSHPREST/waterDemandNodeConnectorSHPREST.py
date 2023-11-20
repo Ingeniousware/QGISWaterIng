@@ -22,7 +22,6 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         connectionHub.on("DELETE_NODE", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
-        print("SCENARIO FK", scenarioFK)
 
     def processPOSTElementToLocal(self, paraminput):
         print("Entering processPOSTElementToLocal")        

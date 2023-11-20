@@ -22,6 +22,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         connectionHub.on("DELETE_PIPE", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
+        print("SCENARIO FK pipe", scenarioFK)
 
 
     def processPOSTElementToLocal(self, paraminput):
@@ -45,15 +46,10 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def addElementToServer(self, feature):
         print("ADDING PIPESS")
-        x = feature.geometry().asPoint().x()
-        y = feature.geometry().asPoint().y()
-        #transforming coordinates for the CRS of the server
-        transGeometry = QgsGeometry.fromPointXY(QgsPointXY(x, y))
-        transGeometry.transform(QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance()))
-        x = transGeometry.asPoint().x()
-        y = transGeometry.asPoint().y()
 
-
+        vertices = self.getVertices(feature)
+        print("VERTICES: ", vertices)
+        
         """name = feature["Name"]
         last_mdf = feature["Last Mdf"]
         description = feature["Descript"]
@@ -156,6 +152,18 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         serverResponse = self.serverRepository.deleteFromServer(elementJSON)
     
     def getVertices(self, feature):
-        lines = feature.geometry().asMultiPolyline()
-        flat_list = [(point.x(), point.y())  for sublist in lines for point in sublist]
-        print(flat_list)
+        vertices = []
+        
+        transGeometry = feature.geometry()
+        transform = QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance())
+        transGeometry.transform(transform)
+        
+        for point in transGeometry.asPolyline():
+            vertex = {
+                    "vertexFK": "anything",  # Substitua por uma chave estrangeira, se necessário
+                    "lng": point.x(),
+                    "lat": point.y()
+            }
+            vertices.append(vertex)
+            
+        return vertices
