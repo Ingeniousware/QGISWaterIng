@@ -4,7 +4,7 @@ from ..watering_utils import WateringUtils
 from qgis.gui import QgsMapTool, QgsMapToolIdentify
 from qgis.utils import iface
 from qgis.core import QgsProject, QgsFeature, QgsVectorLayer
-from qgis.gui import QgsMapTool
+
 
 class DeleteElementTool(QgsMapTool):
 

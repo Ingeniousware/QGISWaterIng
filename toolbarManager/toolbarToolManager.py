@@ -1,6 +1,7 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 from qgis.utils import iface
+from qgis.gui import QgsMapTool
 from PyQt5.QtCore import Qt
 
 from functools import partial
@@ -10,7 +11,7 @@ from ..watering_utils import WateringUtils
 from ..ui.watering_datachannels import WateringDatachannels
 from ..ui.watering_optimization import WaterOptimization
 from ..ui.watering_analysis import WateringAnalysis
-from ..maptools.toolbarAction import toolbarAction
+from ..toolsMap.toolbarAction import toolbarAction
 
 class toolbarToolManager():
 
@@ -24,6 +25,7 @@ class toolbarToolManager():
 
         # Actions
         self.editElementsAction = None
+        self.toolImportINPFile = None
         self.insertDemandNodeAction = None
         self.insertTankNodeAction = None
         self.insertWaterPipeAction = None
@@ -55,19 +57,7 @@ class toolbarToolManager():
         self.editElementsAction.setCheckable(True)        
         #self.editElementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         self.editElementsAction.toggled.connect(self.activateEditTool)
-        
-        # Optimization Tools        
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimizationManager.png'
-        self.optimizationToolsAction = self.addMapToolButtonAction(
-            icon_path,
-            text=WateringUtils.tr(u'Optimization Tools'),
-            callback=self.activeControllerTool,
-            toolbar = self.toolbar,
-            parent=self.parentWindow)
-        self.optimizationToolsAction.setCheckable(True)        
-        #self.optimizationToolsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-        self.optimizationToolsAction.toggled.connect(self.activateOptimizationTool)
-        
+               
         # Analysis
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
         self.readAnalysisAction = self.addMapToolButtonAction(
@@ -80,6 +70,18 @@ class toolbarToolManager():
         self.readAnalysisAction.setEnabled(not WateringUtils.isScenarioNotOpened())   
         self.readAnalysisAction.setCheckable(True)        
         self.readAnalysisAction.toggled.connect(self.activateWaterAnalysisTool)
+
+         # Optimization Tools        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimizationManager.png'
+        self.optimizationToolsAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Optimization Tools'),
+            callback=self.activeControllerTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.optimizationToolsAction.setCheckable(True)        
+        #self.optimizationToolsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.optimizationToolsAction.toggled.connect(self.activateOptimizationTool)
         
         # Measurements
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/Monitoring.png'
@@ -92,6 +94,19 @@ class toolbarToolManager():
         self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         self.readMeasurementsAction.setCheckable(True)        
         self.readMeasurementsAction.toggled.connect(self.activateMeasurementTool)
+
+
+        # import elements
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Import.png'
+        self.toolImportINPFile = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Import INP File'),
+            callback=self.activateActionTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.toolImportINPFile.setCheckable(False)        
+        self.toolImportINPFile.setEnabled(not WateringUtils.isScenarioNotOpened())
+
            
         # Demand Nodes
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/node.svg'
@@ -279,6 +294,9 @@ class toolbarToolManager():
         else:
             self.canvas.unsetMapTool(mapToolButtonAction.MapTool)
             self.activeMapTool = None
+
+    def activateActionTool(self, toolButtonAction):
+        toolButtonAction.MapTool.ExecuteAction()
     
     def activeControllerTool(self, toolControllerAction):
         if (toolControllerAction.isChecked()):
@@ -290,7 +308,8 @@ class toolbarToolManager():
         
             
     def activateEditTool(self, checked):    
-        editTools = [self.insertDemandNodeAction,
+        editTools = [self.toolImportINPFile,
+                         self.insertDemandNodeAction,
                          self.insertTankNodeAction,
                          self.insertWaterPipeAction,
                          self.insertReservoirNodeAction,
@@ -309,7 +328,7 @@ class toolbarToolManager():
                 
                 tool.setChecked(False)
                 
-                if tool.MapTool:
+                if tool.MapTool and isinstance(tool, QgsMapTool):
                     self.canvas.unsetMapTool(tool.MapTool)
                 
     def activateOptimizationTool(self, checked):
