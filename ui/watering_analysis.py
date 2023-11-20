@@ -37,10 +37,10 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.compareCheckBox.clicked.connect(self.checkUserControlState)
         self.is_playing = False
         self.new_field_name = None
-        self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/start.png"))
+        self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/play.svg"))
         self.BtGetAnalysisResultsPlayPause.clicked.connect(self.switch_icon_play_pause)
-        self.BtGetAnalysisResultsBackward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/Backward.png"))
-        self.BtGetAnalysisResultsForward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/Forward.png"))
+        self.BtGetAnalysisResultsBackward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/backward.svg"))
+        self.BtGetAnalysisResultsForward.setIcon(QIcon(":/plugins/QGISPlugin_WaterIng/images/forward.svg"))
         self.BoxSelectType.addItem("What If")
         self.BoxSelectType.addItem("Replay")
         self.BoxSelectType.addItem("Look Ahead")
@@ -166,9 +166,9 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
 
     def switch_icon_play_pause(self):
         if self.is_playing:
-            icon_path = ":/plugins/QGISPlugin_WaterIng/images/start.png"
+            icon_path = ":/plugins/QGISPlugin_WaterIng/images/play.svg"
         else:
-            icon_path = ":/plugins/QGISPlugin_WaterIng/images/stop.png"
+            icon_path = ":/plugins/QGISPlugin_WaterIng/images/stop.svg"
         self.BtGetAnalysisResultsPlayPause.setIcon(QIcon(icon_path))
         self.is_playing = not self.is_playing
 

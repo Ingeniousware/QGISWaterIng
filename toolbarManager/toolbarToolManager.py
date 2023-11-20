@@ -47,7 +47,7 @@ class toolbarToolManager():
 
     def initializeToolbarButtonActions(self):
         # Edit
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Edit.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/editElements.svg'
         self.editElementsAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Edit Elements'),
@@ -59,7 +59,7 @@ class toolbarToolManager():
         self.editElementsAction.toggled.connect(self.activateEditTool)
                
         # Analysis
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_analysis.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/analysisChart.svg'
         self.readAnalysisAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Water Network Analysis', 'QGISWaterIng'),
@@ -72,7 +72,7 @@ class toolbarToolManager():
         self.readAnalysisAction.toggled.connect(self.activateWaterAnalysisTool)
 
          # Optimization Tools        
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimizationManager.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimizationTools.svg'
         self.optimizationToolsAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Optimization Tools'),
@@ -84,7 +84,7 @@ class toolbarToolManager():
         self.optimizationToolsAction.toggled.connect(self.activateOptimizationTool)
         
         # Measurements
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Monitoring.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/monitoring.svg'
         self.readMeasurementsAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Get Measurements'),
@@ -97,7 +97,7 @@ class toolbarToolManager():
 
 
         # import elements
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Import.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/import.svg'
         self.toolImportINPFile = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Import INP File'),
@@ -153,7 +153,7 @@ class toolbarToolManager():
         self.insertReservoirNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Valves
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Valve.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/valve.svg'
         self.insertValveNodeAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Add Valve Node'),
@@ -164,7 +164,7 @@ class toolbarToolManager():
         self.insertValveNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Pumps
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Pump.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/pump.svg'
         self.insertPumpNodeAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Add Pump Node'),
@@ -175,7 +175,7 @@ class toolbarToolManager():
         self.insertPumpNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         
         # Undo
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Backward.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/backward.svg'
         self.undoAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'unDo'),
@@ -186,7 +186,7 @@ class toolbarToolManager():
         self.undoAction.setEnabled(False)
 
         # Redo
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Forward.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/forward.svg'
         self.redoAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'reDo'),
@@ -197,7 +197,7 @@ class toolbarToolManager():
         self.redoAction.setEnabled(False)
 
         # Delete Element
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/trash.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/trash.svg'
         self.toolDeleteElementAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Delete Element'),
@@ -208,7 +208,7 @@ class toolbarToolManager():
         self.toolDeleteElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         
         # Select 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_select.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/select.svg'
         self.selectElementAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Select Element'),
@@ -219,7 +219,7 @@ class toolbarToolManager():
         self.selectElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Optimization
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_optimization.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimization.svg'
         self.openOptimizationManagerAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Optimization'),
@@ -229,7 +229,7 @@ class toolbarToolManager():
         self.openOptimizationManagerAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Sensors
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.svg'
         self.insertSensorNodeAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Add Sensor Node'),

@@ -27,5 +27,7 @@
         <file>images/trash.svg</file>
         <file>images/forward.svg</file>
         <file>images/backward.svg</file>
+        <file>images/play.svg</file>
+        <file>images/stop.svg</file>
     </qresource>
 </RCC>

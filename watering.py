@@ -183,7 +183,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_update.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/refresh.svg'
         self.add_action(
             icon_path,
             text=self.tr(u'Update Elements'),
@@ -191,7 +191,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_cache.png'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/clean.svg'
         self.deleteCacheFromWaterIng = self.add_action(
             icon_path,
             text=self.tr(u'Clean cache'),
@@ -210,7 +210,7 @@ class QGISPlugin_WaterIng:
 
                                                        
         #adding a standard action to our toolbar
-        self.iface.actionIdentify().setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/selection.png'))
+        self.iface.actionIdentify().setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/select.svg'))
         #self.toolIdentify = QgsMapToolIdentify(self.canvas)
         #self.toolIdentify.setAction(self.iface.actionIdentify())
         self.toolbar.addAction(self.iface.actionIdentify())
