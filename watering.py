@@ -227,6 +227,7 @@ class QGISPlugin_WaterIng:
             self.iface.removeToolBarIcon(action)
 
         del self.toolbar
+        del self.toolbarToolManager.toolbar
 
     def addLogin(self):
         self.dlg = WateringLogin()
