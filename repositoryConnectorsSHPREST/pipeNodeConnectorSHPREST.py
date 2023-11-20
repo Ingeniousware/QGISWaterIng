@@ -2,10 +2,10 @@ import os
 import requests
 
 from .abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
-
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
-from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
+from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsDistanceArea
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 import queue
@@ -50,13 +50,18 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         vertices = self.getVertices(feature)
         print("VERTICES: ", vertices)
         
-        """name = feature["Name"]
-        last_mdf = feature["Last Mdf"]
+        name = feature["Name"]
+        last_mdf = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
         description = feature["Descript"]
-        diameterInt = feature["Diameter"]
-        length = feature["Length"]
-        roughnessAbsolute = feature["Rough.A"]
-        roughnessCoefficient = feature["C(H.W.)"]
+        #diameterInt = feature["Diameter"]
+        diameterInt = 0.2
+        #length = feature["Length"]
+        length = self.getPipeLength(vertices)
+        print("length: ", length)
+        #roughnessAbsolute = feature["Rough.A"]
+        roughnessAbsolute = 0.045
+        #roughnessCoefficient = feature["C(H.W.)"]
+        roughnessCoefficient = 150
         #initialStatus = feature["Name"]
         #currentStatus = feature["Name"]
         nodeUpFK = uuid.uuid4()
@@ -70,32 +75,18 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             
         elementJSON = {
             "serverKeyId": "{}".format(serverKeyId),
-            "lastModified": "{}".format(serverKeyId),
+            "lastModified": "{}".format(last_mdf),
             "scenarioFK": "{}".format(self.ScenarioFK),
             "name": "{}".format(name),
             "description": "{}".format(description),
-            "vertices": [
-                {
-                "vertexFK": "{}".format(uuid.uuid4()),
-                "lng": 0,
-                "lat": 0,
-                "order": 0
-                },
-                {
-                "vertexFK": "{}".format(uuid.uuid4()),
-                "lng": 1,
-                "lat": 1,
-                "order": 1
-                }
-                
-            ],
+            "vertices": vertices,
             "diameterInt": "{}".format(diameterInt),
             "length": "{}".format(length),
             "roughnessAbsolute": "{}".format(roughnessAbsolute),
             "roughnessCoefficient": "{}".format(roughnessCoefficient)
-        }"""
+        }
         
-        elementJSON = {"serverKeyId": "00000000-0000-0000-0000-000000000000",
+        """elementJSON = {"serverKeyId": "00000000-0000-0000-0000-000000000000",
                         "scenarioFK": "a85ef45c-014a-43fe-9d7d-bac7abf417e3",
                         "nodeUpFK": "5d89c584-a10a-4869-8b7d-7994ff5c231e",
                         "nodeUpName": "string",
@@ -119,7 +110,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                         "roughnessAbsolute": "0",
                         "roughnessCoefficient": "0",
                         "initialStatus": 1,
-                        "currentStatus": 1}
+                        "currentStatus": 1}"""
         
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
@@ -128,6 +119,8 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             self.lastAddedElements.pop(keyIdToEliminate)
 
         serverResponse = self.serverRepository.postToServer(elementJSON)
+        
+        print("RESPONSE TEXT: ", serverResponse.text)
         if serverResponse.status_code == 200:
             print("Water Pipe Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
@@ -167,3 +160,17 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             vertices.append(vertex)
             
         return vertices
+
+    def getPipeLength(self, vertices):
+        if len(vertices) < 2:
+            return 0
+
+        distance_area = QgsDistanceArea()
+        distance_area.setEllipsoid('WGS84')
+        distance_area.setSourceCrs(self.serverRepository.currentCRS, QgsProject.instance().transformContext())
+
+        points = [QgsPointXY(vertex["lng"], vertex["lat"]) for vertex in vertices]
+
+        length = sum(distance_area.measureLine(points[i], points[i+1]) for i in range(len(points) - 1))
+
+        return length
