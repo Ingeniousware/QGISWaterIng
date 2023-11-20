@@ -5,18 +5,16 @@ from qgis.core import QgsProject
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, QEvent, Qt
 
-
-class InsertReservoirNodeTool(InsertAbstractTool):
-    
+class InsertValveNodeTool(InsertAbstractTool):
     def __init__(self, canvas, elementRepository, actionManager, toolbarManager):
-        super(InsertReservoirNodeTool, self).__init__(canvas, elementRepository, actionManager)  
+        super(InsertValveNodeTool, self).__init__(canvas, elementRepository, actionManager)  
         self.toolbarManager =  toolbarManager
-        print("Init at Insert Reservoir Node")
-        if (QgsProject.instance().mapLayersByName("watering_reservoirs") is not None) and len(QgsProject.instance().mapLayersByName("watering_reservoirs")) != 0:
-            self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_reservoirs")[0]
-            self.toolFindIdentify = QgsMapToolIdentify(self.canvas)
-    
+        print("Init at Insert Demand Node")
+        if (QgsProject.instance().mapLayersByName("watering_valves") is not None) and len(QgsProject.instance().mapLayersByName("watering_valves")) != 0:
+          self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_valves")[0]
+          self.toolFindIdentify = QgsMapToolIdentify(self.canvas)
 
+          
     def canvasPressEvent(self, e):
         self.point = self.toMapCoordinates(e.pos())
         
@@ -39,5 +37,8 @@ class InsertReservoirNodeTool(InsertAbstractTool):
 
     def deactivate(self):
         print("deactivate insert demand node tool")
+        self.toolbarManager.insertValveNodeAction.setChecked(False)
         self.canvas.unsetMapTool(self.canvas.mapTool())
-        
+
+
+    

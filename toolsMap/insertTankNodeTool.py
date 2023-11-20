@@ -5,16 +5,17 @@ from qgis.core import QgsProject
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QObject, QEvent, Qt
 
-class InsertPumpNodeTool(InsertAbstractTool):
+class InsertTankNodeTool(InsertAbstractTool):
+    
     def __init__(self, canvas, elementRepository, actionManager, toolbarManager):
-        super(InsertPumpNodeTool, self).__init__(canvas, elementRepository, actionManager)  
+        super(InsertTankNodeTool, self).__init__(canvas, elementRepository, actionManager)  
         self.toolbarManager =  toolbarManager
-        print("Init at Insert Demand Node")
-        if (QgsProject.instance().mapLayersByName("watering_pumps") is not None) and len(QgsProject.instance().mapLayersByName("watering_pumps")) != 0:
-          self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_pumps")[0]
+        print("Init at Insert Tank Node")
+        if (QgsProject.instance().mapLayersByName("watering_tanks") is not None) and len(QgsProject.instance().mapLayersByName("watering_tanks")) != 0:
+          self.demandNodeLayer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
           self.toolFindIdentify = QgsMapToolIdentify(self.canvas)
+          self.vertexDict = {}
 
-          
     def canvasPressEvent(self, e):
         self.point = self.toMapCoordinates(e.pos())
         
@@ -31,13 +32,11 @@ class InsertPumpNodeTool(InsertAbstractTool):
         action = insertNodeAction(self.elementRepository, self.point.x(), self.point.y())         
         self.actionManager.execute(action)
             
-
     def keyReleaseEvent(self, e):
         if e.key() == Qt.Key.Key_Escape:
             self.deactivate()
-            
-    def deactivate(self):
-        print("deactivate insert demand node tool")
-        self.canvas.unsetMapTool(self.canvas.mapTool())
 
-    
+    def deactivate(self):
+        print("deactivate insert demand node tool")   
+        self.toolbarManager.insertTankNodeAction.setChecked(False)
+        self.canvas.unsetMapTool(self.canvas.mapTool())

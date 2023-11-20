@@ -18,7 +18,7 @@ import os
 import math
 import requests
 from ..watering_utils import WateringUtils
-from ..maptools.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacement
+from ..toolsMap.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacement
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_optimization_dialog.ui'))

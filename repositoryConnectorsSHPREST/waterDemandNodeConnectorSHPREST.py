@@ -23,7 +23,6 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
 
-
     def processPOSTElementToLocal(self, paraminput):
         print("Entering processPOSTElementToLocal")        
         #print(paraminput[0])
