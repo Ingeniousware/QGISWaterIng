@@ -374,6 +374,7 @@ class QGISPlugin_WaterIng:
                     self.toolbarToolManager.insertDemandNodeAction,
                     self.toolbarToolManager.insertTankNodeAction,
                     self.toolbarToolManager.insertReservoirNodeAction,
+                    self.toolbarToolManager.insertWaterPipeAction,
                     self.toolbarToolManager.insertValveNodeAction,
                     self.toolbarToolManager.insertPumpNodeAction,
                     self.toolbarToolManager.insertSensorNodeAction,
