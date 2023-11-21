@@ -15,6 +15,8 @@ from time import time, gmtime, strftime
 from datetime import datetime
 import requests
 import os
+import random
+import string
 
 #serverInput
 
@@ -203,3 +205,9 @@ class WateringUtils():
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate(context, message)
+    
+    def generateRandomElementName(elementInitial):
+        # elementInitial, for instance, P for pipes
+        random_letter = random.choice(string.ascii_uppercase)
+        random_number = random.randint(10, 99)
+        return f"{elementInitial}-[{random_letter}{random_number}]"

@@ -52,7 +52,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         print("node_down_fk: ", node_down_fk)
         print("node_up_fk: ", node_up_fk)
         
-        name = feature["Name"] if feature["Name"] else "string"
+        name = feature["Name"] if feature["Name"] else WateringUtils.generateRandomElementName("P")
         last_mdf = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
         description = feature["Descript"] if feature["Descript"] else ""
         #diameterInt = feature["Diameter"]
