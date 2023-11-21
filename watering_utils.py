@@ -206,8 +206,18 @@ class WateringUtils():
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate(context, message)
     
-    def generateRandomElementName(elementInitial):
+    def generateRandomElementName1(elementInitial):
         # elementInitial, for instance, P for pipes
+        # Return a combination of Uppercase letter + 2 random digits
         random_letter = random.choice(string.ascii_uppercase)
         random_number = random.randint(10, 99)
         return f"{elementInitial}-[{random_letter}{random_number}]"
+    
+    def generateRandomElementName(elementInitial):
+        # elementInitial, for instance, P for pipes
+        # Return a combination of digits and letters, lowercase or uppercase, in any order.
+        all_characters = string.digits + string.ascii_letters
+        random_chars = ''.join(random.choice(all_characters) for _ in range(3))
+
+        return f"{elementInitial}-[{random_chars}]"
+    
