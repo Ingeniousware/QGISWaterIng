@@ -46,37 +46,46 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def addElementToServer(self, feature):
         print("ADDING PIPESS")
-
-        vertices = self.getVertices(feature)
-        print("VERTICES: ", vertices)
+        node_down_fk = WateringUtils.getProjectMetadata("nodeDownFK")
+        node_up_fk = WateringUtils.getProjectMetadata("nodeUpFK")
         
-        name = feature["Name"]
+        print("node_down_fk: ", node_down_fk)
+        print("node_up_fk: ", node_up_fk)
+        
+        name = feature["Name"] if feature["Name"] else "string"
         last_mdf = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
-        description = feature["Descript"]
+        description = feature["Descript"] if feature["Descript"] else ""
         #diameterInt = feature["Diameter"]
         diameterInt = 0.2
-        #length = feature["Length"]
-        length = self.getPipeLength(vertices)
-        print("length: ", length)
         #roughnessAbsolute = feature["Rough.A"]
         roughnessAbsolute = 0.045
         #roughnessCoefficient = feature["C(H.W.)"]
         roughnessCoefficient = 150
         #initialStatus = feature["Name"]
         #currentStatus = feature["Name"]
-        nodeUpFK = uuid.uuid4()
-        nodeUpName = feature["Up-Node"]
-        nodeDownFK = uuid.uuid4()
-        nodeDownName = feature["Down-Node"]
+        nodeUpFK = node_up_fk
+        #nodeUpName = feature["Up-Node"]
+        nodeUpName = "string"
+        nodeDownFK = node_down_fk
+        #nodeDownName = feature["Down-Node"]
+        nodeDownName = "string"
         
-        vertices = self.getVertices(feature)
-        vertexFK = uuid.uuid4()
+        vertices = self.getVertices(feature, nodeDownFK, nodeUpFK)
+        #length = feature["Length"]
+        length = self.getPipeLength(vertices)
+        print("length: ", length)
+        print("VERTICES: ", vertices)
+        #vertexFK = uuid.uuid4()
         serverKeyId = uuid.uuid4()
             
         elementJSON = {
             "serverKeyId": "{}".format(serverKeyId),
             "lastModified": "{}".format(last_mdf),
             "scenarioFK": "{}".format(self.ScenarioFK),
+            "nodeUpFK": "{}".format(nodeUpFK),
+            "nodeUpName": "{}".format(nodeUpName),
+            "nodeDownFK": "{}".format(nodeDownFK),
+            "nodeDownName": "{}".format(nodeDownName),
             "name": "{}".format(name),
             "description": "{}".format(description),
             "vertices": vertices,
@@ -112,6 +121,9 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                         "initialStatus": 1,
                         "currentStatus": 1}"""
         
+        print("EEMENTS JSON: ", elementJSON)
+        
+        
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
         while self.lifoAddedElements.full():
@@ -120,7 +132,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
         serverResponse = self.serverRepository.postToServer(elementJSON)
         
-        print("RESPONSE TEXT: ", serverResponse.text)
+        print("RESPONSE TEXT: ", serverResponse.text, " status: ", serverResponse)
         if serverResponse.status_code == 200:
             print("Water Pipe Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
@@ -144,22 +156,24 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         
         serverResponse = self.serverRepository.deleteFromServer(elementJSON)
     
-    def getVertices(self, feature):
+    def getVertices(self, feature, nodeDownFK, nodeUpFK):
         vertices = []
         
         transGeometry = feature.geometry()
         transform = QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance())
         transGeometry.transform(transform)
         
-        for point in transGeometry.asPolyline():
+        for index, point in enumerate(transGeometry.asPolyline()):
+            current_vertex_fk = nodeUpFK if index % 2 == 0 else nodeDownFK
+            
             vertex = {
-                    "vertexFK": "anything",  # Substitua por uma chave estrangeira, se necessário
+                    "vertexFK": "{}".format(current_vertex_fk),  # Substitua por uma chave estrangeira, se necessário
                     "lng": point.x(),
                     "lat": point.y()
-            }
+            }   
             vertices.append(vertex)
             
-        return vertices
+        return vertices[::-1]
 
     def getPipeLength(self, vertices):
         if len(vertices) < 2:

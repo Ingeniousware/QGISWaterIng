@@ -2,7 +2,7 @@ import os
 import requests
 
 from ..repositoryConnectorsSHPREST.abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
-
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
@@ -65,6 +65,15 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             isNew = True
         else: serverKeyId = uuid.UUID(id)
         
+        node_status = WateringUtils.getProjectMetadata("node_status")
+        
+        if node_status == "default text":
+            WateringUtils.setProjectMetadata("nodeDownFK", str(serverKeyId))
+            WateringUtils.setProjectMetadata("node_status", "down_node_ready")
+        else:
+            WateringUtils.setProjectMetadata("nodeUpFK", str(serverKeyId))
+            WateringUtils.setProjectMetadata("node_status", "default text")
+        
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
@@ -74,7 +83,6 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'z': "{}".format(z), 
                        'baseDemand': "{}".format(baseDemand)}
         
-
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
         while self.lifoAddedElements.full():
