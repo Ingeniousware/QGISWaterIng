@@ -55,14 +55,12 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         name = feature["Name"] if feature["Name"] else WateringUtils.generateRandomElementName("P")
         last_mdf = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
         description = feature["Descript"] if feature["Descript"] else ""
-        #diameterInt = feature["Diameter"]
-        diameterInt = 0.2
-        #roughnessAbsolute = feature["Rough.A"]
-        roughnessAbsolute = 0.045
+        diameterInt = feature["Diameter"] if feature["Diameter"] else 0.2
+        roughnessAbsolute = feature["Rough.A"] if feature["Rough.A"] else 0.045
         #roughnessCoefficient = feature["C(H.W.)"]
-        roughnessCoefficient = 150
-        #initialStatus = feature["Name"]
-        #currentStatus = feature["Name"]
+        roughnessCoefficient = feature["C(H.W.)"] if feature["C(H.W.)"] else 150
+        initialStatus = 1
+        currentStatus = 1
         nodeUpFK = node_up_fk
         #nodeUpName = feature["Up-Node"]
         nodeUpName = "string"
@@ -92,7 +90,9 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             "diameterInt": "{}".format(diameterInt),
             "length": "{}".format(length),
             "roughnessAbsolute": "{}".format(roughnessAbsolute),
-            "roughnessCoefficient": "{}".format(roughnessCoefficient)
+            "roughnessCoefficient": "{}".format(roughnessCoefficient),
+            "initialStatus": "{}".format(initialStatus),
+            "currentStatus": "{}".format(currentStatus)
         }
         
         """elementJSON = {"serverKeyId": "00000000-0000-0000-0000-000000000000",
