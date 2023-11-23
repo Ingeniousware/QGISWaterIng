@@ -64,10 +64,10 @@ class WateringUtils():
     def isWateringProject():
         scenarioId = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         projectId = QgsProject.instance().readEntry("watering","project_id","default text")[0] 
-        token = os.environ.get('TOKEN')
+        #token = os.environ.get('TOKEN')
         print("scenario" + scenarioId)
         print("project" + projectId)
-        return scenarioId != "default text" and projectId != "default text" and token is not None
+        return scenarioId != "default text" and projectId != "default text"
     
     def saveProjectBox():
         project = QgsProject.instance()

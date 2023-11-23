@@ -29,8 +29,12 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
            
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
+        print("last added elements: ", self.lastAddedElements)
+        print("serverkeyid: ", serverKeyId)
+        
         if not (serverKeyId in self.lastAddedElements):
             print("Just before creating valve from server push")
+            print(paraminput[0])
             self.localRepository.addElementFromSignalR(paraminput[0])
             print("Water Valve Node inserted after push from server")
             print("dict-> ", self.lastAddedElements)

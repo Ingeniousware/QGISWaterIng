@@ -7,6 +7,7 @@ from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeomet
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSymbol, edit
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
+from qgis.utils import iface
 
 class PipeNodeRepository(AbstractRepository):
 
@@ -138,14 +139,25 @@ class PipeNodeRepository(AbstractRepository):
         geometry = QgsGeometry.fromPolylineXY(points)
         geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
 
+        print("pipes adding")
+        print("field_definitions: ", self.field_definitions)
+        print("element: ", element)
         feature.setGeometry(geometry)
-        for i in range(len(self.field_definitions)):
-            feature.setAttribute(self.field_definitions[i][0], element[i+2])
+        
+        for i in range(len(self.field_definitions) - 1):
+            feature.setAttribute(self.field_definitions[i][0], element[i])
+            print("element i + 1", element[i])
+            print("field definition position: ", self.field_definitions[i][0])
 
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
-
+        #feature['lastUpdate'] = WateringUtils.getDateTimeNow()
+        
+        feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz"))
+        
+        print("Adding feature ", feature, "to server")
+        
         layer.addFeature(feature)
         layer.commitChanges()
+        layer.triggerRepaint()
 
 
     def addElement(self, id):
@@ -199,6 +211,8 @@ class PipeNodeRepository(AbstractRepository):
 
         self.setDefaultValues(feature)
 
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        
         layer.addFeature(feature)
         layer.commitChanges()
 
@@ -209,7 +223,8 @@ class PipeNodeRepository(AbstractRepository):
     
     #Pipes update
     
-    def updatePipes(self, lastUpdatedToServer):
+    def updateFromServerToOffline(self, lastUpdatedToServer):
+        print("updating PIPE")
         self.lastUpdatedToServer = lastUpdatedToServer
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-1]]

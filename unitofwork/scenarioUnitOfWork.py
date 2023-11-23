@@ -49,9 +49,9 @@ class scenarioUnitOfWork():
     def updateAll(self):
         now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
         
-        """for element in self.list_of_elements:
+        for element in self.list_of_elements:
             element.updateFromServerToOffline(self.lastUpdatedFromServer)
-        self.lastUpdatedFromServer = now"""
+        self.lastUpdatedFromServer = now
         
         print("before self.lastUpdatedToServer", self.lastUpdatedToServer)
         for element in self.list_of_elements:

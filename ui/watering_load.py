@@ -266,16 +266,21 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return False
 
     def openExistingWaterIngProject(self, justCreated):
+        self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
+        
         self.OfflineProjects = self.getOfflineProjects()
         self.OfflineScenarios = self.getOfflineScenarios(self.ProjectFK)
         self.openProjectFromFolder()
         if not self.Offline:
             self.updateProject(justCreated)
+        else: 
+            self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         self.loadOpenStreetMapLayer()
         self.zoomToProject()
+        self.done(True)
     
     def updateProject(self, justCreated):
-        self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
+        #self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         if (not justCreated): self.myScenarioUnitOfWork.updateAll()
         
@@ -399,7 +404,13 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 group.addLayer(layer)
 
                 layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
-                layer.attributeValueChanged.connect(self.onChangesInAttribute)           
+                
+                layer.attributeValueChanged.connect(
+                        lambda feature_id, attribute_index, new_value, layer=layer: 
+                        self.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+                
+                #layer.attributeValueChanged.connect(self.onChangesInAttribute)           
 
             else: 
                 print("Layer not valid: ",element_layer)
@@ -407,28 +418,26 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
 
-    def onChangesInAttribute(self, feature_id, attribute_index, new_value):
-        sender_layer = iface.activeLayer()
-        
+    def onChangesInAttribute(self, feature_id, attribute_index, new_value, layer):
         print("----CHANGING FEATURE----")
-        print(f"Layer: {sender_layer.name()}")
+        print(f"Layer: {layer.name()}")
         print(f"Feature ID: {feature_id}")
         print(f"Attribute Index: {attribute_index}")
         print(f"New Value: {new_value}")
 
-        fields = sender_layer.fields()
+        fields = layer.fields()
         lastUpdate_index = fields.indexFromName('lastUpdate')
         
         if lastUpdate_index == attribute_index: return 
 
         new_datetime = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
         
-        if sender_layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
-            print(f"Last updated datetime updated for {feature_id} in {sender_layer.name()}")
+        if layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
+            print(f"Last updated datetime updated for {feature_id} in {layer.name()}")
         else:
             print("Datetime could not be updated")
             
-        sender_layer.commitChanges()
+        layer.commitChanges()
 
     def createNewProjectFromServer(self):
         if self.Offline: return False

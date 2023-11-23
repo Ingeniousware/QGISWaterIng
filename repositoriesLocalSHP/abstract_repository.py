@@ -105,23 +105,35 @@ class AbstractRepository():
 
     #When layer already exists
     def addElementFromSignalR(self, elementJSON):
+        print("Adding from signal r")
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         element = [elementJSON[field] for field in self.features]
 
         layer.startEditing()
-         
+        print("reached first")
         feature = QgsFeature(layer.fields())
         geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
         geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+        print("reached second")
 
         feature.setGeometry(geometry)
-        for i in range(len(self.field_definitions)):
-            feature.setAttribute(self.field_definitions[i][0], element[i+2])
+        print("field_definitions: ", self.field_definitions)
+        print("element: ", element)
+        
+        for i in range(len(self.field_definitions) - 1):
+            feature.setAttribute(self.field_definitions[i][0], element[i+1])
+            print("element i + 1", element[i+1])
+            print("field definition position: ", self.field_definitions[i][0])
+            
+        print("reached third")
 
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        feature.setAttribute('lastUpdate',WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz"))
+
+        print("Adding feature ", feature, "to server")
 
         layer.addFeature(feature)
         layer.commitChanges()
+        layer.triggerRepaint()
 
     def AddNewElementFromMapInteraction(self, x, y):
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -209,7 +221,10 @@ class AbstractRepository():
 
         self.Attributes = self.features[3:]
         self.getServerDict()
-        self.getOfflineDict()
+        self.getOfflineDict(lastUpdatedFromServer)
+        
+        print("Server dict: ", self.ServerDict)
+        print("Offline dict: ", self.OfflineDict)
         
         server_keys = set(self.ServerDict.keys())
         offline_keys = set(self.OfflineDict.keys())
@@ -306,18 +321,19 @@ class AbstractRepository():
 
 
           
-    def getOfflineDict(self):
+    def getOfflineDict(self, lastUpdatedFromServer):
         for feature in self.Layer.getFeatures():
-            attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
+            if feature["lastUpdate"] < lastUpdatedFromServer:
+                attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
 
-            if len(attributes) > 2 and (not attributes[2]):
-                attributes[2] = None
-                
-            geom = feature.geometry()
-            point = geom.asPoint()
-            attributes.append((point.x(), point.y()))
+                if len(attributes) > 2 and (not attributes[2]):
+                    attributes[2] = None
+                    
+                geom = feature.geometry()
+                point = geom.asPoint()
+                attributes.append((point.x(), point.y()))
 
-            self.OfflineDict[feature["ID"]] = attributes
+                self.OfflineDict[feature["ID"]] = attributes
 
 
 
