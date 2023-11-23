@@ -242,13 +242,13 @@ class PipeNodeRepository(AbstractRepository):
             
         #Delete Element
         for element_id in offline_keys - server_keys:
-            self.deleteElement(element_id)
+            self.deleteElement(element_id, lastUpdatedToServer)
 
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.PipeServerDict[element_id] != self.PipeOfflineDict[element_id]:
                 print("This: ", self.PipeServerDict[element_id], "Diff from this: ", self.PipeOfflineDict[element_id])
-                self.updateExistingPipe(element_id)
+                self.updateExistingPipe(element_id, lastUpdatedToServer)
                 
     def getPipeServerDict(self):
         self.PipeResponse = self.loadElements()
@@ -294,7 +294,7 @@ class PipeNodeRepository(AbstractRepository):
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
     
-    def updateExistingPipe(self, id):
+    def updateExistingPipe(self, id, lastUpdatedToServer):
         #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
@@ -303,14 +303,16 @@ class PipeNodeRepository(AbstractRepository):
         self.Layer.startEditing()
         
         for feature in features:
-            for i in range(len(self.FieldDefinitions)):
-                feature[self.FieldDefinitions[i]] = self.PipeServerDict[id][i]
-                
-            feature["lastupdate"] = self.timeAtUpdate
-            #update geometry
-            feature.setGeometry(QgsGeometry.fromPolylineXY(self.PipeServerDict[id][-1]))
-            
-            self.Layer.updateFeature(feature)
+            if id in self.PipeServerDict:
+                if feature['lastUpdate'] < self.PipeServerDict[id][0]:
+                    for i in range(len(self.FieldDefinitions)):
+                        feature[self.FieldDefinitions[i]] = self.PipeServerDict[id][i]
+                        
+                    feature["lastupdate"] = self.timeAtUpdate
+                    #update geometry
+                    feature.setGeometry(QgsGeometry.fromPolylineXY(self.PipeServerDict[id][-1]))
+                    
+                    self.Layer.updateFeature(feature)
         
         self.Layer.commitChanges()
         

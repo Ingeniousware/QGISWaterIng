@@ -216,16 +216,12 @@ class AbstractRepository():
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
 
-        print(self.LayerName)
-        print(self.FieldDefinitions)
-
         self.Attributes = self.features[3:]
         self.getServerDict()
         self.getOfflineDict(lastUpdatedFromServer)
         
-        print("Server dict: ", self.ServerDict)
-        print("Offline dict: ", self.OfflineDict)
-        
+        print("SERVER DICT: ", self.ServerDict)
+        print("OFFLINE DICT: ", self.OfflineDict)
         server_keys = set(self.ServerDict.keys())
         offline_keys = set(self.OfflineDict.keys())
 
@@ -235,16 +231,13 @@ class AbstractRepository():
             
         #Delete Element
         for element_id in offline_keys - server_keys:
-            self.deleteElement(element_id)
+            self.deleteElement(element_id, lastUpdatedFromServer)
 
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
-                self.updateElement(element_id)
+                self.updateElement(element_id, lastUpdatedFromServer)
     
-
-
-
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
             print("Entering updateFromOfflineToServer")
@@ -358,22 +351,27 @@ class AbstractRepository():
 
     
 
-    def deleteElement(self, id):
+    def deleteElement(self, id, lastUpdatedFromServer):
+        print("ID in delete element: ", id)
         print(f"Deleting existing element in {self.LayerName}: {id}")
         
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
-        features_to_delete = [feature.id() for feature in self.Layer.getFeatures() if feature['ID'] == id]
+        features_to_delete = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
 
         self.Layer.startEditing()
         
         for feature in features_to_delete:
-            self.Layer.deleteFeature(feature)
+            if id in self.ServerDict:
+                print("lAST MDF?: ", self.ServerDict[id][0])
+                if feature['lastUpdate'] < self.ServerDict[id][0]:
+                #if feature['lastUpdate'] < lastUpdatedFromServer:
+                    self.Layer.deleteFeature(feature.id())
             
         self.Layer.commitChanges()
 
         
-    def updateElement(self, id):
+    def updateElement(self, id, lastUpdatedFromServer):
         
         #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -383,14 +381,17 @@ class AbstractRepository():
         self.Layer.startEditing()
         
         for feature in features:
-            for i in range(len(self.FieldDefinitions)-self.numberLocalFieldsOnly):
-                feature[self.FieldDefinitions[i]] = self.ServerDict[id][i]
-            
-            #update geometry
-            feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
-                                                               self.ServerDict[id][-1][1])))
-            
-            self.Layer.updateFeature(feature)
+            #if feature['lastUpdate'] < lastUpdatedFromServer:
+            if id in self.ServerDict:
+                if feature['lastUpdate'] < self.ServerDict[id][0]:
+                    for i in range(len(self.FieldDefinitions)-self.numberLocalFieldsOnly):
+                        feature[self.FieldDefinitions[i]] = self.ServerDict[id][i]
+                    
+                    #update geometry
+                    feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
+                                                                    self.ServerDict[id][-1][1])))
+                    
+                    self.Layer.updateFeature(feature)
         
         self.Layer.commitChanges()
         
