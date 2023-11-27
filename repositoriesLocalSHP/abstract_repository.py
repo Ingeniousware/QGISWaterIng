@@ -212,13 +212,13 @@ class AbstractRepository():
             symbol.symbolLayer(0).setStrokeColor(self.StrokeColor)
         layer.triggerRepaint()
     
-    def updateFromServerToOffline(self, lastUpdatedFromServer, lastUpdatedToServer):  
+    def generalUpdate(self, lastUpdated):  
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
 
         self.Attributes = self.features[3:]
-        self.getServerDict(lastUpdatedToServer)
-        self.getOfflineDict(lastUpdatedFromServer)
+        self.getServerDict(lastUpdated)
+        self.getOfflineDict(lastUpdated)
         
         print("SERVER DICT: ", self.ServerDict)
         print("OFFLINE DICT: ", self.OfflineDict)
@@ -234,12 +234,12 @@ class AbstractRepository():
             
         #Delete Element
         for element_id in offline_keys - server_keys:
-            self.deleteElement(element_id, lastUpdatedFromServer)
+            self.deleteElement(element_id, lastUpdated)
 
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
-                self.updateElement(element_id, lastUpdatedFromServer)
+                self.updateElement(element_id, lastUpdated)
     
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
@@ -298,7 +298,8 @@ class AbstractRepository():
         self.Response = self.loadElements()
         data = self.Response.json()["data"]
         for element in data:
-            if element["lastModified"] 
+            if element["lastModified"]: 
+                print("nothing")
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
             attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
             self.ServerDict[element["serverKeyId"]] = attributes
@@ -387,7 +388,7 @@ class AbstractRepository():
                     self.Layer.updateFeature(feature)
                     
                 if feature['lastUpdate'] > lastUpdatedFromServer:
-                    
+                    break
         
         self.Layer.commitChanges()
         

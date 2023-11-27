@@ -54,7 +54,7 @@ class scenarioUnitOfWork():
         WateringUtils.setProjectMetadata(self.keyUpdate, now)
         
     def getLastUpdate(self):
-        date = WateringUtils.getProjectMetadata(self.keyToServer)
+        date = WateringUtils.getProjectMetadata(self.keyUpdate)
 
         if date != "default text":
             return date
