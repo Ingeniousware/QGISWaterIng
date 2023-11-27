@@ -212,12 +212,12 @@ class AbstractRepository():
             symbol.symbolLayer(0).setStrokeColor(self.StrokeColor)
         layer.triggerRepaint()
     
-    def updateFromServerToOffline(self, lastUpdatedFromServer):  
+    def updateFromServerToOffline(self, lastUpdatedFromServer, lastUpdatedToServer):  
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
 
         self.Attributes = self.features[3:]
-        self.getServerDict()
+        self.getServerDict(lastUpdatedToServer)
         self.getOfflineDict(lastUpdatedFromServer)
         
         print("SERVER DICT: ", self.ServerDict)
@@ -227,7 +227,10 @@ class AbstractRepository():
 
         #Add Element
         for element_id in server_keys - offline_keys:
-            self.addElement(element_id)
+            self.addElementToOffline(element_id)
+        
+        for element_id in offline_keys - server_keys:
+            self.updateAddElementToServer(element_id)
             
         #Delete Element
         for element_id in offline_keys - server_keys:
@@ -291,10 +294,11 @@ class AbstractRepository():
             layer.rollback()
             print("Changes were rolled back.")
     
-    def getServerDict(self):
+    def getServerDict(self, last):
         self.Response = self.loadElements()
         data = self.Response.json()["data"]
         for element in data:
+            if element["lastModified"] 
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
             attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
             self.ServerDict[element["serverKeyId"]] = attributes
@@ -303,7 +307,7 @@ class AbstractRepository():
           
     def getOfflineDict(self, lastUpdatedFromServer):
         for feature in self.Layer.getFeatures():
-            if feature["lastUpdate"] < lastUpdatedFromServer:
+            if feature["lastUpdate"] > lastUpdatedFromServer:
                 attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
 
                 if len(attributes) > 2 and (not attributes[2]):
@@ -317,7 +321,7 @@ class AbstractRepository():
 
 
 
-    def addElement(self, id):
+    def addElementToOffline(self, id):
         
         print(f"Adding element in {self.LayerName}: {id}")
         
@@ -335,7 +339,8 @@ class AbstractRepository():
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
     
-
+    def updateAddElementToServer(self, id):
+        ...
     
 
     def deleteElement(self, id, lastUpdatedFromServer):
