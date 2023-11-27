@@ -43,7 +43,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def addElementToServer(self, feature):
         name = feature["Name"] if feature["Name"] else WateringUtils.generateRandomElementName("P")
-        last_mdf = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        last_mdf = WateringUtils.getDateTimeNow()
         description = feature["Descript"] if feature["Descript"] else ""
         diameterInt = feature["Diameter"] if feature["Diameter"] else 0.2
         roughnessAbsolute = feature["Rough.A"] if feature["Rough.A"] else 0.045

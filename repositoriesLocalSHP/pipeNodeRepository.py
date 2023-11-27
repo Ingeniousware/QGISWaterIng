@@ -151,7 +151,7 @@ class PipeNodeRepository(AbstractRepository):
 
         #feature['lastUpdate'] = WateringUtils.getDateTimeNow()
         
-        feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz"))
+        feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
         
         print("Adding feature ", feature, "to server")
         
@@ -211,7 +211,7 @@ class PipeNodeRepository(AbstractRepository):
 
         self.setDefaultValues(feature)
 
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
         
         layer.addFeature(feature)
         layer.commitChanges()

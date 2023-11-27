@@ -127,7 +127,7 @@ class AbstractRepository():
             
         print("reached third")
 
-        feature.setAttribute('lastUpdate',WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz"))
+        feature.setAttribute('lastUpdate',WateringUtils.getDateTimeNow())
 
         print("Adding feature ", feature, "to server")
 
@@ -152,7 +152,7 @@ class AbstractRepository():
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
         self.setDefaultValues(feature)
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -290,19 +290,6 @@ class AbstractRepository():
         else:
             layer.rollback()
             print("Changes were rolled back.")
-
-    """ def updateAll(self):
-        print("Update tool has been activated")
-        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        
-        self.Response = self.loadElements()
-        
-        self.getServerDict()
-        self.getOfflineDict()
-        
-        self.updateFromServerToOffline()
-        self.updateFromOfflineToServer() """
-
     
     def getServerDict(self):
         self.Response = self.loadElements()
@@ -384,6 +371,7 @@ class AbstractRepository():
             #if feature['lastUpdate'] < lastUpdatedFromServer:
             if id in self.ServerDict:
                 if feature['lastUpdate'] < self.ServerDict[id][0]:
+                    print("updating from server to local: ", self.Layer, " ", feature)
                     for i in range(len(self.FieldDefinitions)-self.numberLocalFieldsOnly):
                         feature[self.FieldDefinitions[i]] = self.ServerDict[id][i]
                     
@@ -392,6 +380,9 @@ class AbstractRepository():
                                                                     self.ServerDict[id][-1][1])))
                     
                     self.Layer.updateFeature(feature)
+                    
+                if feature['lastUpdate'] > lastUpdatedFromServer:
+                    
         
         self.Layer.commitChanges()
         

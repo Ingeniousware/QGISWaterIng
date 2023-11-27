@@ -47,7 +47,7 @@ class scenarioUnitOfWork():
             element.initializeRepository()
 
     def updateAll(self):
-        now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        now = WateringUtils.getDateTimeNow()
         
         for element in self.list_of_elements:
             element.updateFromServerToOffline(self.lastUpdatedFromServer)
@@ -67,7 +67,7 @@ class scenarioUnitOfWork():
         if date != "default text":
             return date
         else:
-            now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+            now = WateringUtils.getDateTimeNow()
             
             WateringUtils.setProjectMetadata(self.keyToServer, now)
             return now
@@ -78,7 +78,7 @@ class scenarioUnitOfWork():
         if date != "default text":
             return date
         else:
-            now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+            now = WateringUtils.getDateTimeNow()
             WateringUtils.setProjectMetadata(self.keyFromServer, now)
             return now
         

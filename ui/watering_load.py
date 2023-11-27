@@ -430,7 +430,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         if lastUpdate_index == attribute_index: return 
 
-        new_datetime = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        new_datetime = WateringUtils.getDateTimeNow()
         
         if layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
             print(f"Last updated datetime updated for {feature_id} in {layer.name()}")

@@ -188,7 +188,8 @@ class WateringUtils():
     def getDateTimeNow():
         current_datetime = datetime.now()
         qdatetime = QDateTime(current_datetime)
-        return QVariant(qdatetime)
+        time = QVariant(qdatetime)
+        return time.value().toString("yyyy/MM/dd HH:mm:ss.zzz")
     
 
         # noinspection PyMethodMayBeStatic
