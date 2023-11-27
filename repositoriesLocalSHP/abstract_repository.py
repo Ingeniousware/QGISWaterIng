@@ -45,7 +45,7 @@ class AbstractRepository():
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         url = WateringUtils.getServerUrl() + self.UrlGet
         response =  requests.get(url, params=params_element, 
-                            headers={'Authorization': "Bearer {}".format(self.Token)})  
+                            headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})  
         return response
 
     def setElementFields(self, fields_definitions):
