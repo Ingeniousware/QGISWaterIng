@@ -63,9 +63,9 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         minimumVolume = feature["Min. Vol."]
         nominalDiameter = feature["Diameter"]
         canOverflow = feature["Overflow"]
-
-
-        serverKeyId = uuid.uuid4()
+        
+        serverKeyId = feature["ID"]
+            
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
@@ -81,7 +81,8 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'canOverflow':"{}".format(canOverflow)
                         }
         
-
+        print("element json tanks: ", elementJSON)
+        
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
         while self.lifoAddedElements.full():
@@ -103,7 +104,7 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
         else: 
-            print("Failed on sendig Water Tank Node to the server")
+            print("Failed on sendig Water Tank Node to the server. Status Code: ", serverResponse.status_code, " text: ", serverResponse.text)
 
     
 

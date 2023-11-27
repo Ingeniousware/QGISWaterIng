@@ -57,7 +57,11 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         
         vertices = self.getVertices(feature, nodeDownFK, nodeUpFK)
         length = self.getPipeLength(vertices)
-        serverKeyId = uuid.uuid4()
+        
+        if feature["ID"] == "NULL":
+            serverKeyId = uuid.uuid4()
+        else:
+            serverKeyId = feature["ID"]
             
         elementJSON = {
             "serverKeyId": "{}".format(serverKeyId),

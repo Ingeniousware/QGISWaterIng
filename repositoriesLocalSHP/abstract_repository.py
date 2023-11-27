@@ -1,5 +1,6 @@
 import requests
 import os
+import uuid
 from ..watering_utils import WateringUtils
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
@@ -152,11 +153,14 @@ class AbstractRepository():
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
         self.setDefaultValues(feature)
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
-
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
+        
+        feature.setAttribute("ID", str(uuid.uuid4()))
+        print("feature id: ", feature["id"])
         layer.addFeature(feature)
         layer.commitChanges()
-
+        print("adding to server")
         if self.connectorToServer:
             self.connectorToServer.addElementToServer(feature)
 
@@ -233,13 +237,16 @@ class AbstractRepository():
             self.updateAddElementToServer(element_id)
             
         #Delete Element
-        for element_id in offline_keys - server_keys:
+        """for element_id in offline_keys - server_keys:
             self.deleteElement(element_id, lastUpdated)
-
+"""
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
                 self.updateElement(element_id, lastUpdated)
+
+        # Deleting BackupLayerElements
+        self.deleteElementsInBackupLayers(lastUpdated)
     
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
@@ -250,8 +257,6 @@ class AbstractRepository():
                 if feature['lastUpdate'] > lastUpdatedToServer: 
                     print("Updating feature: ", feature.id())                                           
                     self.connectorToServer.addElementToServer(feature)
-            
-            self.deleteElementsInBackupLayers(lastUpdatedToServer)
          #def removeElementFromServer(self, serverKeyId):
 
     def deleteElementsInBackupLayers(self, lastUpdatedToServer):
@@ -294,21 +299,19 @@ class AbstractRepository():
             layer.rollback()
             print("Changes were rolled back.")
     
-    def getServerDict(self, last):
+    def getServerDict(self, lastUpdated):
         self.Response = self.loadElements()
         data = self.Response.json()["data"]
         for element in data:
-            if element["lastModified"]: 
-                print("nothing")
-            attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
-            attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
-            self.ServerDict[element["serverKeyId"]] = attributes
+            if element["lastModified"] > lastUpdated:
+                attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
+                attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
+                self.ServerDict[element["serverKeyId"]] = attributes
 
-
-          
-    def getOfflineDict(self, lastUpdatedFromServer):
+    def getOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
-            if feature["lastUpdate"] > lastUpdatedFromServer:
+            if feature["lastUpdate"] > lastUpdated:
+                print("adding feature to server on update from offline: ", feature)
                 attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
 
                 if len(attributes) > 2 and (not attributes[2]):
@@ -341,7 +344,12 @@ class AbstractRepository():
         self.Layer.commitChanges()
     
     def updateAddElementToServer(self, id):
-        ...
+        print(id, " reach updateAddElementToServer ")
+        features_to_add= [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
+        
+        if self.connectorToServer:
+            for feature in features_to_add:
+                self.connectorToServer.addElementToServer(feature)
     
 
     def deleteElement(self, id, lastUpdatedFromServer):
@@ -356,15 +364,15 @@ class AbstractRepository():
         
         for feature in features_to_delete:
             if id in self.ServerDict:
-                print("lAST MDF?: ", self.ServerDict[id][0])
                 if feature['lastUpdate'] < self.ServerDict[id][0]:
                 #if feature['lastUpdate'] < lastUpdatedFromServer:
+                    print("element is going to be deleted")
                     self.Layer.deleteFeature(feature.id())
             
         self.Layer.commitChanges()
 
         
-    def updateElement(self, id, lastUpdatedFromServer):
+    def updateElement(self, id, lastUpdated):
         
         #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -377,7 +385,7 @@ class AbstractRepository():
             #if feature['lastUpdate'] < lastUpdatedFromServer:
             if id in self.ServerDict:
                 if feature['lastUpdate'] < self.ServerDict[id][0]:
-                    print("updating from server to local: ", self.Layer, " ", feature)
+                    print("option 1->updating from server to local: ", self.Layer, " ", feature)
                     for i in range(len(self.FieldDefinitions)-self.numberLocalFieldsOnly):
                         feature[self.FieldDefinitions[i]] = self.ServerDict[id][i]
                     
@@ -386,9 +394,10 @@ class AbstractRepository():
                                                                     self.ServerDict[id][-1][1])))
                     
                     self.Layer.updateFeature(feature)
-                    
-                if feature['lastUpdate'] > lastUpdatedFromServer:
-                    break
+                elif feature['lastUpdate'] > lastUpdated:
+                    print("option 2->updating from local to server" , feature, " ", self.Layer)
+                    if self.connectorToServer:
+                        self.connectorToServer.addElement(feature)
         
         self.Layer.commitChanges()
         
