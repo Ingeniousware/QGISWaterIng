@@ -58,12 +58,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         description = feature["Descript"]
         z = feature["Z[m]"]
         baseDemand = feature["B. Demand"]
-
-        isNew = False
-        if (id == None) or id == "NULL": 
-            serverKeyId = uuid.uuid4()
-            isNew = True
-        else: serverKeyId = id
+        serverKeyId = feature["ID"]
         
         node_status = WateringUtils.getProjectMetadata("node_status")
         
