@@ -60,12 +60,7 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         typeV = feature["typeValvul"]
         minorLossCoef = feature["minorLossC"]
         initial = feature["initialSta"]
-
-
-        if feature["ID"] == "NULL":
-            serverKeyId = uuid.uuid4()
-        else:
-            serverKeyId = feature["ID"]
+        serverKeyId = feature["ID"]
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
