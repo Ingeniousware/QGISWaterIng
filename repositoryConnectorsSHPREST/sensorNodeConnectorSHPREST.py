@@ -59,11 +59,7 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         description = feature["Descript"]
         z = feature["Z[m]"]
 
-        isNew = False
-        if (id == None): 
-            serverKeyId = uuid.uuid4()
-            isNew = True
-        else: serverKeyId = uuid.UUID(id)
+        serverKeyId = feature["ID"]
         
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
