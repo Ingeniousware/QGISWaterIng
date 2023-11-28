@@ -63,12 +63,7 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         z = feature["Z[m]"]
         model = feature["Model FK"]
         speed = feature["Rel. Speed"]
-
-
-        if feature["ID"] == "NULL":
-            serverKeyId = uuid.uuid4()
-        else:
-            serverKeyId = feature["ID"]
+        serverKeyId = feature["ID"]
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
