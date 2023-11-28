@@ -345,11 +345,17 @@ class AbstractRepository():
     
     def updateAddElementToServer(self, id):
         print(id, " reach updateAddElementToServer ")
+        print("layer: ", self.Layer)
         features_to_add= [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
+        print("features to add: ", features_to_add)
         
         if self.connectorToServer:
+            print("has connector")
             for feature in features_to_add:
+                print("adding feature: ", feature)
                 self.connectorToServer.addElementToServer(feature)
+        else:
+            print("no connector")
     
 
     def deleteElement(self, id, lastUpdatedFromServer):

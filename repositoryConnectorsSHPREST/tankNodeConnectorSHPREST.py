@@ -53,7 +53,7 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
 
-
+        print("reach 1")
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
@@ -62,10 +62,10 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         maximumLevel = feature["Max. Lvl"]
         minimumVolume = feature["Min. Vol."]
         nominalDiameter = feature["Diameter"]
-        canOverflow = feature["Overflow"]
+        canOverflow = feature["Overflow"] == 1
         
         serverKeyId = feature["ID"]
-            
+        print("reach 2")
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
