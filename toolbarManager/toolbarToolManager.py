@@ -348,12 +348,12 @@ class toolbarToolManager():
                 if tool.MapTool:
                     self.canvas.unsetMapTool(tool.MapTool)
 
-    def waterOptimization(self):
+    def waterOptimization(self, second):
         if WateringUtils.isScenarioNotOpened():
             iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
             iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
-        else:
+        else:            
             dlg = WaterOptimization()
             dlg.show()
             dlg.exec_()
