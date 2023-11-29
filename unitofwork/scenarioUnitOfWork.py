@@ -58,19 +58,22 @@ class scenarioUnitOfWork():
         
         for element in self.list_of_elements:
             element.generalUpdate(self.lastUpdate)
-        self.lastUpdatedFromServer = now
+        self.lastUpdate = now
     
-        WateringUtils.setProjectMetadata(self.keyUpdate, now)
+        WateringUtils.setProjectMetadata(self.keyUpdate, self.lastUpdate)
         
     def getLastUpdate(self):
         date = WateringUtils.getProjectMetadata(self.keyUpdate)
 
+        print("Getting last update: ", date)
+        
         if date != "default text":
             return date
         else:
             now = WateringUtils.getDateTimeNow()
             
             WateringUtils.setProjectMetadata(self.keyUpdate, now)
+            
             return now
     
     def scenarioKeyLastUpdate(self):
