@@ -17,6 +17,7 @@ import requests
 import os
 import random
 import string
+import pytz
 
 #serverInput
 
@@ -184,13 +185,15 @@ class WateringUtils():
         else:
             # Other platforms or an error
             raise ValueError(f"Unsupported platform: {platform}")
-        
+
     def getDateTimeNow():
-        current_datetime = datetime.now()
-        qdatetime = QDateTime(current_datetime)
-        time = QVariant(qdatetime)
-        return time.value().toString("yyyy/MM/dd HH:mm:ss.zzz")
-    
+        # Current UTC Time
+        current_datetime_utc = datetime.now(pytz.utc)
+
+        # Converts to format '2023-11-29T10:28:46.2756439Z'
+        formatted_time = current_datetime_utc.strftime('%Y-%m-%dT%H:%M:%S.%f') + '0Z'
+        
+        return formatted_time
 
         # noinspection PyMethodMayBeStatic
     def tr(message, context = "QGISPlugin_WaterIng"):
