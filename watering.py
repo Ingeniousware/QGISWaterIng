@@ -249,8 +249,6 @@ class QGISPlugin_WaterIng:
                 self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
                 self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
                 
-                
-                
                 server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
                 self.hub_connection = HubConnectionBuilder()\

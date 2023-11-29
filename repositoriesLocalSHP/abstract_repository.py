@@ -2,6 +2,8 @@ import requests
 import os
 import uuid
 from ..watering_utils import WateringUtils
+from datetime import datetime
+import pytz
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
@@ -217,6 +219,7 @@ class AbstractRepository():
         layer.triggerRepaint()
     
     def generalUpdate(self, lastUpdated):  
+        print("LAST UPDATED: ", lastUpdated)
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
 
@@ -310,6 +313,7 @@ class AbstractRepository():
 
     def getOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
+            print("feature[lastUpdate]: ", feature["lastUpdate"] , " last updated: ", lastUpdated)
             if feature["lastUpdate"] > lastUpdated:
                 print("adding feature to server on update from offline: ", feature)
                 attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
@@ -451,4 +455,17 @@ class AbstractRepository():
         else:
             QgsProject.instance().addMapLayer(element_layer, False)
             print("opened successfully:", element_layer.name())"""
-            
+        
+    def transformTimezone(self, time):
+        
+        input_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+        output_format = "%Y/%m/%d %H:%M:%S.%f"
+        
+        original_datetime = datetime.strptime(time, input_format)
+        
+        target_timezone = pytz.timezone('UTC')
+        target_datetime = original_datetime.astimezone(target_timezone)
+        
+        formatted_datetime_str = target_datetime.strftime(output_format)
+        
+        return formatted_datetime_str

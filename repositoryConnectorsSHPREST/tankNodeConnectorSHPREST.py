@@ -62,7 +62,8 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         maximumLevel = feature["Max. Lvl"]
         minimumVolume = feature["Min. Vol."]
         nominalDiameter = feature["Diameter"]
-        canOverflow = feature["Overflow"] == 1
+        #canOverflow = feature["Overflow"] == 1 For later tests
+        canOverflow = True
         
         serverKeyId = feature["ID"]
         print("reach 2")
