@@ -156,10 +156,9 @@ class AbstractRepository():
         
         self.setDefaultValues(feature)
         feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
-        feature.setAttribute("Last Mdf", None)
+        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
+        feature.setAttribute("ID", None)
         
-        feature.setAttribute("ID", str(uuid.uuid4()))
-        print("feature id: ", feature["id"])
         layer.addFeature(feature)
         layer.commitChanges()
         print("adding to server")
@@ -300,21 +299,30 @@ class AbstractRepository():
             print("Changes were rolled back.")
     
     def getServerDict(self, lastUpdated):
+        print("server dict")
         self.Response = self.loadElements()
         data = self.Response.json()["data"]
         for element in data:
             if element["lastModified"] > lastUpdated:
+                print("element last update bigger")
                 attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
                 attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
                 self.ServerDict[element["serverKeyId"]] = attributes
+        print("server dict")
+        
 
     def getOfflineDict(self, lastUpdated):
+        print("offline dict")
+        
         for feature in self.Layer.getFeatures():
             print("feature[lastUpdate]: ", feature["lastUpdate"] , " last updated: ", lastUpdated)
             if feature["lastUpdate"] > lastUpdated:
                 print("adding feature to server on update from offline: ", feature)
+                
                 attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
 
+                print(attributes)
+                
                 if len(attributes) > 2 and (not attributes[2]):
                     attributes[2] = None
                     
@@ -322,8 +330,14 @@ class AbstractRepository():
                 point = geom.asPoint()
                 attributes.append((point.x(), point.y()))
 
-                self.OfflineDict[feature["ID"]] = attributes
+                if feature["ID"]:
+                    self.OfflineDict[feature["ID"]] = attributes
+                else:
+                    uuid_str = str(uuid.uuid4())
+                    temp_key_id = uuid_str[:10]
+                    self.OfflineDict[temp_key_id] = attributes
 
+        print("offline dict")
 
 
     def addElementToOffline(self, id):
@@ -355,9 +369,9 @@ class AbstractRepository():
             for feature in features_to_add:
                 print("adding feature: ", feature)
                 self.connectorToServer.addElementToServer(feature)
+                self.updateLastUpdated(feature)
         else:
             print("no connector")
-    
 
     def deleteElement(self, id, lastUpdatedFromServer):
         print("ID in delete element: ", id)
@@ -404,7 +418,7 @@ class AbstractRepository():
                 elif feature['lastUpdate'] > lastUpdated:
                     print("option 2->updating from local to server" , feature, " ", self.Layer)
                     if self.connectorToServer:
-                        self.connectorToServer.addElement(feature)
+                        self.connectorToServer.addElementToServer(feature)
         
         self.Layer.commitChanges()
         
@@ -466,3 +480,12 @@ class AbstractRepository():
         formatted_datetime_str = target_datetime.strftime(output_format)
         
         return formatted_datetime_str
+    
+    def updateLastUpdated(self, feature):
+        self.Layer.startEditing()
+
+        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
+        
+        self.Layer.updateFeature(feature)
+
+        self.Layer.commitChanges()

@@ -52,7 +52,16 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         transGeometry.transform(QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance()))
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
-
+        
+        isNew = False
+        if feature["ID"] == None: 
+            isNew = True
+            serverKeyId = uuid.uuid4()
+        else:
+            serverKeyId = feature["ID"]
+            
+        print("isNEW: ", isNew)
+            
         print("reach 1")
         name = feature["Name"]
         description = feature["Descript"]
@@ -65,7 +74,7 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         #canOverflow = feature["Overflow"] == 1 For later tests
         canOverflow = True
         
-        serverKeyId = feature["ID"]
+        #serverKeyId = feature["ID"]
         print("reach 2")
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
@@ -90,25 +99,29 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-        isNew = False
+        """isNew = False
         if (feature["Last Mdf"] == None): 
-            isNew = True
+            isNew = True"""
             
         #isNew = WateringUtils.getFeatureIsNewStatus(serverKeyId)
         
-        if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
-        else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
+        if (isNew): 
+            print("tank is new, posting")
+            serverResponse = self.serverRepository.postToServer(elementJSON)
+        else: 
+            print("tank is not new, putting")
+            serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
-        layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
+        #layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
         
         if serverResponse.status_code == 200:
             print("Water Tank Node was sent succesfully to the server")
             #WateringUtils.setProjectMetadata(serverKeyId, "already on server")
-            fields = layer.fields()
+            """fields = layer.fields()
             
             lastModified_index = fields.indexFromName('Last Mdf')
             
-            layer.changeAttributeValue(feature.id(), lastModified_index, WateringUtils.getDateTimeNow())
+            layer.changeAttributeValue(feature.id(), lastModified_index, WateringUtils.getDateTimeNow())"""
             #writing the server key id to the element that has been created
             #serverKeyId = serverResponse.json()["serverKeyId"]
             #print(serverKeyId)       

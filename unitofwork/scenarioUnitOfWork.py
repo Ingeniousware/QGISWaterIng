@@ -70,11 +70,12 @@ class scenarioUnitOfWork():
         if date != "default text":
             return date
         else:
-            now = WateringUtils.getDateTimeNow()
+            # First update, update everything
+            date = "1800-11-30T14:39:22.4189860Z"
             
-            WateringUtils.setProjectMetadata(self.keyUpdate, now)
+            WateringUtils.setProjectMetadata(self.keyUpdate, date)
             
-            return now
+            return date
     
     def scenarioKeyLastUpdate(self):
         return self.scenarioFK + "last_general_update"

@@ -282,7 +282,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def updateProject(self, justCreated):
         #self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        if (not justCreated): self.myScenarioUnitOfWork.updateAll()
+        # Paused for testings
+        # if (not justCreated): self.myScenarioUnitOfWork.updateAll()
         
     def setWateringFolderAppData(self, path):
         #Creates directory QGISWatering inside Appdata
@@ -442,7 +443,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         """if layer.changeAttributeValue(feature_id, lastModified_index, new_datetime):
             print(f"Last modified datetime updated for {feature_id} in {layer.name()}")
         else:
-            print("Datetime could not be updated")  """ 
+            print("Datetime could not be updated")"""
             
         layer.commitChanges()
 
