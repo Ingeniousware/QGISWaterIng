@@ -7,7 +7,7 @@ import pytz
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
-from PyQt5.QtCore import QFileInfo
+from PyQt5.QtCore import QFileInfo, QDateTime
 from PyQt5.QtGui import QColor
 from qgis.utils import iface
 
@@ -218,6 +218,8 @@ class AbstractRepository():
         layer.triggerRepaint()
     
     def generalUpdate(self, lastUpdated):  
+        self.ServerDict = {}
+        self.OfflineDict = {}
         print("LAST UPDATED: ", lastUpdated)
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
@@ -345,7 +347,7 @@ class AbstractRepository():
         print(f"Adding element in {self.LayerName}: {id}")
         
         feature = QgsFeature(self.Layer.fields())
-        feature["ID"] = id
+        feature.setAttribute("ID", id)
         feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
                                                                self.ServerDict[id][-1][1])))
         
@@ -354,14 +356,16 @@ class AbstractRepository():
         
         for i, field in enumerate(self.FieldDefinitions):
             feature[field] = self.ServerDict[id][i]
-
+        
+        feature.setAttribute("lastUpdate", QDateTime.fromString(WateringUtils.getDateTimeNow(), "yyyy-MM-ddTHH:mm:ss.zzzZ"))
+        
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
     
     def updateAddElementToServer(self, id):
         print(id, " reach updateAddElementToServer ")
         print("layer: ", self.Layer)
-        features_to_add= [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if feature['ID'] == None]
         print("features to add: ", features_to_add)
         
         if self.connectorToServer:
@@ -369,7 +373,6 @@ class AbstractRepository():
             for feature in features_to_add:
                 print("adding feature: ", feature)
                 self.connectorToServer.addElementToServer(feature)
-                self.updateLastUpdated(feature)
         else:
             print("no connector")
 
@@ -481,11 +484,3 @@ class AbstractRepository():
         
         return formatted_datetime_str
     
-    def updateLastUpdated(self, feature):
-        self.Layer.startEditing()
-
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
-        
-        self.Layer.updateFeature(feature)
-
-        self.Layer.commitChanges()

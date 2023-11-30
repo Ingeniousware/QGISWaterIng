@@ -22,7 +22,7 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         connectionHub.on("DELETE_TANK", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
-
+        self.Layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
 
     def processPOSTElementToLocal(self, paraminput):
         print("Entering processPOSTElementToLocal")        
@@ -55,8 +55,17 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         
         isNew = False
         if feature["ID"] == None: 
+            #layer = feature.layer()
+            #print("LAYER ON UPDATE LAST UPDATE: ", layer)
             isNew = True
             serverKeyId = uuid.uuid4()
+            #now = WateringUtils.getDateTimeNow()
+            #layer.startEditing()
+            #feature.setAttribute(layer.fields().indexFromName('Last Mdf'), now)
+            #feature.setAttribute(layer.fields().indexFromName('lastUpdate'), now)
+            #layer.updateFeature(feature)
+            #layer.commitChanges()
+            
         else:
             serverKeyId = feature["ID"]
             
@@ -117,6 +126,18 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         if serverResponse.status_code == 200:
             print("Water Tank Node was sent succesfully to the server")
             #WateringUtils.setProjectMetadata(serverKeyId, "already on server")
+            
+            #layer = feature.layer()
+            #print("LAYER ON UPDATE LAST UPDATE: ", self.Layer)
+            #isNew = True
+            #serverKeyId = uuid.uuid4()
+            #now = WateringUtils.getDateTimeNow()
+            self.Layer.startEditing()
+            feature.setAttribute(self.Layer.fields().indexFromName('ID'), serverKeyId)
+            #feature.setAttribute(self.Layer.fields().indexFromName('lastUpdate'), now)
+            self.Layer.updateFeature(feature)
+            self.Layer.commitChanges()
+            
             """fields = layer.fields()
             
             lastModified_index = fields.indexFromName('Last Mdf')
