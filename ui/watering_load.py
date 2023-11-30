@@ -428,6 +428,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         fields = layer.fields()
         lastUpdate_index = fields.indexFromName('lastUpdate')
         
+        #lastModified_index = fields.indexFromName('Last Mdf')
+        
         if lastUpdate_index == attribute_index: return 
 
         new_datetime = WateringUtils.getDateTimeNow()
@@ -436,6 +438,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             print(f"Last updated datetime updated for {feature_id} in {layer.name()}")
         else:
             print("Datetime could not be updated")
+            
+        """if layer.changeAttributeValue(feature_id, lastModified_index, new_datetime):
+            print(f"Last modified datetime updated for {feature_id} in {layer.name()}")
+        else:
+            print("Datetime could not be updated")  """ 
             
         layer.commitChanges()
 

@@ -2,7 +2,7 @@ import os
 import requests
 
 from .abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
-
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
@@ -90,14 +90,29 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-        serverResponse = self.serverRepository.postToServer(elementJSON)
+        isNew = False
+        if (feature["Last Mdf"] == None): 
+            isNew = True
+            
+        #isNew = WateringUtils.getFeatureIsNewStatus(serverKeyId)
+        
+        if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
+        else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
+        
+        layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
         
         if serverResponse.status_code == 200:
             print("Water Tank Node was sent succesfully to the server")
+            #WateringUtils.setProjectMetadata(serverKeyId, "already on server")
+            fields = layer.fields()
+            
+            lastModified_index = fields.indexFromName('Last Mdf')
+            
+            layer.changeAttributeValue(feature.id(), lastModified_index, WateringUtils.getDateTimeNow())
             #writing the server key id to the element that has been created
-            serverKeyId = serverResponse.json()["serverKeyId"]
-            print(serverKeyId)       
-            feature.setAttribute("ID", serverKeyId)   
+            #serverKeyId = serverResponse.json()["serverKeyId"]
+            #print(serverKeyId)       
+            #feature.setAttribute("ID", serverKeyId)   
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)

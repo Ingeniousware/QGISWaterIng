@@ -233,7 +233,6 @@ class QGISPlugin_WaterIng:
         self.dlg = WateringLogin()
         self.dlg.show()
         self.dlg.exec_()
-
         
     def addLoad(self):
         #self.InitializeProjectToolbar()

@@ -84,7 +84,10 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-
+        isNew = False
+        if (feature["Last Mdf"] == None): 
+            isNew = True
+        
         if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
         else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
 

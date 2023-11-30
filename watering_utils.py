@@ -225,3 +225,7 @@ class WateringUtils():
 
         return f"{elementInitial}-[{random_chars}]"
     
+    def getFeatureIsNewStatus(serverKeyId):
+        data = WateringUtils.getProjectMetadata(serverKeyId)
+        
+        return True if data == "default text" else False

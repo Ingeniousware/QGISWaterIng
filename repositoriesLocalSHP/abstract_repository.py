@@ -156,7 +156,7 @@ class AbstractRepository():
         
         self.setDefaultValues(feature)
         feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
-        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
+        feature.setAttribute("Last Mdf", None)
         
         feature.setAttribute("ID", str(uuid.uuid4()))
         print("feature id: ", feature["id"])
@@ -232,6 +232,9 @@ class AbstractRepository():
         server_keys = set(self.ServerDict.keys())
         offline_keys = set(self.OfflineDict.keys())
 
+        # Deleting in BackupLayerElements from server
+        self.deleteElementsInBackupLayers(lastUpdated)
+        
         #Add Element
         for element_id in server_keys - offline_keys:
             self.addElementToOffline(element_id)
@@ -246,10 +249,8 @@ class AbstractRepository():
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
+                print("Server list: ",self.ServerDict[element_id]," diffs from online list: ",self.OfflineDict[element_id])
                 self.updateElement(element_id, lastUpdated)
-
-        # Deleting BackupLayerElements
-        self.deleteElementsInBackupLayers(lastUpdated)
     
     def updateFromOfflineToServer(self, lastUpdatedToServer):
         if self.connectorToServer:
@@ -276,12 +277,8 @@ class AbstractRepository():
         current_time = WateringUtils.getDateTimeNow()
         for feature in layer.getFeatures():
             if feature['lastUpdate'] > lastUpdatedToServer: 
-                print("Updating feature: ", feature.id()) 
-                print("its is: ", feature['lastUpdate'], "last update: ", lastUpdatedToServer)
                 layer.changeAttributeValue(feature.id(), layer.fields().indexFromName('lastUpdate'), current_time)
                 self.connectorToServer.removeElementFromServer(feature["ID"])
-            else:
-                print("its is not: ", feature['lastUpdate'], "last update: ", lastUpdatedToServer)
                 
     def getElementsIdsFromLayer(self, layer):
         ids = []
