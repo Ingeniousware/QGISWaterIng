@@ -30,7 +30,7 @@ class PipeNodeRepository(AbstractRepository):
             ("C(H.W.)", QVariant.Double),
             ("Up-Node", QVariant.String),
             ("Down-Node", QVariant.String),
-            ("lastUpdate", QVariant.DateTime)
+            ("lastUpdate", QVariant.String)
         ]
         
         self.features = ["serverKeyId", "lastModified", "name", "description", "diameterInt",

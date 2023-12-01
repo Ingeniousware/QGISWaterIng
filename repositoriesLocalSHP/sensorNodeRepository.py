@@ -23,7 +23,7 @@ class SensorNodeRepository(AbstractRepository):
             ("Name", QVariant.String),
             ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
-            ("lastUpdate", QVariant.DateTime)
+            ("lastUpdate", QVariant.String)
         ]
     
         self.features = ["lng", "lat", "serverKeyId", "lastModified","name", "description", "z"]
