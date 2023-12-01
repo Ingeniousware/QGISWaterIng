@@ -357,7 +357,7 @@ class AbstractRepository():
         for i, field in enumerate(self.FieldDefinitions):
             feature[field] = self.ServerDict[id][i]
         
-        feature.setAttribute("lastUpdate", QDateTime.currentDateTime())
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
         
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
