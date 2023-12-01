@@ -39,7 +39,7 @@ class SensorNodeRepository(AbstractRepository):
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
-        name = "sensorName"
+        name = "sensorNameNew"
         description = "sensor form QGIS"
         z = 0
 

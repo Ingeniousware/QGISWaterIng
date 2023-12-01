@@ -22,6 +22,7 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         connectionHub.on("DELETE_SENSOR", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
+        self.Layer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
 
 
     def processPOSTElementToLocal(self, paraminput):
@@ -29,7 +30,7 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         #print(paraminput[0])
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
-        print(serverKeyId)
+        #print(serverKeyId)
         if not (serverKeyId in self.lastAddedElements):
             self.localRepository.addElementFromSignalR(paraminput[0])
             print("Water Sensor Node inserted after push from server")
@@ -53,14 +54,18 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
 
-
-        id = feature["ID"]
+        isNew = False
+        if feature["ID"] == None: 
+            isNew = True
+            serverKeyId = uuid.uuid4()
+            
+        else:
+            serverKeyId = feature["ID"]
+            
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
 
-        serverKeyId = feature["ID"]
-        
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
@@ -78,16 +83,29 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             self.lastAddedElements.pop(keyIdToEliminate)
 
 
-        if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
-        else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
+        #if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
+        #else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
 
+        if (isNew): 
+            print("sensor is new, posting")
+            serverResponse = self.serverRepository.postToServer(elementJSON)
+        else: 
+            print("sensor is not new, putting")
+            serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
+        
+        print("SERVER RESPONSE SENSOR: ", serverResponse)
         
         if serverResponse.status_code == 200:
             print("Water Sensor Node was sent succesfully to the server")
-            #writing the server key id to the element that has been created
-            serverKeyId = serverResponse.json()["serverKeyId"]
-            print(serverKeyId)       
-            feature.setAttribute("ID", serverKeyId)   
+            
+            self.Layer.startEditing()
+            feature.setAttribute(self.Layer.fields().indexFromName('ID'), serverKeyId)
+            #feature.setAttribute(self.Layer.fields().indexFromName('lastUpdate'), now)
+            self.Layer.updateFeature(feature)
+            self.Layer.commitChanges()
+                
+            #feature.setAttribute("ID", serverKeyId)  
+             
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)
