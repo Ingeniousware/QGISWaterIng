@@ -157,13 +157,32 @@ class AbstractRepository():
         self.setDefaultValues(feature)
         feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
         feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
-        feature.setAttribute("ID", None)
+        
+        id = str(uuid.uuid4())
+        temp_id = id[:10]
+        
+        feature.setAttribute("ID", temp_id)
         
         layer.addFeature(feature)
-        layer.commitChanges()
+        """layer.commitChanges()
+        
         print("adding to server")
         if self.connectorToServer:
+            print("connection, adding id in server locally")
             self.connectorToServer.addElementToServer(feature)
+        
+        return feature"""
+        commit_success = layer.commitChanges()
+
+        if commit_success:
+            print("Changes committed successfully.")
+            print("Adding to server...")
+            if self.connectorToServer:
+                print("Connection established, adding ID in server locally")
+                print("feature id before: ", feature.id())
+                self.connectorToServer.addElementToServer(feature)
+        else:
+            print("Failed to commit changes.")
 
         return feature
 

@@ -57,8 +57,7 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         isNew = False
         if feature["ID"] == None: 
             isNew = True
-            serverKeyId = uuid.uuid4()
-            
+            serverKeyId = uuid.uuid4() 
         else:
             serverKeyId = feature["ID"]
             

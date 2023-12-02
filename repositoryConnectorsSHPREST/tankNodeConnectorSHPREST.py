@@ -22,7 +22,6 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         connectionHub.on("DELETE_TANK", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
-        self.Layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
 
     def processPOSTElementToLocal(self, paraminput):
         print("Entering processPOSTElementToLocal")        
@@ -44,7 +43,9 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
 
     def addElementToServer(self, feature):
-        
+        feature_id = feature.id()
+        print("feature id: ", feature_id)
+
         x = feature.geometry().asPoint().x()
         y = feature.geometry().asPoint().y()
         #transforming coordinates for the CRS of the server
@@ -54,18 +55,9 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         y = transGeometry.asPoint().y()
         
         isNew = False
-        if feature["ID"] == None: 
-            #layer = feature.layer()
-            #print("LAYER ON UPDATE LAST UPDATE: ", layer)
+        if len(feature["ID"]) == 10:
             isNew = True
-            serverKeyId = uuid.uuid4()
-            #now = WateringUtils.getDateTimeNow()
-            #layer.startEditing()
-            #feature.setAttribute(layer.fields().indexFromName('Last Mdf'), now)
-            #feature.setAttribute(layer.fields().indexFromName('lastUpdate'), now)
-            #layer.updateFeature(feature)
-            #layer.commitChanges()
-            
+            serverKeyId = str(uuid.uuid4())
         else:
             serverKeyId = feature["ID"]
             
@@ -132,17 +124,64 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             #isNew = True
             #serverKeyId = uuid.uuid4()
             #now = WateringUtils.getDateTimeNow()
-            self.Layer.startEditing()
-            feature.setAttribute(self.Layer.fields().indexFromName('ID'), serverKeyId)
+            
+            #old
+            """layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
+            id_feature = feature.id()
+            layer.startEditing()
+            id_index = layer.fields().indexFromName('ID')
+            new_id = str(serverKeyId)
+            #feature.setAttribute(layer.fields().indexFromName('ID'), str(serverKeyId))
+            layer.changeAttributeValue(id_feature, id_index, new_id)
+            print(layer, "id changed ", serverKeyId)
             #feature.setAttribute(self.Layer.fields().indexFromName('lastUpdate'), now)
-            self.Layer.updateFeature(feature)
-            self.Layer.commitChanges()
+            layer.updateFeature(feature)
+            layer.commitChanges()"""
             
-            """fields = layer.fields()
-            
-            lastModified_index = fields.indexFromName('Last Mdf')
-            
-            layer.changeAttributeValue(feature.id(), lastModified_index, WateringUtils.getDateTimeNow())"""
+            #new
+            print("isNew: ", isNew)
+            if isNew:
+                #layer = QgsVectorLayer('/Users/vmstar/Library/Application Support/QGISWatering/22fbb771-0e96-4357-b1b7-d6e045fddc42/watering_tanks.shp', 'watering_tanks', 'ogr')
+
+                #print("layer : ", layer)
+                layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
+                
+                #prov = layer.dataProvider()
+                
+                id_element = feature["ID"]
+                print("ID EEMENT: ", id_element)
+                #layer.startEditing()
+                layer.startEditing()
+
+                # Assuming you know the feature's ID or some other unique identifier
+                
+                id_index = layer.fields().indexFromName('ID')
+                print(feature_id)
+                # Retrieve the feature with the specified ID
+                the_feature = None
+                for feat in layer.getFeatures():
+                    if feat["ID"] == id_element:
+                        the_feature = feat
+                        print("Feature Found")
+                        break
+
+                # Check if the feature was found
+                if the_feature:
+                    print("feature id ", the_feature.id())
+                    new_s = str(serverKeyId)
+                    print("new s: ", new_s)
+                    layer.changeAttributeValue(the_feature.id(), id_index, new_s)
+                    layer.updateFeature(the_feature)
+                    layer.commitChanges()
+                    layer.triggerRepaint()
+                else:
+                    print("Feature not found")
+                
+                """fields = layer.fields()
+                
+                lastModified_index = fields.indexFromName('Last Mdf')
+                
+                layer.changeAttributeValue(feature.id(), lastModified_index, WateringUtils.getDateTimeNow())"""
             #writing the server key id to the element that has been created
             #serverKeyId = serverResponse.json()["serverKeyId"]
             #print(serverKeyId)       
