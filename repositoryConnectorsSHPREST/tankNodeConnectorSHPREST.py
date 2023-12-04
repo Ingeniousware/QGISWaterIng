@@ -43,9 +43,6 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
 
     def addElementToServer(self, feature):
-        feature_id = feature.id()
-        print("feature id: ", feature_id)
-
         x = feature.geometry().asPoint().x()
         y = feature.geometry().asPoint().y()
         #transforming coordinates for the CRS of the server
@@ -61,9 +58,6 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         else:
             serverKeyId = feature["ID"]
             
-        print("isNEW: ", isNew)
-            
-        print("reach 1")
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
@@ -72,11 +66,8 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         maximumLevel = feature["Max. Lvl"]
         minimumVolume = feature["Min. Vol."]
         nominalDiameter = feature["Diameter"]
-        #canOverflow = feature["Overflow"] == 1 For later tests
-        canOverflow = True
-        
-        #serverKeyId = feature["ID"]
-        print("reach 2")
+        canOverflow = True if feature["Overflow"] == 1 else False
+  
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
@@ -91,21 +82,13 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'nominalDiameter':"{}".format(nominalDiameter),
                        'canOverflow':"{}".format(canOverflow)
                         }
-        
-        print("element json tanks: ", elementJSON)
-        
+
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
         while self.lifoAddedElements.full():
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-        """isNew = False
-        if (feature["Last Mdf"] == None): 
-            isNew = True"""
-            
-        #isNew = WateringUtils.getFeatureIsNewStatus(serverKeyId)
-        
         if (isNew): 
             print("tank is new, posting")
             serverResponse = self.serverRepository.postToServer(elementJSON)
@@ -113,129 +96,27 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             print("tank is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
-        #layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
-        
         if serverResponse.status_code == 200:
             print("Water Tank Node was sent succesfully to the server")
-            #WateringUtils.setProjectMetadata(serverKeyId, "already on server")
-            
-            #layer = feature.layer()
-            #print("LAYER ON UPDATE LAST UPDATE: ", self.Layer)
-            #isNew = True
-            #serverKeyId = uuid.uuid4()
-            #now = WateringUtils.getDateTimeNow()
-            
-            #old
-            """layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
-            id_feature = feature.id()
-            layer.startEditing()
-            id_index = layer.fields().indexFromName('ID')
-            new_id = str(serverKeyId)
-            #feature.setAttribute(layer.fields().indexFromName('ID'), str(serverKeyId))
-            layer.changeAttributeValue(id_feature, id_index, new_id)
-            print(layer, "id changed ", serverKeyId)
-            #feature.setAttribute(self.Layer.fields().indexFromName('lastUpdate'), now)
-            layer.updateFeature(feature)
-            layer.commitChanges()"""
-            
-            """#new
-            print("isNew: ", isNew)
+ 
             if isNew:
-                #layer = QgsVectorLayer('/Users/vmstar/Library/Application Support/QGISWatering/22fbb771-0e96-4357-b1b7-d6e045fddc42/watering_tanks.shp', 'watering_tanks', 'ogr')
-
-                #print("layer : ", layer)
                 layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
                 
-                #prov = layer.dataProvider()
-                
                 id_element = feature["ID"]
-                print("ID EEMENT: ", id_element)
-                #layer.startEditing()
+                
                 layer.startEditing()
 
-                # Assuming you know the feature's ID or some other unique identifier
-                
-                id_index = layer.fields().indexFromName('ID')
-                print(feature_id)
-                # Retrieve the feature with the specified ID
-                the_feature = None
+                c_feature = None
                 for feat in layer.getFeatures():
                     if feat["ID"] == id_element:
-                        the_feature = feat
-                        print("Feature Found")
-                        break
-
-                # Check if the feature was found
-                if the_feature:
-                    print("feature id ", the_feature.id())
-                    new_s = str(serverKeyId)
-                    print("new s: ", new_s)
-                    if layer.changeAttributeValue(the_feature.id(), id_index, new_s):
-                        print("VALUE CHANGED")
-                    else:
-                        print("value not changed")
-                    layer.updateFeature(the_feature)
-                    layer.commitChanges()
-                    layer.triggerRepaint()
-                else:
-                    print("Feature not found")"""
-                
-                #new
-            print("isNew: ", isNew)
-            if isNew:
-                #layer = QgsVectorLayer('/Users/vmstar/Library/Application Support/QGISWatering/22fbb771-0e96-4357-b1b7-d6e045fddc42/watering_tanks.shp', 'watering_tanks', 'ogr')
-
-                #print("layer : ", layer)
-                layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
-                
-                prov = layer.dataProvider()
-                
-                id_element = feature["ID"]
-                print("ID EEMENT: ", id_element)
-                #layer.startEditing()
-                layer.startEditing()
-
-                # Assuming you know the feature's ID or some other unique identifier
-                new_s = str(serverKeyId)
-                id_index = prov.fields().indexFromName('ID')
-                print(feature_id)
-                # Retrieve the feature with the specified ID
-                the_feature = None
-                for feat in prov.getFeatures():
-                    if feat["ID"] == id_element:
-                        the_feature = feat
-                        the_feature.setAttribute(the_feature.fieldNameIndex("ID"), new_s)
-                        # Update the feature
-                        layer.updateFeature(the_feature)
+                        c_feature = feat
+                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        layer.updateFeature(c_feature)
                         print("Feature Found")
                         break
                 
                 layer.commitChanges()
-                
-                """# Check if the feature was found
-                if the_feature:
-                    print("feature id ", the_feature.id())
-                    new_s = str(serverKeyId)
-                    print("new s: ", new_s)
-                    if prov.changeAttributeValue(the_feature.id(), id_index, new_s):
-                        print("VALUE CHANGED")
-                    else:
-                        print("value not changed")
-                    prov.updateFeature(the_feature)
-                    layer.commitChanges()
-                    layer.triggerRepaint()
-                else:
-                    print("Feature not found")"""
-                    
-                """fields = layer.fields()
-                
-                lastModified_index = fields.indexFromName('Last Mdf')
-                
-                layer.changeAttributeValue(feature.id(), lastModified_index, WateringUtils.getDateTimeNow())"""
-            #writing the server key id to the element that has been created
-            #serverKeyId = serverResponse.json()["serverKeyId"]
-            #print(serverKeyId)       
-            #feature.setAttribute("ID", serverKeyId)   
+        
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)
