@@ -52,13 +52,17 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
 
-
-        id = feature["ID"]
+        isNew = False
+        if len(feature["ID"]) == 10:
+            isNew = True
+            serverKeyId = str(uuid.uuid4())
+        else:
+            serverKeyId = feature["ID"]
+   
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
         baseDemand = feature["B. Demand"]
-        serverKeyId = feature["ID"]
         
         node_status = WateringUtils.getProjectMetadata("node_status")
         
@@ -84,20 +88,31 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-        isNew = False
-        if (feature["Last Mdf"] == None): 
-            isNew = True
-        
         if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
         else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
 
-        
         if serverResponse.status_code == 200:
             print("Water Demand Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
-            serverKeyId = serverResponse.json()["serverKeyId"]
-            print(serverKeyId)       
-            feature.setAttribute("ID", serverKeyId)   
+            
+            if isNew:
+                layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+                
+                id_element = feature["ID"]
+                
+                layer.startEditing()
+                
+                c_feature = None
+                for feat in layer.getFeatures():
+                    if feat["ID"] == id_element:
+                        c_feature = feat
+                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        layer.updateFeature(c_feature)
+                        print("Feature Found")
+                        break
+                    
+                layer.commitChanges()
+                
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)
