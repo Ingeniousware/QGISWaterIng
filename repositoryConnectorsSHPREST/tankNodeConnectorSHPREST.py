@@ -138,7 +138,7 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             layer.updateFeature(feature)
             layer.commitChanges()"""
             
-            #new
+            """#new
             print("isNew: ", isNew)
             if isNew:
                 #layer = QgsVectorLayer('/Users/vmstar/Library/Application Support/QGISWatering/22fbb771-0e96-4357-b1b7-d6e045fddc42/watering_tanks.shp', 'watering_tanks', 'ogr')
@@ -170,13 +170,63 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     print("feature id ", the_feature.id())
                     new_s = str(serverKeyId)
                     print("new s: ", new_s)
-                    layer.changeAttributeValue(the_feature.id(), id_index, new_s)
+                    if layer.changeAttributeValue(the_feature.id(), id_index, new_s):
+                        print("VALUE CHANGED")
+                    else:
+                        print("value not changed")
                     layer.updateFeature(the_feature)
                     layer.commitChanges()
                     layer.triggerRepaint()
                 else:
-                    print("Feature not found")
+                    print("Feature not found")"""
                 
+                #new
+            print("isNew: ", isNew)
+            if isNew:
+                #layer = QgsVectorLayer('/Users/vmstar/Library/Application Support/QGISWatering/22fbb771-0e96-4357-b1b7-d6e045fddc42/watering_tanks.shp', 'watering_tanks', 'ogr')
+
+                #print("layer : ", layer)
+                layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
+                
+                prov = layer.dataProvider()
+                
+                id_element = feature["ID"]
+                print("ID EEMENT: ", id_element)
+                #layer.startEditing()
+                layer.startEditing()
+
+                # Assuming you know the feature's ID or some other unique identifier
+                new_s = str(serverKeyId)
+                id_index = prov.fields().indexFromName('ID')
+                print(feature_id)
+                # Retrieve the feature with the specified ID
+                the_feature = None
+                for feat in prov.getFeatures():
+                    if feat["ID"] == id_element:
+                        the_feature = feat
+                        the_feature.setAttribute(the_feature.fieldNameIndex("ID"), new_s)
+                        # Update the feature
+                        layer.updateFeature(the_feature)
+                        print("Feature Found")
+                        break
+                
+                layer.commitChanges()
+                
+                """# Check if the feature was found
+                if the_feature:
+                    print("feature id ", the_feature.id())
+                    new_s = str(serverKeyId)
+                    print("new s: ", new_s)
+                    if prov.changeAttributeValue(the_feature.id(), id_index, new_s):
+                        print("VALUE CHANGED")
+                    else:
+                        print("value not changed")
+                    prov.updateFeature(the_feature)
+                    layer.commitChanges()
+                    layer.triggerRepaint()
+                else:
+                    print("Feature not found")"""
+                    
                 """fields = layer.fields()
                 
                 lastModified_index = fields.indexFromName('Last Mdf')
