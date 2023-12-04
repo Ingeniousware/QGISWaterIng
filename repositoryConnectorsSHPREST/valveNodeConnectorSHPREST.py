@@ -52,7 +52,13 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
 
-
+        isNew = False
+        if len(feature["ID"]) == 10:
+            isNew = True
+            serverKeyId = str(uuid.uuid4())
+        else:
+            serverKeyId = feature["ID"]
+            
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
@@ -60,7 +66,6 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         typeV = feature["typeValvul"]
         minorLossCoef = feature["minorLossC"]
         initial = feature["initialSta"]
-        serverKeyId = feature["ID"]
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
@@ -82,14 +87,35 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-        serverResponse = self.serverRepository.postToServer(elementJSON)
+        if (isNew): 
+            print("Valve is new, posting")
+            serverResponse = self.serverRepository.postToServer(elementJSON)
+        else: 
+            print("Valve is not new, putting")
+            serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
         if serverResponse.status_code == 200:
             print("Water Valve Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
-            serverKeyId = serverResponse.json()["serverKeyId"]
-            print(serverKeyId)       
-            feature.setAttribute("ID", serverKeyId)   
+            
+            if isNew:
+                layer = QgsProject.instance().mapLayersByName("watering_valves")[0]
+                
+                id_element = feature["ID"]
+                
+                layer.startEditing()
+                
+                c_feature = None
+                for feat in layer.getFeatures():
+                    if feat["ID"] == id_element:
+                        c_feature = feat
+                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        layer.updateFeature(c_feature)
+                        print("Feature Found")
+                        break
+                    
+                layer.commitChanges()
+              
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)
