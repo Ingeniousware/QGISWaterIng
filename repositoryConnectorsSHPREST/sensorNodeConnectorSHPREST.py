@@ -22,7 +22,6 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         connectionHub.on("DELETE_SENSOR", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
-        self.Layer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
 
 
     def processPOSTElementToLocal(self, paraminput):
@@ -55,9 +54,9 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         y = transGeometry.asPoint().y()
 
         isNew = False
-        if feature["ID"] == None: 
+        if len(feature["ID"]) == 10:
             isNew = True
-            serverKeyId = uuid.uuid4() 
+            serverKeyId = str(uuid.uuid4())
         else:
             serverKeyId = feature["ID"]
             
@@ -71,39 +70,41 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'description': "{}".format(description), 
                        'lng': "{}".format(x), 
                        'lat': "{}".format(y), 
-                       'z': "{}".format(z)
-                       }
+                       'z': "{}".format(z)}
         
-
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
         while self.lifoAddedElements.full():
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-
-        #if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
-        #else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
-
         if (isNew): 
-            print("sensor is new, posting")
+            print("Sensor is new, posting.")
             serverResponse = self.serverRepository.postToServer(elementJSON)
         else: 
-            print("sensor is not new, putting")
+            print("Sensor is not new, putting.")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
-        
-        print("SERVER RESPONSE SENSOR: ", serverResponse)
         
         if serverResponse.status_code == 200:
             print("Water Sensor Node was sent succesfully to the server")
             
-            self.Layer.startEditing()
-            feature.setAttribute(self.Layer.fields().indexFromName('ID'), serverKeyId)
-            #feature.setAttribute(self.Layer.fields().indexFromName('lastUpdate'), now)
-            self.Layer.updateFeature(feature)
-            self.Layer.commitChanges()
+            if isNew:
+                layer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
                 
-            #feature.setAttribute("ID", serverKeyId)  
+                id_element = feature["ID"]
+                
+                layer.startEditing()
+                
+                c_feature = None
+                for feat in layer.getFeatures():
+                    if feat["ID"] == id_element:
+                        c_feature = feat
+                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        layer.updateFeature(c_feature)
+                        print("Feature Found")
+                        break
+                    
+                layer.commitChanges() 
              
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
