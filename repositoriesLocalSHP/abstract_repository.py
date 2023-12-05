@@ -320,8 +320,8 @@ class AbstractRepository():
             print("Changes were rolled back.")
     
     def getServerDict(self, lastUpdated):
-        print("server dict")
         self.Response = self.loadElements()
+        
         data = self.Response.json()["data"]
         for element in data:
             if element["lastModified"] > lastUpdated:
@@ -329,7 +329,6 @@ class AbstractRepository():
                 attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
                 attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
                 self.ServerDict[element["serverKeyId"]] = attributes
-        print("server dict")
         
 
     def getOfflineDict(self, lastUpdated):
