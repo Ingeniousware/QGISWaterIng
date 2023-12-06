@@ -381,9 +381,8 @@ class AbstractRepository():
         self.Layer.commitChanges()
     
     def updateAddElementToServer(self, id):
-        print(id, " reach updateAddElementToServer ")
         print("layer: ", self.Layer)
-        features_to_add= [feature for feature in self.Layer.getFeatures() if feature['ID'] == None]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if len(str(feature['ID'])) == 10]
         print("features to add: ", features_to_add)
         
         if self.connectorToServer:
