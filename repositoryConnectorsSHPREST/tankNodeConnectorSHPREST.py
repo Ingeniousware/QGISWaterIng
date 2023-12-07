@@ -105,16 +105,17 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 id_element = feature["ID"]
                 
                 layer.startEditing()
-
+                
                 c_feature = None
                 for feat in layer.getFeatures():
                     if feat["ID"] == id_element:
                         c_feature = feat
                         c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        c_feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
                         layer.updateFeature(c_feature)
                         print("Feature Found")
                         break
-                
+                    
                 layer.commitChanges()
         
             if not serverKeyId in self.lastAddedElements:     
