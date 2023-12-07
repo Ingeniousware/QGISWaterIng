@@ -267,17 +267,13 @@ class AbstractRepository():
         # Deleting in BackupLayerElements from server
         self.deleteElementsInBackupLayers(lastUpdated)
         
-        #Add Element
+        #Add Element from server to offline
         for element_id in server_keys - offline_keys:
             self.addElementToOffline(element_id)
         
-        for element_id in offline_keys - server_keys:
-            self.updateAddElementToServer(element_id)
+        #Add offline-elements from offline to server
+        self.updateAddElementToServer()
             
-        #Delete Element
-        """for element_id in offline_keys - server_keys:
-            self.deleteElement(element_id, lastUpdated)
-"""
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
@@ -394,9 +390,9 @@ class AbstractRepository():
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
     
-    def updateAddElementToServer(self, id):
+    def updateAddElementToServer(self):
         print("layer: ", self.Layer)
-        features_to_add= [feature for feature in self.Layer.getFeatures() if len(feature['ID']) == id]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if len(str(feature['ID'])) == 10]
         print("features to add: ", features_to_add)
         
         if self.connectorToServer:
