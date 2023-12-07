@@ -393,6 +393,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.openGroup(shp_filesMonitoring, group_sensors, scenario_path)
         self.openGroup(shp_backupFiles, group_backup, scenario_path)
         
+        all_shps = shp_element_files + shp_filesMonitoring
+        self.setOnAttributeChange(all_shps)
+        
     def openGroup(self, group_list, group, scenario_path):
         
         for element_layer in group_list:
@@ -404,17 +407,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 QgsProject.instance().addMapLayer(layer, False)
                 group.addLayer(layer)
 
-                layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
+                layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))        
                 
-                layer.attributeValueChanged.connect(
-                        lambda feature_id, attribute_index, new_value, layer=layer: 
-                        self.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
-                )
-                
-                #layer.attributeValueChanged.connect(self.onChangesInAttribute)           
-
             else: 
-                print("Layer not valid: ",element_layer)
+                print("Layer not valid: ", element_layer)
                 
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
@@ -447,6 +443,15 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             
         layer.commitChanges()
 
+    def setOnAttributeChange(self, layer_list):
+        for layer in layer_list:
+            real_layer = QgsProject.instance().mapLayersByName(layer.replace('.shp', ''))[0]
+            
+            real_layer.attributeValueChanged.connect(
+                        lambda feature_id, attribute_index, new_value, layer=real_layer: 
+                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+    
     def createNewProjectFromServer(self):
         if self.Offline: return False
 

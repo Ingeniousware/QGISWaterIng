@@ -75,6 +75,11 @@ class AbstractRepository():
         
         features = self.currentLayer.getFeatures()
         
+        self.currentLayer.attributeValueChanged.connect(
+                        lambda feature_id, attribute_index, new_value, layer=self.Layer: 
+                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+        
         #PRINT FEATURES
         #print("FEATURES")
         # Iterate through the features and print their attributes and geometry
@@ -209,6 +214,7 @@ class AbstractRepository():
 
     def writeShp(self):
         writer = QgsVectorFileWriter.writeAsVectorFormat(self.currentLayer, self.StorageShapeFile, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
+        
         if writer[0] == QgsVectorFileWriter.NoError:
             print(f"Shapefile for {self.LayerName} created successfully!")
         else:
@@ -241,6 +247,12 @@ class AbstractRepository():
         self.OfflineDict = {}
         print("LAST UPDATED: ", lastUpdated)
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        
+        self.Layer.attributeValueChanged.connect(
+                        lambda feature_id, attribute_index, new_value, layer=self.Layer: 
+                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+        
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
 
         self.Attributes = self.features[3:]
@@ -322,15 +334,17 @@ class AbstractRepository():
     def getServerDict(self, lastUpdated):
         self.Response = self.loadElements()
         
+        print("getting server dict")
         data = self.Response.json()["data"]
         for element in data:
+            print("last mdf: ", element["lastModified"], " last updated: ", lastUpdated)
             if element["lastModified"] > lastUpdated:
                 print("element last update bigger")
                 attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
                 attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
                 self.ServerDict[element["serverKeyId"]] = attributes
+        print("done server dict")
         
-
     def getOfflineDict(self, lastUpdated):
         print("offline dict")
         
@@ -382,7 +396,7 @@ class AbstractRepository():
     
     def updateAddElementToServer(self, id):
         print("layer: ", self.Layer)
-        features_to_add= [feature for feature in self.Layer.getFeatures() if len(str(feature['ID'])) == 10]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if len(feature['ID']) == id]
         print("features to add: ", features_to_add)
         
         if self.connectorToServer:
@@ -435,7 +449,8 @@ class AbstractRepository():
                                                                     self.ServerDict[id][-1][1])))
                     
                     self.Layer.updateFeature(feature)
-                elif feature['lastUpdate'] > lastUpdated:
+                # If online feature has been modified and it´s already in the server
+                elif feature['lastUpdate'] > lastUpdated and len(str(feature['ID'])) == 36:
                     print("option 2->updating from local to server" , feature, " ", self.Layer)
                     if self.connectorToServer:
                         self.connectorToServer.addElementToServer(feature)

@@ -229,3 +229,25 @@ class WateringUtils():
         data = WateringUtils.getProjectMetadata(serverKeyId)
         
         return True if data == "default text" else False
+    
+    def onChangesInAttribute(feature_id, attribute_index, new_value, layer):
+        print("----CHANGING FEATURE----")
+        print(f"Layer: {layer.name()}")
+        print(f"Feature ID: {feature_id}")
+        print(f"Attribute Index: {attribute_index}")
+        print(f"New Value: {new_value}")
+
+        fields = layer.fields()
+        
+        lastUpdate_index = fields.indexFromName('lastUpdate')
+    
+        if lastUpdate_index == attribute_index: return 
+
+        new_datetime = WateringUtils.getDateTimeNow()
+        
+        if layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
+            print(f"Last updated datetime updated for {feature_id} in {layer.name()}")
+        else:
+            print("Datetime could not be updated")
+            
+        layer.commitChanges()
