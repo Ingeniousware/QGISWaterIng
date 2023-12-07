@@ -160,7 +160,6 @@ class AbstractRepository():
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
         self.setDefaultValues(feature)
-        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
         feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
         
         id = str(uuid.uuid4())
@@ -438,11 +437,12 @@ class AbstractRepository():
                 if feature['lastUpdate'] < self.ServerDict[id][0]:
                     print("option 1->updating from server to local: ", self.Layer, " ", feature)
                     for i in range(len(self.FieldDefinitions)-self.numberLocalFieldsOnly):
-                        feature[self.FieldDefinitions[i]] = self.ServerDict[id][i]
-                    
+                        feature.setAttribute(self.FieldDefinitions[i], self.ServerDict[id][i])
                     #update geometry
                     feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
                                                                     self.ServerDict[id][-1][1])))
+                    
+                    feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
                     
                     self.Layer.updateFeature(feature)
                 # If online feature has been modified and it´s already in the server
