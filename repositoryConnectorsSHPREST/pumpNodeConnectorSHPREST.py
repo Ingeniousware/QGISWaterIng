@@ -2,7 +2,7 @@ import os
 import requests
 
 from .abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
-
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
@@ -112,6 +112,7 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     if feat["ID"] == id_element:
                         c_feature = feat
                         c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        c_feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
                         layer.updateFeature(c_feature)
                         print("Feature Found")
                         break
