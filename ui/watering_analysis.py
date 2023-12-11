@@ -55,13 +55,6 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.BoxSelectType.addItem("Connectivity")
         self.BoxSelectType.addItem("Graph Decomposition")
         self.BoxSelectType.addItem("Sector Identification")
-        # Node and pipes property comboBox
-        self.nodesComboBox.addItem("Pressure")
-        self.nodesComboBox.addItem("Water Demand")
-        self.nodesComboBox.addItem("Water Age")
-        self.pipesComboBox.addItem("Velocity")
-        self.pipesComboBox.addItem("Flow")
-        self.pipesComboBox.addItem("Headloss")
         
         self.BTExecute.clicked.connect(self.requestAnalysisExecution)
         self.startDateTime.setDateTime(QDateTime.currentDateTime())
@@ -80,6 +73,29 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         url_analysis = WateringUtils.getServerUrl() + "/api/v1/WaterAnalysis"
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         params = {'ScenarioFK': "{}".format(self.ScenarioFK)}
+
+        """
+        response_analysis = requests.get(url_analysis, params=params,
+                                headers={'Authorization': "Bearer {}".format(self.token)})
+
+        for i in range(0, response_analysis.json()["total"]):
+            self.analysis_box.addItem(response_analysis.json()["data"][i]["name"])
+            self.listOfAnalysis.append((response_analysis.json()["data"][i]["serverKeyId"],
+                                         response_analysis.json()["data"][i]["simulationStartTime"]))
+        for i in range(0, response_analysis.json()["total"]):
+            self.analysis_box2.addItem(response_analysis.json()["data"][i]["name"])
+            self.listOfAnalysis.append((response_analysis.json()["data"][i]["serverKeyId"],
+                                         response_analysis.json()["data"][i]["simulationStartTime"]))
+            
+        #For simulator combo box in executions    
+        url_simulators = url_analysis + "/simulators"
+        response_simulators = requests.get(url_simulators, params=params,
+                                headers={'Authorization': "Bearer {}".format(self.token)})
+        for i in range(0, response_simulators.json()["total"]):
+            self.BoxSimulator.addItem(response_simulators.json()["data"][i]["name"])
+            self.listOfSimulators.append((response_simulators.json()["data"][i]["name"], 
+                                          response_simulators.json()["data"][i]["serverKeyId"]))
+        """
             
         try:
             # Get water analysis
@@ -111,6 +127,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         else:
             self.analysis_box2.hide()
            
+
     def getAnalysisResults(self, behavior):
         root = QgsProject.instance().layerTreeRoot()
         shapeGroup = root.findGroup("Analysis")
@@ -119,11 +136,6 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             root.removeChildNode(shapeGroup)
             for layer_id in layer_ids:
                 QgsProject.instance().removeMapLayer(layer_id)
-        
-        pipeProperty = self.pipesComboBox.currentText()
-        nodeProperty = self.nodesComboBox.currentText()
-        nodeProperty, pipeProperty = (prop.replace(" ", "").lower() for prop in (nodeProperty, pipeProperty))
-
     
         self.show_progress_bar()
         analysisExecutionId = self.listOfAnalysis[self.analysis_box.currentIndex()][0]
@@ -132,19 +144,19 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         datetime2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][1]
         self.set_progress(20)
             
-        pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, pipeProperty, behavior)
+        pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior)
         self.set_progress(50)  
-        waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, nodeProperty, behavior) 
+        waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, behavior) 
 
         if self.compareCheckBox.isChecked():
             self.set_progress(60)  
-            pipeNodeRepository2 = PipeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, pipeProperty, behavior)
-            self.createNewColumns(pipeNodeRepository2.LayerName, pipeProperty)
+            pipeNodeRepository2 = PipeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
+            self.createNewColumns(pipeNodeRepository2.LayerName, "velocity")
             self.fieldCalculator(pipeNodeRepository, pipeNodeRepository2)
             
             self.set_progress(80)
-            waterDemandNodeRepository2 = NodeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, nodeProperty, behavior)
-            self.createNewColumns(waterDemandNodeRepository2.LayerName, nodeProperty)
+            waterDemandNodeRepository2 = NodeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, behavior)
+            self.createNewColumns(waterDemandNodeRepository2.LayerName, "pressure")
             self.set_progress(90)
             self.fieldCalculator(waterDemandNodeRepository, waterDemandNodeRepository2)
             
@@ -168,39 +180,14 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         if not layer:
             raise Exception(f"Layer '{layerDest}' not found in the project.")
         self.new_field_name = "d_" + name
-        if len(self.new_field_name) > 10:
-            self.new_field_name = self.new_field_name[:10]
         field_index = layer.fields().indexFromName(self.new_field_name)
         if field_index != -1:                                   
-            """ layer.dataProvider().deleteAttributes([field_index])
-            layer.updateFields()
-            layer.commitChanges() """
-            #Delete the existing field
-            layer.startEditing()
             layer.dataProvider().deleteAttributes([field_index])
+            layer.updateFields()
             layer.commitChanges()
-           
-        if layer.fields().indexFromName(self.new_field_name) == -1:
-            """ layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
-            layer.updateFields()                
-            layer.commitChanges()
-
-            layer.startEditing()
-            default_value = 0.0  # You can set another default value if needed
-            layer.dataProvider().changeAttributeValues({f.id(): {field_index: default_value} for f in layer.getFeatures()})
-            layer.commitChanges() """
-            # Add a new attribute with the specified name and data type
-            layer.startEditing()
-            layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
-            layer.commitChanges()
-
-            # Set default values for the new field to avoid null values
-            layer.startEditing()
-            default_value = 0.0  # You can set another default value if needed
-            field_index = layer.fields().indexFromName(self.new_field_name)  # Recheck field index
-            features = [(f.id(), {field_index: default_value}) for f in layer.getFeatures()]
-            layer.dataProvider().changeAttributeValues({f[0]: f[1] for f in features})
-            layer.commitChanges()
+        layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
+        layer.updateFields()                
+        layer.commitChanges()
   
 
     def fieldCalculator(self, repository, repository2):
@@ -209,13 +196,13 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         column_b = repository2.Field
 
         layer = QgsProject.instance().mapLayersByName(layerDest)[0]
-        #if not layer:
-            #raise Exception(f"Layer '{layerDest}' not found in the project.")
+        if not layer:
+            raise Exception(f"Layer '{layerDest}' not found in the project.")
 
         expression = QgsExpression(f'"{column_a}" - "{column_b}"')
         if expression.hasParserError():
             raise Exception(expression.parserErrorString())
-    
+
         layer.startEditing()
         context = QgsExpressionContext()
         field_index = layer.fields().indexFromName(self.new_field_name)

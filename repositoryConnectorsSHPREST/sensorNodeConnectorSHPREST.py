@@ -2,7 +2,7 @@ import os
 import requests
 
 from ..repositoryConnectorsSHPREST.abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
-
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
@@ -29,7 +29,7 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         #print(paraminput[0])
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
-        print(serverKeyId)
+        #print(serverKeyId)
         if not (serverKeyId in self.lastAddedElements):
             self.localRepository.addElementFromSignalR(paraminput[0])
             print("Water Sensor Node inserted after push from server")
@@ -53,45 +53,60 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
 
-
-        id = feature["ID"]
+        isNew = False
+        if len(feature["ID"]) == 10:
+            isNew = True
+            serverKeyId = str(uuid.uuid4())
+        else:
+            serverKeyId = feature["ID"]
+            
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
 
-        isNew = False
-        if (id == None): 
-            serverKeyId = uuid.uuid4()
-            isNew = True
-        else: serverKeyId = uuid.UUID(id)
-        
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
                        'description': "{}".format(description), 
                        'lng': "{}".format(x), 
                        'lat': "{}".format(y), 
-                       'z': "{}".format(z)
-                       }
+                       'z': "{}".format(z)}
         
-
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
         while self.lifoAddedElements.full():
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-
-        if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
-        else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
-
+        if (isNew): 
+            print("Sensor is new, posting.")
+            serverResponse = self.serverRepository.postToServer(elementJSON)
+        else: 
+            print("Sensor is not new, putting.")
+            serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
         if serverResponse.status_code == 200:
             print("Water Sensor Node was sent succesfully to the server")
-            #writing the server key id to the element that has been created
-            serverKeyId = serverResponse.json()["serverKeyId"]
-            print(serverKeyId)       
-            feature.setAttribute("ID", serverKeyId)   
+            
+            if isNew:
+                layer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
+                
+                id_element = feature["ID"]
+                
+                layer.startEditing()
+                
+                c_feature = None
+                for feat in layer.getFeatures():
+                    if feat["ID"] == id_element:
+                        c_feature = feat
+                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        c_feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+                        layer.updateFeature(c_feature)
+                        print("Feature Found")
+                        break
+                    
+                layer.commitChanges() 
+             
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)

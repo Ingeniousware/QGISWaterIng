@@ -20,7 +20,7 @@
         <file>images/editElements.svg</file>
         <file>images/clean.svg</file>
         <file>images/select.svg</file>
-        <file>images/anomalyDetection.svg</file>
+        <file>images/optimizationTools.svg</file>
         <file>images/monitoring.svg</file>
         <file>images/analysisChart.svg</file>
         <file>images/optimization.svg</file>
@@ -29,6 +29,5 @@
         <file>images/backward.svg</file>
         <file>images/play.svg</file>
         <file>images/stop.svg</file>
-        <file>images/optimizationTools.svg</file>
     </qresource>
 </RCC>

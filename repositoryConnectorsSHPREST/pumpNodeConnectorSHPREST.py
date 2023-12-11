@@ -2,7 +2,7 @@ import os
 import requests
 
 from .abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
-
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
@@ -29,8 +29,12 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
            
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
+        print("last added elements: ", self.lastAddedElements)
+        print("serverkeyid: ", serverKeyId)
+        
         if not (serverKeyId in self.lastAddedElements):
             print("Just before creating valve from server push")
+            print(paraminput[0])
             self.localRepository.addElementFromSignalR(paraminput[0])
             print("Water Valve Node inserted after push from server")
             print("dict-> ", self.lastAddedElements)
@@ -52,16 +56,20 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         transGeometry.transform(QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance()))
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
-
-
+        
+        isNew = False
+        if len(feature["ID"]) == 10:
+            isNew = True
+            serverKeyId = str(uuid.uuid4())
+        else:
+            serverKeyId = feature["ID"]
+            
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
         model = feature["Model FK"]
         speed = feature["Rel. Speed"]
-
-
-        serverKeyId = uuid.uuid4()
+            
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
@@ -80,12 +88,37 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
+        if (isNew): 
+            print("Pump is new, posting")
+            serverResponse = self.serverRepository.postToServer(elementJSON)
+        else: 
+            print("Pump is not new, putting")
+            serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
+            
         serverResponse = self.serverRepository.postToServer(elementJSON)
         if serverResponse.status_code == 200:
             print("Water Pump Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
-            serverKeyId = serverResponse.json()["serverKeyId"]    
-            feature.setAttribute("ID", serverKeyId)   
+            
+            if isNew:
+                layer = QgsProject.instance().mapLayersByName("watering_pumps")[0]
+                
+                id_element = feature["ID"]
+                
+                layer.startEditing()
+                
+                c_feature = None
+                for feat in layer.getFeatures():
+                    if feat["ID"] == id_element:
+                        c_feature = feat
+                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        c_feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+                        layer.updateFeature(c_feature)
+                        print("Feature Found")
+                        break
+                    
+                layer.commitChanges()
+                
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)

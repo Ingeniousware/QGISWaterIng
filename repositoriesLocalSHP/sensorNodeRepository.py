@@ -23,7 +23,7 @@ class SensorNodeRepository(AbstractRepository):
             ("Name", QVariant.String),
             ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
-            ("lastUpdate", QVariant.DateTime)
+            ("lastUpdate", QVariant.String)
         ]
     
         self.features = ["lng", "lat", "serverKeyId", "lastModified","name", "description", "z"]
@@ -39,7 +39,7 @@ class SensorNodeRepository(AbstractRepository):
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
-        name = "sensorName"
+        name = "sensorNameNew"
         description = "sensor form QGIS"
         z = 0
 

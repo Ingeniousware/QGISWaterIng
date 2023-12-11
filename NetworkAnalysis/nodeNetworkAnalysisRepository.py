@@ -4,7 +4,7 @@ from qgis.PyQt.QtGui import QColor
 
 class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
 
-    def __init__(self,token,analysisExecutionId, datetime, nodeProperty, behavior, field=None):
+    def __init__(self,token,analysisExecutionId, datetime, behavior, field=None):
         """Constructor."""
         super(NodeNetworkAnalysisRepository, self).__init__(token,analysisExecutionId, datetime, behavior)      
         self.UrlGet = "/api/v1/WaterAnalysisResults/nodes"
@@ -12,8 +12,7 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.Attributes = ["Pressure", "Demand","Demand C", "Age"]
         self.LayerName = "watering_demand_nodes"
         #self.Field = "Pressure"
-        #self.Field = (f"Nodes_{datetime}_pressure")
-        self.Field = (f"Nodes_{datetime}_{nodeProperty}")
+        self.Field = (f"Nodes_{datetime}_pressure")
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 3
