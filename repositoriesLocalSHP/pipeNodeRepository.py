@@ -255,7 +255,17 @@ class PipeNodeRepository(AbstractRepository):
                     attributes[2] = ""
                 
                 geom = feature.geometry()
-                points = geom.asMultiPolyline()
+
+                # Check if the geometry is a single or multipart line
+                if geom.isMultipart():
+                    # It's a MultiPolyline, so we use asMultiPolyline()
+                    line_parts = geom.asMultiPolyline()
+                    # Flatten the list of points from all parts
+                    points = [point for part in line_parts for point in part]
+                else:
+                    # It's a single part line (Polyline), so we use asPolyline()
+                    points = geom.asPolyline()
+
                 attributes.append([point for point in points])
                 
                 attributes[-1] = attributes[-1][0]

@@ -45,6 +45,10 @@ class scenarioUnitOfWork():
             element.initializeRepository()
 
     def updateAll(self):
+        
+        # Only water meters
+        #self.list_of_elements = [self.waterMeterNodeRepository]
+        
         now = WateringUtils.getDateTimeNow()
         
         for element in self.list_of_elements:

@@ -138,22 +138,32 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
     
     def getVertices(self, feature, nodeDownFK, nodeUpFK):
         vertices = []
-        
+
         transGeometry = feature.geometry()
         transform = QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance())
         transGeometry.transform(transform)
-        
-        for index, point in enumerate(transGeometry.asPolyline()):
-            current_vertex_fk = nodeUpFK if index % 2 == 0 else nodeDownFK
-            
-            vertex = {
-                    "vertexFK": "{}".format(current_vertex_fk),
-                    "lng": point.x(),
-                    "lat": point.y()
-            }   
-            vertices.append(vertex)
-            
+
+        if transGeometry.isMultipart():
+            line_parts = transGeometry.asMultiPolyline()
+            for part in line_parts:
+                for index, point in enumerate(part):
+                    self._processPoint(point, index, nodeDownFK, nodeUpFK, vertices)
+                    break
+                break
+        else:
+            for index, point in enumerate(transGeometry.asPolyline()):
+                self._processPoint(point, index, nodeDownFK, nodeUpFK, vertices)
+
         return vertices[::-1]
+
+    def _processPoint(self, point, index, nodeDownFK, nodeUpFK, vertices):
+        current_vertex_fk = nodeUpFK if index % 2 == 0 else nodeDownFK
+        vertex = {
+            "vertexFK": "{}".format(current_vertex_fk),
+            "lng": point.x(),
+            "lat": point.y()
+        }
+        vertices.append(vertex)
 
     def getPipeLength(self, vertices):
         if len(vertices) < 2:
