@@ -266,18 +266,24 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return False
 
     def openExistingWaterIngProject(self, justCreated):
+        self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
+        
         self.OfflineProjects = self.getOfflineProjects()
         self.OfflineScenarios = self.getOfflineScenarios(self.ProjectFK)
         self.openProjectFromFolder()
         if not self.Offline:
             self.updateProject(justCreated)
+        else: 
+            self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         self.loadOpenStreetMapLayer()
         self.zoomToProject()
+        self.done(True)
     
     def updateProject(self, justCreated):
-        self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
+        #self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        if (not justCreated): self.myScenarioUnitOfWork.updateAll()
+        # Re-established for testings
+        #if (not justCreated): self.myScenarioUnitOfWork.updateAll()
         
     def setWateringFolderAppData(self, path):
         #Creates directory QGISWatering inside Appdata
@@ -387,6 +393,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.openGroup(shp_filesMonitoring, group_sensors, scenario_path)
         self.openGroup(shp_backupFiles, group_backup, scenario_path)
         
+        all_shps = shp_element_files + shp_filesMonitoring
+        self.setOnAttributeChange(all_shps)
+        
     def openGroup(self, group_list, group, scenario_path):
         
         for element_layer in group_list:
@@ -398,38 +407,56 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 QgsProject.instance().addMapLayer(layer, False)
                 group.addLayer(layer)
 
-                layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))  
-                layer.attributeValueChanged.connect(self.onChangesInAttribute)           
-
+                layer.editingStarted.connect(partial(self.layerEditionStarted, layer_name))        
+                
             else: 
-                print("Layer not valid: ",element_layer)
+                print("Layer not valid: ", element_layer)
                 
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
 
-    def onChangesInAttribute(self, feature_id, attribute_index, new_value):
-        sender_layer = iface.activeLayer()
-        
+    def onChangesInAttribute(self, feature_id, attribute_index, new_value, layer):
         print("----CHANGING FEATURE----")
-        print(f"Layer: {sender_layer.name()}")
+        print(f"Layer: {layer.name()}")
         print(f"Feature ID: {feature_id}")
         print(f"Attribute Index: {attribute_index}")
         print(f"New Value: {new_value}")
 
-        fields = sender_layer.fields()
+        fields = layer.fields()
         lastUpdate_index = fields.indexFromName('lastUpdate')
+        
+        #lastModified_index = fields.indexFromName('Last Mdf')
         
         if lastUpdate_index == attribute_index: return 
 
-        new_datetime = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        new_datetime = WateringUtils.getDateTimeNow()
         
-        if sender_layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
-            print(f"Last updated datetime updated for {feature_id} in {sender_layer.name()}")
+        if layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
+            print(f"Last updated datetime updated for {feature_id} in {layer.name()}")
         else:
             print("Datetime could not be updated")
             
-        sender_layer.commitChanges()
+        """if layer.changeAttributeValue(feature_id, lastModified_index, new_datetime):
+            print(f"Last modified datetime updated for {feature_id} in {layer.name()}")
+        else:
+            print("Datetime could not be updated")"""
+            
+        layer.commitChanges()
 
+    def setOnAttributeChange(self, layer_list):
+        for layer in layer_list:
+            real_layer = QgsProject.instance().mapLayersByName(layer.replace('.shp', ''))[0]
+            
+            real_layer.attributeValueChanged.connect(
+                        lambda feature_id, attribute_index, new_value, layer=real_layer: 
+                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+            
+            real_layer.geometryChanged.connect(
+                    lambda feature_id, old_geometry, new_geometry, layer=self.currentLayer: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+                )
+    
     def createNewProjectFromServer(self):
         if self.Offline: return False
 
