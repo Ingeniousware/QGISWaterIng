@@ -282,8 +282,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def updateProject(self, justCreated):
         #self.scenario_folder = self.WateringFolder + self.ProjectFK + "/" + self.ScenarioFK + '/'
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
-        # Paused for testings
-        # if (not justCreated): self.myScenarioUnitOfWork.updateAll()
+        # Re-established for testings
+        #if (not justCreated): self.myScenarioUnitOfWork.updateAll()
         
     def setWateringFolderAppData(self, path):
         #Creates directory QGISWatering inside Appdata
@@ -450,6 +450,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             real_layer.attributeValueChanged.connect(
                         lambda feature_id, attribute_index, new_value, layer=real_layer: 
                         WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+            
+            real_layer.geometryChanged.connect(
+                    lambda feature_id, old_geometry, new_geometry, layer=real_layer: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
                 )
     
     def createNewProjectFromServer(self):
