@@ -265,7 +265,7 @@ class AbstractRepository():
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
 
         self.Attributes = self.features[3:]
-        self.getServerDict(lastUpdated) #SANJOSE
+        self.getServerDict(lastUpdated) 
         self.getOfflineDict(lastUpdated)
         
         print("SERVER DICT: ", self.ServerDict)
@@ -401,8 +401,7 @@ class AbstractRepository():
     
     def updateAddElementToServer(self):
         print("layer: ", self.Layer)
-        features_to_add= [feature for feature in self.Layer.getFeatures() if len(str(feature['ID'])) == 10] #SANJOSE
-        #features_to_add= [feature for feature in self.Layer.getFeatures()]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if len(str(feature['ID'])) == 10]
         print("features to add: ", features_to_add)
         
         if self.connectorToServer:

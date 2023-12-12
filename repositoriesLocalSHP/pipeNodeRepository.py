@@ -217,7 +217,7 @@ class PipeNodeRepository(AbstractRepository):
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-1]]
         
         self.Attributes = self.features[1:]
-        #self.getPipeServerDict(lastUpdated) SANJOSE
+        self.getPipeServerDict(lastUpdated)
         self.getPipeOfflineDict(lastUpdated)
         
         server_keys = set(self.PipeServerDict.keys())
@@ -253,38 +253,37 @@ class PipeNodeRepository(AbstractRepository):
     def getPipeOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
             print("pipe feature[lastUpdate]: ", feature["lastUpdate"] , " pipe last updated: ", lastUpdated)
-            # if feature["lastUpdate"] > lastUpdated: SANJOSE
-            attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
-            
-            if not attributes[2]:
-                attributes[2] = ""
-            
-            geom = feature.geometry()
+            if feature["lastUpdate"] > lastUpdated: 
+                attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
+                
+                if not attributes[2]:
+                    attributes[2] = ""
+                
+                geom = feature.geometry()
 
-            # Check if the geometry is a single or multipart line
-            if geom.isMultipart():
-                # It's a MultiPolyline, so we use asMultiPolyline()
-                line_parts = geom.asMultiPolyline()
-                # Flatten the list of points from all parts
-                points = [point for part in line_parts for point in part]
-            else:
-                # It's a single part line (Polyline), so we use asPolyline()
-                points = geom.asPolyline()
+                # Check if the geometry is a single or multipart line
+                if geom.isMultipart():
+                    # It's a MultiPolyline, so we use asMultiPolyline()
+                    line_parts = geom.asMultiPolyline()
+                    # Flatten the list of points from all parts
+                    points = [point for part in line_parts for point in part]
+                else:
+                    # It's a single part line (Polyline), so we use asPolyline()
+                    points = geom.asPolyline()
 
-            attributes.append([point for point in points])
-            
-            attributes[-1] = attributes[-1][0]
-            
-            if feature["ID"]:
-                self.PipeOfflineDict[feature["ID"]] = attributes
-            else:
-                uuid_str = str(uuid.uuid4())
-                temp_key_id = uuid_str[:10]
-                self.PipeOfflineDict[temp_key_id] = attributes
+                attributes.append([point for point in points])
+                
+                attributes[-1] = attributes[-1][0]
+                
+                if feature["ID"]:
+                    self.PipeOfflineDict[feature["ID"]] = attributes
+                else:
+                    uuid_str = str(uuid.uuid4())
+                    temp_key_id = uuid_str[:10]
+                    self.PipeOfflineDict[temp_key_id] = attributes
     
     def addPipesToOnline(self):
-        #features_to_add= [feature for feature in self.Layer.getFeatures() if len(feature['ID']) == 10] SANJOSE
-        features_to_add= [feature for feature in self.Layer.getFeatures()]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if len(feature['ID']) == 10]
         print("features to add: ", features_to_add)
         
         if self.connectorToServer:
