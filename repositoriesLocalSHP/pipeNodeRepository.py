@@ -209,6 +209,11 @@ class PipeNodeRepository(AbstractRepository):
                         WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
                 )
         
+        self.Layer.geometryChanged.connect(
+                    lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+                )
+        
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-1]]
         
         self.Attributes = self.features[1:]
