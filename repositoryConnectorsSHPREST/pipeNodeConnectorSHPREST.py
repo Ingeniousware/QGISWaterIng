@@ -58,10 +58,15 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         roughnessCoefficient = feature["C(H.W.)"] if feature["C(H.W.)"] else 150
         initialStatus = 1
         currentStatus = 1
-        nodeUpFK = WateringUtils.getProjectMetadata("nodeUpFK")
+        
+        #nodeUpFK = WateringUtils.getProjectMetadata("nodeUpFK")
         nodeUpName = "string"
-        nodeDownFK = WateringUtils.getProjectMetadata("nodeDownFK")
+        #nodeDownFK = WateringUtils.getProjectMetadata("nodeDownFK")
         nodeDownName = "string"
+        
+        nodeDownFK, nodeUpFK = self.getPipeNodes(feature)
+        
+        print(nodeDownFK, nodeUpFK)
         
         vertices = self.getVertices(feature, nodeDownFK, nodeUpFK)
         length = self.getPipeLength(vertices)
@@ -154,7 +159,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             for index, point in enumerate(transGeometry.asPolyline()):
                 self._processPoint(point, index, nodeDownFK, nodeUpFK, vertices)
 
-        return vertices[::-1]
+        return vertices
 
     def _processPoint(self, point, index, nodeDownFK, nodeUpFK, vertices):
         current_vertex_fk = nodeUpFK if index % 2 == 0 else nodeDownFK
@@ -178,3 +183,30 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         length = sum(distance_area.measureLine(points[i], points[i+1]) for i in range(len(points) - 1))
 
         return length
+    
+    def getPipeNodes(self, feature):
+        demand_nodes_layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+        
+        polyline_geom = feature.geometry()
+
+        if polyline_geom.isMultipart():
+            lines = polyline_geom.asMultiPolyline()
+            start_point = lines[0][0]  
+            end_point = lines[-1][-1]  
+        else:
+            line = polyline_geom.asPolyline()
+            start_point = line[0]
+            end_point = line[-1]
+
+        up_node = self.find_matching_node(start_point, demand_nodes_layer)
+        down_node = self.find_matching_node(end_point, demand_nodes_layer)
+        
+        return down_node, up_node
+        
+    def find_matching_node(self, point, node_layer):
+        tolerance=0.0001
+        for node in node_layer.getFeatures():
+            node_point = node.geometry().asPoint()
+            if point.distance(node_point) < tolerance:
+                return node["ID"]
+        return None
