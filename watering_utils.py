@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# 
+
 # Import QGis
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
@@ -251,3 +251,9 @@ class WateringUtils():
             print("Datetime could not be updated")
             
         layer.commitChanges()
+        
+    def onGeometryChange(feature_id, old_geometry, new_geometry, layer):
+        with layer.edit():
+            feature = layer.getFeature(feature_id)
+            feature['lastMdf'] = WateringUtils.getDateTimeNow()
+            layer.updateFeature(feature)
