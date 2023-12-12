@@ -80,6 +80,11 @@ class AbstractRepository():
                         WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
                 )
         
+        self.currentLayer.geometryChanged.connect(
+                    lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+                )
+        
         #PRINT FEATURES
         #print("FEATURES")
         # Iterate through the features and print their attributes and geometry
@@ -250,6 +255,11 @@ class AbstractRepository():
         self.Layer.attributeValueChanged.connect(
                         lambda feature_id, attribute_index, new_value, layer=self.Layer: 
                         WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+        
+        self.Layer.geometryChanged.connect(
+                    lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
                 )
         
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
