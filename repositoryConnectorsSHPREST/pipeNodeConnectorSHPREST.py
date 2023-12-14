@@ -71,7 +71,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         vertices = self.getVertices(feature, nodeDownFK, nodeUpFK)
         length = self.getPipeLength(vertices)
             
-        elementJSON = {
+        """elementJSON = {
             "serverKeyId": "{}".format(serverKeyId),
             "lastModified": "{}".format(last_mdf),
             "scenarioFK": "{}".format(self.ScenarioFK),
@@ -88,7 +88,41 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             "roughnessCoefficient": "{}".format(roughnessCoefficient),
             "initialStatus": "{}".format(initialStatus),
             "currentStatus": "{}".format(currentStatus)
-        }
+        }"""
+        
+        elementJSON = {"serverKeyId": "00000000-0000-0000-0000-000000000000",
+                        "scenarioFK": "72d28861-a56c-49d3-9652-cbe0e7d4c8e2",
+                        "nodeUpFK": "a3486a9c-2e17-48cb-81bc-0b57622afcc5",
+                        "nodeUpName": "string",
+                        "nodeDownFK": "e102e23b-b99c-4645-9a58-7e486e868775",
+                        "nodeDownName": "string",
+                        "name": "my new pipe",
+                        "description": "nothing",
+                        "vertices": [
+                                    {
+                                    "vertexFK": "00000000-0000-0000-0000-000000000000",
+                                    "lng": -0.3281215857714519,
+                                    "lat": 39.447635340890834,
+                                    "order": 0,
+                                    },
+                                    {
+                                    "vertexFK": "00000000-0000-0000-0000-000000000000",
+                                    "lng": -0.3481215857714519,
+                                    "lat": 39.44835340890834,
+                                    "order": 1,
+                                    },
+                                    {
+                                    "vertexFK": "00000000-0000-0000-0000-000000000000",
+                                    "lng": -0.331243677064786,
+                                    "lat": 39.44708853750615,
+                                    "order": 2,
+                                    }
+                                    ],
+                        "diameterInt": "0.5",
+                        "roughnessAbsolute": "0",
+                        "roughnessCoefficient": "0",
+                        "initialStatus": 1,
+                        "currentStatus": 1}
         
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
