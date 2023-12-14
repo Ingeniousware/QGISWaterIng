@@ -187,30 +187,28 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         if transGeometry.isMultipart():
             line_parts = transGeometry.asMultiPolyline()
             for part in line_parts:
-                for index, point in enumerate(part):
-                    self.processPoint(point, index, nodeDownFK, nodeUpFK, vertices)
+                for point in part:
+                    self.processPoint(point, vertices)
                     break
                 break
         else:
-            for index, point in enumerate(transGeometry.asPolyline()):
-                self.processPoint(point, index, nodeDownFK, nodeUpFK, vertices)
+            for point in transGeometry.asPolyline():
+                self.processPoint(point, vertices)
 
         print("VERTICES: ", vertices)
         return vertices
 
-    def processPoint(self, point, index, nodeDownFK, nodeUpFK, vertices):
-        current_vertex_fk = nodeUpFK if index % 2 == 0 else nodeDownFK
+    def processPoint(self, point, vertices):
         vertex = {
-            "vertexFK": "{}".format(current_vertex_fk),
+            "vertexFK": "00000000-0000-0000-0000-000000000000",
             "lng": point.x(),
             "lat": point.y()
         }
         vertices.append(vertex)
 
-    def processMultiPoint(self, point, index, nodeDownFK, nodeUpFK, vertices, order):
-        current_vertex_fk = nodeUpFK if index % 2 == 0 else nodeDownFK
+    def processMultiPoint(self, point, vertices, order):
         vertex = {
-            "vertexFK": "{}".format(current_vertex_fk),
+            "vertexFK": "00000000-0000-0000-0000-000000000000",
             "lng": point.x(),
             "lat": point.y(),
             "order": order
