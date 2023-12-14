@@ -105,6 +105,8 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         
         if serverResponse.status_code == 200:
             print("Water Pipe Node was sent succesfully to the server")
+            
+            print("Server response text -> ", serverResponse.text)
             #writing the server key id to the element that has been created
             
             if isNew:
@@ -151,17 +153,15 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         if transGeometry.isMultipart():
             line_parts = transGeometry.asMultiPolyline()
             for part in line_parts:
-                order = 0
                 for index, point in enumerate(part):
-                    self.processMultiPoint(point, index, nodeDownFK, nodeUpFK, vertices, order)
-                    print("Multi points + ", order)
-                    print("POINT DATA: X -> ", point.x(), " Y -> ", point.y())
-                    order = order + 1
-                print("ORDER: ", order)
+                    self.processPoint(point, index, nodeDownFK, nodeUpFK, vertices)
+                    break
+                break
         else:
             for index, point in enumerate(transGeometry.asPolyline()):
                 self.processPoint(point, index, nodeDownFK, nodeUpFK, vertices)
 
+        print("VERTICES: ", vertices)
         return vertices
 
     def processPoint(self, point, index, nodeDownFK, nodeUpFK, vertices):
@@ -211,6 +211,9 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             start_point = line[0]
             end_point = line[-1]
 
+        print("START POINT -> ", start_point)
+        print("END POINT -> ", end_point)
+        
         up_node = self.find_matching_node(start_point, demand_nodes_layer)
         down_node = self.find_matching_node(end_point, demand_nodes_layer)
         
