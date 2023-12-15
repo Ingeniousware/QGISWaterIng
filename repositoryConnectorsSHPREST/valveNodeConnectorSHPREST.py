@@ -63,9 +63,9 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         description = feature["Descript"]
         z = feature["Z[m]"]
         diameter = feature["Diameter"]
-        typeV = feature["typeValvul"]
+        typeV = int(feature["typeValvul"])
         minorLossCoef = feature["minorLossC"]
-        initial = feature["initialSta"]
+        initial = 1
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
@@ -93,6 +93,8 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         else: 
             print("Valve is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
+        
+        print("VALVE RESPONSE: ", serverResponse.text)
         
         if serverResponse.status_code == 200:
             print("Water Valve Node was sent succesfully to the server")
