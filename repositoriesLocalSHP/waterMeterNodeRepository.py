@@ -25,7 +25,7 @@ class WaterMeterNodeRepository(AbstractRepository):
             ("Meterstate", QVariant.Double),
             ("FunctType", QVariant.Double),
             ("LastDate", QVariant.String),
-            ("lastUpdate", QVariant.DateTime)
+            ("lastUpdate", QVariant.String)
         ]
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description","meterstate",

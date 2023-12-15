@@ -1,5 +1,6 @@
 import os
 import requests
+import uuid
 from .abstract_repository import AbstractRepository
 from ..watering_utils import WateringUtils
 
@@ -7,6 +8,7 @@ from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeomet
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsSymbol, edit
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
+from qgis.utils import iface
 
 class PipeNodeRepository(AbstractRepository):
 
@@ -29,7 +31,7 @@ class PipeNodeRepository(AbstractRepository):
             ("C(H.W.)", QVariant.Double),
             ("Up-Node", QVariant.String),
             ("Down-Node", QVariant.String),
-            ("lastUpdate", QVariant.DateTime)
+            ("lastUpdate", QVariant.String)
         ]
         
         self.features = ["serverKeyId", "lastModified", "name", "description", "diameterInt",
@@ -43,8 +45,6 @@ class PipeNodeRepository(AbstractRepository):
         self.PipeServerDict = {}
         self.PipeOfflineDict = {}
         
-   
-
     def initializeRepository(self):
         super(PipeNodeRepository, self).initializeRepository() 
         self.openLayers(None, 0.7) 
@@ -58,34 +58,6 @@ class PipeNodeRepository(AbstractRepository):
         layer.renderer().setSymbol(symbol)
         layer.saveNamedStyle(self.FileQml)
         layer.triggerRepaint()
-
-   
-    def getServerDict(self):
-        if not self.Response:
-            self.Response = self.loadElements()
-            
-        data = self.Response.json()["data"]
-        for element in data:
-            attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]  
-            points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in element["vertices"]]
-            geometry = QgsGeometry.fromPolylineXY(points)
-            geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))  
-            attributes.append(geometry)
-            self.ServerDict[element["serverKeyId"]] = attributes
-
-
-    def getOfflineDict(self):
-        for feature in self.Layer.getFeatures():
-            attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
-
-            if len(attributes) > 2 and (not attributes[2]):
-                attributes[2] = None
-                
-            geom = feature.geometry()
-            attributes.append(geom)
-
-            self.OfflineDict[feature["ID"]] = attributes
-
 
     def createElementLayerFromServerResponse(self, serverResponse):
         print("CREATING PIPES")
@@ -124,8 +96,6 @@ class PipeNodeRepository(AbstractRepository):
         except ValueError:
               print("Error->" + ValueError)
 
-
-
     #When layer already exists
     def addElementFromSignalR(self, elementJSON):
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -138,18 +108,28 @@ class PipeNodeRepository(AbstractRepository):
         geometry = QgsGeometry.fromPolylineXY(points)
         geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
 
+        print("pipes adding")
+        print("field_definitions: ", self.field_definitions)
+        print("element: ", element)
         feature.setGeometry(geometry)
-        for i in range(len(self.field_definitions)):
-            feature.setAttribute(self.field_definitions[i][0], element[i+2])
+        
+        for i in range(len(self.field_definitions) - 1):
+            feature.setAttribute(self.field_definitions[i][0], element[i])
+            print("element i + 1", element[i])
+            print("field definition position: ", self.field_definitions[i][0])
 
-        feature['lastUpdate'] = WateringUtils.getDateTimeNow()
-
+        #feature['lastUpdate'] = WateringUtils.getDateTimeNow()
+        
+        feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
+        
+        print("Adding feature ", feature, "to server")
+        
         layer.addFeature(feature)
         layer.commitChanges()
+        layer.triggerRepaint()
 
 
     def addElement(self, id):
-        
         print(f"Adding element in {self.LayerName}: {id}")
         print(self.Layer.fields())
         
@@ -198,6 +178,14 @@ class PipeNodeRepository(AbstractRepository):
         feature.setGeometry(g)
 
         self.setDefaultValues(feature)
+        
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
+        
+        id = str(uuid.uuid4())
+        temp_id = id[:10]
+        
+        feature.setAttribute("ID", temp_id)
 
         layer.addFeature(feature)
         layer.commitChanges()
@@ -209,64 +197,110 @@ class PipeNodeRepository(AbstractRepository):
     
     #Pipes update
     
-    def updatePipes(self, lastUpdatedToServer):
-        self.lastUpdatedToServer = lastUpdatedToServer
+    def generalUpdate(self, lastUpdated):
+        print("updating PIPE")
+        self.PipeServerDict = {}
+        self.PipeOfflineDict = {}
+        
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        
+        self.Layer.attributeValueChanged.connect(
+                        lambda feature_id, attribute_index, new_value, layer=self.Layer: 
+                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+        
+        self.Layer.geometryChanged.connect(
+                    lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+                )
+        
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-1]]
+        
         self.Attributes = self.features[1:]
-        self.timeAtUpdate = WateringUtils.getDateTimeNow()
-        self.getPipeServerDict()
-        self.getPipeOfflineDict()
+        self.getPipeServerDict(lastUpdated)
+        self.getPipeOfflineDict(lastUpdated)
         
         server_keys = set(self.PipeServerDict.keys())
         offline_keys = set(self.PipeOfflineDict.keys())
 
-        #Add Element
+        # Deleting in Pipes BackupLayerElements from server
+        self.deleteElementsInBackupLayers(lastUpdated)
+        
+        #Add Element from server to offline
         for element_id in server_keys - offline_keys:
-            self.addPipe(element_id)
-            
-        #Delete Element
-        for element_id in offline_keys - server_keys:
-            self.deleteElement(element_id)
+            self.addPipeToOffline(element_id)
+        
+        # Retrieve pipes to be added to online
+        self.addPipesToOnline()
 
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.PipeServerDict[element_id] != self.PipeOfflineDict[element_id]:
                 print("This: ", self.PipeServerDict[element_id], "Diff from this: ", self.PipeOfflineDict[element_id])
-                self.updateExistingPipe(element_id)
+                self.updateExistingPipe(element_id, lastUpdated)
                 
-    def getPipeServerDict(self):
+    def getPipeServerDict(self, lastUpdated):
         self.PipeResponse = self.loadElements()
         data = self.PipeResponse.json()["data"]
         for element in data:
-            attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
-            points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in element["vertices"]]
-            attributes.append(self.timeAtUpdate)
-            attributes.append(points)
-            self.PipeServerDict[element["serverKeyId"]] = attributes
+            print("pipe last mdf: ", element["lastModified"], " pipe last updated: ", lastUpdated)
+            if element["lastModified"] > lastUpdated:
+                attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
+                points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in element["vertices"]]
+                attributes.append(points)
+                self.PipeServerDict[element["serverKeyId"]] = attributes
             
-    def getPipeOfflineDict(self):
+    def getPipeOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
-            attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
-            
-            if not attributes[2]:
-                attributes[2] = ""
+            print("pipe feature[lastUpdate]: ", feature["lastUpdate"] , " pipe last updated: ", lastUpdated)
+            if feature["lastUpdate"] > lastUpdated: 
+                attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
+                
+                if not attributes[2]:
+                    attributes[2] = ""
+                
+                geom = feature.geometry()
 
-            attributes.append(self.timeAtUpdate)
-            
-            geom = feature.geometry()
-            points = geom.asMultiPolyline()
-            attributes.append([point for point in points])
-            
-            attributes[-1] = attributes[-1][0]
-            self.PipeOfflineDict[feature["ID"]] = attributes
-    
-    def addPipe(self, id):
+                # Check if the geometry is a single or multipart line
+                if geom.isMultipart():
+                    # It's a MultiPolyline, so we use asMultiPolyline()
+                    line_parts = geom.asMultiPolyline()
+                    # Flatten the list of points from all parts
+                    points = [point for part in line_parts for point in part]
+                else:
+                    # It's a single part line (Polyline), so we use asPolyline()
+                    points = geom.asPolyline()
+
+                attributes.append([point for point in points])
+                
+                attributes[-1] = attributes[-1][0]
+                
+                if feature["ID"]:
+                    self.PipeOfflineDict[feature["ID"]] = attributes
+                else:
+                    uuid_str = str(uuid.uuid4())
+                    temp_key_id = uuid_str[:10]
+                    self.PipeOfflineDict[temp_key_id] = attributes
+
+    def addPipesToOnline(self):
+        features_to_add= [feature for feature in self.Layer.getFeatures() if len(feature['ID']) == 10]
+        
+        print("features to add: ", features_to_add)
+        
+        if self.connectorToServer:
+            print("has connector")
+            for feature in features_to_add:
+                print("adding feature: ", feature)
+                self.connectorToServer.addElementToServer(feature)
+        else:
+            print("no connector")
+        
+    def addPipeToOffline(self, id):
         print(f"Adding element in {self.LayerName}: {id}")
         
         feature = QgsFeature(self.Layer.fields())
         feature["ID"] = id
-        feature["lastUpdate"] = self.timeAtUpdate
+        feature["lastUpdate"] = WateringUtils.getDateTimeNow()
         
         feature.setGeometry(QgsGeometry.fromPolylineXY(self.PipeServerDict[id][-1]))
         
@@ -279,7 +313,7 @@ class PipeNodeRepository(AbstractRepository):
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
     
-    def updateExistingPipe(self, id):
+    def updateExistingPipe(self, id, lastUpdated):
         #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
@@ -288,19 +322,25 @@ class PipeNodeRepository(AbstractRepository):
         self.Layer.startEditing()
         
         for feature in features:
-            for i in range(len(self.FieldDefinitions)):
-                feature[self.FieldDefinitions[i]] = self.PipeServerDict[id][i]
-                
-            feature["lastupdate"] = self.timeAtUpdate
-            #update geometry
-            feature.setGeometry(QgsGeometry.fromPolylineXY(self.PipeServerDict[id][-1]))
-            
-            self.Layer.updateFeature(feature)
-        
+            if id in self.PipeServerDict:
+                if feature['lastUpdate'] < self.PipeServerDict[id][0]:
+                    print("option 1->updating from server to local in pipes: ", self.Layer, " ", feature)
+                    for i in range(len(self.FieldDefinitions)):
+                        feature[self.FieldDefinitions[i]] = self.PipeServerDict[id][i]
+                        
+                    feature['lastUpdate'] = WateringUtils.getDateTimeNow()
+                    #update geometry
+                    feature.setGeometry(QgsGeometry.fromPolylineXY(self.PipeServerDict[id][-1]))
+                    
+                    self.Layer.updateFeature(feature)
+                # If online feature has been modified and it´s already in the server
+                elif feature['lastUpdate'] > lastUpdated and len(str(feature['ID'])) == 36:
+                    print("option 2->updating from local to server in pipes" , feature, " ", self.Layer)
+                    if self.connectorToServer:
+                        self.connectorToServer.addElementToServer(feature)
+                        
         self.Layer.commitChanges()
         
-
-
     def getPipeTransformedCrs(self, point):
         source_crs = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS 84
         dest_crs = QgsCoordinateReferenceSystem("EPSG:3857")   # Web Mercator
@@ -311,3 +351,15 @@ class PipeNodeRepository(AbstractRepository):
         
         return QgsPointXY(point.x(), point.y())
     
+    def setDefaultValues(self, feature):
+        name = "pipeName"
+        description = "pipe form QGIS"
+        diameter = 0.2
+        roughnessAbsolute = 0.045
+        roughnessCoefficient = 150
+    
+        feature.setAttribute("Name", name)
+        feature.setAttribute("Descript", description)
+        feature.setAttribute("Diameter", diameter)
+        feature.setAttribute("Rough.A", roughnessAbsolute) 
+        feature.setAttribute("C(H.W.)", roughnessCoefficient)

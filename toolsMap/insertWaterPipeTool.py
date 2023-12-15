@@ -117,10 +117,10 @@ class InsertWaterPipeTool(InsertAbstractTool):
         # Iterate over features in the layer
         for feature in layer.getFeatures():
             points_in_pipe = []
-            lines = feature.geometry().asMultiPolyline()
+            lines = feature.geometry().asPolyline()
             flat_list = [(point.x(), point.y())  for sublist in lines for point in sublist]
             
-            for line in feature.geometry().asMultiPolyline():
+            for line in feature.geometry().asPolyline():
 
                 for point in line:
                     points_in_pipe.append((point.x(), point.y()))

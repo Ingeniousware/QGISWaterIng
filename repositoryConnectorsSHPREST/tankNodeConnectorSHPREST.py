@@ -2,7 +2,7 @@ import os
 import requests
 
 from .abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
-
+from ..watering_utils import WateringUtils
 
 from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
@@ -22,7 +22,6 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         connectionHub.on("DELETE_TANK", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
-
 
     def processPOSTElementToLocal(self, paraminput):
         print("Entering processPOSTElementToLocal")        
@@ -44,7 +43,6 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
 
     def addElementToServer(self, feature):
-        
         x = feature.geometry().asPoint().x()
         y = feature.geometry().asPoint().y()
         #transforming coordinates for the CRS of the server
@@ -52,8 +50,14 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         transGeometry.transform(QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance()))
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
-
-
+        
+        isNew = False
+        if len(feature["ID"]) == 10:
+            isNew = True
+            serverKeyId = str(uuid.uuid4())
+        else:
+            serverKeyId = feature["ID"]
+            
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
@@ -62,10 +66,8 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         maximumLevel = feature["Max. Lvl"]
         minimumVolume = feature["Min. Vol."]
         nominalDiameter = feature["Diameter"]
-        canOverflow = feature["Overflow"]
-
-
-        serverKeyId = uuid.uuid4()
+        canOverflow = True if feature["Overflow"] == 1 else False
+  
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
@@ -80,7 +82,6 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'nominalDiameter':"{}".format(nominalDiameter),
                        'canOverflow':"{}".format(canOverflow)
                         }
-        
 
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
@@ -88,14 +89,35 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-        serverResponse = self.serverRepository.postToServer(elementJSON)
+        if (isNew): 
+            print("tank is new, posting")
+            serverResponse = self.serverRepository.postToServer(elementJSON)
+        else: 
+            print("tank is not new, putting")
+            serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
         if serverResponse.status_code == 200:
             print("Water Tank Node was sent succesfully to the server")
-            #writing the server key id to the element that has been created
-            serverKeyId = serverResponse.json()["serverKeyId"]
-            print(serverKeyId)       
-            feature.setAttribute("ID", serverKeyId)   
+ 
+            if isNew:
+                layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
+                
+                id_element = feature["ID"]
+                
+                layer.startEditing()
+                
+                c_feature = None
+                for feat in layer.getFeatures():
+                    if feat["ID"] == id_element:
+                        c_feature = feat
+                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        c_feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+                        layer.updateFeature(c_feature)
+                        print("Feature Found")
+                        break
+                    
+                layer.commitChanges()
+        
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)
@@ -103,7 +125,7 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
         else: 
-            print("Failed on sendig Water Tank Node to the server")
+            print("Failed on sendig Water Tank Node to the server. Status Code: ", serverResponse.status_code, " text: ", serverResponse.text)
 
     
 
