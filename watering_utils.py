@@ -17,6 +17,7 @@ import requests
 import os
 import random
 import string
+import pytz
 
 #serverInput
 
@@ -64,10 +65,10 @@ class WateringUtils():
     def isWateringProject():
         scenarioId = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         projectId = QgsProject.instance().readEntry("watering","project_id","default text")[0] 
-        token = os.environ.get('TOKEN')
+        #token = os.environ.get('TOKEN')
         print("scenario" + scenarioId)
         print("project" + projectId)
-        return scenarioId != "default text" and projectId != "default text" and token is not None
+        return scenarioId != "default text" and projectId != "default text"
     
     def saveProjectBox():
         project = QgsProject.instance()
@@ -184,12 +185,15 @@ class WateringUtils():
         else:
             # Other platforms or an error
             raise ValueError(f"Unsupported platform: {platform}")
-        
+
     def getDateTimeNow():
-        current_datetime = datetime.now()
-        qdatetime = QDateTime(current_datetime)
-        return QVariant(qdatetime)
-    
+        # Current UTC Time
+        current_datetime_utc = datetime.now(pytz.utc)
+
+        # Converts to format '2023-11-29T10:28:46.2756439Z'
+        formatted_time = current_datetime_utc.strftime('%Y-%m-%dT%H:%M:%S.%f') + '0Z'
+        
+        return formatted_time
 
         # noinspection PyMethodMayBeStatic
     def tr(message, context = "QGISPlugin_WaterIng"):
@@ -221,3 +225,35 @@ class WateringUtils():
 
         return f"{elementInitial}-[{random_chars}]"
     
+    def getFeatureIsNewStatus(serverKeyId):
+        data = WateringUtils.getProjectMetadata(serverKeyId)
+        
+        return True if data == "default text" else False
+    
+    def onChangesInAttribute(feature_id, attribute_index, new_value, layer):
+        print("----CHANGING FEATURE----")
+        print(f"Layer: {layer.name()}")
+        print(f"Feature ID: {feature_id}")
+        print(f"Attribute Index: {attribute_index}")
+        print(f"New Value: {new_value}")
+
+        fields = layer.fields()
+        
+        lastUpdate_index = fields.indexFromName('lastUpdate')
+    
+        if lastUpdate_index == attribute_index: return 
+
+        new_datetime = WateringUtils.getDateTimeNow()
+        
+        if layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
+            print(f"Last updated datetime updated for {feature_id} in {layer.name()}")
+        else:
+            print("Datetime could not be updated")
+            
+        layer.commitChanges()
+        
+    def onGeometryChange(feature_id, old_geometry, new_geometry, layer):
+        with layer.edit():
+            feature = layer.getFeature(feature_id)
+            feature['lastMdf'] = WateringUtils.getDateTimeNow()
+            layer.updateFeature(feature)

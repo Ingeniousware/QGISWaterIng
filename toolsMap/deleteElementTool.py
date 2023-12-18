@@ -51,7 +51,7 @@ class DeleteElementTool(QgsMapTool):
                 new_feat.setGeometry(feature.geometry())
                 new_feat.setAttributes(feature.attributes())
                 lastUpdateIndex = new_feat.fields().indexFromName('lastUpdate')
-                new_feat.setAttribute(lastUpdateIndex, WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz"))
+                new_feat.setAttribute(lastUpdateIndex, WateringUtils.getDateTimeNow())
                 # Add the new feature to the target layer
                 backup_layer.addFeature(new_feat)
                 

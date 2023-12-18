@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>405</width>
-    <height>320</height>
+    <width>525</width>
+    <height>425</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,18 +32,18 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_3">
+    <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab">
        <attribute name="title">
         <string>Analysis</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_3">
-        <item>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
            <widget class="QComboBox" name="analysis_box"/>
@@ -64,6 +64,65 @@
           </item>
           <item>
            <widget class="QComboBox" name="analysis_box2"/>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout" stretch="0,0">
+            <property name="spacing">
+             <number>1</number>
+            </property>
+            <property name="sizeConstraint">
+             <enum>QLayout::SetDefaultConstraint</enum>
+            </property>
+            <item>
+             <widget class="QLabel" name="nodesValueLabel">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>140</width>
+                <height>20</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Select node property:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="nodesComboBox">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <property name="spacing">
+             <number>1</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="pipesValueLabel">
+              <property name="maximumSize">
+               <size>
+                <width>140</width>
+                <height>20</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Select pipe property:</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="pipesComboBox"/>
+            </item>
+           </layout>
           </item>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -194,7 +253,6 @@
         <item row="0" column="1" colspan="4">
          <widget class="QComboBox" name="BoxSelectType"/>
         </item>
-
         <item row="0" column="0">
          <widget class="QLabel" name="labelSelectType">
           <property name="text">
@@ -202,7 +260,6 @@
           </property>
          </widget>
         </item>
-
         <item row="1" column="0">
          <widget class="QLabel" name="label">
           <property name="text">
@@ -210,7 +267,6 @@
           </property>
          </widget>
         </item>
-        
         <item row="2" column="0">
          <widget class="QLabel" name="labelStartTime">
           <property name="text">

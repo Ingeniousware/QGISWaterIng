@@ -18,8 +18,7 @@ class scenarioUnitOfWork():
         self.scenarioFK = scenarioFK
         self.project_path = project_path
         
-        self.keyToServer = self.scenarioKeyLastToServer()
-        self.keyFromServer = self.scenarioKeyLastFromServer()
+        self.keyUpdate = self.scenarioKeyLastUpdate()
         
         self.waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, scenarioFK)                
         self.tankNodeRepository = TankNodeRepository(self.token, project_path, scenarioFK)    
@@ -39,56 +38,37 @@ class scenarioUnitOfWork():
                                  self.pipeNodeRepository,
                                  self.sensorNodeRepository]
         
-        self.lastUpdatedToServer = self.getLastUpdatedToServer()
-        self.lastUpdatedFromServer = self.getLastUpdatedFromServer()
-
+        self.lastUpdate = self.getLastUpdate()
+        
     def loadAll(self):
         for element in self.list_of_elements:
             element.initializeRepository()
 
     def updateAll(self):
-        now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+        now = WateringUtils.getDateTimeNow()
         
-        """for element in self.list_of_elements:
-            element.updateFromServerToOffline(self.lastUpdatedFromServer)
-        self.lastUpdatedFromServer = now"""
-        
-        print("before self.lastUpdatedToServer", self.lastUpdatedToServer)
         for element in self.list_of_elements:
-            element.updateFromOfflineToServer(self.lastUpdatedToServer)
-        self.lastUpdatedToServer = now
-        print("after self.lastUpdatedToServer", self.lastUpdatedToServer)
-        self.updateProjectMetadata(now)
-        
-    def getLastUpdatedToServer(self):
-        date = WateringUtils.getProjectMetadata(self.keyToServer)
-        print("Date last update", date)
-        
-        if date != "default text":
-            return date
-        else:
-            now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
+           element.generalUpdate(self.lastUpdate)
             
-            WateringUtils.setProjectMetadata(self.keyToServer, now)
-            return now
+        self.lastUpdate = now
+    
+        WateringUtils.setProjectMetadata(self.keyUpdate, self.lastUpdate)
         
-    def getLastUpdatedFromServer(self):
-        date = WateringUtils.getProjectMetadata(self.keyFromServer)
+    def getLastUpdate(self):
+        date = WateringUtils.getProjectMetadata(self.keyUpdate)
+
+        print("Getting last update: ", date)
         
         if date != "default text":
             return date
         else:
-            now = WateringUtils.getDateTimeNow().value().toString("yyyy/MM/dd HH:mm:ss.zzz")
-            WateringUtils.setProjectMetadata(self.keyFromServer, now)
-            return now
-        
-    def updateProjectMetadata(self, now):
-        WateringUtils.setProjectMetadata(self.keyToServer, now)
-        WateringUtils.setProjectMetadata(self.keyFromServer, now)
+            # First update, update everything
+            date = "1800-11-30T14:39:22.4189860Z"
+            
+            WateringUtils.setProjectMetadata(self.keyUpdate, date)
+            
+            return date
     
-    def scenarioKeyLastToServer(self):
-        return self.scenarioFK + "to_server"
-    
-    def scenarioKeyLastFromServer(self):
-        return self.scenarioFK + "from_server"
+    def scenarioKeyLastUpdate(self):
+        return self.scenarioFK + "last_general_update"
     

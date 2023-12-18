@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from qgis.core import QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat
+from qgis.core import QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat, QgsSymbol, QgsSimpleLineSymbolLayer, QgsSymbolLayer
 from qgis.core import QgsStyle, QgsClassificationQuantile, QgsGradientColorRamp, QgsVectorLayer, QgsLayerTreeLayer, QgsVectorLayerJoinInfo
 from PyQt5.QtCore import QVariant
 import requests
@@ -103,7 +103,7 @@ class AbstractAnalysisRepository():
 
     def changeColor(self, fieldName):
         # Set layer name and desired paremeters
-        num_classes = 10
+        num_classes = 7
         classification_method = QgsClassificationQuantile()
         
         layer = QgsProject().instance().mapLayersByName(self.LayerName)[0]
@@ -124,5 +124,15 @@ class AbstractAnalysisRepository():
         renderer.updateClasses(layer, num_classes)
         renderer.updateColorRamp(color_ramp)
         renderer.setSymbolSizes(self.Size, self.Size)
+
+        """ 
+        if self.LayerName == "watering_pipes":
+            col_idx = layer.fields().indexFromName('Diameter')
+            if col_idx != -1:
+                vals = [feat.attributes()[col_idx] for feat in layer.getFeatures()]
+                min_val, max_val = min(vals), max(vals)
+                #print(min_val, max_val)
+                renderer.setSymbolSizes(min_val, max_val)
+        """
         layer.setRenderer(renderer)
         layer.triggerRepaint()

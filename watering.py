@@ -233,7 +233,6 @@ class QGISPlugin_WaterIng:
         self.dlg = WateringLogin()
         self.dlg.show()
         self.dlg.exec_()
-
         
     def addLoad(self):
         #self.InitializeProjectToolbar()
@@ -241,14 +240,13 @@ class QGISPlugin_WaterIng:
         self.dlg = WateringLoad()
         self.dlg.show() 
         if (self.dlg.exec_() == 1):
-            self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork   
+            self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork  
+            self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
             if not self.dlg.Offline:          
                 print(self.scenarioUnitOFWork)
-                self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo)
+                #self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo)
                 self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
                 self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
-                self.updateActionScenarioStateOpen()
-                
                 
                 server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
@@ -273,6 +271,7 @@ class QGISPlugin_WaterIng:
 
             print("before updating options")                
             self.updateActionStateOpen()
+            self.updateActionScenarioStateOpen()
              
                 
     def importINPFile(self):

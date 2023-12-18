@@ -11,30 +11,25 @@ from PyQt5.QtGui import QColor
 import queue
 import uuid
 
-class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
+class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def __init__(self, scenarioFK, connectionHub):
         """Constructor."""
-        super(pumpNodeConnectorSHPREST, self).__init__(scenarioFK)    
+        super(valveNodeConnectorSHPREST, self).__init__(scenarioFK)    
         self.serverRepository = None  
         self.localRepository = None
-        connectionHub.on("POST_PUMP", self.processPOSTElementToLocal)
-        connectionHub.on("DELETE_PUMP", self.processDELETEElementToLocal)
+        connectionHub.on("POST_WATERMETER", self.processPOSTElementToLocal)
+        connectionHub.on("POST_WATERMETER", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
 
 
     def processPOSTElementToLocal(self, paraminput):
-        print("Entering processPOSTElementToLocal")
-           
+        print("Entering processPOSTElementToLocal")        
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
-        print("last added elements: ", self.lastAddedElements)
-        print("serverkeyid: ", serverKeyId)
-        
         if not (serverKeyId in self.lastAddedElements):
             print("Just before creating valve from server push")
-            print(paraminput[0])
             self.localRepository.addElementFromSignalR(paraminput[0])
             print("Water Valve Node inserted after push from server")
             print("dict-> ", self.lastAddedElements)
@@ -44,7 +39,7 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def processDELETEElementToLocal(self, paraminput):
         self.localRepository.deleteElement(paraminput[0])
-        print("Water Pump Node removed after push from server")
+        print("Water Valve Node removed after push from server")
 
 
     def addElementToServer(self, feature):
@@ -56,7 +51,7 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         transGeometry.transform(QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance()))
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
-        
+
         isNew = False
         if len(feature["ID"]) == 10:
             isNew = True
@@ -66,9 +61,10 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             
         name = feature["Name"]
         description = feature["Descript"]
-        z = feature["Z[m]"]
-        model = feature["Model FK"]
-        speed = feature["Rel. Speed"]
+        diameter = feature["Diameter"]
+        meterState = feature["Meterstate"]
+        functType = feature["FunctType"]
+        lastDate = feature["LastDate"]
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
@@ -76,9 +72,11 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'description': "{}".format(description), 
                        'lng': "{}".format(x), 
                        'lat': "{}".format(y), 
-                       'z': "{}".format(z),
-                       'pumpModelFK': "{}".format(model),
-                       'relativeSpeed': "{}".format(speed)
+                       'z': "{}".format(z), 
+                       'diameter': "{}".format(diameter),
+                       'meterstate': "{}".format(meterState), 
+                       'functionalType':"{}".format(functType),
+                       'lastRead': "{}".format(lastDate)
                         }
         
 
@@ -89,19 +87,18 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             self.lastAddedElements.pop(keyIdToEliminate)
 
         if (isNew): 
-            print("Pump is new, posting")
+            print("Water Meter is new, posting")
             serverResponse = self.serverRepository.postToServer(elementJSON)
         else: 
-            print("Pump is not new, putting")
+            print("Water Meter is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
             
-        serverResponse = self.serverRepository.postToServer(elementJSON)
         if serverResponse.status_code == 200:
-            print("Water Pump Node was sent succesfully to the server")
+            print("Water Valve Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
             
             if isNew:
-                layer = QgsProject.instance().mapLayersByName("watering_pumps")[0]
+                layer = QgsProject.instance().mapLayersByName("watering_waterMeter")[0]
                 
                 id_element = feature["ID"]
                 
@@ -126,7 +123,7 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
         else: 
-            print("Failed on sendig Pump Tank Node to the server")
+            print("Failed on sendig Water Meter to the server")
 
     
 
