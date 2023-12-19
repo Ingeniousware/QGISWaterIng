@@ -11,11 +11,11 @@ from PyQt5.QtGui import QColor
 import queue
 import uuid
 
-class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
+class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def __init__(self, scenarioFK, connectionHub):
         """Constructor."""
-        super(valveNodeConnectorSHPREST, self).__init__(scenarioFK)    
+        super(waterMeterNodeConnectorSHPREST, self).__init__(scenarioFK)    
         self.serverRepository = None  
         self.localRepository = None
         connectionHub.on("POST_WATERMETER", self.processPOSTElementToLocal)
@@ -61,7 +61,6 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             
         name = feature["Name"]
         description = feature["Descript"]
-        diameter = feature["Diameter"]
         meterState = feature["Meterstate"]
         functType = feature["FunctType"]
         lastDate = feature["LastDate"]
@@ -71,9 +70,7 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'name': "{}".format(name), 
                        'description': "{}".format(description), 
                        'lng': "{}".format(x), 
-                       'lat': "{}".format(y), 
-                       'z': "{}".format(z), 
-                       'diameter': "{}".format(diameter),
+                       'lat': "{}".format(y),
                        'meterstate': "{}".format(meterState), 
                        'functionalType':"{}".format(functType),
                        'lastRead': "{}".format(lastDate)
