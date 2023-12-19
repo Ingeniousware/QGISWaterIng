@@ -35,7 +35,7 @@ class SensorNodeRepository(AbstractRepository):
 
     def initializeRepository(self):
         super(SensorNodeRepository, self).initializeRepository()   
-        self.openLayers(':/plugins/QGISPlugin_WaterIng/images/sensorLayer.gif', 10)
+        self.openLayers(':/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT.svg', 10)
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
