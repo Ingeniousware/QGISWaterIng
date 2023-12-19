@@ -188,7 +188,6 @@ class AbstractRepository():
             print("Adding to server...")
             if self.connectorToServer:
                 print("Connection established, adding ID in server locally")
-                print("feature id before: ", feature.id())
                 self.connectorToServer.addElementToServer(feature)
         else:
             print("Failed to commit changes.")

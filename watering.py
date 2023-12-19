@@ -39,6 +39,7 @@ from .watering_utils import WateringUtils
 #from .ui.watering_datachannels import WateringDatachannels
 from .ui.watering_INPImport import WateringINPImport
 from .ActionManagement.actionManager import actionManager
+from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
 
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
@@ -490,13 +491,15 @@ class QGISPlugin_WaterIng:
         if self.connectionStatusAction.isChecked():
             self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_online.png'))
             if connection_status != "default text":
-                self.setHubConnection()
+                if not self.syncManager:
+                    self.setHubConnection()
                 iface.messageBar().pushMessage(self.tr("Set connection status to online."), level=Qgis.Success, duration=5)
             else:
                 self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Failed to establish connection. Please reopen the project."), level=1, duration=5)
                 self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
         else:
             self.closeHubConnection()
+            self.syncManager.stop()
             iface.messageBar().pushMessage(self.tr("Set connection status to offline."), level=Qgis.Success, duration=5)
             self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
     
