@@ -200,8 +200,15 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-
-
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'
+        self.connectionStatusAction = self.add_action(
+            icon_path,
+            text=self.tr(u'Watering Connection'),
+            callback=self.setWateringConnection,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        self.connectionStatusAction.setCheckable(True)
+        
         self.toolbarToolManager.initializeToolbarButtonActions()
         self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
         self.toolbarToolManager.optimizationToolsAction.toggled.connect(self.toolbarToolManager.activateOptimizationTool)
@@ -244,32 +251,10 @@ class QGISPlugin_WaterIng:
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork  
             self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
             if not self.dlg.Offline:          
-                print(self.scenarioUnitOFWork)
-                #self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo)
-                self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
-                self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
-                
-                server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
-
-                self.hub_connection = HubConnectionBuilder()\
-                    .with_url(server_url, options={"verify_ssl": False, 
-                                                "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
-                    .with_automatic_reconnect({
-                            "type": "interval",
-                            "keep_alive_interval": 10,
-                            "intervals": [1, 3, 5, 6, 7, 87, 3]
-                        }).build()
-
-                #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
-                self.hub_connection.on_open(self.createOnlineConnectionChannels)
-                self.hub_connection.on_close(lambda: print("connection closed"))
-                self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
-                    
-                self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
-
-                
-                self.hub_connection.start()
-
+                self.setHubConnection()
+                WateringUtils.setProjectMetadata("connection_status", "online")
+            else:
+                WateringUtils.setProjectMetadata("connection_status", "default text")
             print("before updating options")                
             self.updateActionStateOpen()
             self.updateActionScenarioStateOpen()
@@ -499,4 +484,49 @@ class QGISPlugin_WaterIng:
     def deleteElement(self):
         print("Deleted")
     
+    def setWateringConnection(self):
+        connection_status = WateringUtils.getProjectMetadata("connection_status")
+        
+        if self.connectionStatusAction.isChecked():
+            self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_online.png'))
+            if connection_status != "default text":
+                self.setHubConnection()
+                iface.messageBar().pushMessage(self.tr("Set connection status to online."), level=Qgis.Success, duration=5)
+            else:
+                self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Failed to establish connection. Please reopen the project."), level=1, duration=5)
+                self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
+        else:
+            self.closeHubConnection()
+            iface.messageBar().pushMessage(self.tr("Set connection status to offline."), level=Qgis.Success, duration=5)
+            self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
     
+    def setHubConnection(self):
+        if self.scenarioUnitOFWork:
+            self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
+            self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
+            
+            server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
+
+            self.hub_connection = HubConnectionBuilder()\
+                .with_url(server_url, options={"verify_ssl": False, 
+                                            "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
+                .with_automatic_reconnect({
+                        "type": "interval",
+                        "keep_alive_interval": 10,
+                        "intervals": [1, 3, 5, 6, 7, 87, 3]
+                    }).build()
+
+            #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+            self.hub_connection.on_open(self.createOnlineConnectionChannels)
+            self.hub_connection.on_close(lambda: print("connection closed"))
+            self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+                
+            self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+
+            
+            self.hub_connection.start()
+            
+    def closeHubConnection(self):
+        if self.hub_connection is not None:
+            self.hub_connection.stop()
+            self.hub_connection = None

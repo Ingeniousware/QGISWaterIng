@@ -31,5 +31,7 @@
         <file>images/stop.svg</file>
         <file>images/optimizationTools.svg</file>
         <file>images/Icon_waterMeter_GT.svg</file>
+        <file>images/connection_status_offline.png</file>
+        <file>images/connection_status_online.png</file>
     </qresource>
 </RCC>
