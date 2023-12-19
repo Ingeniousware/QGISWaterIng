@@ -27,6 +27,7 @@ from .toolsMap.insertReservoirNodeTool import InsertReservoirNodeTool
 from .toolsMap.insertWaterPipeTool import InsertWaterPipeTool
 from .toolsMap.insertValveNodeTool import InsertValveNodeTool
 from .toolsMap.insertPumpNodeTool import InsertPumpNodeTool
+from .toolsMap.insertWaterMeterNodeTool import InsertWaterMeterNodeTool
 from .toolsMap.insertSensorNodeTool import InsertSensorNodeTool
 from .toolsMap.selectNodeTool import SelectNodeTool
 from .toolsMap.deleteElementTool import DeleteElementTool
@@ -337,6 +338,11 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.insertPumpNodeAction.setCurrentTool(toolInsertPumpNode)
         self.toolbarToolManager.insertPumpNodeAction.setEnabled(True)
 
+        toolInsertWaterMeterNode = InsertWaterMeterNodeTool(self.canvas, self.scenarioUnitOFWork.waterMeterNodeRepository, self.actionManager, self.toolbarToolManager)
+        toolInsertWaterMeterNode.setAction(self.toolbarToolManager.insertWaterMeterNodeAction)
+        self.toolbarToolManager.insertWaterMeterNodeAction.setCurrentTool(toolInsertWaterMeterNode)
+        self.toolbarToolManager.insertWaterMeterNodeAction.setEnabled(True)
+        
         toolInsertSensorNode = InsertSensorNodeTool(self.canvas, self.scenarioUnitOFWork.sensorNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertSensorNode.setAction(self.toolbarToolManager.insertSensorNodeAction)
         self.toolbarToolManager.insertSensorNodeAction.setCurrentTool(toolInsertSensorNode)
@@ -376,6 +382,7 @@ class QGISPlugin_WaterIng:
                     self.toolbarToolManager.insertWaterPipeAction,
                     self.toolbarToolManager.insertValveNodeAction,
                     self.toolbarToolManager.insertPumpNodeAction,
+                    self.toolbarToolManager.insertWaterMeterNodeAction,
                     self.toolbarToolManager.insertSensorNodeAction,
                     self.toolbarToolManager.toolDeleteElementAction]
 

@@ -33,6 +33,7 @@ class toolbarToolManager():
         self.insertValveNodeAction = None
         self.insertPumpNodeAction = None
         self.insertSensorNodeAction = None
+        self.insertWaterMeterNodeAction = None
         self.toolDeleteElementAction = None
         self.selectElementAction = None
         self.openOptimizationManagerAction = None
@@ -173,6 +174,18 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.insertPumpNodeAction.setCheckable(True)        
         self.insertPumpNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
+        # Water Meters
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/Icon_waterMeter_GT.svg'
+        self.insertWaterMeterNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Water Meter'),
+            callback=self.activateMapTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.insertWaterMeterNodeAction.setCheckable(True)        
+        self.insertWaterMeterNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
         
         # Undo
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/backward.svg'
@@ -315,6 +328,7 @@ class toolbarToolManager():
                          self.insertReservoirNodeAction,
                          self.insertValveNodeAction,
                          self.insertPumpNodeAction,
+                         self.insertWaterMeterNodeAction,
                          self.toolDeleteElementAction, 
                          self.undoAction,
                          self.redoAction]

@@ -30,5 +30,6 @@
         <file>images/play.svg</file>
         <file>images/stop.svg</file>
         <file>images/optimizationTools.svg</file>
+        <file>images/Icon_waterMeter_GT.svg</file>
     </qresource>
 </RCC>
