@@ -193,7 +193,7 @@ class WateringUtils():
         # Converts to format '2023-11-29T10:28:46.2756439Z'
         formatted_time = current_datetime_utc.strftime('%Y-%m-%dT%H:%M:%S.%f') + '0Z'
         
-        return formatted_time
+        return str(formatted_time)
 
         # noinspection PyMethodMayBeStatic
     def tr(message, context = "QGISPlugin_WaterIng"):

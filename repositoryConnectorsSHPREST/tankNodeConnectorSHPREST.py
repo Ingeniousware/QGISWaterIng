@@ -106,16 +106,29 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 
                 layer.startEditing()
 
-                c_feature = None
+                attr_updates = {}
+
                 for feat in layer.getFeatures():
                     if feat["ID"] == id_element:
-                        c_feature = feat
-                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
-                        layer.updateFeature(c_feature)
+                        feat_id = feat.id()
+
+                        id_idx = layer.fields().indexOf('ID')
+                        last_update_idx = layer.fields().indexOf('lastUpdate')
+
+                        new_id_value = str(serverKeyId)
+                        new_last_update_value = str(WateringUtils.getDateTimeNow())
+
+                        attr_updates[feat_id] = {id_idx: new_id_value, last_update_idx: new_last_update_value}
+
                         print("Feature Found")
                         break
-                
-                layer.commitChanges()
+
+                if attr_updates:
+                    layer.dataProvider().changeAttributeValues(attr_updates)
+
+                    layer.commitChanges()
+                else:
+                    print("No feature found")
         
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
