@@ -237,19 +237,24 @@ class WateringUtils():
         print(f"Attribute Index: {attribute_index}")
         print(f"New Value: {new_value}")
 
-        fields = layer.fields()
-        
-        lastUpdate_index = fields.indexFromName('lastUpdate')
-    
-        if lastUpdate_index == attribute_index: return 
+        layer.startEditing()
 
-        new_datetime = WateringUtils.getDateTimeNow()
+        c_feature = None
+        for feat in layer.getFeatures():
+            if feat["ID"] == feature_id:
+                c_feature = feat
+                print("Feature Found")
         
-        if layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
-            print(f"Last updated datetime updated for {feature_id} in {layer.name()}")
-        else:
-            print("Datetime could not be updated")
-            
+                lastUpdate_index = c_feature.fieldNameIndex('lastUpdate')
+
+                if lastUpdate_index == attribute_index: return 
+
+                new_datetime = WateringUtils.getDateTimeNow()
+                
+                c_feature.setAttribute(lastUpdate_index, new_datetime)
+                
+                layer.updateFeature(c_feature)
+                    
         layer.commitChanges()
         
     def onGeometryChange(feature_id, old_geometry, new_geometry, layer):

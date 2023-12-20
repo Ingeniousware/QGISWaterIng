@@ -64,15 +64,6 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         z = feature["Z[m]"]
         baseDemand = feature["B. Demand"]
         
-        node_status = WateringUtils.getProjectMetadata("node_status")
-        
-        if node_status == "default text":
-            WateringUtils.setProjectMetadata("nodeDownFK", str(serverKeyId))
-            WateringUtils.setProjectMetadata("node_status", "down_node_ready")
-        else:
-            WateringUtils.setProjectMetadata("nodeUpFK", str(serverKeyId))
-            WateringUtils.setProjectMetadata("node_status", "default text")
-        
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 

@@ -417,34 +417,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
 
-    def onChangesInAttribute(self, feature_id, attribute_index, new_value, layer):
-        print("----CHANGING FEATURE----")
-        print(f"Layer: {layer.name()}")
-        print(f"Feature ID: {feature_id}")
-        print(f"Attribute Index: {attribute_index}")
-        print(f"New Value: {new_value}")
-
-        fields = layer.fields()
-        lastUpdate_index = fields.indexFromName('lastUpdate')
-        
-        #lastModified_index = fields.indexFromName('Last Mdf')
-        
-        if lastUpdate_index == attribute_index: return 
-
-        new_datetime = WateringUtils.getDateTimeNow()
-        
-        if layer.changeAttributeValue(feature_id, lastUpdate_index, new_datetime):
-            print(f"Last updated datetime updated for {feature_id} in {layer.name()}")
-        else:
-            print("Datetime could not be updated")
-            
-        """if layer.changeAttributeValue(feature_id, lastModified_index, new_datetime):
-            print(f"Last modified datetime updated for {feature_id} in {layer.name()}")
-        else:
-            print("Datetime could not be updated")"""
-            
-        layer.commitChanges()
-
     def setOnAttributeChange(self, layer_list):
         for layer in layer_list:
             real_layer = QgsProject.instance().mapLayersByName(layer.replace('.shp', ''))[0]
@@ -495,8 +467,14 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     
     def CreateLayers(self):
+        scenarioFK = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
+        
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         self.myScenarioUnitOfWork.loadAll()
+        
+        keyUpdate = scenarioFK + "last_general_update"
+        date = WateringUtils.getDateTimeNow()
+        WateringUtils.setProjectMetadata(keyUpdate, date)
         
         self.loadOpenStreetMapLayer()
         self.setStatusBar()

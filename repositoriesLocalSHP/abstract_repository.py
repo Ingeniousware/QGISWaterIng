@@ -292,17 +292,6 @@ class AbstractRepository():
             if self.ServerDict[element_id] != self.OfflineDict[element_id]:
                 print("Server list: ",self.ServerDict[element_id]," diffs from online list: ",self.OfflineDict[element_id])
                 self.updateElement(element_id, lastUpdated)
-    
-    def updateFromOfflineToServer(self, lastUpdatedToServer):
-        if self.connectorToServer:
-            print("Entering updateFromOfflineToServer")
-            print("in update lastUpdatedToServer", lastUpdatedToServer)
-            self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-            for feature in self.Layer.getFeatures():   
-                if feature['lastUpdate'] > lastUpdatedToServer: 
-                    print("Updating feature: ", feature.id())                                           
-                    self.connectorToServer.addElementToServer(feature)
-         #def removeElementFromServer(self, serverKeyId):
 
     def deleteElementsInBackupLayers(self, lastUpdatedToServer):
         
@@ -359,7 +348,7 @@ class AbstractRepository():
         
         for feature in self.Layer.getFeatures():
             print("feature[lastUpdate]: ", feature["lastUpdate"] , " last updated: ", lastUpdated)
-            if feature["lastUpdate"] > lastUpdated:
+            if feature["lastUpdate"] > lastUpdated or not feature["lastUpdate"]:
                 print("adding feature to server on update from offline: ", feature)
                 
                 attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
@@ -373,12 +362,7 @@ class AbstractRepository():
                 point = geom.asPoint()
                 attributes.append((point.x(), point.y()))
 
-                if feature["ID"]:
-                    self.OfflineDict[feature["ID"]] = attributes
-                else:
-                    uuid_str = str(uuid.uuid4())
-                    temp_key_id = uuid_str[:10]
-                    self.OfflineDict[temp_key_id] = attributes
+                self.OfflineDict[feature["ID"]] = attributes
 
         print("offline dict")
 
@@ -405,14 +389,18 @@ class AbstractRepository():
     
     def updateAddElementToServer(self):
         print("layer: ", self.Layer)
-        features_to_add= [feature for feature in self.Layer.getFeatures() if len(str(feature['ID'])) == 10]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if len(str(feature['ID'])) == 10 
+                          and feature['ID'] in self.OfflineDict]
+        
         print("features to add: ", features_to_add)
         
+
         if self.connectorToServer:
             print("has connector")
-            for feature in features_to_add:
-                print("adding feature: ", feature)
-                self.connectorToServer.addElementToServer(feature)
+            if features_to_add:
+                for feature in features_to_add:
+                    print("adding feature: ", feature)
+                    self.connectorToServer.addElementToServer(feature)
         else:
             print("no connector")
 

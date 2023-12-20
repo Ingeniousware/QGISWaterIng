@@ -242,7 +242,10 @@ class QGISPlugin_WaterIng:
     def addLogin(self):
         self.dlg = WateringLogin()
         self.dlg.show()
-        self.dlg.exec_()
+        if (self.dlg.exec_() == 1):
+            if WateringUtils.isProjectOpened() and WateringUtils.isWateringProject():
+                self.setHubConnection()
+                WateringUtils.setProjectMetadata("connection_status", "online")
         
     def addLoad(self):
         #self.InitializeProjectToolbar()
@@ -339,6 +342,12 @@ class QGISPlugin_WaterIng:
         toolDeleteElement.setAction(self.toolbarToolManager.toolDeleteElementAction)
         self.toolbarToolManager.toolDeleteElementAction.setCurrentTool(toolDeleteElement)
         self.toolbarToolManager.toolDeleteElementAction.setEnabled(True)
+        
+        # Connection button
+        if (os.environ.get('TOKEN') != None) and not self.connectionStatusAction.isChecked():
+            self.setHubConnection()
+            self.connectionStatusAction.setChecked(True)
+            
               
     def updateActionStateOpen(self):
         #self.cleanMarkers()

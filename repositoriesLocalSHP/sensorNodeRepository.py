@@ -25,7 +25,7 @@ class SensorNodeRepository(AbstractRepository):
             ("Z[m]", QVariant.Double),
             ("lastUpdate", QVariant.String)
         ]
-    
+        
         self.features = ["lng", "lat", "serverKeyId", "lastModified","name", "description", "z"]
         
         self.LayerType = "Point?crs="
