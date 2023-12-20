@@ -490,15 +490,16 @@ class QGISPlugin_WaterIng:
         connection_status = WateringUtils.getProjectMetadata("connection_status")
         
         if self.connectionStatusAction.isChecked():
-            self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_online.png'))
             if not self.syncManager:
                 self.setHubConnection()
-            iface.messageBar().pushMessage(self.tr("Set connection status to online."), level=Qgis.Success, duration=5)
         else:
-            self.syncManager.setStatusOffline()
-            self.syncManager = None
-            iface.messageBar().pushMessage(self.tr("Set connection status to offline."), level=Qgis.Success, duration=5)
             self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
+            if self.syncManager:
+                self.syncManager.setStatusOffline()
+                self.syncManager = None
+            #self.actionManager.unset()
+            self.actionManager = None
+            iface.messageBar().pushMessage(self.tr("Set connection status to offline."), level=Qgis.Success, duration=5)
     
     def setHubConnection(self):
         token = os.environ.get('TOKEN') 
@@ -507,8 +508,9 @@ class QGISPlugin_WaterIng:
                 scenario_folder = WateringUtils.getProjectMetadata("scenario_folder")
                 scenario_fk = WateringUtils.getProjectMetadata("scenario_fk")
                 self.scenarioUnitOFWork = scenarioUnitOfWork(token, scenario_folder, scenario_fk)
-                
-            self.syncManager = syncManagerSHPREST(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK)
+            
+            self.actionManager = actionManager(token, self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
+            self.syncManager = syncManagerSHPREST(token, self.scenarioUnitOFWork.scenarioFK)
             self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
             
             server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
@@ -531,9 +533,16 @@ class QGISPlugin_WaterIng:
 
             
             self.hub_connection.start()
+            
+            self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_online.png'))
+            self.connectionStatusAction.setChecked(True)
+            
+            iface.messageBar().pushMessage(self.tr("Set connection status to online."), level=Qgis.Success, duration=5)
         else:
             print("Token is none")
-        
+            iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng or reopen the project!"), level=1, duration=5)
+            self.connectionStatusAction.setChecked(False)
+            
     def closeHubConnection(self):
         if self.hub_connection is not None:
             self.hub_connection.stop()

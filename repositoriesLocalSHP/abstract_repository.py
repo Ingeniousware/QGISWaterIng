@@ -167,13 +167,13 @@ class AbstractRepository():
         #for i in range(len(self.field_definitions)):
         #    feature.setAttribute(self.field_definitions[i][0], element[i+2])
         
-        self.setDefaultValues(feature)
-        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
-        
         id = str(uuid.uuid4())
         temp_id = id[:10]
         
         feature.setAttribute("ID", temp_id)
+        
+        self.setDefaultValues(feature)
+        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
         
         layer.addFeature(feature)
         """layer.commitChanges()
@@ -192,6 +192,8 @@ class AbstractRepository():
             if self.connectorToServer:
                 print("Connection established, adding ID in server locally")
                 self.connectorToServer.addElementToServer(feature)
+            else: 
+                print("No connection to send to server")
         else:
             print("Failed to commit changes.")
 

@@ -44,4 +44,10 @@ class actionManager():
         else: self.setActiveStateRedo(False)
         self.setActiveStateUndo(True)
 
+    def unset(self):
+        self.doneActions = None
+        self.undoneActions = None
+        self.setActiveStateUndo = None
+        self.setActiveStateRedo = None
+        print("Action manager has been unset.")
         

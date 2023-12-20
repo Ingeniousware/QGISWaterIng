@@ -147,4 +147,5 @@ class syncManagerSHPREST():
         self.scenarioUnitOfWork.waterMeterNodeRepository.unsetConnectorToServer()
         self.scenarioUnitOfWork.sensorNodeRepository.unsetConnectorToServer()
         self.scenarioUnitOfWork.pipeNodeRepository.unsetConnectorToServer()
-    
+
+        
