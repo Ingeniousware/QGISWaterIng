@@ -274,6 +274,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not self.Offline:
             self.updateProject(justCreated)
         else: 
+            WateringUtils.setProjectMetadata("scenario_folder", str(self.scenario_folder))
+            WateringUtils.setProjectMetadata("scenario_fk", str(self.listOfScenarios[self.scenarios_box.currentIndex()][1]))
             self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         self.loadOpenStreetMapLayer()
         self.zoomToProject()
