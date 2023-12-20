@@ -22,8 +22,10 @@ class abstractServerRESTRepository():
     def setConnectorToLocal(self, connector):
         self.connector = connector
         self.connector.serverRepository = self 
- 
-
+    
+    def unsetConnectorToLocal(self):
+        self.connector = None
+        
     def getFromServer(self, elementJSON):
         ...
 

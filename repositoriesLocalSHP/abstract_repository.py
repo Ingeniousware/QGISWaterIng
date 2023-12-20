@@ -43,6 +43,9 @@ class AbstractRepository():
     def setConnectorToServer(self, connector):
         self.connectorToServer = connector
         self.connectorToServer.localRepository = self
+        
+    def unsetConnectorToServer(self):
+        self.connectorToServer = None
 
     def loadElements(self):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}

@@ -127,4 +127,24 @@ class syncManagerSHPREST():
             
         print("Finishing stopping the sync manager...............................................")
 
+    def setStatusOffline(self):
+                #linking connectors and server repositories
+        self.waterDemandNodeServerRESTRepository.unsetConnectorToLocal()
+        self.tankNodeServerRESTRepository.unsetConnectorToLocal()
+        self.reservoirNodeServerRESTRepository.unsetConnectorToLocal()
+        self.valveNodeServerRESTRepository.unsetConnectorToLocal()
+        self.pumpNodeServerRESTRepository.unsetConnectorToLocal()
+        self.waterDemandNodeServerRESTRepository.unsetConnectorToLocal()
+        self.sensorNodeServerRESTRepository.unsetConnectorToLocal()
+        self.pipeNodeServerRESTRepository.unsetConnectorToLocal()
+        
+        #linking connectors and local repositories from unitofwork
+        self.scenarioUnitOfWork.waterDemandNodeRepository.unsetConnectorToServer()
+        self.scenarioUnitOfWork.tankNodeRepository.unsetConnectorToServer()
+        self.scenarioUnitOfWork.reservoirNodeRepository.unsetConnectorToServer()
+        self.scenarioUnitOfWork.valveNodeRepository.unsetConnectorToServer()
+        self.scenarioUnitOfWork.pumpNodeRepository.unsetConnectorToServer()
+        self.scenarioUnitOfWork.waterMeterNodeRepository.unsetConnectorToServer()
+        self.scenarioUnitOfWork.sensorNodeRepository.unsetConnectorToServer()
+        self.scenarioUnitOfWork.pipeNodeRepository.unsetConnectorToServer()
     

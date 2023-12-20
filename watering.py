@@ -490,16 +490,11 @@ class QGISPlugin_WaterIng:
         
         if self.connectionStatusAction.isChecked():
             self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_online.png'))
-            if connection_status != "default text":
-                if not self.syncManager:
-                    self.setHubConnection()
-                iface.messageBar().pushMessage(self.tr("Set connection status to online."), level=Qgis.Success, duration=5)
-            else:
-                self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Failed to establish connection. Please reopen the project."), level=1, duration=5)
-                self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
+            if not self.syncManager:
+                self.setHubConnection()
+            iface.messageBar().pushMessage(self.tr("Set connection status to online."), level=Qgis.Success, duration=5)
         else:
-            self.closeHubConnection()
-            self.syncManager.stop()
+            self.syncManager.setStatusOffline()
             iface.messageBar().pushMessage(self.tr("Set connection status to offline."), level=Qgis.Success, duration=5)
             self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
     
