@@ -244,46 +244,40 @@ class PipeNodeRepository(AbstractRepository):
         data = self.PipeResponse.json()["data"]
         for element in data:
             print("pipe last mdf: ", element["lastModified"], " pipe last updated: ", lastUpdated)
-            if element["lastModified"] > lastUpdated:
-                attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
-                points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in element["vertices"]]
-                attributes.append(points)
-                self.PipeServerDict[element["serverKeyId"]] = attributes
+            attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
+            points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in element["vertices"]]
+            attributes.append(points)
+            self.PipeServerDict[element["serverKeyId"]] = attributes
             
     def getPipeOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
-            if feature["lastUpdate"] > lastUpdated: 
-                print("pipe feature[lastUpdate]: ", feature["lastUpdate"] , " pipe last updated: ", lastUpdated)
-                attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
-                
-                if not attributes[2]:
-                    attributes[2] = ""
-                
-                geom = feature.geometry()
+            print("pipe feature[lastUpdate]: ", feature["lastUpdate"] , " pipe last updated: ", lastUpdated)
+            attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
+            
+            if not attributes[2]:
+                attributes[2] = ""
+            
+            geom = feature.geometry()
 
-                # Check if the geometry is a single or multipart line
-                if geom.isMultipart():
-                    # It's a MultiPolyline, so we use asMultiPolyline()
-                    line_parts = geom.asMultiPolyline()
-                    # Flatten the list of points from all parts
-                    points = [point for part in line_parts for point in part]
-                else:
-                    # It's a single part line (Polyline), so we use asPolyline()
-                    points = geom.asPolyline()
+            # Check if the geometry is a single or multipart line
+            if geom.isMultipart():
+                # It's a MultiPolyline, so we use asMultiPolyline()
+                line_parts = geom.asMultiPolyline()
+                # Flatten the list of points from all parts
+                points = [point for part in line_parts for point in part]
+            else:
+                # It's a single part line (Polyline), so we use asPolyline()
+                points = geom.asPolyline()
 
-                attributes.append([point for point in points])
-                
-                attributes[-1] = attributes[-1][0]
-                
-                if feature["ID"]:
-                    self.PipeOfflineDict[feature["ID"]] = attributes
-                else:
-                    uuid_str = str(uuid.uuid4())
-                    temp_key_id = uuid_str[:10]
-                    self.PipeOfflineDict[temp_key_id] = attributes
+            attributes.append([point for point in points])
+            
+            attributes[-1] = attributes[-1][0]
+            
+            self.PipeOfflineDict[feature["ID"]] = attributes
 
     def addPipesToOnline(self):
-        features_to_add= [feature for feature in self.Layer.getFeatures() if len(feature['ID']) == 10]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if (len(str(feature['ID'])) == 10)
+                          and (feature['ID'] in self.PipeOfflineDict)]
         
         print("features to add: ", features_to_add)
         
@@ -299,8 +293,7 @@ class PipeNodeRepository(AbstractRepository):
         print(f"Adding element in {self.LayerName}: {id}")
         
         feature = QgsFeature(self.Layer.fields())
-        feature["ID"] = id
-        feature["lastUpdate"] = WateringUtils.getDateTimeNow()
+        feature.setAttribute("ID", id)
         
         feature.setGeometry(QgsGeometry.fromPolylineXY(self.PipeServerDict[id][-1]))
         
@@ -309,10 +302,24 @@ class PipeNodeRepository(AbstractRepository):
         for i, field in enumerate(self.FieldDefinitions):
             feature[field] = self.PipeServerDict[id][i]
         
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
         
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
     
+    def handleDeletedElementsFromServer(self):
+        elements_deleted_from_server = [id for id in self.OfflineDict if (len(str(id)) != 10) and id not in self.PipeServerDict]
+        
+        print(" elements_deleted_from_server: ", elements_deleted_from_server)
+        if elements_deleted_from_server:
+            ids_to_delete = [feature.id() for feature in self.Layer.getFeatures() if feature["ID"] in elements_deleted_from_server]
+            
+            self.Layer.startEditing()
+            
+            self.Layer.deleteFeatures(ids_to_delete)
+
+            self.Layer.commitChanges()
+            
     def updateExistingPipe(self, id, lastUpdated):
         #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -322,19 +329,30 @@ class PipeNodeRepository(AbstractRepository):
         self.Layer.startEditing()
         
         for feature in features:
-            if id in self.PipeServerDict:
-                if feature['lastUpdate'] < self.PipeServerDict[id][0]:
+            if (id in self.PipeServerDict) and (id in self.PipeOfflineDict):
+                if self.PipeServerDict[id][0] > feature['lastUpdate']:
                     print("option 1->updating from server to local in pipes: ", self.Layer, " ", feature)
-                    for i in range(len(self.FieldDefinitions)):
-                        feature[self.FieldDefinitions[i]] = self.PipeServerDict[id][i]
-                        
-                    feature['lastUpdate'] = WateringUtils.getDateTimeNow()
-                    #update geometry
-                    feature.setGeometry(QgsGeometry.fromPolylineXY(self.PipeServerDict[id][-1]))
+                    self.Layer.startEditing()
+
+                    attrs = {}
                     
-                    self.Layer.updateFeature(feature)
+                    for i in range(len(self.FieldDefinitions)):
+                        field_index = self.Layer.fields().indexOf(self.FieldDefinitions[i])
+                        attrs[field_index] = self.PipeServerDict[id][i]
+                        
+                    last_update_index = self.Layer.fields().indexOf('lastUpdate')
+                    attrs[last_update_index] = str(WateringUtils.getDateTimeNow())
+
+                    self.Layer.dataProvider().changeAttributeValues({feature.id(): attrs})
+                    #update geometry
+                    new_geometry = QgsGeometry.fromPolylineXY(self.PipeServerDict[id][-1])
+                    
+                    self.Layer.dataProvider().changeGeometryValues({feature.id(): new_geometry})
+                    
+                    self.Layer.commitChanges()
+                    
                 # If online feature has been modified and it´s already in the server
-                elif feature['lastUpdate'] > lastUpdated and len(str(feature['ID'])) == 36:
+                elif len(str(feature['ID'])) == 36:
                     print("option 2->updating from local to server in pipes" , feature, " ", self.Layer)
                     if self.connectorToServer:
                         self.connectorToServer.addElementToServer(feature)
