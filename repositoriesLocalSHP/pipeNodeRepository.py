@@ -252,8 +252,8 @@ class PipeNodeRepository(AbstractRepository):
             
     def getPipeOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
-            print("pipe feature[lastUpdate]: ", feature["lastUpdate"] , " pipe last updated: ", lastUpdated)
             if feature["lastUpdate"] > lastUpdated: 
+                print("pipe feature[lastUpdate]: ", feature["lastUpdate"] , " pipe last updated: ", lastUpdated)
                 attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
                 
                 if not attributes[2]:

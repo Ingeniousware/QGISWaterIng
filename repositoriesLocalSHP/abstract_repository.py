@@ -143,7 +143,7 @@ class AbstractRepository():
             
         print("reached third")
 
-        feature.setAttribute('lastUpdate',WateringUtils.getDateTimeNow())
+        feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
 
         print("Adding feature ", feature, "to server")
 
@@ -286,10 +286,13 @@ class AbstractRepository():
         
         #Add offline-elements from offline to server
         self.updateAddElementToServer()
-            
+        
+        # Deleted elements from server
+        self.handleDeletedElementsFromServer()
+           
         #Update Element
         for element_id in server_keys & offline_keys:
-            if self.ServerDict[element_id] != self.OfflineDict[element_id]:
+            if self.ServerDict[element_id][1:] != self.OfflineDict[element_id][1:]:
                 print("Server list: ",self.ServerDict[element_id]," diffs from online list: ",self.OfflineDict[element_id])
                 self.updateElement(element_id, lastUpdated)
 
@@ -335,34 +338,34 @@ class AbstractRepository():
         print("getting server dict")
         data = self.Response.json()["data"]
         for element in data:
+            #if element["lastModified"] > lastUpdated:
+            print("SERVER DICT: element last update bigger")
             print("last mdf: ", element["lastModified"], " last updated: ", lastUpdated)
-            if element["lastModified"] > lastUpdated:
-                print("element last update bigger")
-                attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
-                attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
-                self.ServerDict[element["serverKeyId"]] = attributes
+            attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
+            attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
+            self.ServerDict[element["serverKeyId"]] = attributes
         print("done server dict")
         
     def getOfflineDict(self, lastUpdated):
         print("offline dict")
         
         for feature in self.Layer.getFeatures():
+            #if feature["lastUpdate"] > lastUpdated or not feature["lastUpdate"]:
+            print("OFFLINE DICT: element last update bigger")
             print("feature[lastUpdate]: ", feature["lastUpdate"] , " last updated: ", lastUpdated)
-            if feature["lastUpdate"] > lastUpdated or not feature["lastUpdate"]:
-                print("adding feature to server on update from offline: ", feature)
-                
-                attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
+            
+            attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
 
-                print(attributes)
+            print(attributes)
+            
+            if len(attributes) > 2 and (not attributes[2]):
+                attributes[2] = None
                 
-                if len(attributes) > 2 and (not attributes[2]):
-                    attributes[2] = None
-                    
-                geom = feature.geometry()
-                point = geom.asPoint()
-                attributes.append((point.x(), point.y()))
+            geom = feature.geometry()
+            point = geom.asPoint()
+            attributes.append((point.x(), point.y()))
 
-                self.OfflineDict[feature["ID"]] = attributes
+            self.OfflineDict[feature["ID"]] = attributes
 
         print("offline dict")
 
@@ -387,10 +390,23 @@ class AbstractRepository():
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()
     
+    def handleDeletedElementsFromServer(self):
+        elements_deleted_from_server = [id for id in self.OfflineDict if (len(str(id)) != 10) and id not in self.ServerDict]
+        
+        print(" elements_deleted_from_server: ", elements_deleted_from_server)
+        if elements_deleted_from_server:
+            ids_to_delete = [feature.id() for feature in self.Layer.getFeatures() if feature["ID"] in elements_deleted_from_server]
+            
+            self.Layer.startEditing()
+            
+            self.Layer.deleteFeatures(ids_to_delete)
+
+            self.Layer.commitChanges()
+        
     def updateAddElementToServer(self):
         print("layer: ", self.Layer)
-        features_to_add= [feature for feature in self.Layer.getFeatures() if len(str(feature['ID'])) == 10 
-                          and feature['ID'] in self.OfflineDict]
+        features_to_add= [feature for feature in self.Layer.getFeatures() if (len(str(feature['ID'])) == 10)
+                          and (feature['ID'] in self.OfflineDict)]
         
         print("features to add: ", features_to_add)
         
@@ -434,22 +450,33 @@ class AbstractRepository():
         self.Layer.startEditing()
         
         for feature in features:
-            #if feature['lastUpdate'] < lastUpdatedFromServer:
-            if id in self.ServerDict:
-                if feature['lastUpdate'] < self.ServerDict[id][0]:
-                    print("option 1->updating from server to local: ", self.Layer, " ", feature)
-                    for i in range(len(self.FieldDefinitions)-self.numberLocalFieldsOnly):
-                        feature.setAttribute(self.FieldDefinitions[i], self.ServerDict[id][i])
-                    #update geometry
-                    feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
-                                                                    self.ServerDict[id][-1][1])))
+            #if feature['lastUpdate'] < lastUpdatedFromServer
+            
+            if (id in self.ServerDict) and (id in self.OfflineDict):
+                print("time at server -> ", self.ServerDict[id][0], " time at offline -> ", feature['lastUpdate'])
+                if self.ServerDict[id][0] > feature['lastUpdate']:
+                    print("option 1 -> from server to offline")
+                    self.Layer.startEditing()
+
+                    attrs = {}
+
+                    for i in range(len(self.FieldDefinitions) - self.numberLocalFieldsOnly):
+                        field_index = self.Layer.fields().indexOf(self.FieldDefinitions[i])
+                        attrs[field_index] = self.ServerDict[id][i]
+
+                    last_update_index = self.Layer.fields().indexOf('lastUpdate')
+                    attrs[last_update_index] = str(WateringUtils.getDateTimeNow())
+
+                    self.Layer.dataProvider().changeAttributeValues({feature.id(): attrs})
+
+                    new_geometry = QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0], self.ServerDict[id][-1][1]))
+                    self.Layer.dataProvider().changeGeometryValues({feature.id(): new_geometry})
+
+                    self.Layer.commitChanges()
                     
-                    feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
-                    
-                    self.Layer.updateFeature(feature)
                 # If online feature has been modified and it´s already in the server
-                elif feature['lastUpdate'] > lastUpdated and len(str(feature['ID'])) == 36:
-                    print("option 2->updating from local to server" , feature, " ", self.Layer)
+                elif (len(str(feature['ID'])) == 36):
+                    print("option 2 -> from offline to server")
                     if self.connectorToServer:
                         self.connectorToServer.addElementToServer(feature)
         

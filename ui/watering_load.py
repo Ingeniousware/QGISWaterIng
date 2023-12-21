@@ -399,7 +399,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.setOnAttributeChange(all_shps)
         
     def openGroup(self, group_list, group, scenario_path):
-        
+        print("GROUP OPENED")
         for element_layer in group_list:
             layer_path = os.path.join(scenario_path, element_layer)
             layer_name = os.path.splitext(element_layer)[0]

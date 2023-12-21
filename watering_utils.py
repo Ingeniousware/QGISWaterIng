@@ -193,7 +193,7 @@ class WateringUtils():
         # Converts to format '2023-11-29T10:28:46.2756439Z'
         formatted_time = current_datetime_utc.strftime('%Y-%m-%dT%H:%M:%S.%f') + '0Z'
         
-        return str(formatted_time)
+        return formatted_time
 
         # noinspection PyMethodMayBeStatic
     def tr(message, context = "QGISPlugin_WaterIng"):
@@ -236,26 +236,16 @@ class WateringUtils():
         print(f"Feature ID: {feature_id}")
         print(f"Attribute Index: {attribute_index}")
         print(f"New Value: {new_value}")
-
-        layer.startEditing()
-
-        c_feature = None
-        for feat in layer.getFeatures():
-            if feat["ID"] == feature_id:
-                c_feature = feat
-                print("Feature Found")
         
-                lastUpdate_index = c_feature.fieldNameIndex('lastUpdate')
+        attrs = {attribute_index: new_value}
 
-                if lastUpdate_index == attribute_index: return 
+        last_update_index = layer.fields().indexOf('lastUpdate')
+        
+        if last_update_index == attribute_index: return 
+        
+        attrs[last_update_index] = WateringUtils.getDateTimeNow()
 
-                new_datetime = WateringUtils.getDateTimeNow()
-                
-                c_feature.setAttribute(lastUpdate_index, new_datetime)
-                
-                layer.updateFeature(c_feature)
-                    
-        layer.commitChanges()
+        layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
     def onGeometryChange(feature_id, old_geometry, new_geometry, layer):
         with layer.edit():
