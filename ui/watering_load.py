@@ -351,9 +351,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 project.removeMapLayer(child.layerId())
 
         return group
-
-
-
+    
     def loadOfflineScenario(self):
         project = QgsProject.instance()
         
@@ -396,7 +394,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.openGroup(shp_backupFiles, group_backup, scenario_path)
         
         all_shps = shp_element_files + shp_filesMonitoring
-        self.setOnAttributeChange(all_shps)
         
     def openGroup(self, group_list, group, scenario_path):
         print("GROUP OPENED")
@@ -416,21 +413,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
-
-    def setOnAttributeChange(self, layer_list):
-        for layer in layer_list:
-            print("LAYER IN LAYER LIST: ", layer)
-            real_layer = QgsProject.instance().mapLayersByName(layer.replace('.shp', ''))[0]
-            
-            real_layer.attributeValueChanged.connect(
-                        lambda feature_id, attribute_index, new_value, layer=real_layer: 
-                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
-                )
-            
-            real_layer.geometryChanged.connect(
-                    lambda feature_id, old_geometry, new_geometry, layer=real_layer: 
-                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
-                )
     
     def createNewProjectFromServer(self):
         if self.Offline: return False

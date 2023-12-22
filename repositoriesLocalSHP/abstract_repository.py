@@ -176,14 +176,7 @@ class AbstractRepository():
         feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
         
         layer.addFeature(feature)
-        """layer.commitChanges()
         
-        print("adding to server")
-        if self.connectorToServer:
-            print("connection, adding id in server locally")
-            self.connectorToServer.addElementToServer(feature)
-        
-        return feature"""
         commit_success = layer.commitChanges()
 
         if commit_success:
@@ -253,18 +246,7 @@ class AbstractRepository():
     def generalUpdate(self, lastUpdated):  
         self.ServerDict = {}
         self.OfflineDict = {}
-        print("LAST UPDATED: ", lastUpdated)
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        
-        self.Layer.attributeValueChanged.connect(
-                        lambda feature_id, attribute_index, new_value, layer=self.Layer: 
-                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
-                )
-        
-        self.Layer.geometryChanged.connect(
-                    lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
-                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
-                )
         
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
 
@@ -272,8 +254,6 @@ class AbstractRepository():
         self.getServerDict(lastUpdated) 
         self.getOfflineDict(lastUpdated)
         
-        print("SERVER DICT: ", self.ServerDict)
-        print("OFFLINE DICT: ", self.OfflineDict)
         server_keys = set(self.ServerDict.keys())
         offline_keys = set(self.OfflineDict.keys())
 
@@ -293,11 +273,9 @@ class AbstractRepository():
         #Update Element
         for element_id in server_keys & offline_keys:
             if self.ServerDict[element_id][1:] != self.OfflineDict[element_id][1:]:
-                print("Server list: ",self.ServerDict[element_id]," diffs from online list: ",self.OfflineDict[element_id])
                 self.updateElement(element_id, lastUpdated)
 
     def deleteElementsInBackupLayers(self, lastUpdatedToServer):
-        
         backup_layer_name = self.LayerName + "_backup.shp"
         
         backup_file_path = os.path.dirname(self.StorageShapeFile) + "/" + backup_layer_name
@@ -334,26 +312,15 @@ class AbstractRepository():
     
     def getServerDict(self, lastUpdated):
         self.Response = self.loadElements()
-        
-        print("getting server dict")
+
         data = self.Response.json()["data"]
         for element in data:
-            #if element["lastModified"] > lastUpdated:
-            print("SERVER DICT: element last update bigger")
-            print("last mdf: ", element["lastModified"], " last updated: ", lastUpdated)
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
             attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
             self.ServerDict[element["serverKeyId"]] = attributes
-        print("done server dict")
         
     def getOfflineDict(self, lastUpdated):
-        print("offline dict")
-        
         for feature in self.Layer.getFeatures():
-            #if feature["lastUpdate"] > lastUpdated or not feature["lastUpdate"]:
-            print("OFFLINE DICT: element last update bigger")
-            print("feature[lastUpdate]: ", feature["lastUpdate"] , " last updated: ", lastUpdated)
-            
             attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
 
             print(attributes)
@@ -367,11 +334,7 @@ class AbstractRepository():
 
             self.OfflineDict[feature["ID"]] = attributes
 
-        print("offline dict")
-
-
     def addElementToOffline(self, id):
-        
         print(f"Adding element in {self.LayerName}: {id}")
         
         feature = QgsFeature(self.Layer.fields())
@@ -380,7 +343,6 @@ class AbstractRepository():
                                                                self.ServerDict[id][-1][1])))
         
         self.Layer.startEditing()
-        
         
         for i, field in enumerate(self.FieldDefinitions):
             feature[field] = self.ServerDict[id][i]
@@ -393,7 +355,6 @@ class AbstractRepository():
     def handleDeletedElementsFromServer(self):
         elements_deleted_from_server = [id for id in self.OfflineDict if (len(str(id)) != 10) and id not in self.ServerDict]
         
-        print(" elements_deleted_from_server: ", elements_deleted_from_server)
         if elements_deleted_from_server:
             ids_to_delete = [feature.id() for feature in self.Layer.getFeatures() if feature["ID"] in elements_deleted_from_server]
             
@@ -404,18 +365,12 @@ class AbstractRepository():
             self.Layer.commitChanges()
         
     def updateAddElementToServer(self):
-        print("layer: ", self.Layer)
         features_to_add= [feature for feature in self.Layer.getFeatures() if (len(str(feature['ID'])) == 10)
                           and (feature['ID'] in self.OfflineDict)]
-        
-        print("features to add: ", features_to_add)
-        
 
         if self.connectorToServer:
-            print("has connector")
             if features_to_add:
                 for feature in features_to_add:
-                    print("adding feature: ", feature)
                     self.connectorToServer.addElementToServer(feature)
         else:
             print("no connector")
@@ -433,16 +388,12 @@ class AbstractRepository():
         for feature in features_to_delete:
             if id in self.ServerDict:
                 if feature['lastUpdate'] < self.ServerDict[id][0]:
-                #if feature['lastUpdate'] < lastUpdatedFromServer:
-                    print("element is going to be deleted")
                     self.Layer.deleteFeature(feature.id())
             
         self.Layer.commitChanges()
 
         
     def updateElement(self, id, lastUpdated):
-        
-        #print(f"Updating existing element in {self.LayerName}: {id}")
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
         features = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
@@ -450,8 +401,6 @@ class AbstractRepository():
         self.Layer.startEditing()
         
         for feature in features:
-            #if feature['lastUpdate'] < lastUpdatedFromServer
-            
             if (id in self.ServerDict) and (id in self.OfflineDict):
                 print("time at server -> ", self.ServerDict[id][0], " time at offline -> ", feature['lastUpdate'])
                 if self.ServerDict[id][0] > feature['lastUpdate']:
@@ -494,11 +443,8 @@ class AbstractRepository():
         
 
     def createBackupLayer(self):
-        print("creating backup layer")
         name = self.LayerName + "_backup"
         backup_layer_path = os.path.dirname(self.StorageShapeFile) + "/" + name + ".shp"
-        
-        print("path backup: ", backup_layer_path)
         
         fields = self.setElementFields(self.field_definitions)
         backup_layer = QgsVectorLayer(self.LayerType + self.destCrs.authid(), "New Layer", "memory")
@@ -512,20 +458,9 @@ class AbstractRepository():
         else:
             print(f"Error creating {self.LayerName} Shapefile!")
         
-        key = self.LayerName
-        print("KEY IN CREATION", key)
+        key = "backup_layer_path" + self.LayerName
         WateringUtils.setProjectMetadata(key, backup_layer_path)
-        
         value = WateringUtils.getProjectMetadata(key)
-        print("VAUE: ", value)
-        #open backup_layer
-        """element_layer = QgsVectorLayer(backup_layer_path, name, "ogr") 
-          
-        if not element_layer.isValid():
-            print("Error opening:", element_layer.dataProvider().error().message())
-        else:
-            QgsProject.instance().addMapLayer(element_layer, False)
-            print("opened successfully:", element_layer.name())"""
         
     def transformTimezone(self, time):
         
