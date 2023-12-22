@@ -404,7 +404,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             layer_path = os.path.join(scenario_path, element_layer)
             layer_name = os.path.splitext(element_layer)[0]
             layer = QgsVectorLayer(layer_path, layer_name, "ogr")
-
+            
             if layer.isValid():
                 QgsProject.instance().addMapLayer(layer, False)
                 group.addLayer(layer)
@@ -419,6 +419,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     def setOnAttributeChange(self, layer_list):
         for layer in layer_list:
+            print("LAYER IN LAYER LIST: ", layer)
             real_layer = QgsProject.instance().mapLayersByName(layer.replace('.shp', ''))[0]
             
             real_layer.attributeValueChanged.connect(

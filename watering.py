@@ -263,6 +263,7 @@ class QGISPlugin_WaterIng:
             print("before updating options")                
             self.updateActionStateOpen()
             self.updateActionScenarioStateOpen()
+            self.setOnAttributeChange()
              
                 
     def importINPFile(self):
@@ -556,3 +557,26 @@ class QGISPlugin_WaterIng:
         if self.hub_connection is not None:
             self.hub_connection.stop()
             self.hub_connection = None
+            
+    def setOnAttributeChange(self):
+        layer_list = ['watering_tanks',
+                      'watering_demand_nodes',
+                      'watering_pumps',
+                      'watering_pipes',
+                      'watering_reservoirs',
+                      'watering_sensors',
+                      'watering_valves',
+                      'watering_waterMeter']
+        
+        for layer in layer_list:
+            real_layer = QgsProject.instance().mapLayersByName(layer)[0]
+            
+            real_layer.attributeValueChanged.connect(
+                        lambda feature_id, attribute_index, new_value, layer=real_layer: 
+                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+            
+            real_layer.geometryChanged.connect(
+                    lambda feature_id, old_geometry, new_geometry, layer=real_layer: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+                )
