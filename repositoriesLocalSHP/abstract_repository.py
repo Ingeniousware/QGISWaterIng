@@ -121,35 +121,31 @@ class AbstractRepository():
 
     #When layer already exists
     def addElementFromSignalR(self, elementJSON):
-        print("Adding from signal r")
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        element = [elementJSON[field] for field in self.features]
-
-        layer.startEditing()
-        print("reached first")
-        feature = QgsFeature(layer.fields())
-        geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
-        geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
-        print("reached second")
-
-        feature.setGeometry(geometry)
-        print("field_definitions: ", self.field_definitions)
-        print("element: ", element)
+        id_already_in_offline = self.hasFeatureWithId(layer, elementJSON['serverKeyId'])
         
-        for i in range(len(self.field_definitions) - 1):
-            feature.setAttribute(self.field_definitions[i][0], element[i+1])
-            print("element i + 1", element[i+1])
-            print("field definition position: ", self.field_definitions[i][0])
+        if not id_already_in_offline:
+            print("Adding from signal r")
+            element = [elementJSON[field] for field in self.features]
+
+            layer.startEditing()
+            feature = QgsFeature(layer.fields())
+            geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
+            geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+
+            feature.setGeometry(geometry)
             
-        print("reached third")
+            for i in range(len(self.field_definitions) - 1):
+                feature.setAttribute(self.field_definitions[i][0], element[i+1])
 
-        feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
+            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
 
-        print("Adding feature ", feature, "to server")
 
-        layer.addFeature(feature)
-        layer.commitChanges()
-        layer.triggerRepaint()
+            layer.addFeature(feature)
+            layer.commitChanges()
+            layer.triggerRepaint()
+        else:
+            print("Id already in offline, not adding as new.")
 
     def AddNewElementFromMapInteraction(self, x, y):
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -475,4 +471,10 @@ class AbstractRepository():
         formatted_datetime_str = target_datetime.strftime(output_format)
         
         return formatted_datetime_str
+    
+    def hasFeatureWithId(self, layer, id_value):
+        query = '"ID" = {}'.format(id_value)
+        request = QgsFeatureRequest().setFilterExpression(query)
+        features = layer.getFeatures(request)
+        return any(features)
     
