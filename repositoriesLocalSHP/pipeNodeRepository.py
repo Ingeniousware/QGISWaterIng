@@ -99,34 +99,37 @@ class PipeNodeRepository(AbstractRepository):
     #When layer already exists
     def addElementFromSignalR(self, elementJSON):
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        element = [elementJSON[field] for field in self.features]
+        id_already_in_offline = self.hasFeatureWithId(layer, elementJSON['serverKeyId'])
+        
+        if not id_already_in_offline:
+            element = [elementJSON[field] for field in self.features]
 
-        layer.startEditing()
-         
-        feature = QgsFeature(layer.fields())
-        points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in elementJSON["vertices"]]
-        geometry = QgsGeometry.fromPolylineXY(points)
-        geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+            layer.startEditing()
+            
+            feature = QgsFeature(layer.fields())
+            points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in elementJSON["vertices"]]
+            geometry = QgsGeometry.fromPolylineXY(points)
+            geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
 
-        print("pipes adding")
-        print("field_definitions: ", self.field_definitions)
-        print("element: ", element)
-        feature.setGeometry(geometry)
-        
-        for i in range(len(self.field_definitions) - 1):
-            feature.setAttribute(self.field_definitions[i][0], element[i])
-            print("element i + 1", element[i])
-            print("field definition position: ", self.field_definitions[i][0])
+            print("pipes adding")
+            print("field_definitions: ", self.field_definitions)
+            print("element: ", element)
+            feature.setGeometry(geometry)
+            
+            for i in range(len(self.field_definitions) - 1):
+                feature.setAttribute(self.field_definitions[i][0], element[i])
+                print("element i + 1", element[i])
+                print("field definition position: ", self.field_definitions[i][0])
 
-        #feature['lastUpdate'] = WateringUtils.getDateTimeNow()
-        
-        feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
-        
-        print("Adding feature ", feature, "to server")
-        
-        layer.addFeature(feature)
-        layer.commitChanges()
-        layer.triggerRepaint()
+            #feature['lastUpdate'] = WateringUtils.getDateTimeNow()
+            
+            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
+            
+            print("Adding feature ", feature, "to server")
+            
+            layer.addFeature(feature)
+            layer.commitChanges()
+            layer.triggerRepaint()
 
 
     def addElement(self, id):
