@@ -507,8 +507,7 @@ class QGISPlugin_WaterIng:
             if self.syncManager:
                 self.syncManager.setStatusOffline()
                 self.syncManager = None
-            #self.actionManager.unset()
-            self.actionManager = None
+                
             iface.messageBar().pushMessage(self.tr("Set connection status to offline."), level=Qgis.Success, duration=5)
     
     def setHubConnection(self):
@@ -519,9 +518,12 @@ class QGISPlugin_WaterIng:
                 scenario_fk = WateringUtils.getProjectMetadata("scenario_fk")
                 self.scenarioUnitOFWork = scenarioUnitOfWork(token, scenario_folder, scenario_fk)
             
-            self.actionManager = actionManager(token, self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
-            self.syncManager = syncManagerSHPREST(token, self.scenarioUnitOFWork.scenarioFK)
-            self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
+            if not self.actionManager:
+                self.actionManager = actionManager(token, self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
+            
+            if not self.syncManager:
+                self.syncManager = syncManagerSHPREST(token, self.scenarioUnitOFWork.scenarioFK)
+                self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
             
             server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
@@ -548,6 +550,11 @@ class QGISPlugin_WaterIng:
             self.connectionStatusAction.setChecked(True)
             
             iface.messageBar().pushMessage(self.tr("Set connection status to online."), level=Qgis.Success, duration=5)
+            
+            print("before updating options")                
+            self.updateActionStateOpen()
+            self.updateActionScenarioStateOpen()
+            
         else:
             print("Token is none")
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng or reopen the project!"), level=1, duration=5)
