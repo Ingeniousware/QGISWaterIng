@@ -115,30 +115,18 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 id_element = feature["ID"]
                 
                 layer.startEditing()
-
-                attr_updates = {}
-
+                
+                c_feature = None
                 for feat in layer.getFeatures():
                     if feat["ID"] == id_element:
-                        feat_id = feat.id()
-
-                        id_idx = layer.fields().indexOf('ID')
-                        last_update_idx = layer.fields().indexOf('lastUpdate')
-
-                        new_id_value = str(serverKeyId)
-                        new_last_update_value = str(WateringUtils.getDateTimeNow())
-
-                        attr_updates[feat_id] = {id_idx: new_id_value, last_update_idx: new_last_update_value}
-
+                        c_feature = feat
+                        c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
+                        c_feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+                        layer.updateFeature(c_feature)
                         print("Feature Found")
                         break
-
-                if attr_updates:
-                    layer.dataProvider().changeAttributeValues(attr_updates)
-
-                    layer.commitChanges()
-                else:
-                    print("No feature found")
+                    
+                layer.commitChanges()
              
             if not serverKeyId in self.lastAddedElements:     
                 self.lastAddedElements[serverKeyId] = 1
@@ -168,10 +156,8 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             for part in line_parts:
                 order = 0
                 for point in part:
-                    order = order + 1
                     self.processMultiPoint(point, vertices, order)
-                    break
-                break
+                    order = order + 1
         else:
             for point in transGeometry.asPolyline():
                 self.processPoint(point, vertices)
@@ -182,7 +168,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
     def processPoint(self, point, vertices):
         vertexFK = str(uuid.uuid4())
         vertex = {
-            "vertexFK": "{}".format(vertexFK),
+            "vertexFK": vertexFK,
             "lng": point.x(),
             "lat": point.y()
         }
@@ -191,7 +177,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
     def processMultiPoint(self, point, vertices, order):
         vertexFK = str(uuid.uuid4())
         vertex = {
-            "vertexFK": "{}".format(vertexFK),
+            "vertexFK": vertexFK,
             "lng": point.x(),
             "lat": point.y(),
             "order": order
