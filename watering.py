@@ -500,14 +500,14 @@ class QGISPlugin_WaterIng:
         connection_status = WateringUtils.getProjectMetadata("connection_status")
         
         if self.connectionStatusAction.isChecked():
-            if not self.syncManager:
-                self.setHubConnection()
+            self.setHubConnection()
         else:
-            self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
             if self.syncManager:
+                self.syncManager.stop()
                 self.syncManager.setStatusOffline()
                 self.syncManager = None
-                
+            self.closeHubConnection()
+            self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_offline.png'))
             iface.messageBar().pushMessage(self.tr("Set connection status to offline."), level=Qgis.Success, duration=5)
     
     def setHubConnection(self):
@@ -527,25 +527,26 @@ class QGISPlugin_WaterIng:
             
             server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
-            self.hub_connection = HubConnectionBuilder()\
-                .with_url(server_url, options={"verify_ssl": False, 
-                                            "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
-                .with_automatic_reconnect({
-                        "type": "interval",
-                        "keep_alive_interval": 10,
-                        "intervals": [1, 3, 5, 6, 7, 87, 3]
-                    }).build()
+            if not self.hub_connection:
+                self.hub_connection = HubConnectionBuilder()\
+                    .with_url(server_url, options={"verify_ssl": False, 
+                                                "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
+                    .with_automatic_reconnect({
+                            "type": "interval",
+                            "keep_alive_interval": 10,
+                            "intervals": [1, 3, 5, 6, 7, 87, 3]
+                        }).build()
 
-            #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
-            self.hub_connection.on_open(self.createOnlineConnectionChannels)
-            self.hub_connection.on_close(lambda: print("connection closed"))
-            self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+                #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+                self.hub_connection.on_open(self.createOnlineConnectionChannels)
+                self.hub_connection.on_close(lambda: print("connection closed"))
+                self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
+                    
+                self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
+
                 
-            self.hub_connection.on("UPDATE_IMPORTED", self.processINPImportUpdate)
-
-            
-            self.hub_connection.start()
-            
+                self.hub_connection.start()
+                
             self.connectionStatusAction.setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/connection_status_online.png'))
             self.connectionStatusAction.setChecked(True)
             
