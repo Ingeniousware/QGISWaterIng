@@ -448,7 +448,7 @@ class QGISPlugin_WaterIng:
     def updateElements(self):
         if WateringUtils.isScenarioNotOpened():
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
-        if os.environ.get('TOKEN') == None:
+        if os.environ.get('TOKEN') == None or not self.connectionStatusAction.isChecked():
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
             self.scenarioUnitOFWork.updateAll()
