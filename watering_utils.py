@@ -18,6 +18,7 @@ import os
 import random
 import string
 import pytz
+import socket
 
 #serverInput
 
@@ -252,3 +253,12 @@ class WateringUtils():
             feature = layer.getFeature(feature_id)
             feature['lastMdf'] = WateringUtils.getDateTimeNow()
             layer.updateFeature(feature)
+            
+    def isInternetConnection():
+        try:
+        # try to connect to Google's DNS server
+            socket.create_connection(("8.8.8.8", 53))
+            return True
+        except OSError:
+            pass
+        return False

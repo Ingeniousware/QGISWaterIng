@@ -240,6 +240,7 @@ class QGISPlugin_WaterIng:
         del self.toolbarToolManager.toolbar
 
     def addLogin(self):
+        print("Check Internet Connection: ", WateringUtils.isInternetConnection())
         self.dlg = WateringLogin()
         self.dlg.show()
         if (self.dlg.exec_() == 1):
