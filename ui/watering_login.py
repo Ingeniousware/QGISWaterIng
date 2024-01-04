@@ -8,6 +8,7 @@ from qgis.utils import iface
 import os
 import requests
 from ..watering_utils import WateringUtils
+from ..watering_utils import WateringTimer
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_login_dialog.ui'))
@@ -47,6 +48,7 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
                     self.errorLogin.setStyleSheet("color: lightgreen")
                     self.errorLogin.setText("Login Successful.")
                     os.environ['TOKEN'] = response.json()["token"]
+                    WateringTimer.setTokenTimer()
                     self.token = os.environ['TOKEN']
                     self.logged = True
                 else:

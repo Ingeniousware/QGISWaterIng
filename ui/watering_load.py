@@ -56,7 +56,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
     
     def initializeRepository(self):
-        if os.environ.get('TOKEN') == None:
+        print("OS TOKEN TIMER: ", os.environ.get('TOKEN_TIMER'))
+        if os.environ.get('TOKEN') == None or os.environ.get('TOKEN_TIMER') == "False":
             iface.messageBar().pushMessage(("Running Offline."), level=1, duration=5)
             self.offlineProcedures()
         else:

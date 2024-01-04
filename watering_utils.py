@@ -8,7 +8,7 @@ from qgis.core import Qgis, QgsProject
 from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtCore import QVariant, QDateTime, QCoreApplication
 from PyQt5.QtWidgets import QAction, QMessageBox
-
+from PyQt5.QtCore import QTimer
 
 from PyQt5.QtCore import QTimer
 from time import time, gmtime, strftime
@@ -262,3 +262,20 @@ class WateringUtils():
         except OSError:
             pass
         return False
+
+class WateringTimer():
+    timer = None 
+
+    @classmethod
+    def setTokenTimer(cls):
+        os.environ["TOKEN_TIMER"] = "True"
+        cls.timer = QTimer()
+        # Timer set for 8 hours
+        cls.timer.start(28800000)
+        cls.timer.timeout.connect(cls.unsetTokenTimer)  
+        
+    @classmethod
+    def unsetTokenTimer(cls):
+        print("Token is now unvalid. Redo the login procedures.")
+        os.environ["TOKEN_TIMER"] = "False"
+        cls.timer.stop() 
