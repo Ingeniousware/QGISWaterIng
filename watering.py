@@ -8,6 +8,7 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 from qgis.utils import iface
 from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QTimer
 
 from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
 
@@ -190,12 +191,20 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/refresh.svg'
-        self.add_action(
+        self.synchAction = self.add_action(
             icon_path,
             text=self.tr(u'Update Elements'),
-            callback=self.updateElements,
+            callback=self.onSynchButtonClicked,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+        
+        # Synch behavior: force total synch if clicked twice, enable/disable real time synch if clicked once
+        self.synchClicks = 0
+        self.synchAction.setCheckable(True)
+        self.click_timer = QTimer()
+        self.click_timer.setSingleShot(True)
+        self.click_timer.timeout.connect(self.synchSingleClicked)
+        self.double_click_threshold = 500
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/clean.svg'
         self.deleteCacheFromWaterIng = self.add_action(
@@ -219,7 +228,6 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.optimizationToolsAction.toggled.connect(self.toolbarToolManager.activateOptimizationTool)
         self.toolbarToolManager.readMeasurementsAction.toggled.connect(self.toolbarToolManager.activateMeasurementTool)
         self.toolbarToolManager.readAnalysisAction.toggled.connect(self.toolbarToolManager.activateWaterAnalysisTool)
-       
 
                                                        
         #adding a standard action to our toolbar
@@ -455,16 +463,48 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None or not self.connectionStatusAction.isChecked():
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
-            self.thread = QThread()
-            self.worker = WateringSynchWorker(self.scenarioUnitOFWork)
-            self.worker.moveToThread(self.thread)
-            self.thread.started.connect(self.worker.runSynch)
-            self.worker.finished.connect(self.thread.quit)
-            self.worker.finished.connect(self.worker.deleteLater)
-            self.worker.finished.connect(self.onSynchFinished) 
-            self.thread.finished.connect(self.thread.deleteLater)
-            self.thread.start()
+            # To be constructed
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Double click the button to synch!"), level=1, duration=5)
+    
+    def startSynchronization(self):
+        self.thread = QThread()
+        self.worker = WateringSynchWorker(self.scenarioUnitOFWork)
+        self.worker.moveToThread(self.thread)
+        self.thread.started.connect(self.worker.runSynch)
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.worker.finished.connect(self.onSynchFinished) 
+        self.thread.finished.connect(self.thread.deleteLater)
+        self.thread.start()
+    
+    def onSynchButtonClicked(self):
+        if not self.click_timer.isActive():
+            self.click_timer.start(self.double_click_threshold)
+        else:
+            self.click_timer.stop()  
+            self.synchDoubleClicked()
             
+    def synchSingleClicked(self):
+        print("Synch button single Clicked!")
+        if WateringUtils.isScenarioNotOpened():
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None or not self.connectionStatusAction.isChecked():
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+        else:
+            #self.synchAction.setChecked(self.synchAction.isChecked())
+            # To Do
+            # Real time synch procedures and activation
+            print("Reach single click end")
+            
+    def synchDoubleClicked(self):
+        print("Synch button double Clicked!")
+        if WateringUtils.isScenarioNotOpened():
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None or not self.connectionStatusAction.isChecked():
+            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+        else:
+            self.startSynchronization()
+        
     def cleanCache(self):
         project = QgsProject.instance()
         
