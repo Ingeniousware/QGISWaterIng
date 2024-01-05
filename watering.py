@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import QAction, QMessageBox
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 from qgis.utils import iface
+from PyQt5.QtCore import QThread, pyqtSignal
+
 from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
 
 # Initialize Qt resources from file resources.py
@@ -36,6 +38,7 @@ from .ui.watering_login import WateringLogin
 #from .ui.watering_analysis import WateringAnalysis
 #from .ui.watering_optimization import WaterOptimization
 from .watering_utils import WateringUtils
+from .watering_utils import WateringSynchWorker
 #from .ui.watering_datachannels import WateringDatachannels
 from .ui.watering_INPImport import WateringINPImport
 from .ActionManagement.actionManager import actionManager
@@ -452,9 +455,16 @@ class QGISPlugin_WaterIng:
         if os.environ.get('TOKEN') == None or not self.connectionStatusAction.isChecked():
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
-            self.scenarioUnitOFWork.updateAll()
-
-
+            self.thread = QThread()
+            self.worker = WateringSynchWorker(self.scenarioUnitOFWork)
+            self.worker.moveToThread(self.thread)
+            self.thread.started.connect(self.worker.runSynch)
+            self.worker.finished.connect(self.thread.quit)
+            self.worker.finished.connect(self.worker.deleteLater)
+            self.worker.finished.connect(self.onSynchFinished) 
+            self.thread.finished.connect(self.thread.deleteLater)
+            self.thread.start()
+            
     def cleanCache(self):
         project = QgsProject.instance()
         
@@ -589,3 +599,6 @@ class QGISPlugin_WaterIng:
                     lambda feature_id, old_geometry, new_geometry, layer=real_layer: 
                     WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
                 )
+    
+    def onSynchFinished(self):
+        iface.messageBar().pushMessage("Success", "Synchronization completed successfully!", level=Qgis.Success, duration=6)

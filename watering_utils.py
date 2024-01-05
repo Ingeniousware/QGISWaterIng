@@ -9,6 +9,7 @@ from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtCore import QVariant, QDateTime, QCoreApplication
 from PyQt5.QtWidgets import QAction, QMessageBox
 from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 from PyQt5.QtCore import QTimer
 from time import time, gmtime, strftime
@@ -278,4 +279,15 @@ class WateringTimer():
     def unsetTokenTimer(cls):
         print("Token is now unvalid. Redo the login procedures.")
         os.environ["TOKEN_TIMER"] = "False"
-        cls.timer.stop() 
+        cls.timer.stop()
+            
+class WateringSynchWorker(QObject):
+    finished = pyqtSignal()
+    
+    def __init__(self, scenarioUnitOfWork):
+        super().__init__()
+        self.scenarioUnitOfWork = scenarioUnitOfWork
+
+    def runSynch(self):
+        self.scenarioUnitOfWork.updateAll()
+        self.finished.emit()
