@@ -399,7 +399,7 @@ class AbstractRepository():
         for feature in features:
             if (id in self.ServerDict) and (id in self.OfflineDict):
                 print("time at server -> ", self.ServerDict[id][0], " time at offline -> ", feature['lastUpdate'])
-                if self.ServerDict[id][0] > feature['lastUpdate']:
+                if self.ServerDict[id][0] > feature['lastUpdate'] and self.ServerDict[id][0] > lastUpdated:
                     print("option 1 -> from server to offline")
                     self.Layer.startEditing()
 
@@ -420,7 +420,7 @@ class AbstractRepository():
                     self.Layer.commitChanges()
                     
                 # If online feature has been modified and it´s already in the server
-                elif (len(str(feature['ID'])) == 36):
+                elif (len(str(feature['ID'])) == 36) and self.OfflineDict[id][0] > lastUpdated:
                     print("option 2 -> from offline to server")
                     if self.connectorToServer:
                         self.connectorToServer.addElementToServer(feature)

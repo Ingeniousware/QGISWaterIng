@@ -38,19 +38,19 @@ class scenarioUnitOfWork():
                                  self.pipeNodeRepository,
                                  self.sensorNodeRepository]
         
-        self.lastUpdate = self.getLastUpdate()
+        self.lastUpdate = None
         
     def loadAll(self):
         for element in self.list_of_elements:
             element.initializeRepository()
 
     def updateAll(self):
-        now = WateringUtils.getDateTimeNow()
+        self.lastUpdate = self.getLastUpdate()
         
         for element in self.list_of_elements:
            element.generalUpdate(self.lastUpdate)
             
-        self.lastUpdate = now
+        self.lastUpdate = WateringUtils.getDateTimeNow()
     
         WateringUtils.setProjectMetadata(self.keyUpdate, self.lastUpdate)
         
