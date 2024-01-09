@@ -333,7 +333,7 @@ class PipeNodeRepository(AbstractRepository):
         
         for feature in features:
             if (id in self.PipeServerDict) and (id in self.PipeOfflineDict):
-                if self.PipeServerDict[id][0] > feature['lastUpdate'] and self.PipeServerDict[id][0] > lastUpdated:
+                if self.PipeServerDict[id][0] > feature['lastUpdate'] and self.adjustedDatetime(self.PipeServerDict[id][0]) > self.adjustedDatetime(lastUpdated):
                     print("option 1->updating from server to local in pipes: ", self.Layer, " ", feature)
                     self.Layer.startEditing()
 
@@ -355,7 +355,7 @@ class PipeNodeRepository(AbstractRepository):
                     self.Layer.commitChanges()
                     
                 # If online feature has been modified and it´s already in the server
-                elif len(str(feature['ID'])) == 36 and self.PipeOfflineDict[id][0] > lastUpdated:
+                elif len(str(feature['ID'])) == 36 and self.adjustedDatetime(feature['lastUpdate']) > self.adjustedDatetime(lastUpdated):
                     print("option 2->updating from local to server in pipes" , feature, " ", self.Layer)
                     if self.connectorToServer:
                         self.connectorToServer.addElementToServer(feature)
