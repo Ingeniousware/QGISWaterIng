@@ -239,7 +239,8 @@ class PipeNodeRepository(AbstractRepository):
 
         #Update Element
         for element_id in server_keys & offline_keys:
-            if self.PipeServerDict[element_id][1:] != self.PipeOfflineDict[element_id][1:]:
+            if self.PipeServerDict[element_id][1:1] != self.PipeOfflineDict[element_id][1:1]:
+                print(f"server: {self.PipeServerDict[element_id][1:]} diffs from offline: {self.PipeOfflineDict[element_id][1:]}")
                 self.updateExistingPipe(element_id, lastUpdated)
                 
     def getPipeServerDict(self, lastUpdated):
