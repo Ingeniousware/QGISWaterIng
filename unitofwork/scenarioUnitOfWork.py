@@ -50,7 +50,7 @@ class scenarioUnitOfWork():
         for element in self.list_of_elements:
            element.generalUpdate(self.lastUpdate)
     
-        WateringUtils.setProjectMetadata(self.keyUpdate, WateringUtils.getDateTimeNow())
+        WateringUtils.setProjectMetadata(self.keyUpdate, str(WateringUtils.getDateTimeNow()))
         
     def getLastUpdate(self):
         date = WateringUtils.getProjectMetadata(self.keyUpdate)
@@ -60,7 +60,7 @@ class scenarioUnitOfWork():
         if date != "default text":
             return date
         else:
-            return WateringUtils.getDateTimeNow()
+            return str(WateringUtils.getDateTimeNow())
     
     def scenarioKeyLastUpdate(self):
         return self.scenarioFK + "last_general_update"

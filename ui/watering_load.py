@@ -457,7 +457,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.myScenarioUnitOfWork.loadAll()
         
         keyUpdate = scenarioFK + "last_general_update"
-        date = WateringUtils.getDateTimeNow()
+        date = str(WateringUtils.getDateTimeNow())
         WateringUtils.setProjectMetadata(keyUpdate, date)
         
         self.loadOpenStreetMapLayer()

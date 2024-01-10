@@ -114,6 +114,7 @@ class AbstractRepository():
                 feature.setAttribute(self.field_definitions[i][0], element[i+2])
             
             #print("Datetime: ", datetime.now())
+            
             feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
             #self.currentLayer.dataProvider().addFeature(feature)
             self.toAddFeatures.append(feature)
@@ -241,6 +242,7 @@ class AbstractRepository():
         layer.triggerRepaint()
     
     def generalUpdate(self, lastUpdated):  
+        lastUpdated = self.adjustedDatetime(lastUpdated)
         self.ServerDict = {}
         self.OfflineDict = {}
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
@@ -399,8 +401,9 @@ class AbstractRepository():
         
         for feature in features:
             if (id in self.ServerDict) and (id in self.OfflineDict):
+                serverDictLastUpdated = self.adjustedDatetime(self.ServerDict[id][0])
                 print("time at server -> ", self.ServerDict[id][0], " time at offline -> ", feature['lastUpdate'])
-                if self.ServerDict[id][0] > feature['lastUpdate'] and self.adjustedDatetime(self.ServerDict[id][0]) > self.adjustedDatetime(lastUpdated):
+                if serverDictLastUpdated > feature['lastUpdate'] and serverDictLastUpdated > lastUpdated:
                     print("option 1 -> from server to offline")
                     self.Layer.startEditing()
 
@@ -411,7 +414,7 @@ class AbstractRepository():
                         attrs[field_index] = self.ServerDict[id][i]
 
                     last_update_index = self.Layer.fields().indexOf('lastUpdate')
-                    attrs[last_update_index] = str(WateringUtils.getDateTimeNow())
+                    attrs[last_update_index] = WateringUtils.getDateTimeNow()
 
                     self.Layer.dataProvider().changeAttributeValues({feature.id(): attrs})
 
@@ -421,7 +424,7 @@ class AbstractRepository():
                     self.Layer.commitChanges()
                     
                 # If online feature has been modified and it´s already in the server
-                elif (len(str(feature['ID'])) == 36) and (self.adjustedDatetime(feature['lastUpdate']) > self.adjustedDatetime(lastUpdated)):
+                elif (len(str(feature['ID'])) == 36) and (feature['lastUpdate'] > lastUpdated):
                     print("option 2 -> from offline to server")
                     if self.connectorToServer:
                         self.connectorToServer.addElementToServer(feature)
