@@ -171,7 +171,7 @@ class AbstractRepository():
         feature.setAttribute("ID", temp_id)
         
         self.setDefaultValues(feature)
-        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
+        feature.setAttribute("Last Mdf", str(WateringUtils.getDateTimeNow()))
         
         layer.addFeature(feature)
         
@@ -402,8 +402,9 @@ class AbstractRepository():
         for feature in features:
             if (id in self.ServerDict) and (id in self.OfflineDict):
                 serverDictLastUpdated = self.adjustedDatetime(self.ServerDict[id][0])
+                offlineDictLastUpdated = self.adjustedDatetime(feature['lastUpdate'])
                 print("time at server -> ", self.ServerDict[id][0], " time at offline -> ", feature['lastUpdate'])
-                if serverDictLastUpdated > feature['lastUpdate'] and serverDictLastUpdated > lastUpdated:
+                if serverDictLastUpdated > offlineDictLastUpdated and serverDictLastUpdated > lastUpdated:
                     print("option 1 -> from server to offline")
                     self.Layer.startEditing()
 
@@ -424,7 +425,7 @@ class AbstractRepository():
                     self.Layer.commitChanges()
                     
                 # If online feature has been modified and it´s already in the server
-                elif (len(str(feature['ID'])) == 36) and (feature['lastUpdate'] > lastUpdated):
+                elif (len(str(feature['ID'])) == 36) and (offlineDictLastUpdated > lastUpdated):
                     print("option 2 -> from offline to server")
                     if self.connectorToServer:
                         self.connectorToServer.addElementToServer(feature)

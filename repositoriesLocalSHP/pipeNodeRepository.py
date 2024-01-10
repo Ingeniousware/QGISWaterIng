@@ -183,7 +183,7 @@ class PipeNodeRepository(AbstractRepository):
         self.setDefaultValues(feature)
         
         feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
-        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow())
+        feature.setAttribute("Last Mdf", str(WateringUtils.getDateTimeNow()))
         
         id = str(uuid.uuid4())
         temp_id = id[:10]
@@ -202,6 +202,7 @@ class PipeNodeRepository(AbstractRepository):
     
     def generalUpdate(self, lastUpdated):
         print("updating PIPE")
+        lastUpdated = self.adjustedDatetime(lastUpdated)
         self.PipeServerDict = {}
         self.PipeOfflineDict = {}
         
@@ -238,15 +239,13 @@ class PipeNodeRepository(AbstractRepository):
 
         #Update Element
         for element_id in server_keys & offline_keys:
-            if self.PipeServerDict[element_id] != self.PipeOfflineDict[element_id]:
-                print("This: ", self.PipeServerDict[element_id], "Diff from this: ", self.PipeOfflineDict[element_id])
+            if self.PipeServerDict[element_id][1:] != self.PipeOfflineDict[element_id][1:]:
                 self.updateExistingPipe(element_id, lastUpdated)
                 
     def getPipeServerDict(self, lastUpdated):
         self.PipeResponse = self.loadElements()
         data = self.PipeResponse.json()["data"]
         for element in data:
-            print("pipe last mdf: ", element["lastModified"], " pipe last updated: ", lastUpdated)
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
             points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in element["vertices"]]
             attributes.append(points)
@@ -254,7 +253,6 @@ class PipeNodeRepository(AbstractRepository):
             
     def getPipeOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
-            print("pipe feature[lastUpdate]: ", feature["lastUpdate"] , " pipe last updated: ", lastUpdated)
             attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
             
             if not attributes[2]:
@@ -333,7 +331,10 @@ class PipeNodeRepository(AbstractRepository):
         
         for feature in features:
             if (id in self.PipeServerDict) and (id in self.PipeOfflineDict):
-                if self.PipeServerDict[id][0] > feature['lastUpdate'] and self.adjustedDatetime(self.PipeServerDict[id][0]) > self.adjustedDatetime(lastUpdated):
+                serverDictLastUpdate = self.adjustedDatetime(self.PipeServerDict[id][0])
+                offlineDictLastUpdate = self.adjustedDatetime(feature['lastUpdate'])
+                print("time at server -> ", self.PipeServerDict[id][0], " time at offline -> ", feature['lastUpdate'])
+                if serverDictLastUpdate > offlineDictLastUpdate and serverDictLastUpdate > lastUpdated:
                     print("option 1->updating from server to local in pipes: ", self.Layer, " ", feature)
                     self.Layer.startEditing()
 
@@ -355,7 +356,7 @@ class PipeNodeRepository(AbstractRepository):
                     self.Layer.commitChanges()
                     
                 # If online feature has been modified and it´s already in the server
-                elif len(str(feature['ID'])) == 36 and self.adjustedDatetime(feature['lastUpdate']) > self.adjustedDatetime(lastUpdated):
+                elif len(str(feature['ID'])) == 36 and offlineDictLastUpdate > lastUpdated:
                     print("option 2->updating from local to server in pipes" , feature, " ", self.Layer)
                     if self.connectorToServer:
                         self.connectorToServer.addElementToServer(feature)
