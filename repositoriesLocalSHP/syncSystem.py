@@ -14,7 +14,8 @@ class WateringSync:
         self.change_queue = deque()
         self.change_handlers = {
             "add": self.process_add,
-            "update": self.process_update,
+            "update_server": self.process_update_on_server,
+            "update_offline": self.process_update_in_offline,
             "delete": self.process_delete
         }
         
@@ -37,9 +38,12 @@ class WateringSync:
     def process_add(self, change):
         ...
 
-    def process_update(self, change):
+    def process_update_on_server(self, change):
         ...
 
+    def process_update_in_offline(self, change):
+        ...
+        
     def process_delete(self, change):
         ...
         
