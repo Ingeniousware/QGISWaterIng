@@ -2,10 +2,11 @@ from ..watering_utils import WateringUtils
 from collections import deque
 
 class Change:
-    def __init__(self, layer_id, feature_id, change_type, timestamp=None):
+    def __init__(self, layer_id, feature_id, change_type, data):
         self.layer_id = layer_id
         self.feature_id = feature_id
         self.change_type = change_type
+        self.change_data = data
         self.timestamp = WateringUtils.getDateTimeNow()
         
 class WateringSync:
