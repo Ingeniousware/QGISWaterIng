@@ -71,3 +71,12 @@ class WateringSync:
     def save_offline_changes_to_project(self):
        serialized_changes = json.dumps([change.__dict__ for change in self.offline_change_queue])
        QgsProject.instance().writeEntry("WateringSync", "Changes", serialized_changes)
+
+    def load_offline_changes_from_project(self):
+       success, serialized_changes = QgsProject.instance().readEntry("WateringSync", "Changes", "")
+       if success:
+           changes_list = json.loads(serialized_changes)
+           for change_dict in changes_list:
+               change = Change(**change_dict)
+               self.offline_change_queue.append(change)
+
