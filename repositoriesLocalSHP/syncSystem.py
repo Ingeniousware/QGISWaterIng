@@ -25,8 +25,8 @@ class WateringSync:
             "delete_offline": self.process_delete_in_offline
         }
         
-    def track_server_change(self, feature_id, change_type):
-        change = Change(feature_id, change_type)
+    def track_server_change(self, feature_id, change_type, data):
+        change = Change(feature_id, change_type, data)
         self.server_change_queue.append(change)
 
     def track_offline_change(self, feature_id, change_type):
