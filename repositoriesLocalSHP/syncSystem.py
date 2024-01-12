@@ -67,3 +67,7 @@ class WateringSync:
         
     def process_delete_in_offline(self, change):
         ...
+        
+    def save_offline_changes_to_project(self):
+       serialized_changes = json.dumps([change.__dict__ for change in self.offline_change_queue])
+       QgsProject.instance().writeEntry("WateringSync", "Changes", serialized_changes)
