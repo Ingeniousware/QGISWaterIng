@@ -13,7 +13,9 @@ class Change:
         
 class WateringSync:
     def __init__(self):
-        self.change_queue = deque()
+        self.server_change_queue = deque()
+        self.offline_change_queue = deque()
+        
         self.change_handlers = {
             "add_server": self.process_add_to_server,
             "add_offline": self.process_add_to_offline,
@@ -23,15 +25,24 @@ class WateringSync:
             "delete_offline": self.process_delete_in_offline
         }
         
-    def trackChange(self, feature_id, change_type):
+    def track_server_change(self, feature_id, change_type):
         change = Change(feature_id, change_type)
-        self.change_queue.append(change)
+        self.server_change_queue.append(change)
 
-    def synchronize(self):
-        while self.change_queue:
-            change = self.change_queue.popleft()
+    def track_offline_change(self, feature_id, change_type):
+        change = Change(feature_id, change_type)
+        self.offline_change_queue.append(change)
+        
+    def synchronize_server_changes(self):
+        while self.server_change_queue:
+            change = self.server_change_queue.popleft()
             self.processChange(change)
 
+    def synchronize_offline_changes(self):
+        while self.offline_change_queue:
+            change = self.offline_change_queue.popleft()
+            self.processChange(change)
+            
     def processChange(self, change):
         try:
             process_method = self.change_handlers[change.change_type]
