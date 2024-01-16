@@ -40,9 +40,15 @@ class WateringSync():
         print("reach")
         lastUpdate = WateringUtils.getLastUpdate()
 
+        # Test lastUpdate variable
+        test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
+        
         for repo in self.repositories:
-            response = repo.loadChanges(lastUpdate)
-            print(response.text)
+            response = repo.loadChanges(test_lastUpdate)
+            if response._content:
+                data = response.json()
+                if data:
+                    self.process_server_updates(repo, data)
         
     def track_server_change(self, feature_id, change_type, data):
         change = Change(feature_id, change_type, data)
@@ -69,6 +75,9 @@ class WateringSync():
         except KeyError:
             print(f"Unknown change type: {change.change_type}")
 
+    def process_server_updates(self, repo, response):
+        ...
+        
     def process_add_to_server(self, change):
         ...
 
@@ -86,7 +95,7 @@ class WateringSync():
         
     def process_delete_in_offline(self, change):
         ...
-        
+
     def save_offline_changes_to_project(self):
        serialized_changes = json.dumps([change.__dict__ for change in self.offline_change_queue])
        QgsProject.instance().writeEntry("WateringSync", "Changes", serialized_changes)

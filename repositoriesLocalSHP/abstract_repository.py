@@ -62,9 +62,9 @@ class AbstractRepository():
                           'page': "1",
                           'pageSize': "100"}
         
-        return requests.get(changes_url, params=params_changes, 
+        response = requests.get(changes_url, params=params_changes, 
                             headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})
-        
+        return response
         
     def setElementFields(self, fields_definitions):
         fields = QgsFields()
@@ -259,8 +259,8 @@ class AbstractRepository():
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         
         self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
-
         self.Attributes = self.features[3:]
+        
         self.getServerDict(lastUpdated) 
         self.getOfflineDict(lastUpdated)
         
@@ -328,7 +328,18 @@ class AbstractRepository():
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
             attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
             self.ServerDict[element["serverKeyId"]] = attributes
-        
+    
+    def processChange(self, change):
+        attributes_definitions = self.features[3:]
+        attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
+        attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
+        self.serverChangesDict[change["serverKeyId"]] = attributes
+    
+    def getServerUpdates(self, response):
+        self.serverChangesDict = {}
+        for change in response:
+            print(change)
+    
     def getOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
             attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
