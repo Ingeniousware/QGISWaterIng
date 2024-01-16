@@ -18,28 +18,24 @@ class scenarioUnitOfWork():
         self.token = token
         self.scenarioFK = scenarioFK
         self.project_path = project_path
-        
+        self.lastUpdate = None
         self.keyUpdate = self.scenarioKeyLastUpdate()
+        self.initializeRepositories()
+        self.initializeSyncSystem()
+        self.generateListOfElements()
         
-        self.waterDemandNodeRepository = WateringDemandNodeRepository(self.token, project_path, scenarioFK)                
-        self.tankNodeRepository = TankNodeRepository(self.token, project_path, scenarioFK)    
-        self.reservoirNodeRepository = ReservoirNodeRepository(self.token, project_path, scenarioFK)
-        self.pipeNodeRepository = PipeNodeRepository(self.token, project_path, scenarioFK)
-        self.waterMeterNodeRepository = WaterMeterNodeRepository(self.token, project_path, scenarioFK)
-        self.valveNodeRepository = ValveNodeRepository(self.token, project_path, scenarioFK)  
-        self.pumpNodeRepository = PumpNodeRepository(self.token, project_path, scenarioFK)
-        self.sensorNodeRepository = SensorNodeRepository(self.token, project_path, scenarioFK)
-
-        self.list_of_elements = [self.waterDemandNodeRepository,
-                                 self.tankNodeRepository, 
-                                 self.reservoirNodeRepository,
-                                 self.waterMeterNodeRepository,
-                                 self.valveNodeRepository,                                 
-                                 self.pumpNodeRepository,
-                                 self.pipeNodeRepository,
-                                 self.sensorNodeRepository]
+    def initializeRepositories(self):
+        self.waterDemandNodeRepository = WateringDemandNodeRepository(self.token, self.project_path, self.scenarioFK)                
+        self.tankNodeRepository = TankNodeRepository(self.token, self.project_path, self.scenarioFK)     
+        self.reservoirNodeRepository = ReservoirNodeRepository(self.token, self.project_path, self.scenarioFK)   
+        self.pipeNodeRepository = PipeNodeRepository(self.token, self.project_path, self.scenarioFK)   
+        self.waterMeterNodeRepository = WaterMeterNodeRepository(self.token, self.project_path, self.scenarioFK)   
+        self.valveNodeRepository = ValveNodeRepository(self.token, self.project_path, self.scenarioFK)   
+        self.pumpNodeRepository = PumpNodeRepository(self.token, self.project_path, self.scenarioFK)   
+        self.sensorNodeRepository = SensorNodeRepository(self.token, self.project_path, self.scenarioFK)   
         
-        self.syncSystem = WateringSync(token, project_path, scenarioFK,
+    def initializeSyncSystem(self):
+        self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK,
                                  self.waterDemandNodeRepository,
                                  self.tankNodeRepository, 
                                  self.reservoirNodeRepository,
@@ -48,13 +44,21 @@ class scenarioUnitOfWork():
                                  self.pumpNodeRepository,
                                  self.pipeNodeRepository,
                                  self.sensorNodeRepository)
-        
-        self.lastUpdate = None
-        
+
+    def generateListOfElements(self):
+        self.list_of_elements = [self.waterDemandNodeRepository,
+                                self.tankNodeRepository, 
+                                self.reservoirNodeRepository,
+                                self.waterMeterNodeRepository,
+                                self.valveNodeRepository,                                 
+                                self.pumpNodeRepository,
+                                self.pipeNodeRepository,
+                                self.sensorNodeRepository]
+
     def loadAll(self):
         for element in self.list_of_elements:
             element.initializeRepository()
-
+            
     def updateAll(self):
         self.lastUpdate = self.getLastUpdate()
         
