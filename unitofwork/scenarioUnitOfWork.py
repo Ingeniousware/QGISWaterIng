@@ -7,6 +7,7 @@ from ..repositoriesLocalSHP.tankNodeRepository import TankNodeRepository
 from ..repositoriesLocalSHP.valveNodeRepository import ValveNodeRepository
 from ..repositoriesLocalSHP.waterDemandNodeRepository import WateringDemandNodeRepository
 from ..repositoriesLocalSHP.waterMeterNodeRepository import WaterMeterNodeRepository
+from ..repositoriesLocalSHP.syncSystem import WateringSync
 
 from ..watering_utils import WateringUtils
 
@@ -38,6 +39,16 @@ class scenarioUnitOfWork():
                                  self.pipeNodeRepository,
                                  self.sensorNodeRepository]
         
+        self.syncSystem = WateringSync(token, project_path, scenarioFK,
+                                 self.waterDemandNodeRepository,
+                                 self.tankNodeRepository, 
+                                 self.reservoirNodeRepository,
+                                 self.waterMeterNodeRepository,
+                                 self.valveNodeRepository,                                 
+                                 self.pumpNodeRepository,
+                                 self.pipeNodeRepository,
+                                 self.sensorNodeRepository)
+        
         self.lastUpdate = None
         
     def loadAll(self):
@@ -51,6 +62,9 @@ class scenarioUnitOfWork():
            element.generalUpdate(self.lastUpdate)
     
         WateringUtils.setProjectMetadata(self.keyUpdate, str(WateringUtils.getDateTimeNow()))
+
+    def newUpdateAll(self):
+        self.syncSystem.initializeRepository()
         
     def getLastUpdate(self):
         date = WateringUtils.getProjectMetadata(self.keyUpdate)

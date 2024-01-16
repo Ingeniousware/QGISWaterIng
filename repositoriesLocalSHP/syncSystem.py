@@ -1,5 +1,6 @@
 from qgis.core import QgsProject
 from ..watering_utils import WateringUtils
+from .abstract_repository import AbstractRepository
 from collections import deque
 import json
 
@@ -11,8 +12,12 @@ class Change:
         self.change_data = data
         self.timestamp = WateringUtils.getDateTimeNow()
         
-class WateringSync:
-    def __init__(self):
+class WateringSync():
+    def __init__(self,token, project_path, scenarioFK, 
+                 waterDemandNodeRepo, tankNodeRepo, reservoirNodeRepo, 
+                 pipeNodeRepo, waterMeterNodeRepo, valveNodeRepo, 
+                 pumpNodeRepo, sensorNodeRepo):
+        
         self.server_change_queue = deque()
         self.offline_change_queue = deque()
         
@@ -24,6 +29,21 @@ class WateringSync:
             "delete_server": self.process_delete_on_server,
             "delete_offline": self.process_delete_in_offline
         }
+        
+        self.token = token
+        self.project_path = project_path
+        self.scenarioFK = scenarioFK
+        self.waterDemandNodeRepository = waterDemandNodeRepo                
+        self.tankNodeRepository = tankNodeRepo    
+        self.reservoirNodeRepository = reservoirNodeRepo
+        self.pipeNodeRepository = pipeNodeRepo
+        self.waterMeterNodeRepository = waterMeterNodeRepo
+        self.valveNodeRepository = valveNodeRepo  
+        self.pumpNodeRepository = pumpNodeRepo
+        self.sensorNodeRepository = sensorNodeRepo
+
+    def initializeRepository(self):
+        ...
         
     def track_server_change(self, feature_id, change_type, data):
         change = Change(feature_id, change_type, data)
