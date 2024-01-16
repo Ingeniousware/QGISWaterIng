@@ -43,7 +43,10 @@ class scenarioUnitOfWork():
                                 self.sensorNodeRepository]
 
     def initializeSyncSystem(self):
-        self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK,self.list_of_elements)
+        elements_without_waterMeter = self.list_of_elements
+        elements_without_waterMeter.pop(3)
+        
+        self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK, elements_without_waterMeter)
         self.syncSystem.get_server_changes()
         
     def loadAll(self):
