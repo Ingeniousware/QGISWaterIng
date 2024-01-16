@@ -18,11 +18,9 @@ class scenarioUnitOfWork():
         self.token = token
         self.scenarioFK = scenarioFK
         self.project_path = project_path
-        self.lastUpdate = None
-        self.keyUpdate = self.scenarioKeyLastUpdate()
         self.initializeRepositories()
-        self.initializeSyncSystem()
         self.generateListOfElements()
+        self.initializeSyncSystem()
         
     def initializeRepositories(self):
         self.waterDemandNodeRepository = WateringDemandNodeRepository(self.token, self.project_path, self.scenarioFK)                
@@ -34,17 +32,6 @@ class scenarioUnitOfWork():
         self.pumpNodeRepository = PumpNodeRepository(self.token, self.project_path, self.scenarioFK)   
         self.sensorNodeRepository = SensorNodeRepository(self.token, self.project_path, self.scenarioFK)   
         
-    def initializeSyncSystem(self):
-        self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK,
-                                 self.waterDemandNodeRepository,
-                                 self.tankNodeRepository, 
-                                 self.reservoirNodeRepository,
-                                 self.waterMeterNodeRepository,
-                                 self.valveNodeRepository,                                 
-                                 self.pumpNodeRepository,
-                                 self.pipeNodeRepository,
-                                 self.sensorNodeRepository)
-
     def generateListOfElements(self):
         self.list_of_elements = [self.waterDemandNodeRepository,
                                 self.tankNodeRepository, 
@@ -55,31 +42,24 @@ class scenarioUnitOfWork():
                                 self.pipeNodeRepository,
                                 self.sensorNodeRepository]
 
+    def initializeSyncSystem(self):
+        self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK,self.list_of_elements)
+        self.syncSystem.get_server_changes()
+        
     def loadAll(self):
         for element in self.list_of_elements:
             element.initializeRepository()
             
     def updateAll(self):
-        self.lastUpdate = self.getLastUpdate()
+        lastUpdate = WateringUtils.getLastUpdate()
+        keyUpdate = WateringUtils.scenarioKeyLastUpdate()
         
         for element in self.list_of_elements:
-           element.generalUpdate(self.lastUpdate)
+           element.generalUpdate(lastUpdate)
     
-        WateringUtils.setProjectMetadata(self.keyUpdate, str(WateringUtils.getDateTimeNow()))
+        WateringUtils.setProjectMetadata(keyUpdate, str(WateringUtils.getDateTimeNow()))
 
     def newUpdateAll(self):
         self.syncSystem.initializeRepository()
         
-    def getLastUpdate(self):
-        date = WateringUtils.getProjectMetadata(self.keyUpdate)
-
-        print("Getting last update: ", date)
-        
-        if date != "default text":
-            return date
-        else:
-            return str(WateringUtils.getDateTimeNow())
-    
-    def scenarioKeyLastUpdate(self):
-        return self.scenarioFK + "last_general_update"
     

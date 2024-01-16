@@ -263,6 +263,18 @@ class WateringUtils():
             pass
         return False
 
+    def scenarioKeyLastUpdate(scenarioFK):
+        return scenarioFK + "last_general_update"
+    
+    def getLastUpdate():
+        keyUpdate = WateringUtils.scenarioKeyLastUpdate(WateringUtils.getScenarioId())
+        date = WateringUtils.getProjectMetadata(keyUpdate)
+
+        if date != "default text":
+            return date
+        else:
+            return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        
 class WateringTimer():
     timer = None 
 

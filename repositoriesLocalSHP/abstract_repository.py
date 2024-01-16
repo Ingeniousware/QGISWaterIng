@@ -55,6 +55,17 @@ class AbstractRepository():
                             headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})  
         return response
 
+    def loadChanges(self, lastUpdate):
+        changes_url = WateringUtils.getServerUrl() + self.UrlGet + "/updates"
+        params_changes = {'ScenarioFK': "{}".format(self.ScenarioFK),
+                          'lastPull': "{}".format(lastUpdate),
+                          'page': "1",
+                          'pageSize': "100"}
+        
+        return requests.get(changes_url, params=params_changes, 
+                            headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})
+        
+        
     def setElementFields(self, fields_definitions):
         fields = QgsFields()
         for name, data_type in fields_definitions:

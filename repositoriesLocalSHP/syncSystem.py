@@ -14,9 +14,7 @@ class Change:
         
 class WateringSync():
     def __init__(self,token, project_path, scenarioFK, 
-                 waterDemandNodeRepo, tankNodeRepo, reservoirNodeRepo, 
-                 pipeNodeRepo, waterMeterNodeRepo, valveNodeRepo, 
-                 pumpNodeRepo, sensorNodeRepo):
+                 repositories):
         
         self.server_change_queue = deque()
         self.offline_change_queue = deque()
@@ -33,17 +31,18 @@ class WateringSync():
         self.token = token
         self.project_path = project_path
         self.scenarioFK = scenarioFK
-        self.waterDemandNodeRepository = waterDemandNodeRepo                
-        self.tankNodeRepository = tankNodeRepo    
-        self.reservoirNodeRepository = reservoirNodeRepo
-        self.pipeNodeRepository = pipeNodeRepo
-        self.waterMeterNodeRepository = waterMeterNodeRepo
-        self.valveNodeRepository = valveNodeRepo  
-        self.pumpNodeRepository = pumpNodeRepo
-        self.sensorNodeRepository = sensorNodeRepo
+        self.repositories = repositories
 
     def initializeRepository(self):
         ...
+
+    def get_server_changes(self):
+        print("reach")
+        lastUpdate = WateringUtils.getLastUpdate()
+
+        for repo in self.repositories:
+            response = repo.loadChanges(lastUpdate)
+            print(response.text)
         
     def track_server_change(self, feature_id, change_type, data):
         change = Change(feature_id, change_type, data)
