@@ -329,19 +329,35 @@ class AbstractRepository():
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
             attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
             self.ServerDict[element["serverKeyId"]] = attributes
+    # NEW_SYNC_METHODS_START
     
     def processChange(self, change):
         change_id = change["serverKeyId"]
-        if change['removed'] == False:
-            self.changesList.append(Change(self.Layer, change_id, "delete_server", []))
         
-    
+        if change['removed'] == True:
+            return Change(self.Layer, change_id, "delete_server", [])
+            
+        attributes_definitions = self.features[3:]
+        attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
+        attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
+        
+        if self.elementExistsInOffline(change_id):
+            print("exists in offline: ", change_id)
+            return Change(self.Layer, change_id, "update_server", attributes)
+            
+        return Change(self.Layer, change_id, "add_server", attributes)
+        
     def getServerUpdates(self, data):
-        self.serverChangesDict = {}
-        self.changesList = []
-        for change in data:
-            self.processChange(change)
-        return self.serverChangesDict
+        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        self.changesList = [self.processChange(change) for change in data]
+        return self.changesList
+    
+    def elementExistsInOffline(self, id):
+        expression = f'"ID" = \'{id}\''
+        query = self.Layer.getFeatures(QgsFeatureRequest().setFilterExpression(expression))
+        return any(True for _ in query)
+        
+    # NEW_SYNC_METHODS_END
     
     def getOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():
