@@ -151,7 +151,9 @@ class WateringSync():
         self.layer.commitChanges()
         
     def process_delete_on_server(self, change):
-        ...
+        for repo in self.repositories:
+            if change.layer_id == repo.LayerName and repo.connectorToServer:
+                repo.connectorToServer.removeElementFromServer(change.layer_id)
         
     def process_delete_in_offline(self, change):
         print(f"Delete element in {change.layer_id}: {id} from server to offline")
