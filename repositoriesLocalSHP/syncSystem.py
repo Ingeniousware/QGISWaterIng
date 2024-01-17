@@ -140,7 +140,14 @@ class WateringSync():
         ...
         
     def process_delete_in_offline(self, change):
-        ...
+        print(f"Delete element in {change.layer_id}: {id} from server to offline")
+        
+        self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
+        id_to_delete = self.get_feature_by_id(change.feature_id)
+        
+        self.layer.startEditing()
+        self.layer.deleteFeatures(id_to_delete)
+        self.layer.commitChanges()
 
     def save_offline_changes_to_project(self):
        serialized_changes = json.dumps([change.__dict__ for change in self.offline_change_queue])
