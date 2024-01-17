@@ -483,7 +483,7 @@ class QGISPlugin_WaterIng:
         else:
             self.click_timer.stop()  
             self.synchDoubleClicked()"""
-        self.scenarioUnitOFWork.syncSystem.get_server_changes()
+        self.scenarioUnitOFWork.newUpdateAll()
             
     def synchSingleClicked(self):
         print("Synch button single Clicked!")
