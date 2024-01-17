@@ -335,10 +335,11 @@ class AbstractRepository():
         attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
         self.serverChangesDict[change["serverKeyId"]] = attributes
     
-    def getServerUpdates(self, response):
+    def getServerUpdates(self, data):
         self.serverChangesDict = {}
-        for change in response:
-            print(change)
+        for change in data:
+            self.processChange(change)
+        return self.serverChangesDict
     
     def getOfflineDict(self, lastUpdated):
         for feature in self.Layer.getFeatures():

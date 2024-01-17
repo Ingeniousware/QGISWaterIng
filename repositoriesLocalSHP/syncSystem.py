@@ -1,6 +1,5 @@
 from qgis.core import QgsProject
 from ..watering_utils import WateringUtils
-from .abstract_repository import AbstractRepository
 from collections import deque
 import json
 
@@ -40,8 +39,11 @@ class WateringSync():
         print("reach")
         lastUpdate = WateringUtils.getLastUpdate()
 
-        # Test lastUpdate variable
+        # Test variables
         test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
+        self.repositories = self.repositories.copy()
+        self.repositories.pop(5)
+        # End test variables
         
         for repo in self.repositories:
             response = repo.loadChanges(test_lastUpdate)
@@ -50,8 +52,8 @@ class WateringSync():
                 if data:
                     self.process_server_updates(repo, data)
         
-    def track_server_change(self, feature_id, change_type, data):
-        change = Change(feature_id, change_type, data)
+    def track_server_change(self, change_type, data):
+        change = Change(change_type, data)
         self.server_change_queue.append(change)
 
     def track_offline_change(self, feature_id, change_type, data):
@@ -75,8 +77,10 @@ class WateringSync():
         except KeyError:
             print(f"Unknown change type: {change.change_type}")
 
-    def process_server_updates(self, repo, response):
-        ...
+    def process_server_updates(self, repo, data):
+        changes_dict = repo.getServerUpdates(data)
+        
+        
         
     def process_add_to_server(self, change):
         ...
