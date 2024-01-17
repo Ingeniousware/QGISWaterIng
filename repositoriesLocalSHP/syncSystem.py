@@ -1,4 +1,6 @@
-from qgis.core import QgsProject
+from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
+from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
+from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
 from ..watering_utils import WateringUtils
 from collections import deque
 import json
@@ -88,7 +90,7 @@ class WateringSync():
         ...
 
     def process_add_to_offline(self, change):
-        ...
+        self.add_element_from_server_to_offline(change)
         
     def process_update_on_server(self, change):
         ...
@@ -113,4 +115,27 @@ class WateringSync():
            for change_dict in changes_list:
                change = Change(**change_dict)
                self.offline_change_queue.append(change)
-
+               
+    def add_element_from_server_to_offline(self, change):
+        print(f"Adding element in {change.layer_id}: {id}")
+        self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
+        
+        feature = QgsFeature(self.layer.fields())
+        feature.setAttribute("ID", change.feature_id)
+        feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
+        
+        self.layer.startEditing()
+        
+        for i, field in enumerate(self.get_field_definitions()):
+            feature[field] = change.data[i]
+        
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+        
+        self.layer.addFeature(feature)
+        self.layer.commitChanges()
+    
+    def get_field_definitions(self):
+        if not self.layer: return []
+        fields = self.layer.fields()
+        return [field.name() for field in fields]
+    
