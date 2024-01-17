@@ -85,6 +85,10 @@ class WateringSync():
     def process_server_updates(self, repo, data):
         changes_list = repo.getServerUpdates(data)
         self.server_change_queue.extend(changes_list)
+    
+    def process_offline_updates(self, repo):
+        changes_list = repo.getOfflineUpdates()
+        self.offline_change_queue.extend(changes_list)
         
     def process_add_to_server(self, change):
         ...
