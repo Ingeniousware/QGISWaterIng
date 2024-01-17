@@ -80,7 +80,8 @@ class WateringSync():
     def process_server_updates(self, repo, data):
         changes_dict = repo.getServerUpdates(data)
         
-        print(changes_dict)
+        print(change.change_typ for change in changes_dict)
+        #print(changes_dict)
         
         
     def process_add_to_server(self, change):
