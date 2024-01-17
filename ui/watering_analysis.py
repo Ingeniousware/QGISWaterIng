@@ -124,7 +124,6 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         nodeProperty = self.nodesComboBox.currentText()
         nodeProperty, pipeProperty = (prop.replace(" ", "").lower() for prop in (nodeProperty, pipeProperty))
 
-    
         self.show_progress_bar()
         analysisExecutionId = self.listOfAnalysis[self.analysis_box.currentIndex()][0]
         datetime = self.listOfAnalysis[self.analysis_box.currentIndex()][1]

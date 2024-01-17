@@ -23,3 +23,4 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.elementAnalysisResults() 
         self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Pipes.csv", f"Pipes_{datetime}")
         self.joinLayersAttributes(f"Pipes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)
+        
