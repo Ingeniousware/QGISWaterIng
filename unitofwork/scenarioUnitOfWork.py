@@ -63,5 +63,7 @@ class scenarioUnitOfWork():
 
     def newUpdateAll(self):
         self.syncSystem.initializeRepository()
+        self.syncSystem.synchronize_offline_changes()
+        self.syncSystem.synchronize_server_changes()
         
     

@@ -36,7 +36,8 @@ class WateringSync():
         self.repositories = repositories
 
     def initializeRepository(self):
-        ...
+        self.get_offline_changes()
+        self.get_server_changes()
 
     def get_server_changes(self):
         print("reach")

@@ -359,6 +359,7 @@ class AbstractRepository():
         return any(True for _ in query)
 
     def getOfflineUpdates(self, lastUpdated):
+        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.offlineChangesList = []
         self.getChangesFromOffline(lastUpdated)
         self.getDeletedElementsFromOffline(lastUpdated)
@@ -368,9 +369,9 @@ class AbstractRepository():
         for feature in self.Layer.getFeatures():
             if (feature['lastUpdate'] > lastUpdated):
                 if (len(str(feature['ID'])) == 10):
-                    self.offlineChanges.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
+                    self.offlineChangesList.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
                 if (len(str(feature['ID'])) == 36):
-                    self.offlineChanges.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
+                    self.offlineChangesList.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
 
     def getDeletedElementsFromOffline(self, lastUpdated):
         backup_layer_name = self.LayerName + "_backup.shp"
@@ -380,7 +381,7 @@ class AbstractRepository():
         
         for feature in layer.getFeatures():
             if feature['lastUpdate'] > lastUpdated:
-                self.offlineChanges.append(Change(self.Layer, feature['ID'], "delete_from_offline", []))
+                self.offlineChangesList.append(Change(self.Layer, feature['ID'], "delete_from_offline", []))
                     
     # NEW_SYNC_METHODS_END
     
