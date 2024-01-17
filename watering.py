@@ -478,11 +478,12 @@ class QGISPlugin_WaterIng:
         self.thread.start()
     
     def onSynchButtonClicked(self):
-        if not self.click_timer.isActive():
+        """if not self.click_timer.isActive():
             self.click_timer.start(self.double_click_threshold)
         else:
             self.click_timer.stop()  
-            self.synchDoubleClicked()
+            self.synchDoubleClicked()"""
+        self.scenarioUnitOFWork.syncSystem.get_server_changes()
             
     def synchSingleClicked(self):
         print("Synch button single Clicked!")
