@@ -2,6 +2,7 @@ import requests
 import os
 import uuid
 from ..watering_utils import WateringUtils
+from .syncSystem import Change
 from datetime import datetime
 import pytz
 
@@ -330,13 +331,14 @@ class AbstractRepository():
             self.ServerDict[element["serverKeyId"]] = attributes
     
     def processChange(self, change):
-        attributes_definitions = self.features[3:]
-        attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
-        attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
-        self.serverChangesDict[change["serverKeyId"]] = attributes
+        change_id = change["serverKeyId"]
+        if change['removed'] == False:
+            self.changesList.append(Change(self.Layer, change_id, "delete_server", []))
+        
     
     def getServerUpdates(self, data):
         self.serverChangesDict = {}
+        self.changesList = []
         for change in data:
             self.processChange(change)
         return self.serverChangesDict

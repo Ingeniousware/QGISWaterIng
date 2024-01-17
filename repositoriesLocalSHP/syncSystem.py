@@ -52,8 +52,8 @@ class WateringSync():
                 if data:
                     self.process_server_updates(repo, data)
         
-    def track_server_change(self, change_type, data):
-        change = Change(change_type, data)
+    def track_server_change(self, layer_id, feature_id, change_type, data):
+        change = Change(layer_id, feature_id, change_type, data)
         self.server_change_queue.append(change)
 
     def track_offline_change(self, feature_id, change_type, data):
@@ -80,6 +80,8 @@ class WateringSync():
     def process_server_updates(self, repo, data):
         changes_dict = repo.getServerUpdates(data)
         
+        for changes in data:
+            id = changes[""]
         
         
     def process_add_to_server(self, change):
