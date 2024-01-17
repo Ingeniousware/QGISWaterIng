@@ -53,17 +53,17 @@ class WateringSync():
             if response._content:
                 data = response.json()
                 if data:
-                    self.process_server_updates(repo, data)
+                    self.track_server_updates(repo, data)
                     
         print("change_queue: ", self.server_change_queue)
         
-    def track_server_change(self, layer_id, feature_id, change_type, data):
-        change = Change(layer_id, feature_id, change_type, data)
-        self.server_change_queue.append(change)
-
-    def track_offline_change(self, feature_id, change_type, data):
-        change = Change(feature_id, change_type, data)
-        self.offline_change_queue.append(change)
+    def track_server_updates(self, repo, data):
+        changes_list = repo.getServerUpdates(data)
+        self.server_change_queue.extend(changes_list)
+    
+    def track_offline_updates(self, repo):
+        changes_list = repo.getOfflineUpdates()
+        self.offline_change_queue.extend(changes_list)
         
     def synchronize_server_changes(self):
         while self.server_change_queue:
@@ -81,14 +81,6 @@ class WateringSync():
             process_method(change)
         except KeyError:
             print(f"Unknown change type: {change.change_type}")
-
-    def process_server_updates(self, repo, data):
-        changes_list = repo.getServerUpdates(data)
-        self.server_change_queue.extend(changes_list)
-    
-    def process_offline_updates(self, repo):
-        changes_list = repo.getOfflineUpdates()
-        self.offline_change_queue.extend(changes_list)
         
     def process_add_to_server(self, change):
         ...
