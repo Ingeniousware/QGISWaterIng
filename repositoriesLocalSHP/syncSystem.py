@@ -33,14 +33,15 @@ class WateringSync():
         self.token = token
         self.project_path = project_path
         self.scenarioFK = scenarioFK
-        self.repositories = repositories
+        
+        #Test variables
+        self.repo_copy = repositories.copy()
+        self.repo_copy.pop(3)
+        self.repo_copy.pop(5)
+        
+        self.repositories = self.repo_copy
 
     def initializeRepository(self):
-        try:
-            self.repositories.remove(self.pipeNodeRepository)
-            self.repositories.remove(self.waterMeterNodeRepository)
-        except ValueError:
-            print("Pipe and Water meter alredy not in")
         self.get_offline_changes()
         self.get_server_changes()
 
