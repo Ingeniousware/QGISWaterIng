@@ -100,7 +100,8 @@ class WateringSync():
         for repo in self.repositories:
             if change.layer_id == repo.LayerName and repo.connectorToServer:
                 repo.connectorToServer.addElementToServer(change.data)
-                    
+                break
+                
     def process_add_to_offline(self, change):
         print(f"Adding element in {change.layer_id}: {id} from server to offline")
         self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
@@ -123,7 +124,8 @@ class WateringSync():
         for repo in self.repositories:
             if change.layer_id == repo.LayerName and repo.connectorToServer:
                 repo.connectorToServer.addElementToServer(change.data)
-
+                break
+            
     def process_update_in_offline(self, change):
         print(f"Update element in {change.layer_id}: {id} from server to offline")
         
@@ -154,7 +156,8 @@ class WateringSync():
         for repo in self.repositories:
             if change.layer_id == repo.LayerName and repo.connectorToServer:
                 repo.connectorToServer.removeElementFromServer(change.layer_id)
-        
+                break
+            
     def process_delete_in_offline(self, change):
         print(f"Delete element in {change.layer_id}: {id} from server to offline")
         
