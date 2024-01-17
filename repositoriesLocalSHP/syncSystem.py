@@ -19,12 +19,12 @@ class WateringSync():
         self.offline_change_queue = deque()
         
         self.change_handlers = {
-            "add_server": self.process_add_to_server,
-            "add_offline": self.process_add_to_offline,
-            "update_server": self.process_update_on_server,
-            "update_offline": self.process_update_in_offline,
-            "delete_server": self.process_delete_on_server,
-            "delete_offline": self.process_delete_in_offline
+            "add_from_server": self.process_add_to_offline,
+            "add_from_offline": self.process_add_to_server,
+            "update_from_server": self.process_update_in_offline,
+            "update_from_offline": self.process_update_on_server,
+            "delete_from_server": self.process_delete_in_offline,
+            "delete_from_offline": self.process_delete_on_server
         }
         
         self.token = token
@@ -43,6 +43,7 @@ class WateringSync():
         test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
         self.repositories = self.repositories.copy()
         self.repositories.pop(5)
+        self.server_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:
@@ -51,6 +52,8 @@ class WateringSync():
                 data = response.json()
                 if data:
                     self.process_server_updates(repo, data)
+                    
+        print("change_queue: ", self.server_change_queue)
         
     def track_server_change(self, layer_id, feature_id, change_type, data):
         change = Change(layer_id, feature_id, change_type, data)
@@ -78,11 +81,8 @@ class WateringSync():
             print(f"Unknown change type: {change.change_type}")
 
     def process_server_updates(self, repo, data):
-        changes_dict = repo.getServerUpdates(data)
-        
-        print(change.change_typ for change in changes_dict)
-        #print(changes_dict)
-        
+        changes_list = repo.getServerUpdates(data)
+        self.server_change_queue.extend(changes_list)
         
     def process_add_to_server(self, change):
         ...

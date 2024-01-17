@@ -335,7 +335,7 @@ class AbstractRepository():
         change_id = change["serverKeyId"]
         
         if change['removed'] == True:
-            return Change(self.Layer, change_id, "delete_server", [])
+            return Change(self.Layer, change_id, "delete_from_server", [])
             
         attributes_definitions = self.features[3:]
         attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
@@ -343,9 +343,9 @@ class AbstractRepository():
         
         if self.elementExistsInOffline(change_id):
             print("exists in offline: ", change_id)
-            return Change(self.Layer, change_id, "update_server", attributes)
+            return Change(self.Layer, change_id, "update_from_server", attributes)
             
-        return Change(self.Layer, change_id, "add_server", attributes)
+        return Change(self.Layer, change_id, "add_from_server", attributes)
         
     def getServerUpdates(self, data):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
