@@ -20,6 +20,7 @@ class WateringSync():
         self.server_change_queue = deque()
         self.offline_change_queue = deque()
         
+        # Name = operation + responsible side
         self.change_handlers = {
             "add_from_server": self.process_add_to_offline,
             "add_from_offline": self.process_add_to_server,
@@ -67,14 +68,15 @@ class WateringSync():
         self.server_change_queue.clear()
         # End test variables
         
-        self.track_offline_updates()
+        for repo in self.repositories:
+            self.track_offline_updates(repo, test_lastUpdate)
         
     def track_server_updates(self, repo, data):
         changes_list = repo.getServerUpdates(data)
         self.server_change_queue.extend(changes_list)
     
-    def track_offline_updates(self, repo):
-        changes_list = repo.getOfflineUpdates()
+    def track_offline_updates(self, repo, lastUpdated):
+        changes_list = repo.getOfflineUpdates(lastUpdated)
         self.offline_change_queue.extend(changes_list)
         
     def synchronize_server_changes(self):

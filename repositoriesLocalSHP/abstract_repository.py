@@ -329,6 +329,7 @@ class AbstractRepository():
             attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
             attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
             self.ServerDict[element["serverKeyId"]] = attributes
+            
     # NEW_SYNC_METHODS_START
     
     def processChange(self, change):
@@ -357,9 +358,30 @@ class AbstractRepository():
         query = self.Layer.getFeatures(QgsFeatureRequest().setFilterExpression(expression))
         return any(True for _ in query)
 
-    def getOfflineUpdates(self):
-        ...
+    def getOfflineUpdates(self, lastUpdated):
+        self.offlineChangesList = []
+        self.getChangesFromOffline(lastUpdated)
+        self.getDeletedElementsFromOffline(lastUpdated)
+        return self.offlineChangesList
+    
+    def getChangesFromOffline(self, lastUpdated):
+        for feature in self.Layer.getFeatures():
+            if (feature['lastUpdate'] > lastUpdated):
+                if (len(str(feature['ID'])) == 10):
+                    self.offlineChanges.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
+                if (len(str(feature['ID'])) == 36):
+                    self.offlineChanges.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
+
+    def getDeletedElementsFromOffline(self, lastUpdated):
+        backup_layer_name = self.LayerName + "_backup.shp"
         
+        backup_file_path = os.path.dirname(self.StorageShapeFile) + "/" + backup_layer_name
+        layer = QgsVectorLayer(backup_file_path, "layer", "ogr")
+        
+        for feature in layer.getFeatures():
+            if feature['lastUpdate'] > lastUpdated:
+                self.offlineChanges.append(Change(self.Layer, feature['ID'], "delete_from_offline", []))
+                    
     # NEW_SYNC_METHODS_END
     
     def getOfflineDict(self, lastUpdated):
