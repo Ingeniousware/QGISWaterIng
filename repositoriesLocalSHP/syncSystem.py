@@ -10,7 +10,7 @@ class Change:
         self.layer_id = layer_id
         self.feature_id = feature_id
         self.change_type = change_type
-        self.change_data = data
+        self.data = data
         self.timestamp = WateringUtils.getDateTimeNow()
         
 class WateringSync():
@@ -36,17 +36,19 @@ class WateringSync():
         self.repositories = repositories
 
     def initializeRepository(self):
+        try:
+            self.repositories.remove(self.pipeNodeRepository)
+            self.repositories.remove(self.waterMeterNodeRepository)
+        except ValueError:
+            print("Pipe and Water meter alredy not in")
         self.get_offline_changes()
         self.get_server_changes()
 
     def get_server_changes(self):
-        print("reach")
         lastUpdate = WateringUtils.getLastUpdate()
 
         # Test variables
         test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
-        self.repositories = self.repositories.copy()
-        self.repositories.pop(5)
         self.server_change_queue.clear()
         # End test variables
         
@@ -57,25 +59,25 @@ class WateringSync():
                 if data:
                     self.track_server_updates(repo, data)
                     
-        print("change_queue: ", self.server_change_queue)
+        print("server_change_queue: ", self.server_change_queue)
 
     def get_offline_changes(self):
         lastUpdate = WateringUtils.getLastUpdate()
         
         # Test variables
         test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
-        self.repositories = self.repositories.copy()
-        self.repositories.pop(5)
-        self.server_change_queue.clear()
+        self.offline_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:
             self.track_offline_updates(repo, test_lastUpdate)
         
+        print("offline_change_queue: ", self.offline_change_queue)
+        
     def track_server_updates(self, repo, data):
         changes_list = repo.getServerUpdates(data)
         self.server_change_queue.extend(changes_list)
-    
+
     def track_offline_updates(self, repo, lastUpdated):
         changes_list = repo.getOfflineUpdates(lastUpdated)
         self.offline_change_queue.extend(changes_list)
@@ -99,13 +101,13 @@ class WateringSync():
         
     def process_add_to_server(self, change):
         for repo in self.repositories:
-            if change.layer_id == repo.LayerName and repo.connectorToServer:
+            if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
                 repo.connectorToServer.addElementToServer(change.data)
                 break
                 
     def process_add_to_offline(self, change):
         print(f"Adding element in {change.layer_id}: {id} from server to offline")
-        self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
+        self.layer = change.layer_id
         
         feature = QgsFeature(self.layer.fields())
         feature.setAttribute("ID", change.feature_id)
@@ -123,14 +125,14 @@ class WateringSync():
         
     def process_update_on_server(self, change):
         for repo in self.repositories:
-            if change.layer_id == repo.LayerName and repo.connectorToServer:
+            if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
                 repo.connectorToServer.addElementToServer(change.data)
                 break
             
     def process_update_in_offline(self, change):
         print(f"Update element in {change.layer_id}: {id} from server to offline")
         
-        self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
+        self.layer = change.layer_id
         self.layer.startEditing()
 
         attrs = {}
@@ -155,14 +157,14 @@ class WateringSync():
         
     def process_delete_on_server(self, change):
         for repo in self.repositories:
-            if change.layer_id == repo.LayerName and repo.connectorToServer:
+            if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
                 repo.connectorToServer.removeElementFromServer(change.layer_id)
                 break
             
     def process_delete_in_offline(self, change):
         print(f"Delete element in {change.layer_id}: {id} from server to offline")
         
-        self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
+        self.layer = change.layer_id
         id_to_delete = self.get_feature_by_id(change.feature_id)
         
         self.layer.startEditing()
