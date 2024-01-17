@@ -120,7 +120,9 @@ class WateringSync():
         self.layer.commitChanges()
         
     def process_update_on_server(self, change):
-        ...
+        for repo in self.repositories:
+            if change.layer_id == repo.LayerName and repo.connectorToServer:
+                repo.connectorToServer.addElementToServer(change.data)
 
     def process_update_in_offline(self, change):
         print(f"Update element in {change.layer_id}: {id} from server to offline")
