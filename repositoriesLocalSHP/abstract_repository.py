@@ -356,6 +356,9 @@ class AbstractRepository():
         expression = f'"ID" = \'{id}\''
         query = self.Layer.getFeatures(QgsFeatureRequest().setFilterExpression(expression))
         return any(True for _ in query)
+
+    def getOfflineUpdates(self):
+        ...
         
     # NEW_SYNC_METHODS_END
     

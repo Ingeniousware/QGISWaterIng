@@ -56,6 +56,18 @@ class WateringSync():
                     self.track_server_updates(repo, data)
                     
         print("change_queue: ", self.server_change_queue)
+
+    def get_offline_changes(self):
+        lastUpdate = WateringUtils.getLastUpdate()
+        
+        # Test variables
+        test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
+        self.repositories = self.repositories.copy()
+        self.repositories.pop(5)
+        self.server_change_queue.clear()
+        # End test variables
+        
+        self.track_offline_updates()
         
     def track_server_updates(self, repo, data):
         changes_list = repo.getServerUpdates(data)
