@@ -97,8 +97,10 @@ class WateringSync():
             print(f"Unknown change type: {change.change_type}")
         
     def process_add_to_server(self, change):
-        ...
-
+        for repo in self.repositories:
+            if change.layer_id == repo.LayerName and repo.connectorToServer:
+                repo.connectorToServer.addElementToServer(change.data)
+                    
     def process_add_to_offline(self, change):
         print(f"Adding element in {change.layer_id}: {id} from server to offline")
         self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
