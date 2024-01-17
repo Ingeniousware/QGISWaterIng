@@ -90,13 +90,51 @@ class WateringSync():
         ...
 
     def process_add_to_offline(self, change):
-        self.add_element_from_server_to_offline(change)
+        print(f"Adding element in {change.layer_id}: {id} from server to offline")
+        self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
+        
+        feature = QgsFeature(self.layer.fields())
+        feature.setAttribute("ID", change.feature_id)
+        feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
+        
+        self.layer.startEditing()
+        
+        for i, field in enumerate(self.get_field_definitions()):
+            feature[field] = change.data[i]
+        
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+        
+        self.layer.addFeature(feature)
+        self.layer.commitChanges()
         
     def process_update_on_server(self, change):
         ...
 
     def process_update_in_offline(self, change):
-        ...
+        print(f"Update element in {change.layer_id}: {id} from server to offline")
+        
+        self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
+        self.layer.startEditing()
+
+        attrs = {}
+
+        field_definitions = self.get_field_definitions()
+        
+        for i in range(field_definitions):
+            field_index = self.layer.fields().indexOf(field_definitions[i])
+            attrs[field_index] = change.data[i]
+
+        last_update_index = self.layer.fields().indexOf('lastUpdate')
+        attrs[last_update_index] = WateringUtils.getDateTimeNow()
+
+        feature = self.get_feature_by_id(change.id)
+        
+        self.layer.dataProvider().changeAttributeValues({feature.id(): attrs})
+
+        new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
+        self.layer.dataProvider().changeGeometryValues({feature.id(): new_geometry})
+
+        self.layer.commitChanges()
         
     def process_delete_on_server(self, change):
         ...
@@ -115,27 +153,19 @@ class WateringSync():
            for change_dict in changes_list:
                change = Change(**change_dict)
                self.offline_change_queue.append(change)
-               
-    def add_element_from_server_to_offline(self, change):
-        print(f"Adding element in {change.layer_id}: {id}")
-        self.layer = QgsProject.instance().mapLayersByName(change.layer_id)[0]
-        
-        feature = QgsFeature(self.layer.fields())
-        feature.setAttribute("ID", change.feature_id)
-        feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
-        
-        self.layer.startEditing()
-        
-        for i, field in enumerate(self.get_field_definitions()):
-            feature[field] = change.data[i]
-        
-        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
-        
-        self.layer.addFeature(feature)
-        self.layer.commitChanges()
     
     def get_field_definitions(self):
         if not self.layer: return []
         fields = self.layer.fields()
         return [field.name() for field in fields]
     
+    def get_feature_by_id(self, id):
+        expression = f'"ID" = \'{id}\''
+        request = QgsFeatureRequest(expression)
+        matching_features = self.Layer.getFeatures(request)
+        
+        feature_id = None
+        for feature in matching_features:
+            feature_id = feature.id(); break
+
+        return feature_id
