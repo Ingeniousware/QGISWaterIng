@@ -34,7 +34,7 @@ class WateringSync():
         self.project_path = project_path
         self.scenarioFK = scenarioFK
         
-        #Test variables
+        #Test variables 
         self.repo_copy = repositories.copy()
         self.repo_copy.pop(3)
         self.repo_copy.pop(5)
@@ -140,7 +140,7 @@ class WateringSync():
 
         field_definitions = self.get_field_definitions()
         
-        for i in range(field_definitions):
+        for i in range(len(field_definitions)):
             field_index = self.layer.fields().indexOf(field_definitions[i])
             attrs[field_index] = change.data[i]
 
@@ -187,7 +187,8 @@ class WateringSync():
     def get_field_definitions(self):
         if not self.layer: return []
         fields = self.layer.fields()
-        return [field.name() for field in fields]
+        definitions = [field.name() for field in fields]
+        return definitions[1:-1]
     
     def get_feature_by_id(self, id):
         expression = f'"ID" = \'{id}\''
