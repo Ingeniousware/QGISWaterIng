@@ -191,12 +191,12 @@ class WateringSync():
         return definitions[1:-1]
     
     def get_feature_by_id(self, id):
-        expression = f'"ID" = \'{id}\''
+        expression = QgsExpression(f'"ID" = \'{id}\'')
         request = QgsFeatureRequest(expression)
-        matching_features = self.Layer.getFeatures(request)
+        matching_features = self.layer.getFeatures(request)
         
-        feature_id = None
+        feature_ = None
         for feature in matching_features:
-            feature_id = feature.id(); break
+            feature_ = feature; break
 
-        return feature_id
+        return feature_
