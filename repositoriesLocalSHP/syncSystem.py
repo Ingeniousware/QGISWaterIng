@@ -147,7 +147,7 @@ class WateringSync():
         last_update_index = self.layer.fields().indexOf('lastUpdate')
         attrs[last_update_index] = WateringUtils.getDateTimeNow()
 
-        feature = self.get_feature_by_id(change.id)
+        feature = self.get_feature_by_id(change.feature_id)
         
         self.layer.dataProvider().changeAttributeValues({feature.id(): attrs})
 
