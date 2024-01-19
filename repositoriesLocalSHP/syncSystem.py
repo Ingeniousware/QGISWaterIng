@@ -147,12 +147,12 @@ class WateringSync():
         last_update_index = self.layer.fields().indexOf('lastUpdate')
         attrs[last_update_index] = WateringUtils.getDateTimeNow()
 
-        feature = self.get_feature_by_id(change.feature_id)
+        feature_id = self.get_feature_by_id(change.feature_id).id()
         
-        self.layer.dataProvider().changeAttributeValues({feature.id(): attrs})
+        self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
 
         new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
-        self.layer.dataProvider().changeGeometryValues({feature.id(): new_geometry})
+        self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
 
         self.layer.commitChanges()
         
@@ -166,10 +166,10 @@ class WateringSync():
         print(f"Delete element in {change.layer_id}: {id} from server to offline")
         
         self.layer = change.layer_id
-        id_to_delete = self.get_feature_by_id(change.feature_id)
+        feature_to_delete = self.get_feature_by_id(change.feature_id)
         
         self.layer.startEditing()
-        self.layer.deleteFeatures(id_to_delete)
+        self.layer.deleteFeatures(feature_to_delete.id())
         self.layer.commitChanges()
 
     def save_offline_changes_to_project(self):
