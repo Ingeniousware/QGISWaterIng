@@ -38,6 +38,7 @@ class WateringSync():
         self.repo_copy = repositories.copy()
         self.repo_copy.pop(3)
         self.repo_copy.pop(5)
+        self.lastUpdate = WateringUtils.getLastUpdate()
         
         self.repositories = self.repo_copy
 
@@ -46,15 +47,14 @@ class WateringSync():
         self.get_server_changes()
 
     def get_server_changes(self):
-        lastUpdate = WateringUtils.getLastUpdate()
-
+        print("self.lastUpdate: ", self.lastUpdate)
         # Test variables
         test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
         self.server_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:
-            response = repo.loadChanges(test_lastUpdate)
+            response = repo.loadChanges(self.lastUpdate)
             if response._content:
                 data = response.json()
                 if data:
@@ -63,15 +63,14 @@ class WateringSync():
         print("server_change_queue: ", self.server_change_queue)
 
     def get_offline_changes(self):
-        lastUpdate = WateringUtils.getLastUpdate()
-        
+        print("self.lastUpdate: ", self.lastUpdate)
         # Test variables
         test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
         self.offline_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:
-            self.track_offline_updates(repo, test_lastUpdate)
+            self.track_offline_updates(repo, self.lastUpdate)
         
         print("offline_change_queue: ", self.offline_change_queue)
         

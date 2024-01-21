@@ -50,7 +50,7 @@ class scenarioUnitOfWork():
             element.initializeRepository()
             
     def updateAll(self):
-        lastUpdate = WateringUtils.getLastUpdate()
+        lastUpdate = WateringUtils.getLastUpdate(self.scenarioFK)
         keyUpdate = WateringUtils.scenarioKeyLastUpdate()
         
         for element in self.list_of_elements:
@@ -63,4 +63,6 @@ class scenarioUnitOfWork():
         self.syncSystem.synchronize_offline_changes()
         self.syncSystem.synchronize_server_changes()
         
+        keyUpdate = WateringUtils.scenarioKeyLastUpdate(self.scenarioFK)
+        WateringUtils.setProjectMetadata(keyUpdate, str(WateringUtils.getDateTimeNow()))
     
