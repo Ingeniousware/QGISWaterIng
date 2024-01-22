@@ -51,7 +51,6 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             serverKeyId = feature["ID"]
             
         name = feature["Name"] if feature["Name"] else WateringUtils.generateRandomElementName("P")
-        last_mdf = WateringUtils.getDateTimeNow()
         description = feature["Descript"] if feature["Descript"] else ""
         diameterInt = feature["Diameter"] if feature["Diameter"] else 0.2
         roughnessAbsolute = feature["Rough.A"] if feature["Rough.A"] else 0.045
@@ -73,7 +72,6 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             
         elementJSON = {
             "serverKeyId": "{}".format(serverKeyId),
-            "lastModified": "{}".format(last_mdf),
             "scenarioFK": "{}".format(self.ScenarioFK),
             "nodeUpFK": "{}".format(nodeUpFK),
             "nodeUpName": "{}".format(nodeUpName),
@@ -103,6 +101,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             print("pipe is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
+        print("pipes server response: ", serverResponse.text)
         if serverResponse.status_code == 200:
             print("Water Pipe Node was sent succesfully to the server")
             
