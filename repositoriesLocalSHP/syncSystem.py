@@ -37,15 +37,15 @@ class WateringSync():
     def initializeRepository(self):
         ...
 
-    def get_server_changes(self):
-        print("self.lastUpdate: ", self.lastUpdate)
+    def get_server_changes(self, lastUpdated):
+        print("self.lastUpdate: ", lastUpdated)
         # Test variables
         #test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
         #self.server_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:
-            response = repo.loadChanges(self.lastUpdate)
+            response = repo.loadChanges(lastUpdated)
             if response._content:
                 data = response.json()
                 if data:
@@ -53,15 +53,15 @@ class WateringSync():
                     
         print("server_change_queue: ", self.server_change_queue)
 
-    def get_offline_changes(self):
-        print("self.lastUpdate: ", self.lastUpdate)
+    def get_offline_changes(self, lastUpdated):
+        print("self.lastUpdate: ", lastUpdated)
         # Test variables
         #test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
         #self.offline_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:
-            self.track_offline_updates(repo, self.lastUpdate)
+            self.track_offline_updates(repo, lastUpdated)
         
         print("offline_change_queue: ", self.offline_change_queue)
         
@@ -74,11 +74,17 @@ class WateringSync():
         self.offline_change_queue.extend(changes_list)
 
     def synchronize(self):
-        self.lastUpdate = WateringUtils.getLastUpdate()
-        self.get_offline_changes()
-        self.get_server_changes()
+        keyUpdate = WateringUtils.scenarioKeyLastUpdate(self.scenarioFK)
+        lastUpdated = WateringUtils.getLastUpdate(keyUpdate)
+        
+        print("lastUpdated: ", lastUpdated)
+        self.get_offline_changes(lastUpdated)
+        self.get_server_changes(lastUpdated)
         self.synchronize_server_changes()
         self.synchronize_offline_changes()
+        
+        now = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        WateringUtils.setProjectMetadata(keyUpdate, now)
         
     def synchronize_server_changes(self):
         while self.server_change_queue:
@@ -110,22 +116,7 @@ class WateringSync():
         if self.layer.name() == "watering_pipes":
             self.handle_add_to_line_layer(change)
             return
-        
         self.handle_add_point_layer(change)
-        
-        feature = QgsFeature(self.layer.fields())
-        feature.setAttribute("ID", change.feature_id)
-        feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
-        
-        self.layer.startEditing()
-        
-        for i, field in enumerate(self.get_field_definitions()):
-            feature[field] = change.data[i]
-        
-        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
-        
-        self.layer.addFeature(feature)
-        self.layer.commitChanges()
         
     def process_update_on_server(self, change):
         for repo in self.repositories:
@@ -134,37 +125,17 @@ class WateringSync():
                 break
             
     def process_update_in_offline(self, change):
-        print("Layer: ", change.layer_id.name())
+        layer_name = change.layer_id.name()
+        print("Layer: ", layer_name)
         print(f"Update element in {change.layer_id}: {id} from server to offline")
         
         self.layer = change.layer_id
         
-        if self.layer.name() == "watering_pipes":
+        if layer_name == "watering_pipes":
             self.handle_update_line_layer(change)
-        else: 
-            self.handle_update_point_layer(change)
+            return 
         
-        self.layer.startEditing()
-
-        attrs = {}
-
-        field_definitions = self.get_field_definitions()
-        
-        for i in range(len(field_definitions)):
-            field_index = self.layer.fields().indexOf(field_definitions[i])
-            attrs[field_index] = change.data[i]
-
-        last_update_index = self.layer.fields().indexOf('lastUpdate')
-        attrs[last_update_index] = WateringUtils.getDateTimeNow()
-
-        feature_id = self.get_feature_by_id(change.feature_id).id()
-        
-        self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
-
-        new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
-        self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
-
-        self.layer.commitChanges()
+        self.handle_update_point_layer(change)
         
     def process_delete_on_server(self, change):
         for repo in self.repositories:
@@ -216,11 +187,43 @@ class WateringSync():
         ...
     
     def handle_update_point_layer(self, change):
-        ...
+        self.layer.startEditing()
+
+        attrs = {}
+
+        field_definitions = self.get_field_definitions()
+        
+        for i in range(len(field_definitions)):
+            field_index = self.layer.fields().indexOf(field_definitions[i])
+            attrs[field_index] = change.data[i]
+
+        last_update_index = self.layer.fields().indexOf('lastUpdate')
+        attrs[last_update_index] = WateringUtils.getDateTimeNow()
+
+        feature_id = self.get_feature_by_id(change.feature_id).id()
+        
+        self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
+
+        new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
+        self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
+
+        self.layer.commitChanges()
     
     def handle_add_line_layer(self, change):
         ...
         
     def handle_add_point_layer(self, change):
-        ...
+        feature = QgsFeature(self.layer.fields())
+        feature.setAttribute("ID", change.feature_id)
+        feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
+        
+        self.layer.startEditing()
+        
+        for i, field in enumerate(self.get_field_definitions()):
+            feature[field] = change.data[i]
+        
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+        
+        self.layer.addFeature(feature)
+        self.layer.commitChanges()
         

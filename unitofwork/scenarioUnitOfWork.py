@@ -59,10 +59,5 @@ class scenarioUnitOfWork():
         WateringUtils.setProjectMetadata(keyUpdate, str(WateringUtils.getDateTimeNow()))
 
     def newUpdateAll(self):
-        self.syncSystem.initializeRepository()
         self.syncSystem.synchronize()
-        
-        keyUpdate = WateringUtils.scenarioKeyLastUpdate(self.scenarioFK)
-        now = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
-        WateringUtils.setProjectMetadata(keyUpdate, now)
     

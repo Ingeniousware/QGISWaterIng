@@ -280,10 +280,11 @@ class WateringUtils():
     def scenarioKeyLastUpdate(scenarioFK):
         return scenarioFK + "last_general_update"
     
-    def getLastUpdate():
-        keyUpdate = WateringUtils.scenarioKeyLastUpdate(WateringUtils.getScenarioId())
+    def getLastUpdate(keyUpdate):
         date = WateringUtils.getProjectMetadata(keyUpdate)
 
+        print("date: ", date)
+        
         if date != "default text":
             return date
         else:
