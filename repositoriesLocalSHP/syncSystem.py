@@ -1,5 +1,5 @@
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
-from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
+from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
 from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
 from ..watering_utils import WateringUtils
 from .change import Change
@@ -113,10 +113,23 @@ class WateringSync():
         print(f"Adding element in {change.layer_id}: {id} from server to offline")
         self.layer = change.layer_id
         
+        feature = QgsFeature(self.layer.fields())
+        feature.setAttribute("ID", change.feature_id)
+        
         if self.layer.name() == "watering_pipes":
-            self.handle_add_to_line_layer(change)
-            return
-        self.handle_add_point_layer(change)
+            feature.setGeometry(QgsGeometry(QgsLineString(change.data[-1])))
+        else:
+            feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
+        
+        self.layer.startEditing()
+        
+        for i, field in enumerate(self.get_field_definitions()):
+            feature[field] = change.data[i]
+        
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
+        
+        self.layer.addFeature(feature)
+        self.layer.commitChanges()
         
     def process_update_on_server(self, change):
         for repo in self.repositories:
@@ -128,14 +141,34 @@ class WateringSync():
         layer_name = change.layer_id.name()
         print("Layer: ", layer_name)
         print(f"Update element in {change.layer_id}: {id} from server to offline")
-        
         self.layer = change.layer_id
         
-        if layer_name == "watering_pipes":
-            self.handle_update_line_layer(change)
-            return 
+        self.layer.startEditing()
+
+        attrs = {}
+
+        field_definitions = self.get_field_definitions()
         
-        self.handle_update_point_layer(change)
+        for i in range(len(field_definitions)):
+            field_index = self.layer.fields().indexOf(field_definitions[i])
+            attrs[field_index] = change.data[i]
+
+        last_update_index = self.layer.fields().indexOf('lastUpdate')
+        attrs[last_update_index] = WateringUtils.getDateTimeNow()
+
+        feature_id = self.get_feature_by_id(change.feature_id).id()
+        
+        self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
+        
+        if self.layer.name() == "watering_pipes":
+            new_geometry = QgsGeometry(QgsLineString(change.data[-1]))
+        else:
+            new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
+            
+        self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
+
+        self.layer.commitChanges()
+        
         
     def process_delete_on_server(self, change):
         for repo in self.repositories:
@@ -210,11 +243,25 @@ class WateringSync():
         self.layer.commitChanges()
     
     def handle_add_line_layer(self, change):
-        ...
+        feature = QgsFeature(self.layer.fields())
+        
+        feature.setAttribute("ID", change.feature_id)
+        feature.setGeometry(change.data[-1])
+        
+        self.layer.startEditing()
+        
+        for i, field in enumerate(self.get_field_definitions()):
+            feature[field] = change.data[i]
+
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
+         
+        self.layer.addFeature(feature)
+        self.layer.commitChanges()
         
     def handle_add_point_layer(self, change):
         feature = QgsFeature(self.layer.fields())
         feature.setAttribute("ID", change.feature_id)
+        
         feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
         
         self.layer.startEditing()
@@ -222,7 +269,7 @@ class WateringSync():
         for i, field in enumerate(self.get_field_definitions()):
             feature[field] = change.data[i]
         
-        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
         
         self.layer.addFeature(feature)
         self.layer.commitChanges()

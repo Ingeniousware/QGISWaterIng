@@ -337,14 +337,15 @@ class AbstractRepository():
         
         if change['removed'] == True:
             return Change(self.Layer, change_id, "delete_from_server", [])
-            
-        attributes_definitions = self.features[3:]
-        attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
         
         if self.LayerName == "watering_pipes":
+            attributes_definitions = self.features[1:]
+            attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
             points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in change["vertices"]]
             attributes.append(points)
         else:
+            attributes_definitions = self.features[3:]
+            attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
             attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
         
         if self.elementExistsInOffline(change_id):
