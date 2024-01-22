@@ -359,17 +359,11 @@ class AbstractRepository():
         return any(True for _ in query)
 
     def getOfflineUpdates(self, lastUpdated):
-        print("1")
         lastUpdated = self.adjustedDatetime(lastUpdated)
-        print("2")
-        
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.offlineChangesList = []
         self.getChangesFromOffline(lastUpdated)
-        print("3")
-        
         self.getDeletedElementsFromOffline(lastUpdated)
-        print("4")
         
         return self.offlineChangesList
     
