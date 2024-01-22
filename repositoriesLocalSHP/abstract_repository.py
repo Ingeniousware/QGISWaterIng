@@ -9,7 +9,7 @@ import pytz
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
 from PyQt5.QtCore import QFileInfo, QDateTime
-from PyQt5.QtCore import QDateTime, Qt
+from PyQt5.QtCore import QDateTime, Qt, QVariant
 from PyQt5.QtGui import QColor
 from qgis.utils import iface
 
@@ -359,11 +359,18 @@ class AbstractRepository():
         return any(True for _ in query)
 
     def getOfflineUpdates(self, lastUpdated):
+        print("1")
         lastUpdated = self.adjustedDatetime(lastUpdated)
+        print("2")
+        
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.offlineChangesList = []
         self.getChangesFromOffline(lastUpdated)
+        print("3")
+        
         self.getDeletedElementsFromOffline(lastUpdated)
+        print("4")
+        
         return self.offlineChangesList
     
     def getChangesFromOffline(self, lastUpdated):
@@ -522,7 +529,7 @@ class AbstractRepository():
     
     def adjustedDatetime(self, dt_str):
         #return datetime.fromisoformat(dt_str.replace("Z", ""))
-        return QDateTime.fromString(dt_str, Qt.ISODateWithMs)
+        return QDateTime.fromString(str(dt_str), Qt.ISODateWithMs)
     
     def createBackupLayer(self):
         name = self.LayerName + "_backup"
