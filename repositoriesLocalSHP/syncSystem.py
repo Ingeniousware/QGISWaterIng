@@ -30,15 +30,12 @@ class WateringSync():
         #Test variables 
         self.repo_copy = repositories.copy()
         self.repo_copy.pop(3)
-        self.repo_copy.pop(5)
+        #self.repo_copy.pop(5)
         
         self.repositories = self.repo_copy
 
     def initializeRepository(self):
-        self.lastUpdate = WateringUtils.getLastUpdate()
-        print("SELF LAST UPDATE: ", self.lastUpdate)
-        self.get_offline_changes()
-        self.get_server_changes()
+        ...
 
     def get_server_changes(self):
         print("self.lastUpdate: ", self.lastUpdate)
@@ -75,6 +72,13 @@ class WateringSync():
     def track_offline_updates(self, repo, lastUpdated):
         changes_list = repo.getOfflineUpdates(lastUpdated)
         self.offline_change_queue.extend(changes_list)
+
+    def synchronize(self):
+        self.lastUpdate = WateringUtils.getLastUpdate()
+        self.get_offline_changes()
+        self.get_server_changes()
+        self.synchronize_server_changes()
+        self.synchronize_offline_changes()
         
     def synchronize_server_changes(self):
         while self.server_change_queue:
@@ -103,6 +107,12 @@ class WateringSync():
         print(f"Adding element in {change.layer_id}: {id} from server to offline")
         self.layer = change.layer_id
         
+        if self.layer.name() == "watering_pipes":
+            self.handle_add_to_line_layer(change)
+            return
+        
+        self.handle_add_point_layer(change)
+        
         feature = QgsFeature(self.layer.fields())
         feature.setAttribute("ID", change.feature_id)
         feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
@@ -124,9 +134,16 @@ class WateringSync():
                 break
             
     def process_update_in_offline(self, change):
+        print("Layer: ", change.layer_id.name())
         print(f"Update element in {change.layer_id}: {id} from server to offline")
         
         self.layer = change.layer_id
+        
+        if self.layer.name() == "watering_pipes":
+            self.handle_update_line_layer(change)
+        else: 
+            self.handle_update_point_layer(change)
+        
         self.layer.startEditing()
 
         attrs = {}
@@ -194,3 +211,16 @@ class WateringSync():
             feature_ = feature; break
 
         return feature_
+
+    def handle_update_line_layer(self, change):
+        ...
+    
+    def handle_update_point_layer(self, change):
+        ...
+    
+    def handle_add_line_layer(self, change):
+        ...
+        
+    def handle_add_point_layer(self, change):
+        ...
+        
