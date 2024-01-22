@@ -340,13 +340,21 @@ class AbstractRepository():
             
         attributes_definitions = self.features[3:]
         attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
-        attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
+        
+        if self.LayerName == "watering_pipes":
+            points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in change["vertices"]]
+            attributes.append(points)
+        else:
+            attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
         
         if self.elementExistsInOffline(change_id):
             print("exists in offline: ", change_id)
             return Change(self.Layer, change_id, "update_from_server", attributes)
             
         return Change(self.Layer, change_id, "add_from_server", attributes)
+    
+    def processChangeLineLayer(self, change):
+        ...
         
     def getServerUpdates(self, data):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
