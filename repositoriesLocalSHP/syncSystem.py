@@ -2,16 +2,9 @@ from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimple
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
 from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
 from ..watering_utils import WateringUtils
+from .change import Change
 from collections import deque
 import json
-
-class Change:
-    def __init__(self, layer_id, feature_id, change_type, data):
-        self.layer_id = layer_id
-        self.feature_id = feature_id
-        self.change_type = change_type
-        self.data = data
-        self.timestamp = WateringUtils.getDateTimeNow()
         
 class WateringSync():
     def __init__(self,token, project_path, scenarioFK, 

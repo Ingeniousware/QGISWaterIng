@@ -21,7 +21,7 @@ import string
 import pytz
 import socket
 
-from .repositoriesLocalSHP.syncSystem import Change
+from .repositoriesLocalSHP.change import Change
 
 #serverInput
 
@@ -250,7 +250,11 @@ class WateringUtils():
 
         layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
+        full_feature = layer.getFeature(feature_id)
         
+        change = Change(layer, feature_id, "update_from_offline", full_feature)
+        
+        sync.offline_change_queue.append(change)
         
     def onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync):
         with layer.edit():
@@ -258,6 +262,12 @@ class WateringUtils():
             feature['lastMdf'] = WateringUtils.getDateTimeNow()
             layer.updateFeature(feature)
             
+        full_feature = layer.getFeature(feature_id)
+            
+        change = Change(layer, feature_id, "update_from_offline", full_feature)
+        
+        sync.offline_change_queue.append(change)
+        
     def isInternetConnection():
         try:
         # try to connect to Google's DNS server

@@ -2,7 +2,7 @@ import requests
 import os
 import uuid
 from ..watering_utils import WateringUtils
-from .syncSystem import Change
+from .change import Change
 from datetime import datetime
 import pytz
 
