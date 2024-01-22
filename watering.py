@@ -199,12 +199,12 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         
         # Synch behavior: force total synch if clicked twice, enable/disable real time synch if clicked once
-        self.synchClicks = 0
+        """self.synchClicks = 0
         self.synchAction.setCheckable(True)
         self.click_timer = QTimer()
         self.click_timer.setSingleShot(True)
         self.click_timer.timeout.connect(self.synchSingleClicked)
-        self.double_click_threshold = 500
+        self.double_click_threshold = 500"""
         
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/clean.svg'
         self.deleteCacheFromWaterIng = self.add_action(
