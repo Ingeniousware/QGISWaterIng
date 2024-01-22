@@ -33,7 +33,7 @@ class TankNodeRepository(AbstractRepository):
             ("Min. Vol.", QVariant.Double),
             ("Diameter", QVariant.Double),
             ("Overflow", QVariant.Bool),
-            ("lastUpdate", QVariant.DateTime)
+            ("lastUpdate", QVariant.String)
         ]
         
         self.LayerType = "Point?crs="
