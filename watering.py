@@ -632,13 +632,13 @@ class QGISPlugin_WaterIng:
             real_layer = QgsProject.instance().mapLayersByName(layer)[0]
             
             real_layer.attributeValueChanged.connect(
-                        lambda feature_id, attribute_index, new_value, layer=real_layer: 
-                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                        lambda feature_id, attribute_index, new_value, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem: 
+                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer, sync)
                 )
             
             real_layer.geometryChanged.connect(
-                    lambda feature_id, old_geometry, new_geometry, layer=real_layer: 
-                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+                    lambda feature_id, old_geometry, new_geometry, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync)
                 )
     
     def onSynchFinished(self):

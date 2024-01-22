@@ -359,6 +359,7 @@ class AbstractRepository():
         return any(True for _ in query)
 
     def getOfflineUpdates(self, lastUpdated):
+        lastUpdated = self.adjustedDatetime(lastUpdated)
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.offlineChangesList = []
         self.getChangesFromOffline(lastUpdated)
@@ -367,7 +368,8 @@ class AbstractRepository():
     
     def getChangesFromOffline(self, lastUpdated):
         for feature in self.Layer.getFeatures():
-            if (feature['lastUpdate'] > lastUpdated):
+            adjusted_feature_lastUpdated = self.adjustedDatetime(feature['lastUpdate'])
+            if (adjusted_feature_lastUpdated > lastUpdated):
                 if (len(str(feature['ID'])) == 10):
                     self.offlineChangesList.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
                 if (len(str(feature['ID'])) == 36):

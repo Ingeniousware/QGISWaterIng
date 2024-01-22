@@ -21,6 +21,8 @@ import string
 import pytz
 import socket
 
+from .repositoriesLocalSHP.syncSystem import Change
+
 #serverInput
 
 class WateringUtils():  
@@ -231,7 +233,7 @@ class WateringUtils():
         
         return True if data == "default text" else False
     
-    def onChangesInAttribute(feature_id, attribute_index, new_value, layer):
+    def onChangesInAttribute(feature_id, attribute_index, new_value, layer, sync):
         print("----CHANGING FEATURE----")
         print(f"Layer: {layer.name()}")
         print(f"Feature ID: {feature_id}")
@@ -248,7 +250,9 @@ class WateringUtils():
 
         layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
-    def onGeometryChange(feature_id, old_geometry, new_geometry, layer):
+        
+        
+    def onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync):
         with layer.edit():
             feature = layer.getFeature(feature_id)
             feature['lastMdf'] = WateringUtils.getDateTimeNow()
