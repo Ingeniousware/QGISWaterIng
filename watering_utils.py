@@ -288,7 +288,8 @@ class WateringUtils():
         if date != "default text":
             return date
         else:
-            return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+            #return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+            return '1800-01-01T01:00:00.0000000Z'
         
 class WateringTimer():
     timer = None 
