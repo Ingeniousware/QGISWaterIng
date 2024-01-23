@@ -127,7 +127,7 @@ class AbstractRepository():
             
             #print("Datetime: ", datetime.now())
             
-            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
+            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
             #self.currentLayer.dataProvider().addFeature(feature)
             self.toAddFeatures.append(feature)
         except ValueError:
@@ -152,7 +152,7 @@ class AbstractRepository():
             for i in range(len(self.field_definitions) - 1):
                 feature.setAttribute(self.field_definitions[i][0], element[i+1])
 
-            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
+            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
 
 
             layer.addFeature(feature)
@@ -183,7 +183,7 @@ class AbstractRepository():
         feature.setAttribute("ID", temp_id)
         
         self.setDefaultValues(feature)
-        feature.setAttribute("Last Mdf", str(WateringUtils.getDateTimeNow()))
+        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
         
         layer.addFeature(feature)
         
@@ -425,7 +425,7 @@ class AbstractRepository():
         for i, field in enumerate(self.FieldDefinitions):
             feature[field] = self.ServerDict[id][i]
         
-        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
         
         self.Layer.addFeature(feature)
         self.Layer.commitChanges()

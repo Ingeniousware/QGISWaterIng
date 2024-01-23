@@ -88,7 +88,7 @@ class PipeNodeRepository(AbstractRepository):
             for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
                 feature.setAttribute(self.field_definitions[i][0], element[i])
 
-            feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())            
+            feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))            
             self.currentLayer.addFeature(feature)
 
             self.currentLayer.commitChanges()
@@ -123,7 +123,7 @@ class PipeNodeRepository(AbstractRepository):
 
             #feature['lastUpdate'] = WateringUtils.getDateTimeNow()
             
-            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow())
+            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
             
             print("Adding feature ", feature, "to server")
             
@@ -183,7 +183,7 @@ class PipeNodeRepository(AbstractRepository):
         self.setDefaultValues(feature)
         
         feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
-        feature.setAttribute("Last Mdf", str(WateringUtils.getDateTimeNow()))
+        feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
         
         id = str(uuid.uuid4())
         temp_id = id[:10]
@@ -346,7 +346,7 @@ class PipeNodeRepository(AbstractRepository):
                         attrs[field_index] = self.PipeServerDict[id][i]
                         
                     last_update_index = self.Layer.fields().indexOf('lastUpdate')
-                    attrs[last_update_index] = str(WateringUtils.getDateTimeNow())
+                    attrs[last_update_index] = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
 
                     self.Layer.dataProvider().changeAttributeValues({feature.id(): attrs})
                     #update geometry

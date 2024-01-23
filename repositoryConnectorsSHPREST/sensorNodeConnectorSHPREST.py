@@ -105,7 +105,7 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                         last_update_idx = layer.fields().indexOf('lastUpdate')
 
                         new_id_value = str(serverKeyId)
-                        new_last_update_value = str(WateringUtils.getDateTimeNow())
+                        new_last_update_value = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
 
                         attr_updates[feat_id] = {id_idx: new_id_value, last_update_idx: new_last_update_value}
 

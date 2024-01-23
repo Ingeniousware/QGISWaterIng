@@ -106,7 +106,7 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     if feat["ID"] == id_element:
                         c_feature = feat
                         c_feature.setAttribute(c_feature.fieldNameIndex("ID"), str(serverKeyId))
-                        c_feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
+                        c_feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
                         layer.updateFeature(c_feature)
                         print("Feature Found")
                         break

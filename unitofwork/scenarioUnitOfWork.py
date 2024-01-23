@@ -56,7 +56,7 @@ class scenarioUnitOfWork():
         for element in self.list_of_elements:
            element.generalUpdate(lastUpdate)
     
-        WateringUtils.setProjectMetadata(keyUpdate, str(WateringUtils.getDateTimeNow()))
+        WateringUtils.setProjectMetadata(keyUpdate, WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
 
     def newUpdateAll(self):
         self.syncSystem.synchronize()
