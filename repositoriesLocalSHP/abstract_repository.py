@@ -391,7 +391,8 @@ class AbstractRepository():
         layer = QgsVectorLayer(backup_file_path, "layer", "ogr")
         
         for feature in layer.getFeatures():
-            if feature['lastUpdate'] > lastUpdated:
+            adjusted_feature_lastUpdated = self.adjustedDatetime(feature['lastUpdate'])
+            if adjusted_feature_lastUpdated > lastUpdated:
                 self.offlineChangesList.append(Change(self.Layer, feature['ID'], "delete_from_offline", []))
                     
     # NEW_SYNC_METHODS_END
