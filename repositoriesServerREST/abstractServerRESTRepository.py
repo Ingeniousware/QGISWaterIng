@@ -58,5 +58,6 @@ class abstractServerRESTRepository():
         full_url = f'{self.UrlPost}/{data}'
         headers = {'Authorization': "Bearer {}".format(self.Token)} 
         response = requests.delete(full_url, headers=headers)
+        print("response: ", response)
         print("delete responde text: ", response.text)
         print("url: ", response.request.url)
