@@ -117,7 +117,8 @@ class WateringSync():
         feature.setAttribute("ID", change.feature_id)
         
         if self.layer.name() == "watering_pipes":
-            feature.setGeometry(QgsGeometry(QgsLineString(change.data[-1])))
+            #feature.setGeometry(QgsGeometry.fromPolylineXY(change.data[-1]))
+            feature.setGeometry(change.data[-1])
         else:
             feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1])))
         
@@ -161,7 +162,8 @@ class WateringSync():
         self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
         if self.layer.name() == "watering_pipes":
-            new_geometry = QgsGeometry(QgsLineString(change.data[-1]))
+            #new_geometry = QgsGeometry.fromPolylineXY(change.data[-1])
+            new_geometry = change.data[-1]
         else:
             new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
             
