@@ -393,7 +393,7 @@ class AbstractRepository():
         for feature in layer.getFeatures():
             adjusted_feature_lastUpdated = self.adjustedDatetime(feature['lastUpdate'])
             if adjusted_feature_lastUpdated > lastUpdated:
-                self.offlineChangesList.append(Change(self.Layer, feature['ID'], "delete_from_offline", []))
+                self.offlineChangesList.append(Change(self.Layer, feature['ID'], "delete_from_offline", feature))
                     
     # NEW_SYNC_METHODS_END
     

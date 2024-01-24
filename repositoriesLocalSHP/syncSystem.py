@@ -173,7 +173,8 @@ class WateringSync():
     def process_delete_on_server(self, change):
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
-                repo.connectorToServer.removeElementFromServer(change.layer_id)
+                #feature = self.get_feature_by_id(change.layer_i)
+                repo.connectorToServer.removeElementFromServer(change.data["ID"])
                 break
             
     def process_delete_in_offline(self, change):
