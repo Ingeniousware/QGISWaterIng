@@ -379,10 +379,9 @@ class AbstractRepository():
     def getChangesFromOffline(self, lastUpdated):
         for feature in self.Layer.getFeatures():
             adjusted_feature_lastUpdated = self.adjustedDatetime(feature['lastUpdate'])
-            if (adjusted_feature_lastUpdated > lastUpdated):
-                if (len(str(feature['ID'])) == 10):
+            if (len(str(feature['ID'])) == 10):
                     self.offlineChangesList.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
-                if (len(str(feature['ID'])) == 36):
+            if (adjusted_feature_lastUpdated > lastUpdated) and (len(str(feature['ID'])) == 36):
                     self.offlineChangesList.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
 
     def getDeletedElementsFromOffline(self, lastUpdated):
