@@ -41,7 +41,7 @@ class WateringSync():
         print("self.lastUpdate: ", lastUpdated)
         # Test variables
         #test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
-        #self.server_change_queue.clear()
+        self.server_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:
@@ -57,7 +57,7 @@ class WateringSync():
         print("self.lastUpdate: ", lastUpdated)
         # Test variables
         #test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
-        #self.offline_change_queue.clear()
+        self.offline_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:

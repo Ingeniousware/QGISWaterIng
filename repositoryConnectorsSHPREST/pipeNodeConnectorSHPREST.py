@@ -65,7 +65,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         
         nodeDownFK, nodeUpFK = self.getPipeNodes(feature)
         
-        print(nodeDownFK, nodeUpFK)
+        #print(nodeDownFK, nodeUpFK)
         
         vertices = self.getVertices(feature, nodeDownFK, nodeUpFK)
         length = self.getPipeLength(vertices)
@@ -104,9 +104,6 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         print("pipes server response: ", serverResponse.text)
         if serverResponse.status_code == 200:
             print("Water Pipe Node was sent succesfully to the server")
-            
-            print("Server response text -> ", serverResponse.text)
-            #writing the server key id to the element that has been created
             
             if isNew:
                 layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
@@ -161,7 +158,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             for point in transGeometry.asPolyline():
                 self.processPoint(point, vertices)
 
-        print("VERTICES: ", vertices)
+        #print("VERTICES: ", vertices)
         return vertices
 
     def processPoint(self, point, vertices):
@@ -211,8 +208,8 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             start_point = line[0]
             end_point = line[-1]
 
-        print("START POINT -> ", start_point)
-        print("END POINT -> ", end_point)
+        #print("START POINT -> ", start_point)
+        #print("END POINT -> ", end_point)
         
         up_node = self.find_matching_node(start_point, demand_nodes_layer)
         down_node = self.find_matching_node(end_point, demand_nodes_layer)

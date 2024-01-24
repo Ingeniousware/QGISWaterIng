@@ -246,7 +246,7 @@ class WateringUtils():
         
         if last_update_index == attribute_index: return 
         
-        attrs[last_update_index] = WateringUtils.getDateTimeNow()
+        attrs[last_update_index] = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
 
         layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
@@ -259,7 +259,7 @@ class WateringUtils():
     def onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync):
         with layer.edit():
             feature = layer.getFeature(feature_id)
-            feature['lastMdf'] = WateringUtils.getDateTimeNow()
+            feature['lastMdf'] = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
             layer.updateFeature(feature)
             
         full_feature = layer.getFeature(feature_id)
