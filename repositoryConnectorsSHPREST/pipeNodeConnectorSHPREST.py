@@ -101,7 +101,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             print("pipe is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
-        print("pipes server response: ", serverResponse.text)
+        #print("pipes server response: ", serverResponse.text)
         if serverResponse.status_code == 200:
             print("Water Pipe Node was sent succesfully to the server")
             
