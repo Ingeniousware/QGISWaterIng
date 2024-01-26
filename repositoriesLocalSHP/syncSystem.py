@@ -29,7 +29,7 @@ class WateringSync():
         
         #Test variables 
         self.repo_copy = repositories.copy()
-        self.repo_copy.pop(3)
+        #self.repo_copy.pop(3)
         #self.repo_copy.pop(5)
         
         self.repositories = self.repo_copy
