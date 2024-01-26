@@ -342,10 +342,10 @@ class AbstractRepository():
             attributes_definitions = self.features[1:]
             attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
             #points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in change["vertices"]]
-            points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in change["vertices"]]
+            #points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in change["vertices"]]
             #geometry = QgsGeometry.fromPolylineXY(points)
             #geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
-            attributes.append(points)
+            attributes.append(change["vertices"])
         else:
             attributes_definitions = self.features[3:]
             attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]

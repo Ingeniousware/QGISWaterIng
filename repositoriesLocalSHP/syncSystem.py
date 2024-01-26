@@ -163,15 +163,18 @@ class WateringSync():
         
         self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
-        if self.layer.name() == "watering_pipes":
+        """if self.layer.name() == "watering_pipes":
             #new_geometry = QgsGeometry.fromPolylineXY(change.data[-1])
             #new_geometry = change.data[-1]
-            new_geometry = QgsGeometry.fromPolylineXY(change.data[-1])
+            data = change.data[-1]
+            print("Data == ", change.data[-1])
+            points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in data]
+            new_geometry = QgsGeometry.fromPolylineXY(points)
             new_geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
         else:
             new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
             
-        self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
+        self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})"""
 
         self.layer.commitChanges()
         
