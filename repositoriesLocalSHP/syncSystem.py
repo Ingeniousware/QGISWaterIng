@@ -1,5 +1,5 @@
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
-from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
+from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsCoordinateTransform
 from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
 from ..watering_utils import WateringUtils
 from .change import Change
@@ -29,8 +29,10 @@ class WateringSync():
         
         #Test variables 
         self.repo_copy = repositories.copy()
-        #self.repo_copy.pop(3)
+        self.repo_copy.pop(3)
         #self.repo_copy.pop(5)
+        self.sourceCrs = QgsCoordinateReferenceSystem(4326)
+        self.destCrs = QgsCoordinateReferenceSystem(3857)
         
         self.repositories = self.repo_copy
 
@@ -163,7 +165,9 @@ class WateringSync():
         
         if self.layer.name() == "watering_pipes":
             #new_geometry = QgsGeometry.fromPolylineXY(change.data[-1])
-            new_geometry = change.data[-1]
+            #new_geometry = change.data[-1]
+            new_geometry = QgsGeometry.fromPolylineXY(change.data[-1])
+            new_geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
         else:
             new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
             
