@@ -163,18 +163,19 @@ class WateringSync():
         
         self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
-        """if self.layer.name() == "watering_pipes":
+        if self.layer.name() == "watering_pipes":
             #new_geometry = QgsGeometry.fromPolylineXY(change.data[-1])
             #new_geometry = change.data[-1]
             data = change.data[-1]
             print("Data == ", change.data[-1])
             points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in data]
+            right_order_points = points[::-1]
             new_geometry = QgsGeometry.fromPolylineXY(points)
-            new_geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+            new_geometry.transform(QgsCoordinateTransform(self.destCrs, self.sourceCrs, QgsProject.instance()))
         else:
             new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
             
-        self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})"""
+        self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
 
         self.layer.commitChanges()
         
@@ -194,7 +195,7 @@ class WateringSync():
         
         if feature_to_delete:
             self.layer.startEditing()
-            self.layer.deleteFeatures(feature_to_delete.id())
+            self.layer.deleteFeature(feature_to_delete.id())
             self.layer.commitChanges()
 
     def save_offline_changes_to_project(self):
