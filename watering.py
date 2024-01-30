@@ -194,7 +194,7 @@ class QGISPlugin_WaterIng:
         self.synchAction = self.add_action(
             icon_path,
             text=self.tr(u'Update Elements'),
-            callback=self.onSynchButtonClicked,
+            callback=self.startSynchronization,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         

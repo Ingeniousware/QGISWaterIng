@@ -316,5 +316,5 @@ class WateringSynchWorker(QObject):
         self.scenarioUnitOfWork = scenarioUnitOfWork
 
     def runSynch(self):
-        self.scenarioUnitOfWork.updateAll()
+        self.scenarioUnitOfWork.newUpdateAll()
         self.finished.emit()
