@@ -141,7 +141,7 @@ class AbstractRepository():
         if not id_already_in_offline:
             print("Adding from signal r")
             element = [elementJSON[field] for field in self.features]
-
+            print("element: ", element)
             layer.startEditing()
             feature = QgsFeature(layer.fields())
             geometry = QgsGeometry.fromPointXY(QgsPointXY(element[0], element[1]))
@@ -149,8 +149,8 @@ class AbstractRepository():
 
             feature.setGeometry(geometry)
             
-            for i in range(len(self.field_definitions) - 1):
-                feature.setAttribute(self.field_definitions[i][0], element[i+1])
+            for i in range(len(self.field_definitions) - 1): #except lastUpdate field
+                feature.setAttribute(self.field_definitions[i][0], element[i+2]) #skip lat and lng
 
             feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
 
