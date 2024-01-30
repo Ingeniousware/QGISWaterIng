@@ -164,13 +164,13 @@ class WateringSync():
         self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
         if self.layer.name() == "watering_pipes":
-            """data = change.data[-1]
-            sorted_vertices = sorted(data, key=lambda vertex: vertex['lat'])
-            points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in sorted_vertices]
-            print("Points: ", points)
-            new_geometry = QgsGeometry.fromPolylineXY(points)
-            new_geometry.transform(QgsCoordinateTransform(self.destCrs, self.sourceCrs, QgsProject.instance()))"""
-            print("It’s a pipe!")
+            data = change.data[-1]
+            points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in data]
+            if points:  
+                new_geometry = QgsGeometry.fromPolylineXY(points) 
+                transform = QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance())
+                new_geometry.transform(transform)
+                self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
         else:
             new_geometry = QgsGeometry.fromPointXY(QgsPointXY(change.data[-1][0], change.data[-1][1]))
             self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
@@ -181,7 +181,6 @@ class WateringSync():
     def process_delete_on_server(self, change):
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
-                #feature = self.get_feature_by_id(change.layer_i)
                 repo.connectorToServer.removeElementFromServer(change.data["ID"])
                 break
             
