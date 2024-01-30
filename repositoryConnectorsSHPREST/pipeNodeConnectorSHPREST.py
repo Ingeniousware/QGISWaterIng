@@ -93,7 +93,8 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         while self.lifoAddedElements.full():
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
-
+        
+        print("Pipes element JSON: ", elementJSON)
         if (isNew): 
             print("pipe is new, posting")
             serverResponse = self.serverRepository.postToServer(elementJSON)
@@ -155,18 +156,21 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     self.processMultiPoint(point, vertices, order)
                     order = order + 1
         else:
+            order = 0
             for point in transGeometry.asPolyline():
-                self.processPoint(point, vertices)
+                self.processPoint(point, vertices, order)
+                order = order + 1
 
         #print("VERTICES: ", vertices)
         return vertices
 
-    def processPoint(self, point, vertices):
+    def processPoint(self, point, vertices, order):
         vertexFK = str(uuid.uuid4())
         vertex = {
             "vertexFK": vertexFK,
             "lng": point.x(),
-            "lat": point.y()
+            "lat": point.y(),
+            "order": order
         }
         vertices.append(vertex)
 
