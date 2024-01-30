@@ -164,13 +164,10 @@ class WateringSync():
         self.layer.dataProvider().changeAttributeValues({feature_id: attrs})
         
         if self.layer.name() == "watering_pipes":
-            #new_geometry = QgsGeometry.fromPolylineXY(change.data[-1])
-            #new_geometry = change.data[-1]
             data = change.data[-1]
-            print("Data == ", change.data[-1])
             sorted_vertices = sorted(data, key=lambda vertex: vertex['lat'])
             points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in sorted_vertices]
-            #right_order_points = points[::-1]
+            print("Points: ", points)
             new_geometry = QgsGeometry.fromPolylineXY(points)
             new_geometry.transform(QgsCoordinateTransform(self.destCrs, self.sourceCrs, QgsProject.instance()))
         else:
