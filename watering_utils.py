@@ -310,11 +310,15 @@ class WateringTimer():
             
 class WateringSynchWorker(QObject):
     finished = pyqtSignal()
+    isRunning = True
     
     def __init__(self, scenarioUnitOfWork):
         super().__init__()
         self.scenarioUnitOfWork = scenarioUnitOfWork
 
+    def requestStop(self):
+        self.isRunning = False
+        
     def runSynch(self):
         self.scenarioUnitOfWork.newUpdateAll()
         self.finished.emit()
