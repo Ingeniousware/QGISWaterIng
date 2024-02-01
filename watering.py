@@ -467,10 +467,11 @@ class QGISPlugin_WaterIng:
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Double click the button to synch!"), level=1, duration=5)
     
     def startSynchronization(self):
-        if hasattr(self, 'thread') and self.thread.isRunning():
-            self.worker.requestStop()
-            self.thread.quit()
-            self.thread.wait()
+        if hasattr(self, 'thread') and self.thread is not None:
+            if self.thread.isRunning():
+                self.worker.requestStop()
+                self.thread.quit()
+                self.thread.wait()
             
         self.thread = QThread()
         self.worker = WateringSynchWorker(self.scenarioUnitOFWork)
