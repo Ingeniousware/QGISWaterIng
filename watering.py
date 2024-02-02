@@ -194,7 +194,7 @@ class QGISPlugin_WaterIng:
         self.synchAction = self.add_action(
             icon_path,
             text=self.tr(u'Update Elements'),
-            callback=self.startSynchronization,
+            callback=self.onSynchButtonClicked,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
@@ -484,11 +484,6 @@ class QGISPlugin_WaterIng:
         self.thread.start()
     
     def onSynchButtonClicked(self):
-        """if not self.click_timer.isActive():
-            self.click_timer.start(self.double_click_threshold)
-        else:
-            self.click_timer.stop()  
-            self.synchDoubleClicked()"""
         self.scenarioUnitOFWork.newUpdateAll()
             
     def synchSingleClicked(self):
