@@ -198,14 +198,6 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        # Synch behavior: force total synch if clicked twice, enable/disable real time synch if clicked once
-        """self.synchClicks = 0
-        self.synchAction.setCheckable(True)
-        self.click_timer = QTimer()
-        self.click_timer.setSingleShot(True)
-        self.click_timer.timeout.connect(self.synchSingleClicked)
-        self.double_click_threshold = 500"""
-        
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/clean.svg'
         self.deleteCacheFromWaterIng = self.add_action(
             icon_path,
@@ -235,9 +227,6 @@ class QGISPlugin_WaterIng:
         #self.toolIdentify = QgsMapToolIdentify(self.canvas)
         #self.toolIdentify.setAction(self.iface.actionIdentify())
         self.toolbar.addAction(self.iface.actionIdentify())
-        
-       
-
         
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -295,13 +284,7 @@ class QGISPlugin_WaterIng:
     def executeReDoAction(self):
         self.actionManager.redoAction()
 
-
     def updateActionScenarioStateOpen(self):
-        """ self.toolInsertSensorNodePlacement = InsertSensorNodeToolPlacement(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager)              
-        self.toolInsertSensorNodePlacement.setAction(self.insertSensorAction)
-        self.insertSensorAction.setEnabled(True) """
-
-        
         #TODO toolSelectElements = SelectElementsTool()
         #TODO self.toolbarToolManager.toolImportINPFile.setCurrentTool(toolSelectElements)
         self.toolbarToolManager.selectElementAction.setEnabled(True)
@@ -414,22 +397,7 @@ class QGISPlugin_WaterIng:
             for vertex in vertex_items:
                 self.canvas.scene().removeItem(vertex)
             self.canvas.refresh()  
-
-    """
-    def getMeasurements(self):
-        if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
-        if os.environ.get('TOKEN') == None:
-            self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"You must connect to WaterIng!"), level=1, duration=5)
-        else:
-            try:
-                self.dlg = WateringDatachannels()
-                self.dlg.show()
-                self.dlg.exec_()
-            except:
-                self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"No data source available for the project."), level=1, duration=5)"""
-
-
+            
     def createOnlineConnectionChannels(self):
         print("Entering creation of online connection channels")
         scenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
@@ -440,7 +408,6 @@ class QGISPlugin_WaterIng:
         
         invoresult = self.hub_connection.send("joingroup", [scenarioFK]) 
         print(invoresult.invocation_id)
-
 
     def processINPImportUpdate(self, paraminput):
         print(paraminput)
@@ -456,7 +423,6 @@ class QGISPlugin_WaterIng:
         self.scenarioUnitOFWork.reservoirNodeRepository.deleteElement(paraminput[0])
         print(paraminput)
         
-    
     def updateElements(self):
         if WateringUtils.isScenarioNotOpened():
             self.iface.messageBar().pushMessage(self.tr(u"Error"), self.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
