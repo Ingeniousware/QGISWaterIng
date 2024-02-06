@@ -68,7 +68,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         #print(nodeDownFK, nodeUpFK)
         
         vertices = self.getVertices(feature, nodeDownFK, nodeUpFK)
-        length = self.getPipeLength(vertices)
+        #length = self.getPipeLength(vertices)
             
         elementJSON = {
             "serverKeyId": "{}".format(serverKeyId),
@@ -81,7 +81,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             "description": "{}".format(description),
             "vertices": vertices,
             "diameterInt": "{}".format(diameterInt),
-            "length": "{}".format(length),
+            #"length": "{}".format(length),
             "roughnessAbsolute": "{}".format(roughnessAbsolute),
             "roughnessCoefficient": "{}".format(roughnessCoefficient),
             "initialStatus": "{}".format(initialStatus),
