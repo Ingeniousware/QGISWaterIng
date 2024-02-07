@@ -8,7 +8,10 @@ This repository contains scripts to automate the installation of certain softwar
 ### Running installer on Linux
 
 1. Open a terminal.
-2. Navigate to the directory containing `install.sh`.
+2. Navigate to the directory containing `installer.sh`. 
+```
+cd ~/QGISWaterIng-main/installer
+```
 3. Make the script executable by running:
 ```
 chmod +x install.sh
@@ -21,7 +24,10 @@ chmod +x install.sh
 ### Running the Script on MacOS
 
 1. Open the Terminal app.
-2. Navigate to the directory containing `install.sh`.
+2. Navigate to the directory containing `installer.sh`.
+```
+cd ~/QGISWaterIng-main/installer
+```
 3. Ensure you have Homebrew installed. If not, the script will attempt to install it.
 4. Make the script executable:
 ```
@@ -36,6 +42,9 @@ chmod +x install.sh
 
 1. Open PowerShell as an Administrator.
 2. Navigate to the directory containing `install.ps1`.
+```
+cd ~/QGISWaterIng-main/installer
+```
 3. Execute the script:
 ```
 .\installer.ps1
