@@ -14,11 +14,11 @@ cd ~/QGISWaterIng-main/installer
 ```
 3. Make the script executable by running:
 ```
-chmod +x install.sh
+chmod +x installer.sh
 ```
 4. Execute the script:
 ```
-./install.sh
+./installer.sh
 ```
 
 ### Running the Script on MacOS
@@ -31,17 +31,17 @@ cd ~/QGISWaterIng-main/installer
 3. Ensure you have Homebrew installed. If not, the script will attempt to install it.
 4. Make the script executable:
 ```
-chmod +x install.sh
+chmod +x installer.sh
 ```
 5. Run the script:
 ```
-./install.sh
+./installer.sh
 ```
 
 ### Running the Script on Windows
 
 1. Open PowerShell as an Administrator.
-2. Navigate to the directory containing `install.ps1`.
+2. Navigate to the directory containing `installer.ps1`.
 ```
 cd ~/QGISWaterIng-main/installer
 ```
