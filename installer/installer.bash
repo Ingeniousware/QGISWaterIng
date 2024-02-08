@@ -1,79 +1,48 @@
 #!/bin/bash
 
-command_exists() {
-    command -v "$@" >/dev/null 2>&1
-}
+# Prompt user to select a folder
+echo "Please, enter the path of the folder that contains the QGIS Watering Plugin:"
+read folderPath
 
-# Homebrew installation (if required)
-install_homebrew() {
-    echo "Homebrew is not installed. Installing Homebrew..."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+# Check if the folder exists
+if [ -d "$folderPath" ]; then
+    echo "Folder exists. Proceeding..."
+else
+    echo "Folder does not exist. Try again. Exiting..."
+    exit 1
+fi
 
-    if command_exists brew; then
-        echo "Homebrew installed successfully."
-    else
-        echo "Failed to install Homebrew."
-        exit 1
-    fi
-}
+# Check for Python installation
+if ! command -v python3 &> /dev/null; then
+    echo "Python could not be found. Please install Python manually and try again."
+    exit 1
+else
+    echo "Python is installed."
+fi
 
-# MacOS installation preparation (if required)
-install_python_macos() {
-    if ! command_exists brew; then
-        install_homebrew
-    fi
+# Install necessary Python packages
+echo "Installing Python packages: signalrcore and PyQt5..."
+python3 -m pip install signalrcore PyQt5
 
-    echo "Installing Python for macOS..."
-    brew install python
-}
+# Determine QGIS plugins directory path
+# For MacOS
+if [ "$(uname)" == "Darwin" ]; then
+    QGIS_PLUGIN_DIR="$HOME/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins"
+# For Linux
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    QGIS_PLUGIN_DIR="$HOME/.local/share/QGIS/QGIS3/profiles/default/python/plugins"
+else
+    echo "Unsupported operating system. Exiting..."
+    exit 1
+fi
 
-# Linux installation preparation (if required)
-install_python_linux() {
-    echo "Installing Python and pip for Linux..."
-    sudo apt-get update
-    sudo apt-get install -y python3 python3-pip
-}
+# Check if QGIS plugins directory exists, if not, create it
+if [ ! -d "$QGIS_PLUGIN_DIR" ]; then
+    echo "QGIS plugins directory does not exist. Creating it..."
+    mkdir -p "$QGIS_PLUGIN_DIR"
+fi
 
-# Required Watering plugin packages
-install_packages() {
-    echo "Installing Python packages..."
-    python3 -m pip install --upgrade pip
-    python3 -m pip install signalrcore pyqt5
-}
+# Copy the selected folder to the QGIS plugins directory
+cp -r "$folderPath" "$QGIS_PLUGIN_DIR"
 
-# Installation process
-main() {
-    # Check for Python and pip, install if necessary
-    if ! command_exists python3; then
-        echo "Python 3 is not installed. Attempting to install..."
-        case "$OSTYPE" in
-            linux*)
-                install_python_linux
-                ;;
-            darwin*)
-                install_python_macos
-                ;;
-            *)
-                echo "Unsupported operating system. Please install Python manually."
-                exit 1
-                ;;
-        esac
-    else
-        echo "Python 3 is already installed."
-    fi
-
-    if ! command_exists pip3; then
-        echo "pip is not installed. Installing..."
-        python3 -m ensurepip --upgrade
-    else
-        echo "pip is already installed."
-    fi
-
-    # Install the required Python packages
-    install_packages
-
-    echo "Installation complete."
-}
-
-# Run installer
-main
+echo "QGIS Watering Plugin has been successfully added to the QGIS plugins directory. Installation completed."
