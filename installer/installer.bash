@@ -1,9 +1,5 @@
 #!/bin/bash
 
-# Via terminal, run the following commands:
-# chmod +x installer.sh
-# ./installer.sh
-
 command_exists() {
     command -v "$@" >/dev/null 2>&1
 }
