@@ -57,6 +57,19 @@ cd path\to\QGISWaterIng\installer
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 ```
 
+
+# Activating the QGIS Watering Plugin
+After successfully installing the QGIS Watering Plugin using the provided scripts, you need to activate it within QGIS to start using it. Follow these steps to activate the plugin:
+
+1. Open QGIS on your computer.
+2. Go to the Plugins menu located at the top of the QGIS window.
+3. Select the Manage and Install Plugins... option from the dropdown menu.
+4. In the Plugins window, click on the Installed tab on the left side to view all installed plugins.
+5. Scroll through the list or use the search bar to find the QGIS Watering Plugin.
+6. Check the box next to the QGIS-Watering to activate it. If it was already checked, it means the plugin is active.
+7. Click Close to exit the Plugins window.
+The QGIS Watering Plugin should now be active, and you can access its features from the QGIS interface. If you encounter any issues with the plugin, ensure it was correctly installed and activated, and consult the plugin documentation or support resources for further assistance.
+
 # Post-Installation
 Once the installation script has completed, the QGIS Watering Plugin will be added to your QGIS plugins directory, and you should be able to use it within QGIS.
 
