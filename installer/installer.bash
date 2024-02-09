@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Determine script's parent folder to be copied
+# Determine QGIS Watering folder to be added to QGIS plugin’s folder
 scriptDir="$(dirname "$(readlink -f "$0")")"
 folderToCopy="$(dirname "$scriptDir")"
 
@@ -8,7 +8,7 @@ folderToCopy="$(dirname "$scriptDir")"
 if [ -d "$folderToCopy" ]; then
     echo "Folder exists. Proceeding..."
 else
-    echo "Folder does not exist. Exiting..."
+    echo "Folder does not exist. Try again. Exiting..."
     exit 1
 fi
 
