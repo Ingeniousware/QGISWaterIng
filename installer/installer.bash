@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# Prompt user to select a folder
-echo "Please, enter the path of the folder that contains the QGIS Watering Plugin:"
-read folderPath
+# Determine script's parent folder to be copied
+scriptDir="$(dirname "$(readlink -f "$0")")"
+folderToCopy="$(dirname "$scriptDir")"
 
 # Check if the folder exists
-if [ -d "$folderPath" ]; then
+if [ -d "$folderToCopy" ]; then
     echo "Folder exists. Proceeding..."
 else
-    echo "Folder does not exist. Try again. Exiting..."
+    echo "Folder does not exist. Exiting..."
     exit 1
 fi
 
@@ -42,7 +42,7 @@ if [ ! -d "$QGIS_PLUGIN_DIR" ]; then
     mkdir -p "$QGIS_PLUGIN_DIR"
 fi
 
-# Copy the selected folder to the QGIS plugins directory
-cp -r "$folderPath" "$QGIS_PLUGIN_DIR"
+# Copy the parent folder of the script to the QGIS plugins directory
+cp -r "$folderToCopy" "$QGIS_PLUGIN_DIR"
 
 echo "QGIS Watering Plugin has been successfully added to the QGIS plugins directory. Installation completed."
