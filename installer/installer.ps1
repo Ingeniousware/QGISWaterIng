@@ -1,46 +1,43 @@
-# Determine the QGIS Watering folder to be added to the QGIS plugin's folder
-$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$folderToCopy = Split-Path -Parent $scriptDir
-$folderName = Split-Path -Leaf $folderToCopy
+# Get the parent's parent directory of the script
+$parentParentDir = Split-Path (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
-# Check if the folder exists
-if (-Not (Test-Path $folderToCopy)) {
-    Write-Host "Folder does not exist. Try again. Exiting..."
-    exit 1
+# Attempt to locate QGIS Python executable
+$qgisPythonPaths = @(
+    "$env:ProgramFiles\QGIS 3.*\apps\Python39\python.exe", # Adjust the Python version if necessary
+    "$env:ProgramFiles(x86)\QGIS 3.*\apps\Python39\python.exe"
+)
+
+$qgisPythonExe = $null
+
+foreach ($path in $qgisPythonPaths) {
+    $resolvedPath = Resolve-Path $path -ErrorAction SilentlyContinue
+    if ($resolvedPath) {
+        $qgisPythonExe = $resolvedPath.Path
+        break
+    }
 }
 
-# Define the path to the QGIS application and its Python executable
-$QGIS_APP_PATH = "/Applications/QGIS.app"
-$QGIS_PYTHON_PATH = "$QGIS_APP_PATH/Contents/MacOS/bin/python3"
-
-# Check for QGIS Python installation
-if (-Not (Test-Path $QGIS_PYTHON_PATH)) {
-    Write-Host "QGIS Python could not be found. Please check your QGIS installation and try again."
-    exit 1
+if (-not $qgisPythonExe) {
+    Write-Host "Could not find QGIS Python executable. Please ensure QGIS is installed."
 } else {
-    Write-Host "QGIS Python is installed."
+    Write-Host "Found QGIS Python at: $qgisPythonExe"
+    
+    # Install signalrcore using QGIS Python
+    Write-Host "Installing signalrcore..."
+    Start-Process -FilePath $qgisPythonExe -ArgumentList "-m", "pip", "install", "signalrcore" -Wait -NoNewWindow
+    Write-Host "signalrcore installation complete."
 }
 
-# Install signalrcore using QGIS's Python
-Write-Host "Installing Python package: signalrcore..."
-& $QGIS_PYTHON_PATH -m pip install signalrcore
+# Define the QGIS plugins folder path
+$qgisPluginsFolder = "$env:APPDATA\QGIS\QGIS3\profiles\default\python\plugins"
+$destinationPath = Join-Path $qgisPluginsFolder (Split-Path -Leaf $parentParentDir)
 
-# Determine QGIS plugins directory path for macOS
-$QGIS_PLUGIN_DIR = "$HOME/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins"
-
-# Ensure QGIS plugins directory exists
-if (-Not (Test-Path $QGIS_PLUGIN_DIR)) {
-    Write-Host "QGIS plugins directory does not exist. Creating it..."
-    New-Item -ItemType Directory -Force -Path $QGIS_PLUGIN_DIR
+# Check if the destination directory already exists
+if (Test-Path $destinationPath) {
+    Write-Host "QGIS Watering plugin already exists in QGIS plugins directory. Overwriting..."
+    Remove-Item $destinationPath -Recurse -Force
 }
 
-# Remove existing folder with the same name, if any, and copy the new folder
-$destinationFolder = Join-Path $QGIS_PLUGIN_DIR $folderName
-if (Test-Path $destinationFolder) {
-    Write-Host "Replacing existing plugin folder in the QGIS plugins directory..."
-    Remove-Item -Recurse -Force $destinationFolder
-}
-
-Copy-Item -Recurse -Force $folderToCopy $QGIS_PLUGIN_DIR
-
-Write-Host "QGIS Watering Plugin has been successfully added (or updated) in the QGIS plugins directory. Installation completed."
+# Copy Watering Plugin to QGIS plugin’s folder
+Copy-Item $parentParentDir $qgisPluginsFolder -Recurse -Force
+Write-Host "QGIS Watering plugin installation completed."
