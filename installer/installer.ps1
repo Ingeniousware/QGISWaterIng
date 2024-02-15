@@ -19,14 +19,21 @@ foreach ($path in $qgisPythonPaths) {
 
 if (-not $qgisPythonExe) {
     Write-Host "Could not find QGIS Python executable. Please ensure QGIS is installed."
-} else {
-    Write-Host "Found QGIS Python at: $qgisPythonExe"
-    
-    # Install signalrcore using QGIS Python
-    Write-Host "Installing signalrcore..."
-    Start-Process -FilePath $qgisPythonExe -ArgumentList "-m", "pip", "install", "signalrcore" -Wait -NoNewWindow
-    Write-Host "signalrcore installation complete."
+    exit
 }
+
+Write-Host "Found QGIS Python at: $qgisPythonExe"
+
+# Install signalrcore using QGIS Python
+Write-Host "Installing signalrcore..."
+Start-Process -FilePath $qgisPythonExe -ArgumentList "-m", "pip", "install", "signalrcore" -Wait -NoNewWindow
+Write-Host "signalrcore installation complete."
+
+# Configure the Python SSL module
+Write-Host "Configuring Python SSL module..."
+Start-Process -FilePath $qgisPythonExe -ArgumentList "-m", "pip", "install", "--upgrade", "pip" -Wait -NoNewWindow
+Start-Process -FilePath $qgisPythonExe -ArgumentList "-m", "pip", "install", "pyOpenSSL" -Wait -NoNewWindow
+Write-Host "Python SSL module configuration complete."
 
 # Define the QGIS plugins folder path
 $qgisPluginsFolder = "$env:APPDATA\QGIS\QGIS3\profiles\default\python\plugins"
