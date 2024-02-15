@@ -12,15 +12,16 @@ if not exist "%folderToCopy%" (
     exit /b 1
 )
 
-:: Set QGIS Python path for Windows (assuming default installation path)
-set "QGIS_PYTHON_PATH=C:\Program Files\QGIS 3.16\bin\python-qgis.bat"
+:: Search for QGIS Python path
+set "QGIS_PYTHON_PATH="
+for /r "C:\Program Files" %%a in (python-qgis.bat) do set "QGIS_PYTHON_PATH=%%~dpnxa"
 
 :: Check for QGIS Python installation
-if not exist "%QGIS_PYTHON_PATH%" (
+if not defined QGIS_PYTHON_PATH (
     echo QGIS Python could not be found. Please check your QGIS installation and try again.
     exit /b 1
 ) else (
-    echo QGIS Python is installed.
+    echo QGIS Python is installed: %QGIS_PYTHON_PATH%
 )
 
 :: Install signalrcore using QGIS's Python
