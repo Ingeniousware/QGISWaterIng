@@ -26,11 +26,12 @@ class WaterMeterNodeRepository(AbstractRepository):
             ("Meterstate", QVariant.Double),
             ("FunctType", QVariant.Double),
             ("LastDate", QVariant.String),
+            ("NodeID", QVariant.String),
             ("lastUpdate", QVariant.String)
         ]
         
         self.features = ["lng", "lat", "serverKeyId","lastModified","name", "description","meterstate",
-                                "functionalType","lastReadDateTime"]
+                                "functionalType","lastReadDateTime", "connectedToNodeFK"]
         
         self.LayerType = "Point?crs="
         
