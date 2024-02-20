@@ -215,6 +215,14 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         self.connectionStatusAction.setCheckable(True)
         
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/waterMeterButton.png'
+        self.getWaterMeterNodes = self.add_action(
+            icon_path,
+            text=self.tr(u'Connect Water Meters to Nodes'),
+            callback=self.getClosestNode,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
         self.toolbarToolManager.initializeToolbarButtonActions()
         self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
         self.toolbarToolManager.optimizationToolsAction.toggled.connect(self.toolbarToolManager.activateOptimizationTool)
@@ -610,3 +618,6 @@ class QGISPlugin_WaterIng:
     
     def onSynchFinished(self):
         iface.messageBar().pushMessage("Success", "Synchronization completed successfully!", level=Qgis.Success, duration=6)
+        
+    def getClosestNode(self):
+        print("Okay")
