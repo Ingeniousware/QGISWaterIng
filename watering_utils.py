@@ -291,7 +291,7 @@ class WateringUtils():
             #return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
             return '1800-01-01T01:00:00.0000000Z'
 
-    def getClosestNode(self):
+    def getClosestNodeToWaterMeter():
         field_waterM_nodeFK='NodeID'
         field_dNodeFk='ID'
 
