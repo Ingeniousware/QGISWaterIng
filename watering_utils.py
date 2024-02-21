@@ -290,6 +290,31 @@ class WateringUtils():
         else:
             #return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
             return '1800-01-01T01:00:00.0000000Z'
+
+    def getClosestNode(self):
+        field_waterM_nodeFK='NodeID'
+        field_dNodeFk='ID'
+
+        waterM_layer = QgsProject.instance().mapLayersByName("watering_waterMeter")[0]
+        demandN_layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+
+        waterM_layer.startEditing()
+
+        for feature_x in waterM_layer.getFeatures():
+            min_distance = float('inf')
+            closest_feature_id = None
+
+            for feature_y in demandN_layer.getFeatures():
+                distance = feature_x.geometry().distance(feature_y.geometry())
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_feature_id = feature_y[field_dNodeFk]
+
+            if closest_feature_id is not None:
+                waterM_layer.changeAttributeValue(feature_x.id(), feature_x.fields().indexOf(field_waterM_nodeFK), closest_feature_id)
+
+        waterM_layer.commitChanges()
+        print("Update completed.")
         
 class WateringTimer():
     timer = None 
