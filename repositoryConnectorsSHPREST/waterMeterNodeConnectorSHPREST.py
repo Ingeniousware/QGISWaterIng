@@ -64,7 +64,7 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         meterState = feature["Meterstate"]
         functType = feature["FunctType"]
         lastDate = feature["LastDate"]
-        connectedToNodeFK = feature("NodeID")
+        connectedToNodeFK = feature["NodeID"]
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
