@@ -314,6 +314,9 @@ class WateringUtils():
                 waterM_layer.changeAttributeValue(feature_x.id(), feature_x.fields().indexOf(field_waterM_nodeFK), closest_feature_id)
 
         waterM_layer.commitChanges()
+
+        iface.messageBar().pushMessage("Success", "Successfully identified water meter nodes!", level=Qgis.Success, duration=6)
+        
         print("Update completed.")
         
 class WateringTimer():
