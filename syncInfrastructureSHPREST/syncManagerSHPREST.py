@@ -90,7 +90,7 @@ class syncManagerSHPREST():
         self.reservoirNodeServerRESTRepository = reservoirNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.valveNodeServerRESTRepository = valveNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.pumpNodeServerRESTRepository = pumpNodeServerRESTRepository(self.Token, self.ScenarioFK)
-        self.waterMeterNodeServerRESTRepository = waterDemandNodeServerRESTRepository(self.Token, self.ScenarioFK)
+        self.waterMeterNodeServerRESTRepository = waterMeterNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.sensorNodeServerRESTRepository = sensorNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.pipeNodeServerRESTRepository = pipeNodeServerRESTRepository(self.Token, self.ScenarioFK)
         
@@ -100,7 +100,7 @@ class syncManagerSHPREST():
         self.reservoirNodeServerRESTRepository.setConnectorToLocal(self.reservoirNodeConnector)
         self.valveNodeServerRESTRepository.setConnectorToLocal(self.valveNodeConnector)
         self.pumpNodeServerRESTRepository.setConnectorToLocal(self.pumpNodeConnector)
-        self.waterDemandNodeServerRESTRepository.setConnectorToLocal(self.waterMeterNodeConnector)
+        self.waterMeterNodeServerRESTRepository.setConnectorToLocal(self.waterMeterNodeConnector)
         self.sensorNodeServerRESTRepository.setConnectorToLocal(self.sensorNodeConnector)
         self.pipeNodeServerRESTRepository.setConnectorToLocal(self.pipeNodeConnector)
         
@@ -134,7 +134,7 @@ class syncManagerSHPREST():
         self.reservoirNodeServerRESTRepository.unsetConnectorToLocal()
         self.valveNodeServerRESTRepository.unsetConnectorToLocal()
         self.pumpNodeServerRESTRepository.unsetConnectorToLocal()
-        self.waterDemandNodeServerRESTRepository.unsetConnectorToLocal()
+        self.waterMeterNodeServerRESTRepository.unsetConnectorToLocal()
         self.sensorNodeServerRESTRepository.unsetConnectorToLocal()
         self.pipeNodeServerRESTRepository.unsetConnectorToLocal()
         

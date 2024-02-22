@@ -38,7 +38,7 @@ class InsertWaterMeterNodeTool(InsertAbstractTool):
             
     def deactivate(self):
         print("deactivate insert water meter node tool")
-        self.toolbarManager.insertPumpNodeAction.setChecked(False)
+        self.toolbarManager.insertWaterMeterNodeAction.setChecked(False)
         self.canvas.unsetMapTool(self.canvas.mapTool())
 
     
