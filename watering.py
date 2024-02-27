@@ -369,7 +369,8 @@ class QGISPlugin_WaterIng:
 
     def updateActionStateClose(self):
         print("Entering updateActionStateClose")
-        #self.cleanMarkers()
+        if QgsProject.instance().fileName():
+            self.cleanMarkers()
         
         actions = [self.toolbarToolManager.readAnalysisAction,
                     self.toolbarToolManager.insertSensorNodeAction,
@@ -398,13 +399,13 @@ class QGISPlugin_WaterIng:
         print("Before stopping the sync manager...............................................")
         if (self.syncManager): self.syncManager.stop()
 
-        
     def cleanMarkers(self):
-        if self.canvas and self.canvas.scene() and self.canvas.items():
-            vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
+        scene = self.canvas.scene() if self.canvas else None
+        if scene:
+            vertex_items = [item for item in scene.items() if isinstance(item, QgsVertexMarker)]
             for vertex in vertex_items:
-                self.canvas.scene().removeItem(vertex)
-            self.canvas.refresh()  
+                scene.removeItem(vertex)
+            self.canvas.refresh()
             
     def createOnlineConnectionChannels(self):
         print("Entering creation of online connection channels")
