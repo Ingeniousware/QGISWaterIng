@@ -369,7 +369,7 @@ class QGISPlugin_WaterIng:
 
     def updateActionStateClose(self):
         print("Entering updateActionStateClose")
-        self.cleanMarkers()
+        #self.cleanMarkers()
         
         actions = [self.toolbarToolManager.readAnalysisAction,
                     self.toolbarToolManager.insertSensorNodeAction,
