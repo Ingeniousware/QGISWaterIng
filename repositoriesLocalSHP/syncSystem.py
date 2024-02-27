@@ -1,5 +1,5 @@
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
-from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsCoordinateTransform, QgsWkbTypes, QgsPolyline
+from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsCoordinateTransform, QgsWkbTypes
 from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
 from ..watering_utils import WateringUtils
 from .change import Change
@@ -125,11 +125,11 @@ class WateringSync():
             feature.setGeometry(QgsGeometry.fromPointXY(point))
 
         elif geom_type == QgsWkbTypes.LineGeometry:
-            line = QgsPolyline()
+            line = []
             for line_part in change.data[-1]:
                 line.append([QgsPointXY(pt[0], pt[1]) for pt in line_part])
-            feature.setGeometry(QgsGeometry.fromPolyline(line))
-            
+            feature.setGeometry(QgsGeometry.fromPolylineXY(line))
+                    
         self.layer.startEditing()
 
         for i, field in enumerate(self.get_field_definitions()):
