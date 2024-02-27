@@ -7,7 +7,7 @@ from datetime import datetime
 import pytz
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
-from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
+from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsWkbTypes
 from PyQt5.QtCore import QFileInfo, QDateTime
 from PyQt5.QtCore import QDateTime, Qt, QVariant
 from PyQt5.QtGui import QColor
@@ -332,36 +332,41 @@ class AbstractRepository():
             
     # NEW_SYNC_METHODS_START
     
+    def buildIndex(self):
+        self.idIndex = set(feature['ID'] for feature in self.Layer.getFeatures())
+
     def processChange(self, change):
-        change_id = change["serverKeyId"]
         
-        if change['removed'] == True:
-            return Change(self.Layer, change_id, "delete_from_server", [])
-        
-        if self.LayerName == "watering_pipes":
-            attributes_definitions = self.features[1:]
-            attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
-            #points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in change["vertices"]]
-            #points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in change["vertices"]]
-            #geometry = QgsGeometry.fromPolylineXY(points)
-            #geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
-            attributes.append(change["vertices"])
-        else:
-            attributes_definitions = self.features[3:]
-            attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
-            attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
-        
-        if self.elementExistsInOffline(change_id):
-            print("exists in offline: ", change_id)
-            return Change(self.Layer, change_id, "update_from_server", attributes)
+        if "serverKeyId" in change:
+            change_id = change["serverKeyId"]
             
-        return Change(self.Layer, change_id, "add_from_server", attributes)
+            if change['removed'] == True:
+                return Change(self.Layer, change_id, "delete_from_server", [])
+            
+            if self.LayerName == "watering_pipes":
+                attributes_definitions = self.features[1:]
+                attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
+                #points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in change["vertices"]]
+                #points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in change["vertices"]]
+                #geometry = QgsGeometry.fromPolylineXY(points)
+                #geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+                attributes.append(change["vertices"])
+            else:
+                attributes_definitions = self.features[3:]
+                attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
+                attributes.append(self.getTransformedCrs(change["lng"], change["lat"]))
+            
+            if change_id in self.idIndex:
+                return Change(self.Layer, change_id, "update_from_server", attributes)
+                
+            return Change(self.Layer, change_id, "add_from_server", attributes)
     
     def processChangeLineLayer(self, change):
         ...
         
     def getServerUpdates(self, data):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
+        self.buildIndex()
         self.changesList = [self.processChange(change) for change in data]
         return self.changesList
     
