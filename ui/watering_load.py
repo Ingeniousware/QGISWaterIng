@@ -29,8 +29,14 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         # Ui elements
         self.new_project_name.hide()
         self.new_scenario_name.hide()
+        self.clone_title.hide()
+        self.clone_box.hide()
+        self.cloned_scenario_name.hide()
+        self.cloneScenarioBtn.hide()
         self.newProjectCheckBox.clicked.connect(self.checkUserControlState)
         self.newScenarioCheckBox.clicked.connect(self.checkUserControlState)
+        self.cloneCheckBox.clicked.connect(self.checkUserControlState)
+        self.scenarios_box.currentIndexChanged.connect(self.setCloningScenarioName)
         
         #Variables 
         self.token = os.environ.get('TOKEN')
@@ -54,6 +60,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.Offline = False
         self.initializeRepository()
         self.newProjectBtn.clicked.connect(self.checkExistingProject)
+        self.cloneScenarioBtn.clicked.connect(self.cloneScenario)
     
     def initializeRepository(self):
         print("OS TOKEN TIMER: ", os.environ.get('TOKEN_TIMER'))
@@ -560,4 +567,44 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.scenarios_box.show()
             self.new_scenario_name.hide()
         
+        #Clone Scenario
+        if self.cloneCheckBox.isChecked():
+            if not self.Offline:
+                self.clone_title.show()
+                self.clone_box.show()
+                self.cloned_scenario_name.show()
+                self.cloneScenarioBtn.show()
+                self.loadProjectsToClone()
+        else:
+            self.clone_title.hide()
+            self.clone_box.hide()
+            self.cloned_scenario_name.hide()
+            self.cloneScenarioBtn.hide()
+
+    # Cloning procedures
+    
+    def setCloningScenarioName(self):
+        self.cloned_scenario_name.setPlaceholderText(self.scenarios_box.currentText() + " cloned version")
         
+    def loadProjectsToClone(self):
+        for item in self.listOfProjects:
+            self.clone_box.addItem(item[0])
+
+    def cloneScenario(self):
+        self.listOfProjectsToClone = []
+        
+        if os.path.exists(self.ProjectsJSON):
+            with open(self.ProjectsJSON, 'r') as json_file:
+                self.ProjectsJSON_data = json.load(json_file)
+        
+            if self.ProjectsJSON_data:
+                self.OfflineProjects = self.getOfflineProjects()
+                
+        else:
+            iface.messageBar().pushMessage(("Error"), ("No projects found locally. Connect to WaterIng and load a project from server."), level=1, duration=5)
+                   
+        project_to_check = self.listOfProjects[self.clone_box.currentIndex()]
+        is_in_offline_projects = any(project_to_check == project[1] for project in self.OfflineProjects)
+        
+        print(self.OfflineProjects)
+        print("is: ", is_in_offline_projects)

@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>476</width>
-    <height>324</height>
+    <width>564</width>
+    <height>483</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,55 +24,6 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="QComboBox" name="projects_box"/>
-   </item>
-   <item row="6" column="1">
-    <widget class="QComboBox" name="scenarios_box"/>
-   </item>
-   <item row="3" column="1">
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
-     <item>
-      <widget class="QLineEdit" name="new_project_name">
-       <property name="placeholderText">
-        <string>Project Name</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="8" column="2">
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>10</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="8" column="0">
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>10</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
    <item row="7" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -83,6 +34,27 @@
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="12" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QCheckBox" name="cloneCheckBox">
+       <property name="text">
+        <string>Clone Scenario</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="25" column="1">
+    <widget class="QPushButton" name="newProjectBtn">
+     <property name="text">
+      <string>Load WaterIng Data</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1">
+    <widget class="QComboBox" name="scenarios_box"/>
    </item>
    <item row="5" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -115,32 +87,21 @@
      </item>
     </layout>
    </item>
-   <item row="12" column="1">
-    <widget class="QPushButton" name="newProjectBtn">
-     <property name="text">
-      <string>Load WaterIng Data</string>
+   <item row="8" column="2">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
-    </widget>
-   </item>
-   <item row="8" column="1">
-    <widget class="QLabel" name="projectLabel_3">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
      </property>
-     <property name="font">
-      <font>
-       <pointsize>13</pointsize>
-       <weight>50</weight>
-       <bold>false</bold>
-      </font>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>10</width>
+       <height>20</height>
+      </size>
      </property>
-     <property name="text">
-      <string>Project Directory</string>
-     </property>
-    </widget>
+    </spacer>
    </item>
    <item row="1" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout_4">
@@ -173,7 +134,35 @@
      </item>
     </layout>
    </item>
-   <item row="11" column="1">
+   <item row="21" column="1">
+    <widget class="QLineEdit" name="cloned_scenario_name">
+     <property name="placeholderText">
+      <string>Cloned Scenario Name</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QComboBox" name="projects_box"/>
+   </item>
+   <item row="22" column="1">
+    <widget class="QPushButton" name="cloneScenarioBtn">
+     <property name="text">
+      <string>Clone</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLineEdit" name="new_project_name">
+       <property name="placeholderText">
+        <string>Project Name</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="23" column="1">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -185,6 +174,56 @@
       </size>
      </property>
     </spacer>
+   </item>
+   <item row="8" column="0">
+    <spacer name="horizontalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeType">
+      <enum>QSizePolicy::Fixed</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>10</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="8" column="1">
+    <widget class="QLabel" name="projectLabel_3">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>13</pointsize>
+       <weight>50</weight>
+       <bold>false</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Project Directory</string>
+     </property>
+    </widget>
+   </item>
+   <item row="16" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="clone_title">
+       <property name="text">
+        <string>Clone into project:</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="17" column="1">
+    <widget class="QComboBox" name="clone_box"/>
    </item>
   </layout>
  </widget>
