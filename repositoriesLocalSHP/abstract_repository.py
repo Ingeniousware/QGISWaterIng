@@ -333,7 +333,7 @@ class AbstractRepository():
     # NEW_SYNC_METHODS_START
     
     def buildIndex(self):
-        self.idIndex = set(feature['ID'] for feature in self.Layer.getFeatures())
+        return set(feature['ID'] for feature in self.Layer.getFeatures())
 
     def processChange(self, change):
         
@@ -366,7 +366,7 @@ class AbstractRepository():
         
     def getServerUpdates(self, data):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        self.buildIndex()
+        self.idIndex = self.buildIndex()
         self.changesList = [self.processChange(change) for change in data]
         return self.changesList
     

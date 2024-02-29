@@ -444,7 +444,20 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         #load layers
         self.CreateLayers()
-
+        
+        #here A
+        scenarioName = WateringUtils.getProjectMetadata("scenario_name")
+        scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
+        keyUpdate = scenarioFK + "last_general_update"
+        date = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        WateringUtils.setProjectMetadata(keyUpdate, date)
+        
+        print("SAVING LAST UPDATED")
+        print(scenarioName)
+        print(scenarioFK)
+        print("key update: ", keyUpdate)
+        print("Date: ", date)
+        
         return True
     
     
@@ -461,12 +474,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def CreateLayers(self):
         scenarioFK = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
         
+        
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.listOfScenarios[self.scenarios_box.currentIndex()][1])
         self.myScenarioUnitOfWork.loadAll()
-        
-        keyUpdate = scenarioFK + "last_general_update"
-        date = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
-        WateringUtils.setProjectMetadata(keyUpdate, date)
         
         self.loadOpenStreetMapLayer()
         self.setStatusBar()

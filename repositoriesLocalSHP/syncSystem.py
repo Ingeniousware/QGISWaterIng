@@ -108,6 +108,7 @@ class WateringSync():
     def process_add_to_server(self, change):
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
+                print("server push")
                 repo.connectorToServer.addElementToServer(change.data)
                 break
                 
@@ -127,7 +128,7 @@ class WateringSync():
         elif geom_type == QgsWkbTypes.LineGeometry:
             line = []
             for line_part in change.data[-1]:
-                line.append([QgsPointXY(pt[0], pt[1]) for pt in line_part])
+                line.append(QgsPointXY(line_part["lng"], line_part["lat"]))
             feature.setGeometry(QgsGeometry.fromPolylineXY(line))
                     
         self.layer.startEditing()
@@ -144,6 +145,7 @@ class WateringSync():
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
                 repo.connectorToServer.addElementToServer(change.data)
+                print("server push")
                 break
             
     def process_update_in_offline(self, change):
