@@ -125,7 +125,9 @@ class WateringSync():
             line = []
             for line_part in change.data[-1]:
                 line.append(QgsPointXY(line_part["lng"], line_part["lat"]))
-            feature.setGeometry(QgsGeometry.fromPolylineXY(line))
+            geometry = QgsGeometry.fromPolylineXY(line)
+            geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
+            feature.setGeometry(geometry)
                     
         self.layer.startEditing()
 
