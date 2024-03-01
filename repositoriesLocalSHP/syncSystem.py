@@ -84,6 +84,8 @@ class WateringSync():
         self.synchronize_server_changes()
         self.synchronize_offline_changes() 
         
+        WateringUtils.update_last_updated(self.scenarioFK)
+        
     def synchronize_server_changes(self):
         while self.server_change_queue:
             change = self.server_change_queue.popleft()
