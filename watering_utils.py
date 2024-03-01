@@ -20,6 +20,7 @@ import random
 import string
 import pytz
 import socket
+import json
 
 from .repositoriesLocalSHP.change import Change
 
@@ -319,6 +320,44 @@ class WateringUtils():
         iface.messageBar().pushMessage("Success", "Successfully identified water meter nodes!", level=Qgis.Success, duration=6)
         
         print("Update completed.")
+        
+    def get_last_updated(scenario_key):
+        # Open the JSON file and load the data
+        file_path = WateringUtils.get_projects_json_path()
+        project_key = WateringUtils.getProjectMetadata("project_id")
+        
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+
+        # Retrieve the 'lastUpdated' value
+        try:
+            last_updated = data[project_key]['scenarios'][scenario_key]['lastUpdated']
+            return last_updated
+        except KeyError:
+            return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+    
+    def get_projects_json_path():
+        return WateringUtils.get_app_data_path() + "/QGISWatering/" + 'projects.json'
+    
+    def update_last_updated(scenario_key):
+        # Open and load the JSON file
+        file_path = WateringUtils.get_projects_json_path()
+        project_key = WateringUtils.getProjectMetadata("project_id")
+        
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+        
+        # Check if the project key and scenario key exist
+        if project_key in data and "scenarios" in data[project_key] and scenario_key in data[project_key]["scenarios"]:
+            # Update the 'lastUpdated' field with the current datetime in ISO format
+            data[project_key]["scenarios"][scenario_key]["lastUpdated"] = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        else:
+            print("Project or Scenario key not found in the provided JSON.")
+            return
+        
+        # Write the updated data back to the JSON file
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
         
 class WateringTimer():
     timer = None 

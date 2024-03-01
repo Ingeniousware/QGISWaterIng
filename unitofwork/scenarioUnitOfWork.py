@@ -53,8 +53,12 @@ class scenarioUnitOfWork():
         lastUpdate = WateringUtils.getLastUpdate()
         keyUpdate = WateringUtils.scenarioKeyLastUpdate(self.scenarioFK)
         
+        _lastUpdated_ = WateringUtils.get_last_updated(self.scenarioFK)
+        
+        print("THE LAST _lastUpdated_: ", _lastUpdated_)
+        
         for element in self.list_of_elements:
-           element.generalUpdate(lastUpdate)
+           element.generalUpdate(_lastUpdated_)
     
         WateringUtils.setProjectMetadata(keyUpdate, WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
 

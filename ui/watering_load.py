@@ -446,17 +446,20 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.CreateLayers()
         
         #here A
-        scenarioName = WateringUtils.getProjectMetadata("scenario_name")
-        scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
-        keyUpdate = scenarioFK + "last_general_update"
-        date = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
-        WateringUtils.setProjectMetadata(keyUpdate, date)
+        # scenarioName = WateringUtils.getProjectMetadata("scenario_name")
+        # scenarioFK = WateringUtils.getProjectMetadata("scenario_id")
+        # projectKey = WateringUtils.getProjectMetadata("project_id")
+        # keyUpdate = scenarioFK + "last_general_update"
+        # date = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        # WateringUtils.setProjectMetadata(keyUpdate, date)
         
-        print("SAVING LAST UPDATED")
-        print(scenarioName)
-        print(scenarioFK)
-        print("key update: ", keyUpdate)
-        print("Date: ", date)
+        WateringUtils.update_last_updated(self.ScenarioFK)
+        
+        # print("SAVING LAST UPDATED")
+        # print(scenarioName)
+        # print(scenarioFK)
+        # print("key update: ", keyUpdate)
+        # print("Date: ", date)
         
         return True
     
@@ -618,3 +621,24 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         print(self.OfflineProjects)
         print("is: ", is_in_offline_projects)
+
+    def update_last_updated(self):
+        # Open and load the JSON file
+        json_file_path = self.ProjectsJSON
+        project_key = self.ProjectFK
+        scenario_key = self.ScenarioFK
+        
+        with open(json_file_path, 'r') as file:
+            data = json.load(file)
+        
+        # Check if the project key and scenario key exist
+        if project_key in data and "scenarios" in data[project_key] and scenario_key in data[project_key]["scenarios"]:
+            # Update the 'lastUpdated' field with the current datetime in ISO format
+            data[project_key]["scenarios"][scenario_key]["lastUpdated"] = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        else:
+            print("Project or Scenario key not found in the provided JSON.")
+            return
+        
+        # Write the updated data back to the JSON file
+        with open(json_file_path, 'w') as file:
+            json.dump(data, file, indent=4)

@@ -76,17 +76,13 @@ class WateringSync():
         self.offline_change_queue.extend(changes_list)
 
     def synchronize(self):
-        keyUpdate = WateringUtils.scenarioKeyLastUpdate(self.scenarioFK)
-        lastUpdated = WateringUtils.getLastUpdate(keyUpdate)
+        _lastUpdated_ = WateringUtils.get_last_updated(self.scenarioFK)
         
-        print("lastUpdated: ", lastUpdated)
-        self.get_offline_changes(lastUpdated)
-        self.get_server_changes(lastUpdated)
+        print("_lastUpdated_: ", _lastUpdated_)
+        self.get_offline_changes(_lastUpdated_)
+        self.get_server_changes(_lastUpdated_)
         self.synchronize_server_changes()
-        self.synchronize_offline_changes()
-        
-        now = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
-        WateringUtils.setProjectMetadata(keyUpdate, now)
+        self.synchronize_offline_changes() 
         
     def synchronize_server_changes(self):
         while self.server_change_queue:
