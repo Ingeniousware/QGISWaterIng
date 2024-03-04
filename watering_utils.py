@@ -4,7 +4,7 @@
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.utils import iface
-from qgis.core import Qgis, QgsProject
+from qgis.core import Qgis, QgsProject, QgsFeatureRequest
 from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtCore import QVariant, QDateTime, QCoreApplication
 from PyQt5.QtWidgets import QAction, QMessageBox
@@ -322,16 +322,17 @@ class WateringUtils():
         print("Update completed.")
         
     def get_last_updated(scenario_key):
-        # Open the JSON file and load the data
         file_path = WateringUtils.get_projects_json_path()
-        project_key = WateringUtils.getProjectMetadata("project_id")
-        
+        if not os.path.exists(file_path):
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                json.dump({}, file)
+
         with open(file_path, 'r') as file:
             data = json.load(file)
 
-        # Retrieve the 'lastUpdated' value
         try:
-            last_updated = data[project_key]['scenarios'][scenario_key]['lastUpdated']
+            last_updated = data[WateringUtils.getProjectMetadata("project_id")]['scenarios'][scenario_key]['lastUpdated']
             return last_updated
         except KeyError:
             return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
@@ -340,24 +341,34 @@ class WateringUtils():
         return WateringUtils.get_app_data_path() + "/QGISWatering/" + 'projects.json'
     
     def update_last_updated(scenario_key):
-        # Open and load the JSON file
         file_path = WateringUtils.get_projects_json_path()
-        project_key = WateringUtils.getProjectMetadata("project_id")
-        
+        if not os.path.exists(file_path):
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                json.dump({}, file)
+
         with open(file_path, 'r') as file:
             data = json.load(file)
-        
-        # Check if the project key and scenario key exist
+
+        project_key = WateringUtils.getProjectMetadata("project_id")
         if project_key in data and "scenarios" in data[project_key] and scenario_key in data[project_key]["scenarios"]:
-            # Update the 'lastUpdated' field with the current datetime in ISO format
             data[project_key]["scenarios"][scenario_key]["lastUpdated"] = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
         else:
             print("Project or Scenario key not found in the provided JSON.")
             return
-        
-        # Write the updated data back to the JSON file
+
         with open(file_path, 'w') as file:
             json.dump(data, file, indent=4)
+            
+    def is_server_key_id_absent(layer, serverKeyId):
+        query = f"\"id\" = '{serverKeyId}'"
+        request = QgsFeatureRequest().setFilterExpression(query)
+        features = layer.getFeatures(request)
+        try:
+            first_feature = next(features)
+            return False
+        except StopIteration:
+            return True
         
 class WateringTimer():
     timer = None 
@@ -390,3 +401,4 @@ class WateringSynchWorker(QObject):
     def runSynch(self):
         self.scenarioUnitOfWork.newUpdateAll()
         self.finished.emit()
+        
