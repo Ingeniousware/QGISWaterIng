@@ -29,6 +29,7 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
         print(serverKeyId)
+        layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
         if not (serverKeyId in self.lastAddedElements):
             self.localRepository.addElementFromSignalR(paraminput[0])
             print("Water Tank Node inserted after push from server")

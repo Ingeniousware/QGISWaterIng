@@ -337,8 +337,15 @@ class WateringUtils():
         except KeyError:
             return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
     
+    def get_watering_folder():
+        folder_path = WateringUtils.get_app_data_path() + "/QGISWatering/"
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        return folder_path
+    
     def get_projects_json_path():
-        return WateringUtils.get_app_data_path() + "/QGISWatering/" + 'projects.json'
+        folder_path = WateringUtils.get_watering_folder()
+        return folder_path + 'projects.json'
     
     def update_last_updated(scenario_key):
         file_path = WateringUtils.get_projects_json_path()

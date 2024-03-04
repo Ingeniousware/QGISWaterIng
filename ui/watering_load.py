@@ -53,8 +53,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.ScenarioName = None
         self.OfflineProjects = None
         self.responseProjects = None
-        self.WateringFolder = WateringUtils.get_app_data_path() + "/QGISWatering/"
-        self.ProjectsJSON= self.WateringFolder + 'projects.json'
+        self.WateringFolder = WateringUtils.get_watering_folder()
+        self.ProjectsJSON= WateringUtils.get_projects_json_path()
         self.ProjectsJSON_data = None
         self.block = False
         self.Offline = False

@@ -1,6 +1,7 @@
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsCoordinateTransform, QgsWkbTypes
 from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
+from qgis.utils import iface
 from ..watering_utils import WateringUtils
 from .change import Change
 from collections import deque
@@ -107,7 +108,10 @@ class WateringSync():
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
                 print("server push")
-                repo.connectorToServer.addElementToServer(change.data)
+                if repo.connectorToServer:
+                    repo.connectorToServer.addElementToServer(change.data)
+                else:
+                    iface.messageBar().pushMessage(("Error"), ("Failed to connect to WaterIng Server, restart the connection."), level=1, duration=5)
                 break
                 
     def process_add_to_offline(self, change):
@@ -144,8 +148,11 @@ class WateringSync():
     def process_update_on_server(self, change):
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
-                repo.connectorToServer.addElementToServer(change.data)
-                print("server push")
+                if repo.connectorToServer:
+                    repo.connectorToServer.addElementToServer(change.data)
+                    print("server push")
+                else:
+                    iface.messageBar().pushMessage(("Error"), ("Failed to connect to WaterIng Server, restart the connection."), level=1, duration=5)
                 break
             
     def process_update_in_offline(self, change):
