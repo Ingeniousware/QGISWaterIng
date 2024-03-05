@@ -123,7 +123,8 @@ class PipeNodeRepository(AbstractRepository):
 
             #feature['lastUpdate'] = WateringUtils.getDateTimeNow()
             
-            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
+            lastUpdatedForSignalR = WateringUtils.get_last_updated(self.ScenarioFK)
+            feature.setAttribute('lastUpdate', lastUpdatedForSignalR)
             
             print("Adding feature ", feature, "to server")
             

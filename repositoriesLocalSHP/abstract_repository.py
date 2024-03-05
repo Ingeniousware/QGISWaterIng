@@ -152,8 +152,8 @@ class AbstractRepository():
             for i in range(len(self.field_definitions) - 1): #except lastUpdate field
                 feature.setAttribute(self.field_definitions[i][0], element[i+2]) #skip lat and lng
 
-            feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
-
+            lastUpdatedForSignalR = WateringUtils.get_last_updated(self.ScenarioFK)
+            feature.setAttribute('lastUpdate', lastUpdatedForSignalR)
 
             layer.addFeature(feature)
             layer.commitChanges()
