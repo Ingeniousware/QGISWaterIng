@@ -36,6 +36,7 @@ class WateringSync():
         self.destCrs = QgsCoordinateReferenceSystem(3857)
         
         self.repositories = self.repo_copy
+        self.sync_was_halted = False
 
     def initializeRepository(self):
         ...
@@ -78,6 +79,7 @@ class WateringSync():
 
     def synchronize(self):
         _lastUpdated_ = WateringUtils.get_last_updated(self.scenarioFK)
+        self.sync_was_halted = False
         
         print("_lastUpdated_: ", _lastUpdated_)
         self.get_offline_changes(_lastUpdated_)
@@ -85,7 +87,8 @@ class WateringSync():
         self.synchronize_server_changes()
         self.synchronize_offline_changes() 
         
-        WateringUtils.update_last_updated(self.scenarioFK)
+        if not self.sync_was_halted:
+            WateringUtils.update_last_updated(self.scenarioFK)
         
     def synchronize_server_changes(self):
         while self.server_change_queue:
@@ -105,14 +108,17 @@ class WateringSync():
             print(f"Unknown change type: {change.change_type}")
         
     def process_add_to_server(self, change):
+        connection_found = False
         for repo in self.repositories:
-            if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
-                print("server push")
+            if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
                     repo.connectorToServer.addElementToServer(change.data)
-                else:
-                    iface.messageBar().pushMessage(("Error"), ("Failed to connect to WaterIng Server, restart the connection."), level=1, duration=5)
-                break
+                    connection_found = True
+                    break
+                
+        if not connection_found:
+            iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)
+            self.sync_was_halted = True
                 
     def process_add_to_offline(self, change):
         print(f"Adding element in {change.layer_id}: {change.feature_id} from server to offline")
@@ -146,14 +152,18 @@ class WateringSync():
         self.layer.commitChanges()
         
     def process_update_on_server(self, change):
+        connection_found = False
+        
         for repo in self.repositories:
-            if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
+            if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
                     repo.connectorToServer.addElementToServer(change.data)
-                    print("server push")
-                else:
-                    iface.messageBar().pushMessage(("Error"), ("Failed to connect to WaterIng Server, restart the connection."), level=1, duration=5)
-                break
+                    connection_found = True
+                    break
+                
+        if not connection_found:
+            iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)
+            self.sync_was_halted = True
             
     def process_update_in_offline(self, change):
         layer_name = change.layer_id.name()
@@ -191,13 +201,20 @@ class WateringSync():
             self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
 
         self.layer.commitChanges()
-        
-        
+         
     def process_delete_on_server(self, change):
+        connection_found = False
+
         for repo in self.repositories:
-            if change.layer_id.name() == repo.LayerName and repo.connectorToServer:
-                repo.connectorToServer.removeElementFromServer(change.data["ID"])
-                break
+            if change.layer_id.name() == repo.LayerName:
+                if repo.connectorToServer:
+                    repo.connectorToServer.removeElementFromServer(change.data["ID"])
+                    connection_found = True
+                    break
+
+        if not connection_found:
+            iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)
+            self.sync_was_halted = True
             
     def process_delete_in_offline(self, change):
         print(f"Delete element in {change.layer_id}: {id} from server to offline")

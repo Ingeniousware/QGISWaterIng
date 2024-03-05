@@ -264,12 +264,8 @@ class QGISPlugin_WaterIng:
         if (self.dlg.exec_() == 1):
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork  
             self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
-            if not self.dlg.Offline:          
-                self.setHubConnection()
-                WateringUtils.setProjectMetadata("connection_status", "online")
-            else:
-                WateringUtils.setProjectMetadata("connection_status", "default text")
-            print("before updating options")                
+            if WateringUtils.isInternetConnection() and not self.hub_connection:        
+                self.setHubConnection()        
             self.updateActionStateOpen()
             self.updateActionScenarioStateOpen()
             self.setOnAttributeChange()

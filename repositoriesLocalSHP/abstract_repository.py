@@ -154,7 +154,8 @@ class AbstractRepository():
 
             lastUpdatedForSignalR = WateringUtils.get_last_updated(self.ScenarioFK)
             feature.setAttribute('lastUpdate', lastUpdatedForSignalR)
-
+            
+            print("lastUpdatedForSignalR", lastUpdatedForSignalR)
             layer.addFeature(feature)
             layer.commitChanges()
             layer.triggerRepaint()
@@ -215,8 +216,6 @@ class AbstractRepository():
         print("Changes after deleting feature are now done")
         if self.connectorToServer:
             self.connectorToServer.removeElementFromServer(feature)
-
-        
 
     def setDefaultValues(self, feature):
         ...
