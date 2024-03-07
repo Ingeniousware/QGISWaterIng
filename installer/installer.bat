@@ -45,7 +45,9 @@ if defined QGIS_DIR (
 
     :: Setup OSGeo4W environment
     cd %QGIS_DIR%
-
+    
+    call "%QGIS_DIR%\bin\o4w_env.bat"
+    
     :: Use pip from the OSGeo4W environment to install signalrcore
     echo Installing signalrcore...
     pip install signalrcore
