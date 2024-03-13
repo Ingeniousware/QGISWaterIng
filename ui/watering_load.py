@@ -568,6 +568,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if self.newProjectCheckBox.isChecked():
             self.projects_box.hide()
             self.new_project_name.show()
+            self.newProjectBtn.setText("Create new WaterIng Project") 
+        elif not self.newScenarioCheckBox.isChecked():
+            self.newProjectBtn.setText("Load WaterIng Data") 
         else: 
             self.projects_box.show()
             self.new_project_name.hide()
@@ -576,9 +579,14 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if self.newScenarioCheckBox.isChecked():
             self.scenarios_box.hide()
             self.new_scenario_name.show()
+            self.newProjectBtn.setText("Create new WaterIng Scenario") 
+        elif not self.newProjectCheckBox.isChecked():
+            self.newProjectBtn.setText("Load WaterIng Data") 
         else:
             self.scenarios_box.show()
             self.new_scenario_name.hide()
+            
+        
         
         #Clone Scenario
         if self.cloneCheckBox.isChecked():
