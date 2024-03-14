@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-
-import os
-import json
-import requests
-import glob
-
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer, QgsLayerTreeGroup
 from qgis.utils import iface
@@ -12,8 +6,13 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QDockWidget, QLabel
 from PyQt5.QtCore import Qt
-from functools import partial
 
+import os
+import json
+import requests
+import glob
+import uuid
+from functools import partial
 
 from ..unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
 from ..watering_utils import WateringUtils
@@ -59,7 +58,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.block = False
         self.Offline = False
         self.initializeRepository()
-        self.newProjectBtn.clicked.connect(self.checkExistingProject)
+        self.newProjectBtn.clicked.connect(self.checkAction)
         self.cloneScenarioBtn.clicked.connect(self.cloneScenario)
     
     def initializeRepository(self):
@@ -155,6 +154,22 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.scenarios_box.addItem(self.OfflineScenarios[i][0])
             self.listOfScenarios.append((self.OfflineScenarios[i][0],
                                          self.OfflineScenarios[i][1]))
+    
+    def checkAction(self):
+        if not self.newProjectCheckBox.isChecked() and not self.newScenarioCheckBox.isChecked():
+            self.checkExistingProject(); return 
+            
+        newProjectKeyId = uuid.uuid4()
+        newScenarioKeyId = uuid.uuid4()
+        
+        if self.newProjectCheckBox.isChecked() and self.newScenarioCheckBox.isChecked():
+            self.createNewProjectAndScenario(newProjectKeyId, newScenarioKeyId); return
+        
+        if self.newProjectCheckBox.isChecked():
+            self.createNewProject(newProjectKeyId); return 
+            
+        if self.newScenarioCheckBox.isChecked():
+            self.createNewScenario(newScenarioKeyId, None); return 
             
     def checkExistingProject(self):
         #if there is a project opened
@@ -568,6 +583,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if self.newProjectCheckBox.isChecked():
             self.projects_box.hide()
             self.new_project_name.show()
+            self.newProjectBtn.setText("Create new WaterIng Project") 
+        elif not self.newScenarioCheckBox.isChecked():
+            self.newProjectBtn.setText("Load WaterIng Data") 
         else: 
             self.projects_box.show()
             self.new_project_name.hide()
@@ -576,10 +594,13 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if self.newScenarioCheckBox.isChecked():
             self.scenarios_box.hide()
             self.new_scenario_name.show()
+            self.newProjectBtn.setText("Create new WaterIng Scenario") 
+        elif not self.newProjectCheckBox.isChecked():
+            self.newProjectBtn.setText("Load WaterIng Data") 
         else:
             self.scenarios_box.show()
             self.new_scenario_name.hide()
-        
+            
         #Clone Scenario
         if self.cloneCheckBox.isChecked():
             if not self.Offline:
@@ -642,3 +663,68 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         # Write the updated data back to the JSON file
         with open(json_file_path, 'w') as file:
             json.dump(data, file, indent=4)
+
+    def createNewProjectAndScenario(self, projectKeyId, scenarioKeyId):
+        project_creation_success, createdProjectData = self.createNewProject(projectKeyId)
+        if not project_creation_success:
+            WateringUtils.error_message("Project creation failed. Please try again.")
+            return False
+
+        serverProjectKeyId = createdProjectData.json()["serverKeyId"]
+        scenario_creation_success = self.createNewScenario(scenarioKeyId, serverProjectKeyId)
+        if not scenario_creation_success:
+            WateringUtils.error_message("Scenario creation failed. Please try again.")
+            return False
+
+        WateringUtils.success_message("Project and scenario created successfully!")
+        return True
+
+    def createNewProject(self, keyId):
+        projectName = self.new_project_name.text()
+        description = "Project created in QGIS WaterIng Plugin"
+        
+        newProjectJson = {
+            "keyId": "{}".format(keyId),
+            "name": "{}".format(projectName),
+            "description": "{}".format(description)
+        }
+        
+        url = WateringUtils.getServerUrl() + "/api/v1/ProjectWaterNetworks"
+        headers = {'Authorization': "Bearer {}".format(self.token)} 
+        response = requests.post(url, headers=headers, json=newProjectJson)
+        
+        if response.status_code == 200:
+            WateringUtils.success_message("Project created successfully!")
+            return True, response
+        
+        WateringUtils.success_message("Project creation failed. Please try again.")
+        return False
+        
+    def createNewScenario(self, keyId, projectKeyId):
+        if not projectKeyId:
+            current_index = self.projects_box.currentIndex()
+            projectId = self.listOfProjects[current_index][1]
+        else:
+            projectId = projectKeyId
+            
+        scenarioName = self.new_scenario_name.text() or "My Project Scenario"
+        description =  "Scenario created in WaterIng QGIS Plugin"
+        
+        newScenarioJson = {
+            "keyId": "{}".format(keyId),
+            "serverKeyId": "{}".format(keyId),
+            "fkWaterProject": "{}".format(projectId),
+            "name": "{}".format(scenarioName),
+            "description": "{}".format(description)
+        }
+        
+        url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
+        headers = {'Authorization': "Bearer {}".format(self.token)} 
+        response = requests.post(url, headers=headers, json=newScenarioJson)
+        
+        if response.status_code == 200:
+            WateringUtils.success_message("Scenario created successfully!")
+            return True
+        
+        WateringUtils.error_message("Scenario creation failed. Please try again.")
+        return False
