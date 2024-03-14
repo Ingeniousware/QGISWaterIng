@@ -246,7 +246,7 @@
         <item row="5" column="4">
          <widget class="QPushButton" name="BTExecute">
           <property name="text">
-           <string>Execute</string>
+           <string>Exectute</string>
           </property>
          </widget>
         </item>

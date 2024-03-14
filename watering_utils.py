@@ -376,6 +376,12 @@ class WateringUtils():
             return False
         except StopIteration:
             return True
+
+    def success_message(message):
+        iface.messageBar().pushMessage((message), level=Qgis.Success, duration=5)
+        
+    def error_message(message):
+        iface.messageBar().pushMessage(("Error"), (message), level=1, duration=5)
         
 class WateringTimer():
     timer = None 
