@@ -142,7 +142,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 if node.geometry().asPoint() in existingSensors:
                     matrix_table.append([node["Name"],
                                         node["ID"],
-                                        node["Description"]])
+                                        node["Descript"]])
                         
             model = TableModel(matrix_table, ["Name", "ID", "Description"])
             proxyModel = QSortFilterProxyModel()

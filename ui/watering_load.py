@@ -12,6 +12,7 @@ import json
 import requests
 import glob
 import uuid
+import shutil
 from functools import partial
 
 from ..unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
@@ -27,13 +28,13 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
         # Ui elements
         self.new_project_name.hide()
-        self.new_scenario_name.hide()
+        self.create_scenario.hide()
         self.clone_title.hide()
         self.clone_box.hide()
         self.cloned_scenario_name.hide()
         self.cloneScenarioBtn.hide()
-        self.newProjectCheckBox.clicked.connect(self.checkUserControlState)
-        self.newScenarioCheckBox.clicked.connect(self.checkUserControlState)
+        self.newProjectCheckBox.clicked.connect(self.checkUserControlStateProject)
+        self.newScenarioCheckBox.clicked.connect(self.checkUserControlStateScenario)
         self.cloneCheckBox.clicked.connect(self.checkUserControlState)
         self.scenarios_box.currentIndexChanged.connect(self.setCloningScenarioName)
         
@@ -89,6 +90,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.newShpDirectory.setFilePath(self.WateringFolder)
         
     def loadProjects(self):
+        self.projects_box.clear()
+        self.listOfProjects = []
+        
         if not self.responseProjects:
             return
         
@@ -104,25 +108,27 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         #Resetting scenarios box in case of changing the selected project.
         self.scenarios_box.clear()
         self.listOfScenarios = []
-
-        self.ProjectName = self.listOfProjects[value][0]
-        self.ProjectFK = self.listOfProjects[value][1]
         
-        self.new_project_name.setPlaceholderText(self.ProjectName)
+        if 0 <= value < len(self.listOfProjects):
+            self.ProjectName, self.ProjectFK = self.listOfProjects[value]
         
-        showRemoved = False
-        params = {'ProjectFK': "{}".format(self.ProjectFK), 'showRemoved': "{}".format(showRemoved)}
-        url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
-        
-        response_scenarios = WateringUtils.getResponse(url, params)
-        
-        if not response_scenarios:
-            return
-        
-        for i in range(0, response_scenarios.json()["total"]):
-            self.scenarios_box.addItem(response_scenarios.json()["data"][i]["name"])
-            self.listOfScenarios.append((response_scenarios.json()["data"][i]["name"],
-                                         response_scenarios.json()["data"][i]["serverKeyId"]))
+            self.new_project_name.setPlaceholderText(self.ProjectName)
+            
+            showRemoved = False
+            params = {'ProjectFK': "{}".format(self.ProjectFK), 'showRemoved': "{}".format(showRemoved)}
+            url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
+            
+            response_scenarios = WateringUtils.getResponse(url, params)
+            
+            if not response_scenarios:
+                return
+            
+            for i in range(0, response_scenarios.json()["total"]):
+                self.scenarios_box.addItem(response_scenarios.json()["data"][i]["name"])
+                self.listOfScenarios.append((response_scenarios.json()["data"][i]["name"],
+                                            response_scenarios.json()["data"][i]["serverKeyId"]))
+        else:
+            self.scenarios_box.clear()
 
     def offlineProcedures(self):
         self.projects_box.clear()
@@ -163,13 +169,24 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         newScenarioKeyId = uuid.uuid4()
         
         if self.newProjectCheckBox.isChecked() and self.newScenarioCheckBox.isChecked():
-            self.createNewProjectAndScenario(newProjectKeyId, newScenarioKeyId); return
+            self.createNewProjectAndScenario(newProjectKeyId, newScenarioKeyId)
+            self.newProjectCheckBox.setChecked(False)
+            self.newScenarioCheckBox.setChecked(False)
+            self.checkUserControlStateProject()
+            self.checkUserControlStateScenario()
+            self.initializeRepository(); return
         
         if self.newProjectCheckBox.isChecked():
-            self.createNewProject(newProjectKeyId); return 
+            self.createNewProject(newProjectKeyId)
+            self.newProjectCheckBox.setChecked(False)
+            self.checkUserControlStateProject()
+            self.initializeRepository(); return
             
         if self.newScenarioCheckBox.isChecked():
-            self.createNewScenario(newScenarioKeyId, None); return 
+            self.createNewScenario(newScenarioKeyId, None)
+            self.newScenarioCheckBox.setChecked(False)
+            self.checkUserControlStateScenario()
+            self.initializeRepository(); return
             
     def checkExistingProject(self):
         #if there is a project opened
@@ -579,28 +596,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 print(f"Scenario: {scenario_name} not found!")
                 
     def checkUserControlState(self):
-        # Projects
-        if self.newProjectCheckBox.isChecked():
-            self.projects_box.hide()
-            self.new_project_name.show()
-            self.newProjectBtn.setText("Create new WaterIng Project") 
-        elif not self.newScenarioCheckBox.isChecked():
-            self.newProjectBtn.setText("Load WaterIng Data") 
-        else: 
-            self.projects_box.show()
-            self.new_project_name.hide()
-        
-        # Scenarios
-        if self.newScenarioCheckBox.isChecked():
-            self.scenarios_box.hide()
-            self.new_scenario_name.show()
-            self.newProjectBtn.setText("Create new WaterIng Scenario") 
-        elif not self.newProjectCheckBox.isChecked():
-            self.newProjectBtn.setText("Load WaterIng Data") 
-        else:
-            self.scenarios_box.show()
-            self.new_scenario_name.hide()
-            
         #Clone Scenario
         if self.cloneCheckBox.isChecked():
             if not self.Offline:
@@ -614,9 +609,31 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.clone_box.hide()
             self.cloned_scenario_name.hide()
             self.cloneScenarioBtn.hide()
-
-    # Cloning procedures
     
+    def checkUserControlStateScenario(self):
+        # Scenarios
+        if self.newScenarioCheckBox.isChecked():
+            self.scenarios_box.hide()
+            self.create_scenario.show()
+            self.create_scenario.setPlaceholderText("My New Scenario") 
+            self.newProjectBtn.setText("Create new WaterIng Scenario") 
+        else:
+            self.newProjectBtn.setText("Load WaterIng Data") 
+            self.scenarios_box.show()
+            self.create_scenario.hide()
+    
+    def checkUserControlStateProject(self):
+        # Projects
+        if self.newProjectCheckBox.isChecked():
+            self.projects_box.hide()
+            self.new_project_name.show()
+            self.new_project_name.setPlaceholderText("My New Project") 
+            self.newProjectBtn.setText("Create new WaterIng Project") 
+        else:
+            self.newProjectBtn.setText("Load WaterIng Data") 
+            self.projects_box.show()
+            self.new_project_name.hide()
+            
     def setCloningScenarioName(self):
         self.cloned_scenario_name.setPlaceholderText(self.scenarios_box.currentText() + " cloned version")
         
@@ -624,24 +641,37 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         for item in self.listOfProjects:
             self.clone_box.addItem(item[0])
 
-    def cloneScenario(self):
-        self.listOfProjectsToClone = []
+    # def cloneScenario(self):
+    #     self.listOfProjectsToClone = []
         
-        if os.path.exists(self.ProjectsJSON):
-            with open(self.ProjectsJSON, 'r') as json_file:
-                self.ProjectsJSON_data = json.load(json_file)
+    #     if os.path.exists(self.ProjectsJSON):
+    #         with open(self.ProjectsJSON, 'r') as json_file:
+    #             self.ProjectsJSON_data = json.load(json_file)
         
-            if self.ProjectsJSON_data:
-                self.OfflineProjects = self.getOfflineProjects()
+    #         if self.ProjectsJSON_data:
+    #             self.OfflineProjects = self.getOfflineProjects()
                 
-        else:
-            iface.messageBar().pushMessage(("Error"), ("No projects found locally. Connect to WaterIng and load a project from server."), level=1, duration=5)
+    #     else:
+    #         iface.messageBar().pushMessage(("Error"), ("No projects found locally. Connect to WaterIng and load a project from server."), level=1, duration=5)
                    
-        project_to_check = self.listOfProjects[self.clone_box.currentIndex()]
-        is_in_offline_projects = any(project_to_check == project[1] for project in self.OfflineProjects)
+    #     project_to_check = self.listOfProjects[self.clone_box.currentIndex()]
+    #     is_in_offline_projects = any(project_to_check == project[1] for project in self.OfflineProjects)
         
-        print(self.OfflineProjects)
-        print("is: ", is_in_offline_projects)
+    #     print(self.OfflineProjects)
+    #     print("is: ", is_in_offline_projects)
+    def cloneScenario(self):
+        folder_path = WateringUtils.get_watering_folder()
+        fromProjectKeyID = self.listOfProjects[self.projects_box.currentIndex()][1]
+        fromProjectKeyScenario = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
+        toProjectKeyID = self.listOfProjects[self.clone_box.currentIndex()][1]
+        toProjectKeyScenario = str(uuid.uuid4())
+        
+        scenario_created = self.createNewScenario(toProjectKeyScenario, toProjectKeyID)
+        
+        if scenario_created:
+            self.clone_scenario(folder_path, fromProjectKeyID, fromProjectKeyScenario, toProjectKeyID, toProjectKeyScenario)
+        else:
+            WateringUtils.error_message("Couldn’t clone the scenario. Please try again.")
 
     def update_last_updated(self):
         # Open and load the JSON file
@@ -707,8 +737,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         else:
             projectId = projectKeyId
             
-        scenarioName = self.new_scenario_name.text() or "My Project Scenario"
-        description =  "Scenario created in WaterIng QGIS Plugin"
+        scenarioName = self.create_scenario.text() or "My Project Scenario"
+        description =  "Scenario created in QGIS WaterIng Plugin"
         
         newScenarioJson = {
             "keyId": "{}".format(keyId),
@@ -728,3 +758,38 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         WateringUtils.error_message("Scenario creation failed. Please try again.")
         return False
+    
+    def clone_scenario(self, folder_path, fromProjectKeyID, fromProjectKeyScenario, toProjectKeyID, toProjectKeyScenario):
+        # Source and target paths
+        source_path = os.path.join(folder_path, fromProjectKeyID, fromProjectKeyScenario)
+        target_path = os.path.join(folder_path, toProjectKeyID, toProjectKeyScenario)
+
+        # Create target directory if it doesn't exist
+        os.makedirs(target_path, exist_ok=True)
+
+        # Copy contents from source to target
+        for item in os.listdir(source_path):
+            s = os.path.join(source_path, item)
+            d = os.path.join(target_path, item)
+            if os.path.isdir(s):
+                shutil.copytree(s, d, dirs_exist_ok=True)
+            else:
+                shutil.copy2(s, d)
+
+        # Update projects.json
+        projects_json_path = os.path.join(folder_path, 'projects.json')
+        with open(projects_json_path, 'r+') as f:
+            projects = json.load(f)
+
+            if toProjectKeyID not in projects:
+                projects[toProjectKeyID] = {"name": "", "scenarios": {}}
+
+            projects[toProjectKeyID]["scenarios"][toProjectKeyScenario] = {
+                "name": "Cloned Scenario"
+            }
+
+            # Go to the beginning of the file to overwrite it
+            f.seek(0)
+            json.dump(projects, f, indent=4)
+            # Truncate the file in case the new data is smaller than the old
+            f.truncate()
