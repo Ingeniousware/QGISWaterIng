@@ -27,7 +27,7 @@
    <item row="7" column="1">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QLineEdit" name="new_scenario_name">
+      <widget class="QLineEdit" name="create_scenario">
        <property name="placeholderText">
         <string>Scenario Name</string>
        </property>
