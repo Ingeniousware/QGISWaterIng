@@ -439,7 +439,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.openGroup(shp_backupFiles, group_backup, scenario_path)
         
     def openGroup(self, group_list, group, scenario_path):
-        print("GROUP OPENED")
         for element_layer in group_list:
             layer_path = os.path.join(scenario_path, element_layer)
             layer_name = os.path.splitext(element_layer)[0]
@@ -454,6 +453,19 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             else: 
                 print("Layer not valid: ", element_layer)
                 
+        self.hide_backup_group_layers("Backup")
+    
+    def hide_backup_group_layers(self, group):
+        project = QgsProject.instance()
+        root = project.layerTreeRoot()
+        backup_group = root.findGroup(group)
+        if not backup_group:
+            print("Group 'backup' not found.")
+            return
+        for layer in backup_group.children():
+            if isinstance(layer, QgsLayerTreeLayer):
+                layer.setItemVisibilityChecked(False)
+            
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
     
