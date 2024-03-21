@@ -465,7 +465,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         for layer in backup_group.children():
             if isinstance(layer, QgsLayerTreeLayer):
                 layer.setItemVisibilityChecked(False)
-            
+        
+        root.findGroup(group).setExpanded(False)
+        
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
     
