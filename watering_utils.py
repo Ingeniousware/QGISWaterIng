@@ -337,6 +337,47 @@ class WateringUtils():
         except KeyError:
             return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
     
+    def get_added_from_signalr(scenarioKey):
+        file_path = WateringUtils.get_projects_json_path()
+        projKey = WateringUtils.getProjectMetadata("project_id")
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+
+        if projKey in data and scenarioKey in data[projKey]['scenarios']:
+            return data[projKey]['scenarios'][scenarioKey].get('addedFromSignalR', [])
+        else:
+            return None
+        
+    def clear_added_from_signalr(scenarioKey):
+        file_path = WateringUtils.get_projects_json_path()
+        projKey = WateringUtils.getProjectMetadata("project_id")
+    
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+
+        if projKey in data and scenarioKey in data[projKey]['scenarios']:
+            data[projKey]['scenarios'][scenarioKey]['addedFromSignalR'] = []
+
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+            
+
+    def update_added_from_signalr(scenarioKey, element_id):
+        # element_id type: str
+        file_path = WateringUtils.get_projects_json_path()
+        projKey = WateringUtils.getProjectMetadata("project_id")
+        
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+        
+        if projKey in data and scenarioKey in data[projKey]['scenarios']:
+            if 'addedFromSignalR' not in data[projKey]['scenarios'][scenarioKey]:
+                data[projKey]['scenarios'][scenarioKey]['addedFromSignalR'] = []
+            data[projKey]['scenarios'][scenarioKey]['addedFromSignalR'].append(element_id)
+        
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+        
     def get_watering_folder():
         folder_path = WateringUtils.get_app_data_path() + "/QGISWatering/"
         if not os.path.exists(folder_path):

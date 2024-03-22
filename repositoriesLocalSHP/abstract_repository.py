@@ -159,6 +159,8 @@ class AbstractRepository():
             layer.addFeature(feature)
             layer.commitChanges()
             layer.triggerRepaint()
+            
+            WateringUtils.update_added_from_signalr(self.ScenarioFK, str(elementJSON['serverKeyId']))
         else:
             print("Id already in offline, not adding as new.")
 
