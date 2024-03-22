@@ -368,7 +368,9 @@ class AbstractRepository():
     def getServerUpdates(self, data):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.idIndex = self.buildIndex()
-        self.changesList = [self.processChange(change) for change in data]
+        self.addedFromSignalR = WateringUtils.get_added_from_signalr(self.ScenarioFK)
+        self.changesList = [self.processChange(change) for change in data if change["serverKeyId"] not in self.addedFromSignalR]
+        print("changes lsit: ", self.changesList)
         return self.changesList
     
     def elementExistsInOffline(self, id):
