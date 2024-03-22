@@ -291,9 +291,6 @@ class QGISPlugin_WaterIng:
     def updateActionScenarioStateOpen(self):
         #TODO toolSelectElements = SelectElementsTool()
         #TODO self.toolbarToolManager.toolImportINPFile.setCurrentTool(toolSelectElements)
-        self.toolbarToolManager.selectElementAction.setEnabled(True)
-        
-
         toolImportINPFile = ImportINPFileTool(self.iface)
         self.toolbarToolManager.toolImportINPFile.setCurrentTool(toolImportINPFile)
         self.toolbarToolManager.toolImportINPFile.setEnabled(True)
@@ -355,11 +352,9 @@ class QGISPlugin_WaterIng:
         if WateringUtils.isWateringProject():
             self.toolSelectNode = SelectNodeTool(self.canvas)  #(self.canvas)
             print("before setting to true")
-            #self.toolSelectNode.setAction(self.selectElementAction)
             self.toolbarToolManager.readAnalysisAction.setEnabled(True)                            
             self.toolbarToolManager.openOptimizationManagerAction.setEnabled(True)
             self.toolbarToolManager.readMeasurementsAction.setEnabled(True)
-            # self.selectElementAction.setEnabled(True)
             print("After setting to true")
     
 
@@ -372,7 +367,6 @@ class QGISPlugin_WaterIng:
                     self.toolbarToolManager.insertSensorNodeAction,
                     self.toolbarToolManager.openOptimizationManagerAction,
                     self.toolbarToolManager.readMeasurementsAction,
-                    self.toolbarToolManager.selectElementAction,
                     self.toolbarToolManager.insertDemandNodeAction,
                     self.toolbarToolManager.insertTankNodeAction,
                     self.toolbarToolManager.insertReservoirNodeAction,

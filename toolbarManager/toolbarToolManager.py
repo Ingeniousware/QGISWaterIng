@@ -219,17 +219,6 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.toolDeleteElementAction.setCheckable(True)        
         self.toolDeleteElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-        
-        # Select 
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/select.svg'
-        self.selectElementAction = self.addMapToolButtonAction(
-            icon_path,
-            text=WateringUtils.tr(u'Select Element'),
-            callback=self.activateMapTool,
-            toolbar = self.toolbar,
-            parent=self.parentWindow)
-        self.selectElementAction.setCheckable(True)
-        self.selectElementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Optimization
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimization.svg'
