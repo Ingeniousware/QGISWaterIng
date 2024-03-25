@@ -217,7 +217,7 @@ class AbstractRepository():
 
         print("Changes after deleting feature are now done")
         if self.connectorToServer:
-            self.connectorToServer.removeElementFromServer(feature)
+            self.connectorToServer.removeElementFromServer(feature["ID"])
 
     def setDefaultValues(self, feature):
         ...

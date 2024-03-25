@@ -31,7 +31,7 @@ class scenarioUnitOfWork():
         self.valveNodeRepository = ValveNodeRepository(self.token, self.project_path, self.scenarioFK)   
         self.pumpNodeRepository = PumpNodeRepository(self.token, self.project_path, self.scenarioFK)   
         self.sensorNodeRepository = SensorNodeRepository(self.token, self.project_path, self.scenarioFK)   
-        
+                
     def generateListOfElements(self):
         self.list_of_elements = [self.waterDemandNodeRepository,
                                 self.tankNodeRepository, 
@@ -41,6 +41,8 @@ class scenarioUnitOfWork():
                                 self.pumpNodeRepository,
                                 self.pipeNodeRepository,
                                 self.sensorNodeRepository]
+        
+        self.layer_names = {repo.LayerName: repo for repo in self.list_of_elements}
 
     def initializeSyncSystem(self):
         self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK, self.list_of_elements)
@@ -65,3 +67,6 @@ class scenarioUnitOfWork():
     def newUpdateAll(self):
         self.syncSystem.synchronize()
     
+    def getRepoByLayer(self, layer):
+        return self.layer_names.get(layer.name(), None)
+        

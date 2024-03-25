@@ -335,7 +335,7 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.insertSensorNodeAction.setCurrentTool(toolInsertSensorNode)
         self.toolbarToolManager.insertSensorNodeAction.setEnabled(True)
         
-        toolDeleteElement = DeleteElementTool(self.canvas)
+        toolDeleteElement = DeleteElementTool(self.canvas, self.scenarioUnitOFWork,  self.actionManager, self.toolbarToolManager)
         toolDeleteElement.setAction(self.toolbarToolManager.toolDeleteElementAction)
         self.toolbarToolManager.toolDeleteElementAction.setCurrentTool(toolDeleteElement)
         self.toolbarToolManager.toolDeleteElementAction.setEnabled(True)
