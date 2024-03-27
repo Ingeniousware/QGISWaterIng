@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer, QgsLayerTreeGroup
+from qgis.core import QgsFeature, QgsWkbTypes
 from qgis.utils import iface
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QLabel
@@ -781,6 +782,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         WateringUtils.error_message("Scenario creation failed. Please try again.")
         return False
     
+    #Clone methods
+    
     def clone_scenario(self, folder_path, fromProjectName, fromProjectKeyID, 
                        fromProjectKeyScenario, toProjectKeyID, 
                        toProjectKeyScenario, clonedScenarioName):
@@ -816,5 +819,44 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             f.seek(0)
             json.dump(projects, f, indent=4)
             f.truncate()
+    
+    # Merge methods
+    
+    def feature_signature(self, feature):
+        return feature.geometry().asWkt()
 
-        
+    def load_layer(self, layer_path):
+        layer = QgsProject.instance().mapLayersByName(layer_path)
+        return layer[0] if layer else QgsVectorLayer(layer_path, "Layer", "ogr")
+
+    def copy_features(self, source_layer, dest_dp):
+        signatures = set()
+        for feature in source_layer.getFeatures():
+            signature = self.feature_signature(feature)
+            if signature not in signatures:
+                new_feature = QgsFeature(feature)
+                dest_dp.addFeature(new_feature)
+                signatures.add(signature)
+                
+    def merge_layers(self, layer_path1, layer_path2, merged_layer_name):
+        layer1 = self.load_layer(layer_path1)
+        layer2 = self.load_layer(layer_path2)
+
+        if layer1.geometryType() != layer2.geometryType():
+            raise ValueError("Mismatched geometry types.")
+
+        crs = layer1.crs().authid()
+        geom_type = QgsWkbTypes.displayString(layer1.wkbType())
+        merged_layer = QgsVectorLayer(f"{geom_type}?crs={crs}", merged_layer_name, "memory")
+
+        dp = merged_layer.dataProvider()
+        dp.addAttributes(layer1.fields())
+        merged_layer.updateFields()
+
+        self.copy_features(layer1, dp)
+        self.copy_features(layer2, dp)
+
+        merged_layer.updateExtents()
+        QgsProject.instance().addMapLayer(merged_layer)
+
+        return merged_layer
