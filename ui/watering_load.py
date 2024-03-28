@@ -652,7 +652,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.new_project_name.hide()
             
     def setCloningScenarioName(self):
-        self.cloned_scenario_name.setPlaceholderText(self.scenarios_box.currentText() + " cloned version")
+        self.cloned_scenario_name.setPlaceholderText(self.scenarios_box.currentText() + " Cloned Version")
         
     def loadProjectsToClone(self):
         for item in self.listOfProjects:
