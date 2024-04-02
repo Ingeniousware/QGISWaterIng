@@ -10,6 +10,7 @@ from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 import queue
 import uuid
+from datetime import datetime, timezone
 
 class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
@@ -61,14 +62,16 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             
         name = feature["Name"] if feature["Name"] else WateringUtils.generateRandomElementName("W")
         description = feature["Descript"] if feature["Descript"] else "Water Meter from QGIS Plugin"
-        meterState = feature["Meterstate"] if feature["Meterstate"] else 0
-        functType = feature["FunctType"] if feature["FunctType"] else 0
+        meterState = feature["Meterstate"] if feature["Meterstate"] else 2 #Installed
+        functType = feature["FunctType"] if feature["FunctType"] else 1 #ClientMetering
         connectedToNodeFK = feature["NodeID"] if feature["NodeID"] else ""
+        formatted_date = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'fkScenario': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
-                       'description': "{}".format(description), 
+                       'description': "{}".format(description),
+                       #'installedDate': "{}".format(formatted_date), 
                        'lng': "{}".format(x), 
                        'lat': "{}".format(y),
                        'meterstate': "{}".format(meterState), 
