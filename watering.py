@@ -3,7 +3,7 @@
 # Import QGis
 from qgis.core import QgsProject, Qgis
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMessageBox
+from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
 from qgis.utils import iface
@@ -112,6 +112,7 @@ class QGISPlugin_WaterIng:
         self.syncManager = None
         self.actionManager = None
         self.toolbarToolManager = None
+        self.project_info = None
 
     
 
@@ -269,7 +270,7 @@ class QGISPlugin_WaterIng:
             self.updateActionStateOpen()
             self.updateActionScenarioStateOpen()
             self.setOnAttributeChange()
-             
+            self.setStatusBarInfo(self.dlg.ProjectName, self.dlg.ScenarioName)
                 
     def importINPFile(self):
         if WateringUtils.isScenarioNotOpened():
@@ -363,6 +364,10 @@ class QGISPlugin_WaterIng:
         if QgsProject.instance().fileName():
             self.cleanMarkers()
         
+        if self.project_info:
+            iface.mainWindow().statusBar().removeWidget(self.project_info)
+            self.project_info = None
+            
         actions = [self.toolbarToolManager.readAnalysisAction,
                     self.toolbarToolManager.insertSensorNodeAction,
                     self.toolbarToolManager.openOptimizationManagerAction,
@@ -617,3 +622,14 @@ class QGISPlugin_WaterIng:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         elif QgsProject.instance().mapLayersByName("watering_waterMeter")[0] and QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]:
             WateringUtils.getClosestNodeToWaterMeter()
+    
+    def setStatusBarInfo(self, project_name, scenario_name):
+        status_bar = iface.mainWindow().statusBar()
+                
+        if self.project_info:
+            status_bar.removeWidget(self.project_info)
+            #project_info_label.deleteLater()
+            
+        self.project_info = QLabel(f" Project: {project_name} | Scenario: {scenario_name} ", status_bar)
+        status_bar.addWidget(self.project_info, 1)
+            
