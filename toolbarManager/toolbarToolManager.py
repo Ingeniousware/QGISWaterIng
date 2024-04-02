@@ -12,6 +12,7 @@ from ..ui.watering_datachannels import WateringDatachannels
 from ..ui.watering_optimization import WaterOptimization
 from ..ui.watering_analysis import WateringAnalysis
 from ..toolsMap.toolbarAction import toolbarAction
+from ..ActionManagement.identifyElementAction import WateringIdentifyTool
 
 class toolbarToolManager():
 
@@ -36,6 +37,7 @@ class toolbarToolManager():
         self.insertWaterMeterNodeAction = None
         self.toolDeleteElementAction = None
         self.selectElementAction = None
+        self.wateringIdentifyAction = None
         self.openOptimizationManagerAction = None
         self.readAnalysisAction = None
         self.readMeasurementsAction = None
@@ -96,6 +98,18 @@ class toolbarToolManager():
         self.readMeasurementsAction.setCheckable(True)        
         self.readMeasurementsAction.toggled.connect(self.activateMeasurementTool)
 
+        # Identify
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/select.svg'
+        self.wateringIdentifyAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Identify features'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.wateringIdentifyAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.wateringIdentifyAction.setCheckable(True)        
+        #self.wateringIdentifyAction.toggled.connect(self.activateWateringIdentifyTool)
+        
 
         # import elements
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/import.svg'
@@ -279,9 +293,6 @@ class toolbarToolManager():
 
         return action
 
-
-
-    
     def activateMapTool(self, mapToolButtonAction):
         if (mapToolButtonAction.isChecked()):
             print("Setting Map Tool = ", mapToolButtonAction)
@@ -382,3 +393,7 @@ class toolbarToolManager():
         else:
             self.analysisDockPanel.initializeRepository()
             self.analysisDockPanel.show()
+    
+    def activateWateringIdentifyTool(self):
+        watering_identify_tool = WateringIdentifyTool(iface.mapCanvas())
+        iface.mapCanvas().setMapTool(watering_identify_tool)

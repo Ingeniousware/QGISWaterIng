@@ -5,7 +5,7 @@ from qgis.core import QgsProject, Qgis
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
+from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker, QgsMapToolIdentify
 from qgis.utils import iface
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtCore import QTimer
@@ -43,6 +43,7 @@ from .watering_utils import WateringSynchWorker
 #from .ui.watering_datachannels import WateringDatachannels
 from .ui.watering_INPImport import WateringINPImport
 from .ActionManagement.actionManager import actionManager
+from .ActionManagement.identifyElementAction import WateringIdentifyTool
 from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
 from .unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
 
@@ -229,13 +230,6 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.optimizationToolsAction.toggled.connect(self.toolbarToolManager.activateOptimizationTool)
         self.toolbarToolManager.readMeasurementsAction.toggled.connect(self.toolbarToolManager.activateMeasurementTool)
         self.toolbarToolManager.readAnalysisAction.toggled.connect(self.toolbarToolManager.activateWaterAnalysisTool)
-
-                                                       
-        #adding a standard action to our toolbar
-        self.iface.actionIdentify().setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/select.svg'))
-        #self.toolIdentify = QgsMapToolIdentify(self.canvas)
-        #self.toolIdentify.setAction(self.iface.actionIdentify())
-        self.toolbar.addAction(self.iface.actionIdentify())
         
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -341,12 +335,16 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.toolDeleteElementAction.setCurrentTool(toolDeleteElement)
         self.toolbarToolManager.toolDeleteElementAction.setEnabled(True)
         
+        toolIdentifyElement = WateringIdentifyTool(self.canvas, self.actionManager, self.toolbarToolManager)
+        toolIdentifyElement.setAction(self.toolbarToolManager.wateringIdentifyAction)
+        self.toolbarToolManager.wateringIdentifyAction.setCurrentTool(toolIdentifyElement)
+        self.toolbarToolManager.wateringIdentifyAction.setEnabled(True)
+        
         # Connection button
         if (os.environ.get('TOKEN') != None) and not self.connectionStatusAction.isChecked():
             self.setHubConnection()
             self.connectionStatusAction.setChecked(True)
-            
-              
+    
     def updateActionStateOpen(self):
         #self.cleanMarkers()
         print("before entering if")

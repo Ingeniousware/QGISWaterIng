@@ -28,11 +28,10 @@ class WateringSync():
         self.project_path = project_path
         self.scenarioFK = scenarioFK
         
-        #Test variables
+        #Test variables 
+        self.repositories = repositories
         self.sourceCrs = QgsCoordinateReferenceSystem(4326)
         self.destCrs = QgsCoordinateReferenceSystem(3857)
-        
-        self.repositories = repositories
         self.sync_was_halted = False
 
     def initializeRepository(self):
