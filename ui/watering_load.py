@@ -413,7 +413,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         group_elements = self.checkCreateInitializeGroup(project, "WaterIng Network Layout")
         group_sensors = self.checkCreateInitializeGroup(project, "Sensors")
-        group_backup = self.checkCreateInitializeGroup(project, "Backup")
+        #group_backup = self.checkCreateInitializeGroup(project, "Backup")
 
         shp_element_files = ['watering_demand_nodes.shp', 
                             'watering_reservoirs.shp', 
@@ -436,7 +436,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         self.openGroup(shp_element_files, group_elements, scenario_path)
         self.openGroup(shp_filesMonitoring, group_sensors, scenario_path)
-        self.openGroup(shp_backupFiles, group_backup, scenario_path)
+        self.openLayerGroupFalseVisibility(shp_backupFiles, scenario_path)
         
     def openGroup(self, group_list, group, scenario_path):
         for element_layer in group_list:
@@ -452,21 +452,17 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 
             else: 
                 print("Layer not valid: ", element_layer)
-                
-        self.hide_backup_group_layers("Backup")
-    
-    def hide_backup_group_layers(self, group):
-        project = QgsProject.instance()
-        root = project.layerTreeRoot()
-        backup_group = root.findGroup(group)
-        if not backup_group:
-            print("Group 'backup' not found.")
-            return
-        for layer in backup_group.children():
-            if isinstance(layer, QgsLayerTreeLayer):
-                layer.setItemVisibilityChecked(False)
         
-        root.findGroup(group).setExpanded(False)
+    def openLayerGroupFalseVisibility(self, group_list, scenario_path):
+        for element_layer in group_list:
+            layer_path = os.path.join(scenario_path, element_layer)
+            layer_name = os.path.splitext(element_layer)[0]
+            layer = QgsVectorLayer(layer_path, layer_name, "ogr")
+            
+            if layer.isValid():
+                QgsProject.instance().addMapLayer(layer, False)    
+            else: 
+                print("Layer not valid: ", element_layer)
         
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
