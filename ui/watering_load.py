@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer, QgsLayerTreeGroup
-from qgis.core import QgsFeature, QgsWkbTypes
+from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer
+from qgis.core import  QgsWkbTypes, QgsLayerTreeGroup, QgsFeature,  QgsVectorFileWriter
 from qgis.utils import iface
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QLabel
@@ -14,6 +14,7 @@ import requests
 import glob
 import uuid
 import shutil
+import processing
 from functools import partial
 
 from ..unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
@@ -62,6 +63,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.initializeRepository()
         self.newProjectBtn.clicked.connect(self.checkAction)
         self.cloneScenarioBtn.clicked.connect(self.cloneScenario)
+        self.mergeScenariosBtn.clicked.connect(self.mergeScenarios)
     
     def initializeRepository(self):
         print("OS TOKEN TIMER: ", os.environ.get('TOKEN_TIMER'))
@@ -88,6 +90,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 
         #initializing procedures
         self.setComboBoxCurrentProject()
+        self.initializeMergeSection()
         self.newShpDirectory.setFilePath(self.WateringFolder)
         
     def loadProjects(self):
@@ -414,7 +417,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         group_elements = self.checkCreateInitializeGroup(project, "WaterIng Network Layout")
         group_sensors = self.checkCreateInitializeGroup(project, "Sensors")
-        group_backup = self.checkCreateInitializeGroup(project, "Backup")
+        #group_backup = self.checkCreateInitializeGroup(project, "Backup")
 
         shp_element_files = ['watering_demand_nodes.shp', 
                             'watering_reservoirs.shp', 
@@ -437,7 +440,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         self.openGroup(shp_element_files, group_elements, scenario_path)
         self.openGroup(shp_filesMonitoring, group_sensors, scenario_path)
-        self.openGroup(shp_backupFiles, group_backup, scenario_path)
+        self.openLayerGroupFalseVisibility(shp_backupFiles, scenario_path)
         
     def openGroup(self, group_list, group, scenario_path):
         for element_layer in group_list:
@@ -453,21 +456,17 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 
             else: 
                 print("Layer not valid: ", element_layer)
-                
-        self.hide_backup_group_layers("Backup")
-    
-    def hide_backup_group_layers(self, group):
-        project = QgsProject.instance()
-        root = project.layerTreeRoot()
-        backup_group = root.findGroup(group)
-        if not backup_group:
-            print("Group 'backup' not found.")
-            return
-        for layer in backup_group.children():
-            if isinstance(layer, QgsLayerTreeLayer):
-                layer.setItemVisibilityChecked(False)
         
-        root.findGroup(group).setExpanded(False)
+    def openLayerGroupFalseVisibility(self, group_list, scenario_path):
+        for element_layer in group_list:
+            layer_path = os.path.join(scenario_path, element_layer)
+            layer_name = os.path.splitext(element_layer)[0]
+            layer = QgsVectorLayer(layer_path, layer_name, "ogr")
+            
+            if layer.isValid():
+                QgsProject.instance().addMapLayer(layer, False)    
+            else: 
+                print("Layer not valid: ", element_layer)
         
     def layerEditionStarted(self, layer_name):
         print("Edition started at layer ", layer_name)
@@ -652,30 +651,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.new_project_name.hide()
             
     def setCloningScenarioName(self):
-        self.cloned_scenario_name.setPlaceholderText(self.scenarios_box.currentText() + " Cloned Version")
+        self.cloned_scenario_name.setPlaceholderText(self.scenarios_box.currentText() + " Cloned version")
         
     def loadProjectsToClone(self):
         for item in self.listOfProjects:
             self.clone_box.addItem(item[0])
-
-    # def cloneScenario(self):
-    #     self.listOfProjectsToClone = []
-        
-    #     if os.path.exists(self.ProjectsJSON):
-    #         with open(self.ProjectsJSON, 'r') as json_file:
-    #             self.ProjectsJSON_data = json.load(json_file)
-        
-    #         if self.ProjectsJSON_data:
-    #             self.OfflineProjects = self.getOfflineProjects()
-                
-    #     else:
-    #         iface.messageBar().pushMessage(("Error"), ("No projects found locally. Connect to WaterIng and load a project from server."), level=1, duration=5)
-                   
-    #     project_to_check = self.listOfProjects[self.clone_box.currentIndex()]
-    #     is_in_offline_projects = any(project_to_check == project[1] for project in self.OfflineProjects)
-        
-    #     print(self.OfflineProjects)
-    #     print("is: ", is_in_offline_projects)
     
     def cloneScenario(self):
         folder_path = WateringUtils.get_watering_folder()
@@ -782,8 +762,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         WateringUtils.error_message("Scenario creation failed. Please try again.")
         return False
     
-    #Clone methods
-    
     def clone_scenario(self, folder_path, fromProjectName, fromProjectKeyID, 
                        fromProjectKeyScenario, toProjectKeyID, 
                        toProjectKeyScenario, clonedScenarioName):
@@ -801,9 +779,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             else:
                 shutil.copy2(s, d)
 
-        creation_time =  '1800-11-29T10:28:46.2756439Z' #WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        creation_time = '1800-11-29T10:28:46.2756439Z' #WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
         
         projects_json_path = os.path.join(folder_path, 'projects.json')
+        
         with open(projects_json_path, 'r+') as f:
             projects = json.load(f)
 
@@ -819,9 +798,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             f.seek(0)
             json.dump(projects, f, indent=4)
             f.truncate()
+        
+        return target_path
     
     # Merge methods
-    
+
     def feature_signature(self, feature):
         return feature.geometry().asWkt()
 
@@ -837,7 +818,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 new_feature = QgsFeature(feature)
                 dest_dp.addFeature(new_feature)
                 signatures.add(signature)
-                
+
     def merge_layers(self, layer_path1, layer_path2, merged_layer_name):
         layer1 = self.load_layer(layer_path1)
         layer2 = self.load_layer(layer_path2)
@@ -860,3 +841,84 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         QgsProject.instance().addMapLayer(merged_layer)
 
         return merged_layer
+    
+    def initializeMergeSection(self):
+        self.loadProjectsToMerge()
+        self.loadScenariosToMerge()
+        self.loadMergedScenarioProjectDestination()
+        
+        self.merge_projects_box.currentIndexChanged.connect(self.loadScenariosToMerge)
+        
+    def loadProjectsToMerge(self):
+        for item in self.listOfProjects:
+            self.merge_projects_box.addItem(item[0])
+
+    def loadScenariosToMerge(self):
+        for item in self.listOfScenarios:
+            self.merge_scenarios_box.addItem(item[0])
+    
+    def loadMergedScenarioProjectDestination(self):
+        for item in self.listOfProjects:
+            self.merge_box.addItem(item[0])
+    
+    def mergeScenarios(self):
+        folder_path = WateringUtils.get_watering_folder()
+        
+        # Scenario A
+        fromProjectAKeyID = self.listOfProjects[self.projects_box.currentIndex()][1]
+        fromProjectAName = self.listOfProjects[self.projects_box.currentIndex()][0]
+        fromProjectAKeyScenario = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
+        clonedScenarioAName = self.listOfScenarios[self.scenarios_box.currentIndex()][0]
+        
+        # Scenario B
+        fromProjectBKeyID = self.listOfProjects[self.merge_projects_box.currentIndex()][1]
+        fromProjecBtName = self.listOfProjects[self.merge_projects_box.currentIndex()][0]
+        fromProjectBKeyScenario = self.listOfScenarios[self.merge_scenarios_box.currentIndex()][1]
+        clonedScenarioBName = self.listOfScenarios[self.merge_projects_box.currentIndex()][0]
+        
+        # Merged Scenario - Scenario C
+        toProjectKeyID = self.listOfProjects[self.merge_box.currentIndex()][1]
+        toProjectKeyScenario = str(uuid.uuid4())
+        
+        defaultMergedScenarioName = "Merged: " + clonedScenarioAName + " & " + clonedScenarioBName 
+        scenarioName = self.merged_scenario_name.text() or defaultMergedScenarioName
+        scenario_created = self.createNewScenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
+        
+        if scenario_created:
+            merged_project_path = self.clone_scenario(folder_path, fromProjectAName, fromProjectAKeyID, fromProjectAKeyScenario, 
+                                                      toProjectKeyID, toProjectKeyScenario, clonedScenarioAName)
+        else:
+            WateringUtils.error_message("Couldn’t clone the scenario. Please try again."); return
+        
+        scenarioB_path = os.path.join(folder_path, fromProjectBKeyID, fromProjectBKeyScenario)
+        merged = self.merge_shapefiles(merged_project_path, scenarioB_path)
+        
+        print("Merged: ", merged)
+        
+    def merge_shapefiles(self, folderA, folderB):
+        for filename in os.listdir(folderA):
+            if filename.endswith(".shp"):
+                filePathA = os.path.join(folderA, filename)
+                filePathB = os.path.join(folderB, filename)
+
+                if os.path.exists(filePathB):
+                    layerA = QgsVectorLayer(filePathA, "layerA", "ogr")
+                    layerB = QgsVectorLayer(filePathB, "layerB", "ogr")
+                    
+                    if not layerA.isValid() or not layerB.isValid():
+                        print(f"Failed to load layers for {filename}.")
+                        continue
+                    
+                    merged_layer = processing.run("native:mergevectorlayers", {
+                        'LAYERS': [layerA, layerB],
+                        'CRS': layerA.crs(), 
+                        'OUTPUT': 'memory:' 
+                    })['OUTPUT']
+
+                    merged_filepath = os.path.join(folderA, f"merged_{filename}")
+                    
+                    QgsVectorFileWriter.writeAsVectorFormat(merged_layer, merged_filepath, "utf-8", driverName="ESRI Shapefile")
+                    print(f"Merged shapefile saved as: {merged_filepath}")
+                    return True
+                else:
+                    print(f"Shapefile {filename} in folder A does not have a corresponding file in folder B.")

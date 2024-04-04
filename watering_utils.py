@@ -7,7 +7,7 @@ from qgis.utils import iface
 from qgis.core import Qgis, QgsProject, QgsFeatureRequest
 from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtCore import QVariant, QDateTime, QCoreApplication
-from PyQt5.QtWidgets import QAction, QMessageBox
+from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
 from PyQt5.QtCore import QTimer
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
@@ -423,7 +423,7 @@ class WateringUtils():
         
     def error_message(message):
         iface.messageBar().pushMessage(("Error"), (message), level=1, duration=5)
-        
+    
 class WateringTimer():
     timer = None 
 

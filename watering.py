@@ -3,9 +3,9 @@
 # Import QGis
 from qgis.core import QgsProject, Qgis
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMessageBox
+from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
-from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker
+from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker, QgsMapToolIdentify
 from qgis.utils import iface
 from PyQt5.QtCore import QThread, pyqtSignal
 from PyQt5.QtCore import QTimer
@@ -43,6 +43,7 @@ from .watering_utils import WateringSynchWorker
 #from .ui.watering_datachannels import WateringDatachannels
 from .ui.watering_INPImport import WateringINPImport
 from .ActionManagement.actionManager import actionManager
+from .ActionManagement.identifyElementAction import WateringIdentifyTool
 from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
 from .unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
 
@@ -112,6 +113,7 @@ class QGISPlugin_WaterIng:
         self.syncManager = None
         self.actionManager = None
         self.toolbarToolManager = None
+        self.project_info = None
 
     
 
@@ -224,18 +226,7 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         
         self.toolbarToolManager.initializeToolbarButtonActions()
-        self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
-        self.toolbarToolManager.optimizationToolsAction.toggled.connect(self.toolbarToolManager.activateOptimizationTool)
-        self.toolbarToolManager.readMeasurementsAction.toggled.connect(self.toolbarToolManager.activateMeasurementTool)
-        self.toolbarToolManager.readAnalysisAction.toggled.connect(self.toolbarToolManager.activateWaterAnalysisTool)
 
-                                                       
-        #adding a standard action to our toolbar
-        self.iface.actionIdentify().setIcon(QIcon(':/plugins/QGISPlugin_WaterIng/images/select.svg'))
-        #self.toolIdentify = QgsMapToolIdentify(self.canvas)
-        #self.toolIdentify.setAction(self.iface.actionIdentify())
-        self.toolbar.addAction(self.iface.actionIdentify())
-        
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -269,7 +260,7 @@ class QGISPlugin_WaterIng:
             self.updateActionStateOpen()
             self.updateActionScenarioStateOpen()
             self.setOnAttributeChange()
-             
+            self.setStatusBarInfo(self.dlg.ProjectName, self.dlg.ScenarioName)
                 
     def importINPFile(self):
         if WateringUtils.isScenarioNotOpened():
@@ -340,12 +331,16 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.toolDeleteElementAction.setCurrentTool(toolDeleteElement)
         self.toolbarToolManager.toolDeleteElementAction.setEnabled(True)
         
+        toolIdentifyElement = WateringIdentifyTool(self.canvas, self.actionManager, self.toolbarToolManager)
+        toolIdentifyElement.setAction(self.toolbarToolManager.wateringIdentifyAction)
+        self.toolbarToolManager.wateringIdentifyAction.setCurrentTool(toolIdentifyElement)
+        self.toolbarToolManager.wateringIdentifyAction.setEnabled(True)
+        
         # Connection button
         if (os.environ.get('TOKEN') != None) and not self.connectionStatusAction.isChecked():
             self.setHubConnection()
             self.connectionStatusAction.setChecked(True)
-            
-              
+    
     def updateActionStateOpen(self):
         #self.cleanMarkers()
         print("before entering if")
@@ -363,6 +358,10 @@ class QGISPlugin_WaterIng:
         if QgsProject.instance().fileName():
             self.cleanMarkers()
         
+        if self.project_info:
+            iface.mainWindow().statusBar().removeWidget(self.project_info)
+            self.project_info = None
+            
         actions = [self.toolbarToolManager.readAnalysisAction,
                     self.toolbarToolManager.insertSensorNodeAction,
                     self.toolbarToolManager.openOptimizationManagerAction,
@@ -617,3 +616,14 @@ class QGISPlugin_WaterIng:
             self.iface.messageBar().pushMessage(self.tr("Error"), self.tr("You must login to WaterIng first!"), level=1, duration=5)
         elif QgsProject.instance().mapLayersByName("watering_waterMeter")[0] and QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]:
             WateringUtils.getClosestNodeToWaterMeter()
+    
+    def setStatusBarInfo(self, project_name, scenario_name):
+        status_bar = iface.mainWindow().statusBar()
+                
+        if self.project_info:
+            status_bar.removeWidget(self.project_info)
+            #project_info_label.deleteLater()
+            
+        self.project_info = QLabel(f" Project: {project_name} | Scenario: {scenario_name} ", status_bar)
+        status_bar.addWidget(self.project_info, 1)
+            

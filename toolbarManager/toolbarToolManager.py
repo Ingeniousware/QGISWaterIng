@@ -12,6 +12,7 @@ from ..ui.watering_datachannels import WateringDatachannels
 from ..ui.watering_optimization import WaterOptimization
 from ..ui.watering_analysis import WateringAnalysis
 from ..toolsMap.toolbarAction import toolbarAction
+from ..ActionManagement.identifyElementAction import WateringIdentifyTool
 
 class toolbarToolManager():
 
@@ -36,6 +37,7 @@ class toolbarToolManager():
         self.insertWaterMeterNodeAction = None
         self.toolDeleteElementAction = None
         self.selectElementAction = None
+        self.wateringIdentifyAction = None
         self.openOptimizationManagerAction = None
         self.readAnalysisAction = None
         self.readMeasurementsAction = None
@@ -89,13 +91,25 @@ class toolbarToolManager():
         self.readMeasurementsAction = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Get Measurements'),
-            callback=self.activeControllerTool,
+            callback= self.activateMeasurementTool,
             toolbar = self.toolbar,
             parent=self.parentWindow)
         self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-        self.readMeasurementsAction.setCheckable(True)        
-        self.readMeasurementsAction.toggled.connect(self.activateMeasurementTool)
+        #self.readMeasurementsAction.setCheckable(True)        
+        #self.readMeasurementsAction.toggled.connect(self.activateMeasurementTool)
 
+        # Identify
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/select.svg'
+        self.wateringIdentifyAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Identify features'),
+            callback=self.activateMapTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.wateringIdentifyAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.wateringIdentifyAction.setCheckable(True)        
+        #self.wateringIdentifyAction.toggled.connect(self.activateWateringIdentifyTool)
+        
 
         # import elements
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/import.svg'
@@ -279,9 +293,6 @@ class toolbarToolManager():
 
         return action
 
-
-
-    
     def activateMapTool(self, mapToolButtonAction):
         if (mapToolButtonAction.isChecked()):
             print("Setting Map Tool = ", mapToolButtonAction)
@@ -335,7 +346,6 @@ class toolbarToolManager():
                     self.canvas.unsetMapTool(tool.MapTool)
                 
     def activateOptimizationTool(self, checked):
-                
         optimizationTools = [self.openOptimizationManagerAction,
                             self.insertSensorNodeAction,]
         
@@ -361,16 +371,16 @@ class toolbarToolManager():
             dlg.show()
             dlg.exec_()
             
-    def activateMeasurementTool(self):
+    def activateMeasurementTool(self, *args):
         if WateringUtils.isScenarioNotOpened():
             iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') == None:
             iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:
             try:
-                self.dlg = WateringDatachannels()
-                self.dlg.show()
-                self.dlg.exec_()
+                dlg = WateringDatachannels()
+                dlg.show()
+                dlg.exec_()
             except:
                 iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"No data source available for the project."), level=1, duration=5)
     

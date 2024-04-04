@@ -29,13 +29,9 @@ class WateringSync():
         self.scenarioFK = scenarioFK
         
         #Test variables 
-        self.repo_copy = repositories.copy()
-        self.repo_copy.pop(3)
-        #self.repo_copy.pop(5)
+        self.repositories = repositories
         self.sourceCrs = QgsCoordinateReferenceSystem(4326)
         self.destCrs = QgsCoordinateReferenceSystem(3857)
-        
-        self.repositories = self.repo_copy
         self.sync_was_halted = False
 
     def initializeRepository(self):

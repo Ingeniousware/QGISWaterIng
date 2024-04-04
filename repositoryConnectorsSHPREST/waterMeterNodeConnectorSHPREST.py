@@ -59,26 +59,23 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         else:
             serverKeyId = feature["ID"]
             
-        name = feature["Name"]
-        description = feature["Descript"]
-        meterState = feature["Meterstate"]
-        functType = feature["FunctType"]
-        lastDate = feature["LastDate"]
-        connectedToNodeFK = feature["NodeID"]
+        name = feature["Name"] if feature["Name"] else WateringUtils.generateRandomElementName("W")
+        description = feature["Descript"] if feature["Descript"] else "Water Meter from QGIS Plugin"
+        meterState = feature["Meterstate"] if feature["Meterstate"] else 0
+        functType = feature["FunctType"] if feature["FunctType"] else 0
+        connectedToNodeFK = feature["NodeID"] if feature["NodeID"] else ""
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
-                       'scenarioFK': "{}".format(self.ScenarioFK), 
+                       'fkScenario': "{}".format(self.ScenarioFK), 
                        'name': "{}".format(name), 
                        'description': "{}".format(description), 
                        'lng': "{}".format(x), 
                        'lat': "{}".format(y),
                        'meterstate': "{}".format(meterState), 
-                       'functionalType':"{}".format(functType),
-                       'lastRead': "{}".format(lastDate),
+                       'functionalType': "{}".format(functType),
                        'connectedToNodeFK': "{}".format(connectedToNodeFK)
-                        }
-        
-
+                      }
+    
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
         while self.lifoAddedElements.full():
@@ -91,7 +88,10 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         else: 
             print("Water Meter is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
-            
+
+        print("Server response: ", serverResponse.text)
+        print("Server response status: ", serverResponse.status_code)
+        
         if serverResponse.status_code == 200:
             print("Water Valve Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
