@@ -226,11 +226,7 @@ class QGISPlugin_WaterIng:
             parent=self.iface.mainWindow())
         
         self.toolbarToolManager.initializeToolbarButtonActions()
-        self.toolbarToolManager.editElementsAction.toggled.connect(self.toolbarToolManager.activateEditTool)
-        self.toolbarToolManager.optimizationToolsAction.toggled.connect(self.toolbarToolManager.activateOptimizationTool)
-        self.toolbarToolManager.readMeasurementsAction.toggled.connect(self.toolbarToolManager.activateMeasurementTool)
-        self.toolbarToolManager.readAnalysisAction.toggled.connect(self.toolbarToolManager.activateWaterAnalysisTool)
-        
+
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
