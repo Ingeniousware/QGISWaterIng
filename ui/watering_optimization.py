@@ -411,9 +411,14 @@ class TableModel(QtCore.QAbstractTableModel):
         return len(self._data)
 
     def columnCount(self, index):
-        # The following takes the first sub-list, and returns
-        # the length (only works if all rows are an equal length)
-        return len(self._data[0])
+        # Check if self._data is not empty
+        if self._data:
+            # The following takes the first sub-list, and returns
+            # the length (only works if all rows are an equal length)
+            return len(self._data[0])
+        else:
+            # Return 0 if self._data is empty, indicating no columns
+            return 0
     
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
