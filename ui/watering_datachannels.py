@@ -59,7 +59,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.RefreshGraphs.clicked.connect(self.updateGraphs)
         self.inicial_dateEdit.setDateTime(QDateTime.currentDateTime())
         self.final_dateEdit.setDateTime(QDateTime.currentDateTime())
-    
+        print("initialized ")
 
     def checkUserControlState(self):
         if self.selectdate_box.currentIndex() == 2:

@@ -902,13 +902,15 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     
     def mergeScenarios(self):
         folder_path = WateringUtils.get_watering_folder()
-        
+        #checkExistingProject
         # Scenario A
-        fromProjectAKeyID = self.OfflineProjectsList[self.projects_box.currentIndex()][1]
-        fromProjectAName = self.OfflineProjectsList[self.projects_box.currentIndex()][0]
-        fromProjectAKeyScenario = self.OfflineScenariosList[self.scenarios_box.currentIndex()][1]
-        clonedScenarioAName = self.OfflineScenariosList[self.scenarios_box.currentIndex()][0]
+        fromProjectAKeyID = self.listOfProjects[self.projects_box.currentIndex()][1]
+        fromProjectAName = self.listOfProjects[self.projects_box.currentIndex()][0]
+        fromProjectAKeyScenario = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
+        clonedScenarioAName = self.listOfScenarios[self.scenarios_box.currentIndex()][0]
         
+        self.ProjectFK = fromProjectAKeyID
+        self.checkExistingProject()
         # Scenario B
         fromProjectBKeyID = self.OfflineProjectsList[self.merge_projects_box.currentIndex()][1]
         fromProjecBtName = self.OfflineProjectsList[self.merge_projects_box.currentIndex()][0]
@@ -922,8 +924,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         defaultMergedScenarioName = "Merged: " + clonedScenarioAName + " & " + clonedScenarioBName 
         scenarioName = self.merged_scenario_name.text() or defaultMergedScenarioName
         #scenario_created = self.createNewScenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
-        #scenario_created = self.createNewScenarioForMerge(toProjectKeyScenario, toProjectKeyID, scenarioName)
-        scenario_created = True
+        scenario_created = self.createNewScenarioForMerge(toProjectKeyScenario, toProjectKeyID, scenarioName)
+        #scenario_created = True
         if scenario_created:
             merged_project_path = self.clone_scenario(folder_path, fromProjectAName, fromProjectAKeyID, fromProjectAKeyScenario, 
                                                       toProjectKeyID, toProjectKeyScenario, scenarioName)
@@ -974,7 +976,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             params = {
                 'LAYERS': [layerA, layerB],
                 'CRS': layerA.crs(),
-                'OUTPUT': f"{folderA}/{shp_file}.shp"
+                'OUTPUT': f"{folderA}/{shp_file}_merged.shp"
             }
             result = processing.run("native:mergevectorlayers", params)
 
@@ -997,11 +999,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                     os.rename(f"{folderA}/{shp_file}_merged.{ext}", f"{folderA}/{shp_file}.{ext}")
 
         return True
-            
-        print("verify merge and shp files: ", verify_merged, " ", len(shp_files) - 1)
-        if verify_merged == len(shp_files):
-            return True
-        return False
 
     
     def createNewScenarioForMerge(self, keyId, projectKeyId, scenarioName):
