@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer, QgsLayerTreeGroup
+from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer
+from qgis.core import  QgsWkbTypes, QgsLayerTreeGroup, QgsFeature,  QgsVectorFileWriter
 from qgis.utils import iface
 from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtWidgets import QLabel
@@ -13,6 +14,7 @@ import requests
 import glob
 import uuid
 import shutil
+import processing
 from functools import partial
 
 from ..unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
@@ -61,8 +63,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.initializeRepository()
         self.newProjectBtn.clicked.connect(self.checkAction)
         self.cloneScenarioBtn.clicked.connect(self.cloneScenario)
+        self.mergeScenariosBtn.clicked.connect(self.mergeScenarios)
     
     def initializeRepository(self):
+        self.cloneCheckBox.setChecked(True)
+        self.checkUserControlState()
+
         print("OS TOKEN TIMER: ", os.environ.get('TOKEN_TIMER'))
         if os.environ.get('TOKEN') == None or os.environ.get('TOKEN_TIMER') == "False":
             iface.messageBar().pushMessage(("Running Offline."), level=1, duration=5)
@@ -87,6 +93,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 
         #initializing procedures
         self.setComboBoxCurrentProject()
+        self.initializeMergeSection()
         self.newShpDirectory.setFilePath(self.WateringFolder)
         
     def loadProjects(self):
@@ -103,6 +110,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         self.loadScenarios(self.projects_box.currentIndex())
         self.projects_box.currentIndexChanged.connect(self.loadScenarios)
+        self.loadProjectsToClone()
         
     def loadScenarios(self, value):
         #Resetting scenarios box in case of changing the selected project.
@@ -132,6 +140,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     def offlineProcedures(self):
         self.projects_box.clear()
+        self.listOfProjects = []
+        
         self.Offline = True
         if os.path.exists(self.ProjectsJSON):
             with open(self.ProjectsJSON, 'r') as json_file:
@@ -152,6 +162,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                    
     def setOfflineScenarios(self):
         self.scenarios_box.clear()
+        self.listOfScenarios = []
+        
         self.ProjectFK = self.OfflineProjects[self.projects_box.currentIndex()][0]
         self.ProjectName = self.OfflineProjects[self.projects_box.currentIndex()][1]
         self.OfflineScenarios = self.getOfflineScenarios(self.ProjectFK)
@@ -652,25 +664,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def loadProjectsToClone(self):
         for item in self.listOfProjects:
             self.clone_box.addItem(item[0])
-
-    # def cloneScenario(self):
-    #     self.listOfProjectsToClone = []
-        
-    #     if os.path.exists(self.ProjectsJSON):
-    #         with open(self.ProjectsJSON, 'r') as json_file:
-    #             self.ProjectsJSON_data = json.load(json_file)
-        
-    #         if self.ProjectsJSON_data:
-    #             self.OfflineProjects = self.getOfflineProjects()
-                
-    #     else:
-    #         iface.messageBar().pushMessage(("Error"), ("No projects found locally. Connect to WaterIng and load a project from server."), level=1, duration=5)
-                   
-    #     project_to_check = self.listOfProjects[self.clone_box.currentIndex()]
-    #     is_in_offline_projects = any(project_to_check == project[1] for project in self.OfflineProjects)
-        
-    #     print(self.OfflineProjects)
-    #     print("is: ", is_in_offline_projects)
     
     def cloneScenario(self):
         folder_path = WateringUtils.get_watering_folder()
@@ -753,6 +746,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not projectKeyId:
             current_index = self.projects_box.currentIndex()
             projectId = self.listOfProjects[current_index][1]
+            print("current index: ", current_index)
+            print("projectID: ", projectId)
         else:
             projectId = projectKeyId
             
@@ -769,7 +764,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
         headers = {'Authorization': "Bearer {}".format(self.token)} 
         response = requests.post(url, headers=headers, json=newScenarioJson)
-        
+        print("response.text: ", response.text)
         if response.status_code == 200:
             WateringUtils.success_message("Scenario created successfully!")
             return True
@@ -794,9 +789,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             else:
                 shutil.copy2(s, d)
 
-        creation_time =  '1800-11-29T10:28:46.2756439Z' #WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        creation_time = '1800-11-29T10:28:46.2756439Z' #WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
         
         projects_json_path = os.path.join(folder_path, 'projects.json')
+        
         with open(projects_json_path, 'r+') as f:
             projects = json.load(f)
 
@@ -812,5 +808,252 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             f.seek(0)
             json.dump(projects, f, indent=4)
             f.truncate()
-
         
+        return target_path
+    
+    # Merge methods
+
+    def feature_signature(self, feature):
+        return feature.geometry().asWkt()
+
+    def load_layer(self, layer_path):
+        layer = QgsProject.instance().mapLayersByName(layer_path)
+        return layer[0] if layer else QgsVectorLayer(layer_path, "Layer", "ogr")
+
+    def copy_features(self, source_layer, dest_dp):
+        signatures = set()
+        for feature in source_layer.getFeatures():
+            signature = self.feature_signature(feature)
+            if signature not in signatures:
+                new_feature = QgsFeature(feature)
+                dest_dp.addFeature(new_feature)
+                signatures.add(signature)
+
+    def merge_layers(self, layer_path1, layer_path2, merged_layer_name):
+        layer1 = self.load_layer(layer_path1)
+        layer2 = self.load_layer(layer_path2)
+
+        if layer1.geometryType() != layer2.geometryType():
+            raise ValueError("Mismatched geometry types.")
+
+        crs = layer1.crs().authid()
+        geom_type = QgsWkbTypes.displayString(layer1.wkbType())
+        merged_layer = QgsVectorLayer(f"{geom_type}?crs={crs}", merged_layer_name, "memory")
+
+        dp = merged_layer.dataProvider()
+        dp.addAttributes(layer1.fields())
+        merged_layer.updateFields()
+
+        self.copy_features(layer1, dp)
+        self.copy_features(layer2, dp)
+
+        merged_layer.updateExtents()
+        QgsProject.instance().addMapLayer(merged_layer)
+
+        return merged_layer
+    
+    def initializeMergeSection(self):
+        self.loadProjectsToMerge()
+        self.loadScenariosToMerge()
+        self.loadMergedScenarioProjectDestination()
+        
+        self.merge_projects_box.currentIndexChanged.connect(self.loadScenariosToMerge)
+    
+    def loadProjectsToMerge(self):
+        self.merge_projects_box.clear()
+        #self.listOfProjects = []
+        self.OfflineProjectsList = []
+        
+        self.Offline = True
+        if os.path.exists(self.ProjectsJSON):
+            with open(self.ProjectsJSON, 'r') as json_file:
+                self.ProjectsJSON_data = json.load(json_file)
+        
+            if self.ProjectsJSON_data:
+                self.OfflineProjects = self.getOfflineProjects()
+                for i in range(0, len(self.OfflineProjects)):
+                    self.merge_projects_box.addItem(self.OfflineProjects[i][1])
+                    self.OfflineProjectsList.append((self.OfflineProjects[i][1],
+                                                self.OfflineProjects[i][0]))
+                    
+
+                self.loadScenariosToMerge()
+                self.merge_projects_box.currentIndexChanged.connect(self.loadScenariosToMerge)
+        else:
+            iface.messageBar().pushMessage(("Error"), ("No projects found locally. Connect to WaterIng and load a project from server."), level=1, duration=5)
+                   
+    def loadScenariosToMerge(self):
+        self.merge_scenarios_box.clear()
+        self.OfflineScenariosList = []
+        
+        self.ProjectFK = self.OfflineProjects[self.merge_projects_box.currentIndex()][0]
+        self.ProjectName = self.OfflineProjects[self.merge_projects_box.currentIndex()][1]
+        self.OfflineScenarios = self.getOfflineScenarios(self.ProjectFK)
+        
+        for i in range(0, len(self.OfflineScenarios)):
+            self.merge_scenarios_box.addItem(self.OfflineScenarios[i][0])
+            self.OfflineScenariosList.append((self.OfflineScenarios[i][0],
+                                         self.OfflineScenarios[i][1]))
+            
+    def loadProjectsToMerge2(self):
+        for item in self.OfflineProjectsList:
+            self.merge_projects_box.addItem(item[0])
+
+    def loadScenariosToMerge2(self):
+        for item in self.OfflineScenariosList:
+            self.merge_scenarios_box.addItem(item[0])
+    
+    def loadMergedScenarioProjectDestination(self):
+        for item in self.OfflineProjectsList:
+            self.merge_box.addItem(item[0])
+    
+    def mergeScenarios(self):
+        folder_path = WateringUtils.get_watering_folder()
+        
+        # Scenario A
+        fromProjectAKeyID = self.OfflineProjectsList[self.projects_box.currentIndex()][1]
+        fromProjectAName = self.OfflineProjectsList[self.projects_box.currentIndex()][0]
+        fromProjectAKeyScenario = self.OfflineScenariosList[self.scenarios_box.currentIndex()][1]
+        clonedScenarioAName = self.OfflineScenariosList[self.scenarios_box.currentIndex()][0]
+        
+        # Scenario B
+        fromProjectBKeyID = self.OfflineProjectsList[self.merge_projects_box.currentIndex()][1]
+        fromProjecBtName = self.OfflineProjectsList[self.merge_projects_box.currentIndex()][0]
+        fromProjectBKeyScenario = self.OfflineScenariosList[self.merge_scenarios_box.currentIndex()][1]
+        clonedScenarioBName = self.OfflineScenariosList[self.merge_scenarios_box.currentIndex()][0]
+        
+        # Merged Scenario - Scenario C
+        toProjectKeyID = self.OfflineProjectsList[self.merge_box.currentIndex()][1]
+        toProjectKeyScenario = str(uuid.uuid4())
+        
+        defaultMergedScenarioName = "Merged: " + clonedScenarioAName + " & " + clonedScenarioBName 
+        scenarioName = "aaa " #self.merged_scenario_name.text() or defaultMergedScenarioName
+        #scenario_created = self.createNewScenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
+        #scenario_created = self.createNewScenarioForMerge(toProjectKeyScenario, toProjectKeyID, scenarioName)
+        scenario_created = True
+        if scenario_created:
+            merged_project_path = self.clone_scenario(folder_path, fromProjectAName, fromProjectAKeyID, fromProjectAKeyScenario, 
+                                                      toProjectKeyID, toProjectKeyScenario, defaultMergedScenarioName)
+        else:
+            WateringUtils.error_message("Couldn’t clone the scenario. Please try again."); return
+        
+        scenarioB_path = os.path.join(folder_path, fromProjectBKeyID, fromProjectBKeyScenario)
+        
+        
+        shp_element_files = ['watering_demand_nodes.shp', 
+                            'watering_reservoirs.shp', 
+                            'watering_tanks.shp', 
+                            'watering_pumps.shp', 
+                            'watering_valves.shp',                   
+                            'watering_pipes.shp',
+                            'watering_waterMeter.shp',
+                            'watering_sensors.shp']
+        
+        merged = self.merge_shapefiles(merged_project_path, scenarioB_path, shp_element_files)
+        
+        print("Merged: ", merged)
+        
+    def merge_shapefiles2(self, folderA, folderB):
+        os.remove(folderA)
+        
+        for filename in os.listdir(folderA):
+            if filename.endswith(".shp"):
+                filePathA = os.path.join(folderA, filename)
+                filePathB = os.path.join(folderB, filename)
+
+                if os.path.exists(filePathB):
+                    layerA = QgsVectorLayer(filePathA, "layerA", "ogr")
+                    layerB = QgsVectorLayer(filePathB, "layerB", "ogr")
+                    
+                    if not layerA.isValid() or not layerB.isValid():
+                        print(f"Failed to load layers for {filename}.")
+                        continue
+                    
+                    merged_layer = processing.run("native:mergevectorlayers", {
+                        'LAYERS': [layerA, layerB],
+                        'CRS': layerA.crs(), 
+                        'OUTPUT': 'memory:' 
+                    })['OUTPUT']
+
+                    merged_filepath = os.path.join(folderA, f"merged_{filename}")
+                    
+                    QgsVectorFileWriter.writeAsVectorFormat(merged_layer, merged_filepath, "utf-8", driverName="ESRI Shapefile")
+                    print(f"Merged shapefile saved as: {merged_filepath}")
+                    return True
+                else:
+                    print(f"Shapefile {filename} in folder A does not have a corresponding file in folder B.")
+
+    def merge_shapefiles(self, folderA, folderB, shp_files):
+        print("folderA ",folderA )
+        print("folderB", folderB)
+        
+        verify_merged = 0
+        
+        for shp_file in shp_files:
+            shp_path_A = f"{folderA}/{shp_file}"
+            shp_path_B = f"{folderB}/{shp_file}"
+
+            print("shp_path_A: ", shp_path_A)
+            print("shp_path_B: ", shp_path_B)
+            print()
+            # Load the shapefiles as layers
+            layerA = QgsVectorLayer(shp_path_A, f"{shp_file}_A", "ogr")
+            layerB = QgsVectorLayer(shp_path_B, f"{shp_file}_B", "ogr")
+
+            if not layerA.isValid() or not layerB.isValid():
+                print(f"Failed to load layers for {shp_file}. Please check the file paths.")
+                continue
+
+            # Add layers to the QGIS project
+            QgsProject.instance().addMapLayer(layerA, False)
+            QgsProject.instance().addMapLayer(layerB, False)
+
+            params = {
+                'LAYERS': [layerA, layerB],
+                'CRS': layerA.crs(),
+                'OUTPUT': f"{folderA}/{shp_file}.shp"
+            }
+            result = processing.run("native:mergevectorlayers", params)
+
+            if result:
+                print(f"{shp_file} merged successfully.")
+                verify_merged = verify_merged + 1
+            else:
+                print(f"Failed to merge {shp_file}.")
+                return False
+            
+        print("verify merge and shp files: ", verify_merged, " ", len(shp_files) - 1)
+        if verify_merged == len(shp_files):
+            return True
+        return False
+
+    
+    def createNewScenarioForMerge(self, keyId, projectKeyId, scenarioName):
+        if not projectKeyId:
+            current_index = self.merge_box.currentIndex()
+            projectId = self.OfflineProjectsList[current_index][1]
+            print("current index: ", current_index)
+            print("projectID: ", projectId)
+        else:
+            projectId = projectKeyId
+            
+        description =  "Scenario created in QGIS WaterIng Plugin"
+        
+        newScenarioJson = {
+            "keyId": "{}".format(keyId),
+            "serverKeyId": "{}".format(keyId),
+            "fkWaterProject": "{}".format(projectId),
+            "name": "{}".format(scenarioName),
+            "description": "{}".format(description)
+        }
+        
+        url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
+        headers = {'Authorization': "Bearer {}".format(self.token)} 
+        response = requests.post(url, headers=headers, json=newScenarioJson)
+        print("response.text: ", response.text)
+        if response.status_code == 200:
+            WateringUtils.success_message("Scenario created successfully!")
+            return True
+        
+        WateringUtils.error_message("Scenario creation failed. Please try again.")
+        return False
