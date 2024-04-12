@@ -812,7 +812,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return target_path
     
     # Merge methods
-
     def feature_signature(self, feature):
         return feature.geometry().asWkt()
 
@@ -864,7 +863,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         #self.listOfProjects = []
         self.OfflineProjectsList = []
         
-        self.Offline = True
         if os.path.exists(self.ProjectsJSON):
             with open(self.ProjectsJSON, 'r') as json_file:
                 self.ProjectsJSON_data = json.load(json_file)
@@ -883,6 +881,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             iface.messageBar().pushMessage(("Error"), ("No projects found locally. Connect to WaterIng and load a project from server."), level=1, duration=5)
                    
     def loadScenariosToMerge(self):
+        if not self.OfflineProjects:
+            return
+        
         self.merge_scenarios_box.clear()
         self.OfflineScenariosList = []
         
@@ -895,14 +896,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.OfflineScenariosList.append((self.OfflineScenarios[i][0],
                                          self.OfflineScenarios[i][1]))
             
-    def loadProjectsToMerge2(self):
-        for item in self.OfflineProjectsList:
-            self.merge_projects_box.addItem(item[0])
-
-    def loadScenariosToMerge2(self):
-        for item in self.OfflineScenariosList:
-            self.merge_scenarios_box.addItem(item[0])
-    
     def loadMergedScenarioProjectDestination(self):
         for item in self.OfflineProjectsList:
             self.merge_box.addItem(item[0])
@@ -927,13 +920,13 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         toProjectKeyScenario = str(uuid.uuid4())
         
         defaultMergedScenarioName = "Merged: " + clonedScenarioAName + " & " + clonedScenarioBName 
-        scenarioName = "aaa " #self.merged_scenario_name.text() or defaultMergedScenarioName
+        scenarioName = self.merged_scenario_name.text() or defaultMergedScenarioName
         #scenario_created = self.createNewScenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
         #scenario_created = self.createNewScenarioForMerge(toProjectKeyScenario, toProjectKeyID, scenarioName)
         scenario_created = True
         if scenario_created:
             merged_project_path = self.clone_scenario(folder_path, fromProjectAName, fromProjectAKeyID, fromProjectAKeyScenario, 
-                                                      toProjectKeyID, toProjectKeyScenario, defaultMergedScenarioName)
+                                                      toProjectKeyID, toProjectKeyScenario, scenarioName)
         else:
             WateringUtils.error_message("Couldn’t clone the scenario. Please try again."); return
         
@@ -952,37 +945,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         merged = self.merge_shapefiles(merged_project_path, scenarioB_path, shp_element_files)
         
         print("Merged: ", merged)
-        
-    def merge_shapefiles2(self, folderA, folderB):
-        os.remove(folderA)
-        
-        for filename in os.listdir(folderA):
-            if filename.endswith(".shp"):
-                filePathA = os.path.join(folderA, filename)
-                filePathB = os.path.join(folderB, filename)
-
-                if os.path.exists(filePathB):
-                    layerA = QgsVectorLayer(filePathA, "layerA", "ogr")
-                    layerB = QgsVectorLayer(filePathB, "layerB", "ogr")
-                    
-                    if not layerA.isValid() or not layerB.isValid():
-                        print(f"Failed to load layers for {filename}.")
-                        continue
-                    
-                    merged_layer = processing.run("native:mergevectorlayers", {
-                        'LAYERS': [layerA, layerB],
-                        'CRS': layerA.crs(), 
-                        'OUTPUT': 'memory:' 
-                    })['OUTPUT']
-
-                    merged_filepath = os.path.join(folderA, f"merged_{filename}")
-                    
-                    QgsVectorFileWriter.writeAsVectorFormat(merged_layer, merged_filepath, "utf-8", driverName="ESRI Shapefile")
-                    print(f"Merged shapefile saved as: {merged_filepath}")
-                    return True
-                else:
-                    print(f"Shapefile {filename} in folder A does not have a corresponding file in folder B.")
-
+    
     def merge_shapefiles(self, folderA, folderB, shp_files):
         print("folderA ",folderA )
         print("folderB", folderB)
@@ -1021,6 +984,19 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             else:
                 print(f"Failed to merge {shp_file}.")
                 return False
+            
+            # After merging, delete old shapefiles and rename new files
+        if verify_merged == len(shp_files):
+            for shp_file in shp_files:
+                old_files = [f"{folderA}/{shp_file}.{ext}" for ext in ['shp', 'dbf', 'shx', 'prj']]
+                for old_file in old_files:
+                    if os.path.exists(old_file):
+                        os.remove(old_file)
+                # Rename merged files to original names
+                for ext in ['shp', 'dbf', 'shx', 'prj']:
+                    os.rename(f"{folderA}/{shp_file}_merged.{ext}", f"{folderA}/{shp_file}.{ext}")
+
+        return True
             
         print("verify merge and shp files: ", verify_merged, " ", len(shp_files) - 1)
         if verify_merged == len(shp_files):

@@ -254,7 +254,7 @@ class QGISPlugin_WaterIng:
         self.dlg.show() 
         if (self.dlg.exec_() == 1):
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork  
-            self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
+            self.actionManager = actionManager(os.environ.get('TOKEN'), self.dlg.ScenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
             if WateringUtils.isInternetConnection() and not self.hub_connection:        
                 self.setHubConnection()        
             self.updateActionStateOpen()
