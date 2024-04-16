@@ -24,12 +24,13 @@ class WateringDemandNodeRepository(AbstractRepository):
             ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
             ("B. Demand", QVariant.Double),
+            ("EmitterCoe", QVariant.Double),
             ("Pattern", QVariant.Bool),
             ("lastUpdate", QVariant.String)
         ]
     
         self.features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
-                               "z","baseDemand","demandPatternFK"]
+                               "z","baseDemand","emitterCoeff","demandPatternFK"]
 
         self.LayerType = "Point?crs="
         
@@ -51,4 +52,4 @@ class WateringDemandNodeRepository(AbstractRepository):
         feature.setAttribute("Name", name)
         feature.setAttribute("Descript", description)
         feature.setAttribute("B. Demand", baseDemand)
-        feature.setAttribute("Z[m]", z)        
+        feature.setAttribute("Z[m]", z)       

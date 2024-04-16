@@ -63,6 +63,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         description = feature["Descript"]
         z = feature["Z[m]"]
         baseDemand = feature["B. Demand"]
+        emitterCoeff = feature["EmitterCoe"]
         
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
@@ -70,8 +71,9 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'description': "{}".format(description), 
                        'lng': "{}".format(x), 
                        'lat': "{}".format(y), 
-                       'z': "{}".format(z), 
-                       'baseDemand': "{}".format(baseDemand)}
+                       'z': "{}".format(z),
+                       'baseDemand': "{}".format(baseDemand),
+                       'emitterCoeff': "{}".format(emitterCoeff),}
         
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
