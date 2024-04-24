@@ -41,7 +41,7 @@ class NetworkReviewTool:
 
                 if not node_geom.disjoint(pipe_geom):
                     #print(f'{node_name} intersects with {pipe_name}')
-                    break
+                    continue
                 else:
                     # Calculate distance between point and MultiLineString
                     distance = node_geom.distance(pipe_geom)
