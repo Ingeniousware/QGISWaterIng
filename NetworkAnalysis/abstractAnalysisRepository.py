@@ -125,14 +125,5 @@ class AbstractAnalysisRepository():
         renderer.updateColorRamp(color_ramp)
         renderer.setSymbolSizes(self.Size, self.Size)
 
-        """ 
-        if self.LayerName == "watering_pipes":
-            col_idx = layer.fields().indexFromName('Diameter')
-            if col_idx != -1:
-                vals = [feat.attributes()[col_idx] for feat in layer.getFeatures()]
-                min_val, max_val = min(vals), max(vals)
-                #print(min_val, max_val)
-                renderer.setSymbolSizes(min_val, max_val)
-        """
         layer.setRenderer(renderer)
         layer.triggerRepaint()

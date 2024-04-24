@@ -4,7 +4,9 @@
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.utils import iface
-from qgis.core import Qgis, QgsProject, QgsFeatureRequest
+from qgis.core import Qgis, QgsProject, QgsFeatureRequest, QgsField,  QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCategorizedSymbolRenderer, QgsSymbol, QgsRendererCategory, QgsVectorLayerSimpleLabeling
+from PyQt5.QtGui import QColor
+from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtCore import QVariant, QDateTime, QCoreApplication
 from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
@@ -423,6 +425,54 @@ class WateringUtils():
         
     def error_message(message):
         iface.messageBar().pushMessage(("Error"), (message), level=1, duration=5)
+
+    def createNewColumn(self, layerDest, name):
+        layer = QgsProject.instance().mapLayersByName(layerDest)[0]
+        if not layer:
+            raise Exception(f"Layer '{layerDest}' not found in the project.")
+        
+        self.new_field_name = name
+        if len(self.new_field_name) > 10:
+            self.new_field_name = self.new_field_name[:10]
+        
+        if layer.fields().indexFromName(self.new_field_name) != -1:
+            layer.startEditing()
+            layer.dataProvider().deleteAttributes([layer.fields().indexFromName(self.new_field_name)])
+            layer.commitChanges()
+        
+        if layer.fields().indexFromName(self.new_field_name) == -1:
+            layer.startEditing()
+            layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
+            layer.commitChanges()
+            
+            layer.startEditing()
+            field_index = layer.fields().indexFromName(self.new_field_name)
+            default_value = ""
+            features = [(f.id(), {field_index: default_value}) for f in layer.getFeatures()]
+            layer.dataProvider().changeAttributeValues({f[0]: f[1] for f in features})
+            layer.commitChanges()
+
+    def changeColors(self,layer, field_name):
+        # Create categories
+        categories = [] 
+        # Category for value 1 (red)
+        symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
+        symbol1.setColor(QColor(255, 0, 0))  # Red color
+        category1 = QgsRendererCategory(1, symbol1, 'Unconnected')
+        categories.append(category1)  
+        # Category for value 0 (green)
+        symbol0 = QgsSymbol.defaultSymbol(layer.geometryType())
+        symbol0.setColor(QColor(0, 255, 0))  # Green color
+        category0 = QgsRendererCategory(None, symbol0, 'Connected')
+        categories.append(category0)
+        # Create the categorized symbol renderer
+        renderer = QgsCategorizedSymbolRenderer(field_name, categories)
+        # Set the renderer to the layer
+        layer.setRenderer(renderer)
+        # Refresh the layer
+        layer.triggerRepaint()
+        # Add the layer to the map
+        QgsProject.instance().addMapLayer(layer)
     
 class WateringTimer():
     timer = None 

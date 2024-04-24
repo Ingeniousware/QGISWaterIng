@@ -35,5 +35,6 @@
         <file>images/connection_status_online.png</file>
         <file>images/Icon_pressureSensor_GT.svg</file>
         <file>images/waterMeterButton.png</file>
+        <file>images/automaticNetworkReview.svg</file>
     </qresource>
 </RCC>
