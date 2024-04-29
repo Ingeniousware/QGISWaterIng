@@ -4,7 +4,7 @@
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.utils import iface
-from qgis.core import Qgis, QgsProject, QgsFeatureRequest, QgsField,  QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCategorizedSymbolRenderer, QgsSymbol, QgsRendererCategory, QgsVectorLayerSimpleLabeling
+from qgis.core import Qgis, QgsProject, QgsFeatureRequest, QgsField,  QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCategorizedSymbolRenderer, QgsSymbol, QgsRendererCategory, edit, QgsSingleSymbolRenderer
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtWidgets import QProgressBar
@@ -451,28 +451,45 @@ class WateringUtils():
             features = [(f.id(), {field_index: default_value}) for f in layer.getFeatures()]
             layer.dataProvider().changeAttributeValues({f[0]: f[1] for f in features})
             layer.commitChanges()
-
-    def changeColors(self,layer, field_name):
-        # Create categories
-        categories = [] 
-        # Category for value 1 (red)
-        symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
-        symbol1.setColor(QColor(255, 0, 0))  # Red color
-        category1 = QgsRendererCategory(1, symbol1, 'Unconnected')
-        categories.append(category1)  
-        # Category for value 0 (green)
-        symbol0 = QgsSymbol.defaultSymbol(layer.geometryType())
-        symbol0.setColor(QColor(0, 255, 0))  # Green color
-        category0 = QgsRendererCategory(None, symbol0, 'Connected')
-        categories.append(category0)
-        # Create the categorized symbol renderer
-        renderer = QgsCategorizedSymbolRenderer(field_name, categories)
+    
+    def changeColors(self, layer, field_name, renderer_type):
+        if renderer_type == 'categorized':
+            # Create categories
+            categories = [] 
+            # Category for value 1 (red)
+            symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
+            symbol1.setColor(QColor(255, 0, 0))  # Red color
+            category1 = QgsRendererCategory(1, symbol1, 'Unconnected')
+            categories.append(category1)  
+            # Category for value 0 (green)
+            symbol0 = QgsSymbol.defaultSymbol(layer.geometryType())
+            symbol0.setColor(QColor(0, 255, 0))  # Green color
+            category0 = QgsRendererCategory(None, symbol0, 'Connected')
+            categories.append(category0)
+            # Create the categorized symbol renderer
+            renderer = QgsCategorizedSymbolRenderer(field_name, categories)
+        else:
+            # Single symbol renderer
+            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
+            symbol.setColor(QColor(255, 255, 255))  # Default to red color
+            renderer = QgsSingleSymbolRenderer(symbol)
+            
         # Set the renderer to the layer
         layer.setRenderer(renderer)
         # Refresh the layer
         layer.triggerRepaint()
         # Add the layer to the map
         QgsProject.instance().addMapLayer(layer)
+
+
+    def delete_column(self, layer, name):
+        field_index = layer.fields().indexFromName(name)
+        if field_index != -1:
+            with edit(layer):
+                res = layer.dataProvider().deleteAttributes([field_index])
+                layer.updateFields()
+                return res
+        return False
     
 class WateringTimer():
     timer = None 

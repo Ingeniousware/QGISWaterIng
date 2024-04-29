@@ -1,6 +1,6 @@
 import os
 from ..watering_utils import WateringUtils
-from qgis.core import Qgis, QgsProject, QgsCoordinateTransformContext, QgsProcessingFeedback
+from qgis.core import Qgis, QgsProject, QgsCoordinateTransformContext, QgsProcessingFeedback, QgsGeometry, QgsFeature, QgsPoint, QgsPointXY
 import processing
 from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
 
@@ -12,21 +12,27 @@ class NetworkReviewTool:
         self.node_layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
         self.project_path = WateringUtils.getProjectPath()
         self.scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        # Temporary Layers
         self.intersections_layer = None
         self.snap_layer = None
+        self.linesOnNodes = None
+        self.splited_lines = None
     
     def ExecuteAction(self):
         if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.iface.tr(u"Error"), self.iface.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.iface.tr(u"Error"), 
+                                                self.iface.tr(u"Load a project scenario first in Download Elements!"), 
+                                                level=1, duration=5)
             return
             
         if os.environ.get('TOKEN') is None:
-            self.iface.messageBar().pushMessage(self.iface.tr("Error"), self.iface.tr("You must login to WaterIng first!"), level=1, duration=5)
+            self.iface.messageBar().pushMessage(self.iface.tr("Error"), 
+                                                self.iface.tr("You must login to WaterIng first!"), 
+                                                level=1, duration=5)
             return
 
         field_waterM_nodeFK = 'Unconected'
         unnconnected = 1
-
         WateringUtils.createNewColumn(self, "watering_demand_nodes", field_waterM_nodeFK)
 
         self.node_layer.startEditing()
@@ -38,7 +44,7 @@ class NetworkReviewTool:
         
         for feature_x in pipe_features:
             pipe_geom = feature_x.geometry()
-
+            
             for feature_y in node_features:
                 node_geom = feature_y.geometry()
 
@@ -52,7 +58,7 @@ class NetworkReviewTool:
                         self.node_layer.dataProvider().changeAttributeValues({feature_y.id(): {field_index: unnconnected}})
         
         self.node_layer.commitChanges()
-        WateringUtils.changeColors(self,self.node_layer,field_waterM_nodeFK)
+        WateringUtils.changeColors(self,self.node_layer,field_waterM_nodeFK, "categorized")
 
         self.button()
 
@@ -91,56 +97,102 @@ class NetworkReviewTool:
         else:
             print("Error creating intersection layer.")
 
-    def snapPointTioPoint(self):
-        layer_name = "snapped_layer"
+    def snapPointTioPoint(self, layer_name, input, reference, behavior):
+        print(input)
+        print(reference)
     
         # Define the parameters for the Snap geometries to layer tool
         parameters = {
-            'INPUT': self.node_layer,
-            'REFERENCE_LAYER': self.intersections_layer,
+            'INPUT': input,
+            'REFERENCE_LAYER': reference,
             'TOLERANCE': 6.000,  # Set a suitable tolerance value
-            'BEHAVIOR': 3,  # 0 for closest
+            'BEHAVIOR': behavior,  # 0 for closest
             'OUTPUT': 'memory:' + layer_name
         }
 
         # Run the Snap geometries to layer tool
         feedback = QgsProcessingFeedback()
         result = processing.run("native:snapgeometries", parameters, feedback=feedback)
-        path = f'{self.project_path}/{self.scenario_id}/watering_demand_nodes.shp'
-        # Create the transform context
-        transform_context = QgsCoordinateTransformContext()
+        #path = f'{self.project_path}/{self.scenario_id}/watering_demand_nodes.shp'
 
         # Check if the tool ran successfully
         if result['OUTPUT']:
             self.snap_layer = result['OUTPUT']
             QgsProject.instance().addMapLayer(self.snap_layer)
             print("Snap layer created successfully.")
-            self.copyCoordinates(self.snap_layer)
-        
         else:
             print("Error creating snap layer.")
         
-
-    def copyCoordinates(self):
+    def copyCoordinates(self, layer, newCoordinates):
         id_column_name = "ID"
         # Start editing for Layer Nodes
-        self.node_layer.startEditing()
+        layer.startEditing()
 
         # Get the features of both layers
-        node_features = {f.attribute(id_column_name): f for f in self.node_layer.getFeatures()}
-        snap_features = {f.attribute(id_column_name): f for f in self.snap_layer.getFeatures()}
+        layer_features = {f.attribute(id_column_name): f for f in layer.getFeatures()}
+        newSnap_features = {f.attribute(id_column_name): f for f in newCoordinates.getFeatures()}
 
         # Iterate through features in snapLayer and update coordinates in self.node_layer
-        for feature_id, snap_feature in snap_features.items():
-            node_feature = node_features.get(feature_id)
+        for feature_id, snap_feature in newSnap_features.items():
+            node_feature = layer_features.get(feature_id)
             
             if node_feature:
-                self.node_layer.dataProvider().changeGeometryValues({node_feature.id(): snap_feature.geometry()})
+                layer.dataProvider().changeGeometryValues({node_feature.id(): snap_feature.geometry()})
 
         # Commit changes
-        self.node_layer.commitChanges()
+        layer.commitChanges()
 
-    @run_once
+    def cleanUpTemporaryData(self):
+        project = QgsProject.instance()
+        # List of layer names to delete
+        layers_to_delete = ['Intersections', 'Points to points', 'Lines to points',
+                            'snaped_layer', 'Lines on nodes', 'Splited lines']
+        for layer_name in layers_to_delete:
+            layer_id = project.mapLayersByName(layer_name)
+            if layer_id:
+                project.removeMapLayer(layer_id[0])
+        WateringUtils.delete_column(self,self.node_layer,"Unconected")
+        WateringUtils.changeColors(self,self.node_layer,"","single")
+
+    def split_lines_with_lines(self, input_layer, split_layer):
+        layer_name = "Splited lines"
+        #output = f'{self.project_path}/{self.scenario_id}/watering_pipes.shp'
+        params = {
+            'INPUT': input_layer,
+            'LINES': split_layer,
+            'OUTPUT': 'memory:' + layer_name
+        }
+        # Run the Snap geometries to layer tool
+        feedback = QgsProcessingFeedback()
+        result = processing.run("qgis:splitwithlines", params, feedback=feedback)
+        # Check if the tool ran successfully
+        if result['OUTPUT']:
+            self.splited_lines = result['OUTPUT']
+            QgsProject.instance().addMapLayer(self.splited_lines)
+            print("Snap layer created successfully.")
+        else:
+            print("Error creating snap layer.")
+    
+    def create_lines_on_points(self, input_layer):
+        layer_name = "Lines on nodes"
+        params = {
+            'INPUT': input_layer,
+            'OUTPUT_GEOMETRY': 1,
+            'EXPRESSION': "make_line($geometry, translate($geometry, 5, 5))",
+            'OUTPUT': 'memory:' + layer_name
+        }
+        # Run the Snap geometries to layer tool
+        feedback = QgsProcessingFeedback()
+        result = processing.run("native:geometrybyexpression", params, feedback=feedback)
+        
+        # Check if the tool ran successfully
+        if result['OUTPUT']:
+            self.linesOnNodes = result['OUTPUT']
+            QgsProject.instance().addMapLayer(self.linesOnNodes)
+            print("Snap layer created successfully.")
+        else:
+            print("Error creating snap layer.")
+
     def button(self):
         project = QgsProject.instance()
         if project.isDirty():
@@ -149,17 +201,22 @@ class NetworkReviewTool:
                                             "The current network has errors. Do you want to continue to fix the unconnected nodes?",
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
             if response == QMessageBox.Yes:
+                #node adjustment
                 self.intersectionLayer()
-                self.snapPointTioPoint()
-                self.copyCoordinates()
-                
-                #Delete temporary layers
-                #QgsProject.instance().removeMapLayer(self.intersections_layer.id())
-                #QgsProject.instance().removeMapLayer(self.snap_layer.id())
-            
-                print("yes")
-            elif response == QMessageBox.Cancel:
-                print("Out mtoherfkr")
-                return
+                self.snapPointTioPoint("Points to points",self.node_layer, self.intersections_layer, 3)
+                self.copyCoordinates(self.node_layer, self.snap_layer)
+                #pipes adjustment
+                self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 5)
+                self.copyCoordinates(self.pipe_layer, self.snap_layer)
 
+                self.create_lines_on_points(self.node_layer)
+                self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
+                #self.copyCoordinates(self.pipe_layer, self.splited_lines)
+
+                #self.cleanUpTemporaryData()
+            
+                print("Finished fixing the network")
+            elif response == QMessageBox.Cancel:
+                print("Out")
+                return
 
