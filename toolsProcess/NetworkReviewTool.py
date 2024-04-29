@@ -90,12 +90,7 @@ class NetworkReviewTool:
         result = processing.run("qgis:lineintersections", parameters, feedback=feedback)
 
         # Check if the tool ran successfully
-        if result['OUTPUT']:
-            self.intersections_layer = result['OUTPUT']
-            QgsProject.instance().addMapLayer(self.intersections_layer)
-            print("Intersection layer created successfully.")
-        else:
-            print("Error creating intersection layer.")
+        self.intersections_layer = self.process_result(result)
 
     def snapPointTioPoint(self, layer_name, input, reference, behavior):
         print(input)
@@ -116,12 +111,7 @@ class NetworkReviewTool:
         #path = f'{self.project_path}/{self.scenario_id}/watering_demand_nodes.shp'
 
         # Check if the tool ran successfully
-        if result['OUTPUT']:
-            self.snap_layer = result['OUTPUT']
-            QgsProject.instance().addMapLayer(self.snap_layer)
-            print("Snap layer created successfully.")
-        else:
-            print("Error creating snap layer.")
+        self.snap_layer = self.process_result(result)
         
     def copyCoordinates(self, layer, newCoordinates):
         id_column_name = "ID"
@@ -142,18 +132,6 @@ class NetworkReviewTool:
         # Commit changes
         layer.commitChanges()
 
-    def cleanUpTemporaryData(self):
-        project = QgsProject.instance()
-        # List of layer names to delete
-        layers_to_delete = ['Intersections', 'Points to points', 'Lines to points',
-                            'snaped_layer', 'Lines on nodes', 'Splited lines']
-        for layer_name in layers_to_delete:
-            layer_id = project.mapLayersByName(layer_name)
-            if layer_id:
-                project.removeMapLayer(layer_id[0])
-        WateringUtils.delete_column(self,self.node_layer,"Unconected")
-        WateringUtils.changeColors(self,self.node_layer,"","single")
-
     def split_lines_with_lines(self, input_layer, split_layer):
         layer_name = "Splited lines"
         #output = f'{self.project_path}/{self.scenario_id}/watering_pipes.shp'
@@ -166,12 +144,7 @@ class NetworkReviewTool:
         feedback = QgsProcessingFeedback()
         result = processing.run("qgis:splitwithlines", params, feedback=feedback)
         # Check if the tool ran successfully
-        if result['OUTPUT']:
-            self.splited_lines = result['OUTPUT']
-            QgsProject.instance().addMapLayer(self.splited_lines)
-            print("Snap layer created successfully.")
-        else:
-            print("Error creating snap layer.")
+        self.splited_lines = self.process_result(result)
     
     def create_lines_on_points(self, input_layer):
         layer_name = "Lines on nodes"
@@ -186,12 +159,7 @@ class NetworkReviewTool:
         result = processing.run("native:geometrybyexpression", params, feedback=feedback)
         
         # Check if the tool ran successfully
-        if result['OUTPUT']:
-            self.linesOnNodes = result['OUTPUT']
-            QgsProject.instance().addMapLayer(self.linesOnNodes)
-            print("Snap layer created successfully.")
-        else:
-            print("Error creating snap layer.")
+        self.linesOnNodes = self.process_result(result)
 
     def button(self):
         project = QgsProject.instance()
@@ -219,4 +187,25 @@ class NetworkReviewTool:
             elif response == QMessageBox.Cancel:
                 print("Out")
                 return
-
+            
+    def process_result(self, result):
+        if result['OUTPUT']:
+            lines_on_nodes = result['OUTPUT']
+            QgsProject.instance().addMapLayer(lines_on_nodes)
+            print("Snap layer created successfully.")
+            return lines_on_nodes
+        else:
+            print("Error creating snap layer.")
+            return None
+        
+    def cleanUpTemporaryData(self):
+        project = QgsProject.instance()
+        # List of layer names to delete
+        layers_to_delete = ['Intersections', 'Points to points', 'Lines to points',
+                            'snaped_layer', 'Lines on nodes', 'Splited lines']
+        for layer_name in layers_to_delete:
+            layer_id = project.mapLayersByName(layer_name)
+            if layer_id:
+                project.removeMapLayer(layer_id[0])
+        WateringUtils.delete_column(self,self.node_layer,"Unconected")
+        WateringUtils.changeColors(self,self.node_layer,"","single")
