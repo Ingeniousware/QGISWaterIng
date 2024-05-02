@@ -1,8 +1,9 @@
 import os
 from ..watering_utils import WateringUtils
-from qgis.core import Qgis, QgsProject, QgsCoordinateTransformContext, QgsProcessingFeedback, QgsGeometry, QgsFeature, QgsPoint, QgsPointXY
+from qgis.core import Qgis, QgsProject, QgsCoordinateTransformContext, QgsProcessingFeedback, QgsGeometry, QgsFeature, QgsPoint, QgsPointXY, QgsVectorLayer
 import processing
 from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
+import uuid
 
 class NetworkReviewTool:
 
@@ -11,12 +12,13 @@ class NetworkReviewTool:
         self.pipe_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
         self.node_layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
         self.project_path = WateringUtils.getProjectPath()
-        self.scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        self.scenario_id = WateringUtils.getScenarioId()
         # Temporary Layers
         self.intersections_layer = None
         self.snap_layer = None
         self.linesOnNodes = None
         self.splited_lines = None
+        self.interpolate_layer = None
     
     def ExecuteAction(self):
         if WateringUtils.isScenarioNotOpened():
@@ -91,11 +93,31 @@ class NetworkReviewTool:
 
         # Check if the tool ran successfully
         self.intersections_layer = self.process_result(result)
+    
+    def interpolatePointsToLines(self):
+        uri = "Point?crs=epsg:3857&field=id:integer&field=name:string(20)&index=yes"
+        layer = QgsVectorLayer(uri, "Interpolate", "memory")
+        QgsProject.instance().addMapLayer(layer)
+        self.interpolate_layer = QgsProject.instance().mapLayersByName("Interpolate")[0]
+        for feature_x in self.pipe_layer.getFeatures():
+            pipe_geom = feature_x.geometry()
+            for feature_y in self.node_layer.getFeatures():
+                node_geom = feature_y.geometry()
+                if not node_geom.disjoint(pipe_geom):
+                    continue
+                else:
+                    # Calculate distance between point and MultiLineString
+                    distance = node_geom.distance(pipe_geom)
+                    if distance <= 5:
+                        # Get the point along the pipe which is closest to the node
+                        _, closest_point, _, _ = pipe_geom.closestSegmentWithContext(node_geom.asPoint())
+                        # Create a QgsGeometry object for the closest point
+                        closest_point_geom = QgsGeometry.fromPointXY(closest_point)
+                        new_feature = QgsFeature()
+                        new_feature.setGeometry(closest_point_geom)
+                        layer.dataProvider().addFeature(new_feature)
 
     def snapPointTioPoint(self, layer_name, input, reference, behavior):
-        print(input)
-        print(reference)
-    
         # Define the parameters for the Snap geometries to layer tool
         parameters = {
             'INPUT': input,
@@ -112,6 +134,7 @@ class NetworkReviewTool:
 
         # Check if the tool ran successfully
         self.snap_layer = self.process_result(result)
+        print(self.snap_layer)
         
     def copyCoordinates(self, layer, newCoordinates):
         id_column_name = "ID"
@@ -145,7 +168,8 @@ class NetworkReviewTool:
         result = processing.run("qgis:splitwithlines", params, feedback=feedback)
         # Check if the tool ran successfully
         self.splited_lines = self.process_result(result)
-    
+        #self.setFinalData()
+        
     def create_lines_on_points(self, input_layer):
         layer_name = "Lines on nodes"
         params = {
@@ -171,17 +195,18 @@ class NetworkReviewTool:
             if response == QMessageBox.Yes:
                 #node adjustment
                 self.intersectionLayer()
-                self.snapPointTioPoint("Points to points",self.node_layer, self.intersections_layer, 3)
+                self.interpolatePointsToLines()
+                self.snapPointTioPoint("Interpolated to Intersections", self.interpolate_layer, self.intersections_layer,3)
+                self.snapPointTioPoint("Points to points",self.node_layer, self.snap_layer, 3)
                 self.copyCoordinates(self.node_layer, self.snap_layer)
-                #pipes adjustment
-                self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 5)
-                self.copyCoordinates(self.pipe_layer, self.snap_layer)
 
+                #pipes adjustment
+                self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 0)
                 self.create_lines_on_points(self.node_layer)
                 self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
                 #self.copyCoordinates(self.pipe_layer, self.splited_lines)
 
-                #self.cleanUpTemporaryData()
+                self.cleanUpTemporaryData()
             
                 print("Finished fixing the network")
             elif response == QMessageBox.Cancel:
@@ -202,10 +227,43 @@ class NetworkReviewTool:
         project = QgsProject.instance()
         # List of layer names to delete
         layers_to_delete = ['Intersections', 'Points to points', 'Lines to points',
-                            'snaped_layer', 'Lines on nodes', 'Splited lines']
+                            'snaped_layer', 'Lines on nodes', 'Interpolate', 'Interpolated to Intersections']
         for layer_name in layers_to_delete:
             layer_id = project.mapLayersByName(layer_name)
             if layer_id:
                 project.removeMapLayer(layer_id[0])
         WateringUtils.delete_column(self,self.node_layer,"Unconected")
         WateringUtils.changeColors(self,self.node_layer,"","single")
+
+"""     def setFinalData(self):
+        #New addition od uuid4 code to new pipes when spliting
+        id_count = {}  # Dictionary to store counts of each original ID
+
+        self.splited_lines.startEditing()
+
+        for feature in self.splited_lines.getFeatures():
+            # Get the line geometry
+            line_geometry = feature.geometry().asPolyline()
+            # Get the start (up) node and end (down) node of the line
+            start_node = line_geometry[0]
+            end_node = line_geometry[-1]
+            # Update the "Up-Node" and "Down-Node" fields with the start and end nodes respectively
+            self.splited_lines.changeAttributeValue(feature.id(), self.splited_lines.fields().indexFromName("Up-Node"), start_node)
+            self.splited_lines.changeAttributeValue(feature.id(), self.splited_lines.fields().indexFromName("Down-Node"), end_node)
+            # Calculate the length of the line geometry
+            line_length = feature.geometry().length()
+            # Update the "Length" field with the calculated length
+            self.splited_lines.changeAttributeValue(feature.id(), self.splited_lines.fields().indexFromName("Length"), line_length)
+            original_id = feature['ID']
+            if original_id not in id_count:
+                id_count[original_id] = 1
+            else:
+                id_count[original_id] += 1
+            
+            if id_count[original_id] > 1:
+                # Assign a new unique ID using UUID
+                unique_id = str(uuid.uuid4())[:36]  # Generate UUID and truncate to first 36 characters
+                feature.setAttribute("ID", unique_id)
+                self.splited_lines.updateFeature(feature)
+
+        self.splited_lines.commitChanges() """
