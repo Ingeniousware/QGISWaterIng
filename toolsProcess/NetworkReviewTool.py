@@ -170,6 +170,16 @@ class NetworkReviewTool:
         self.splited_lines = self.process_result(result)
         #self.setFinalData()
         
+        id_field_index = self.splited_lines.fields().indexFromName("ID")
+    
+        self.splited_lines.startEditing()
+        
+        for feature in self.splited_lines.getFeatures():
+            new_uuid = str(uuid.uuid4())[:10]
+            self.splited_lines.changeAttributeValue(feature.id(), id_field_index, new_uuid)
+
+        self.splited_lines.commitChanges()
+        
     def create_lines_on_points(self, input_layer):
         layer_name = "Lines on nodes"
         params = {
