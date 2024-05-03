@@ -134,7 +134,6 @@ class NetworkReviewTool:
 
         # Check if the tool ran successfully
         self.snap_layer = self.process_result(result)
-        print(self.snap_layer)
         
     def copyCoordinates(self, layer, newCoordinates):
         id_column_name = "ID"
