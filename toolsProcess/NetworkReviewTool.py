@@ -1,8 +1,8 @@
 import os
 from ..watering_utils import WateringUtils
-from qgis.core import Qgis, QgsProject, QgsCoordinateTransformContext, QgsProcessingFeedback, QgsGeometry, QgsFeature, QgsPoint, QgsPointXY, QgsVectorLayer
+from qgis.core import Qgis, QgsProject, QgsProcessingFeedback, QgsGeometry, QgsFeature, QgsVectorLayer
 import processing
-from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
+from PyQt5.QtWidgets import QMessageBox
 import uuid
 
 class NetworkReviewTool:
@@ -167,7 +167,6 @@ class NetworkReviewTool:
         result = processing.run("qgis:splitwithlines", params, feedback=feedback)
         # Check if the tool ran successfully
         self.splited_lines = self.process_result(result)
-        #self.setFinalData()
         
         id_field_index = self.splited_lines.fields().indexFromName("ID")
     
@@ -243,36 +242,3 @@ class NetworkReviewTool:
                 project.removeMapLayer(layer_id[0])
         WateringUtils.delete_column(self,self.node_layer,"Unconected")
         WateringUtils.changeColors(self,self.node_layer,"","single")
-
-"""     def setFinalData(self):
-        #New addition od uuid4 code to new pipes when spliting
-        id_count = {}  # Dictionary to store counts of each original ID
-
-        self.splited_lines.startEditing()
-
-        for feature in self.splited_lines.getFeatures():
-            # Get the line geometry
-            line_geometry = feature.geometry().asPolyline()
-            # Get the start (up) node and end (down) node of the line
-            start_node = line_geometry[0]
-            end_node = line_geometry[-1]
-            # Update the "Up-Node" and "Down-Node" fields with the start and end nodes respectively
-            self.splited_lines.changeAttributeValue(feature.id(), self.splited_lines.fields().indexFromName("Up-Node"), start_node)
-            self.splited_lines.changeAttributeValue(feature.id(), self.splited_lines.fields().indexFromName("Down-Node"), end_node)
-            # Calculate the length of the line geometry
-            line_length = feature.geometry().length()
-            # Update the "Length" field with the calculated length
-            self.splited_lines.changeAttributeValue(feature.id(), self.splited_lines.fields().indexFromName("Length"), line_length)
-            original_id = feature['ID']
-            if original_id not in id_count:
-                id_count[original_id] = 1
-            else:
-                id_count[original_id] += 1
-            
-            if id_count[original_id] > 1:
-                # Assign a new unique ID using UUID
-                unique_id = str(uuid.uuid4())[:36]  # Generate UUID and truncate to first 36 characters
-                feature.setAttribute("ID", unique_id)
-                self.splited_lines.updateFeature(feature)
-
-        self.splited_lines.commitChanges() """
