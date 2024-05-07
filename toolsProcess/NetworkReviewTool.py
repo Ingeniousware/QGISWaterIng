@@ -60,7 +60,7 @@ class NetworkReviewTool:
                         self.node_layer.dataProvider().changeAttributeValues({feature_y.id(): {field_index: unnconnected}})
         
         self.node_layer.commitChanges()
-        WateringUtils.changeColors(self,self.node_layer,field_waterM_nodeFK, "categorized")
+        WateringUtils.changeColors(self.node_layer,field_waterM_nodeFK, "categorized")
 
         self.button()
 
@@ -87,11 +87,9 @@ class NetworkReviewTool:
             'INPUT_FIELDS': []  # Keep all fields from input layer
         }
 
-        # Run the Line Intersections tool
         feedback = QgsProcessingFeedback()
         result = processing.run("qgis:lineintersections", parameters, feedback=feedback)
 
-        # Check if the tool ran successfully
         self.intersections_layer = self.process_result(result)
     
     def interpolatePointsToLines(self):
@@ -133,23 +131,6 @@ class NetworkReviewTool:
 
         self.snap_layer = self.process_result(result)
         
-    """ def copyCoordinates(self, layer, newCoordinates):
-        id_column_name = "ID"
-
-        layer.startEditing()
-        # Get the features of both layers
-        layer_features = {f.attribute(id_column_name): f for f in layer.getFeatures()}
-        newSnap_features = {f.attribute(id_column_name): f for f in newCoordinates.getFeatures()}
-        # Iterate through features in snapLayer and update coordinates in self.node_layer
-        for feature_id, snap_feature in newSnap_features.items():
-            feature = layer_features.get(feature_id)
-            if feature:
-                layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
-            else:
-                # Add the feature as a new line
-                layer.addFeature(snap_feature)
-        layer.commitChanges() """
-
     def copyCoordinates(self, layer, newCoordinates, case):
         id_column_name = "ID"
 
@@ -206,8 +187,7 @@ class NetworkReviewTool:
         # Run the Snap geometries to layer tool
         feedback = QgsProcessingFeedback()
         result = processing.run("native:geometrybyexpression", params, feedback=feedback)
-        
-        # Check if the tool ran successfully
+    
         self.linesOnNodes = self.process_result(result)
 
     @run_once
@@ -259,15 +239,15 @@ class NetworkReviewTool:
             layer_id = project.mapLayersByName(layer_name)
             if layer_id:
                 project.removeMapLayer(layer_id[0])
-        WateringUtils.delete_column(self,self.node_layer,"Unconected")
-        WateringUtils.changeColors(self,self.node_layer,"","single")
+        WateringUtils.delete_column(self.node_layer,"Unconected")
+        WateringUtils.changeColors(self.node_layer,"","single")
     
     def deleteAllFeatures(self,layer):
         layer.startEditing()
         provider = layer.dataProvider()
         feature_ids = [feature.id() for feature in layer.getFeatures()]
         for feature in layer.getFeatures():
-            WateringUtils.addFeatureToBackupLayer(self, feature, layer)
+            WateringUtils.add_feature_to_backup_layer(feature, layer)
         provider.deleteFeatures(feature_ids)
         layer.commitChanges()
 
@@ -280,7 +260,7 @@ class NetworkReviewTool:
             point_tuple = (point.x(), point.y())
             if point_tuple in unique_points:
                 # If the coordinates are already present, delete the feature
-                WateringUtils.addFeatureToBackupLayer(self, feature, layer)
+                WateringUtils.add_feature_to_backup_layer(feature, layer)
                 provider.deleteFeatures([feature.id()])
             else:
                 # If the coordinates are not present, add them to the set
