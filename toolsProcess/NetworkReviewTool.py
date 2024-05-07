@@ -130,29 +130,46 @@ class NetworkReviewTool:
         # Run the Snap geometries to layer tool
         feedback = QgsProcessingFeedback()
         result = processing.run("native:snapgeometries", parameters, feedback=feedback)
-        #path = f'{self.project_path}/{self.scenario_id}/watering_demand_nodes.shp'
 
-        # Check if the tool ran successfully
         self.snap_layer = self.process_result(result)
         
-    def copyCoordinates(self, layer, newCoordinates):
+    """ def copyCoordinates(self, layer, newCoordinates):
         id_column_name = "ID"
-        # Start editing for Layer Nodes
-        layer.startEditing()
 
+        layer.startEditing()
         # Get the features of both layers
         layer_features = {f.attribute(id_column_name): f for f in layer.getFeatures()}
         newSnap_features = {f.attribute(id_column_name): f for f in newCoordinates.getFeatures()}
-
         # Iterate through features in snapLayer and update coordinates in self.node_layer
         for feature_id, snap_feature in newSnap_features.items():
-            node_feature = layer_features.get(feature_id)
-            
-            if node_feature:
-                layer.dataProvider().changeGeometryValues({node_feature.id(): snap_feature.geometry()})
+            feature = layer_features.get(feature_id)
+            if feature:
+                layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
+            else:
+                # Add the feature as a new line
+                layer.addFeature(snap_feature)
+        layer.commitChanges() """
 
-        # Commit changes
+    def copyCoordinates(self, layer, newCoordinates, case):
+        id_column_name = "ID"
+
+        layer.startEditing()
+        # Get the features of both layers
+        layer_features = {f.attribute(id_column_name): f for f in layer.getFeatures()}
+        newSnap_features = {f.attribute(id_column_name): f for f in newCoordinates.getFeatures()}
+        # Iterate through features in snapLayer and update coordinates in self.node_layer
+        for feature_id, snap_feature in newSnap_features.items():
+            feature = layer_features.get(feature_id)
+            if case == 1:  # For pipes
+                if feature:
+                    layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
+                else:
+                    layer.addFeature(snap_feature)
+            if case == 0:  # For nodes
+                if feature:
+                    layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})           
         layer.commitChanges()
+
 
     def split_lines_with_lines(self, input_layer, split_layer):
         layer_name = "Splited lines"
@@ -183,7 +200,7 @@ class NetworkReviewTool:
         params = {
             'INPUT': input_layer,
             'OUTPUT_GEOMETRY': 1,
-            'EXPRESSION': "make_line($geometry, translate($geometry, 5, 5))",
+            'EXPRESSION': "make_line($geometry, translate($geometry, 0.9, 0.9))",
             'OUTPUT': 'memory:' + layer_name
         }
         # Run the Snap geometries to layer tool
@@ -193,11 +210,12 @@ class NetworkReviewTool:
         # Check if the tool ran successfully
         self.linesOnNodes = self.process_result(result)
 
+    @run_once
     def button(self):
         project = QgsProject.instance()
         if project.isDirty():
             response = QMessageBox.question(None,
-                                            "Conitnue Fixing the Network",
+                                            "Fix Unconnected Nodes",
                                             "The current network has errors. Do you want to continue to fix the unconnected nodes?",
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
             if response == QMessageBox.Yes:
@@ -206,14 +224,15 @@ class NetworkReviewTool:
                 self.interpolatePointsToLines()
                 self.snapPointTioPoint("Interpolated to Intersections", self.interpolate_layer, self.intersections_layer,3)
                 self.snapPointTioPoint("Points to points",self.node_layer, self.snap_layer, 3)
-                self.copyCoordinates(self.node_layer, self.snap_layer)
+                self.copyCoordinates(self.node_layer, self.snap_layer,0)
+                self.removeDuplicatePoints(self.node_layer)
 
                 #pipes adjustment
                 self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 0)
                 self.create_lines_on_points(self.node_layer)
                 self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
-                #self.copyCoordinates(self.pipe_layer, self.splited_lines)
-
+                self.deleteAllFeatures(self.pipe_layer)
+                self.copyCoordinates(self.pipe_layer, self.splited_lines,1)
                 self.cleanUpTemporaryData()
             
                 print("Finished fixing the network")
@@ -235,10 +254,35 @@ class NetworkReviewTool:
         project = QgsProject.instance()
         # List of layer names to delete
         layers_to_delete = ['Intersections', 'Points to points', 'Lines to points',
-                            'snaped_layer', 'Lines on nodes', 'Interpolate', 'Interpolated to Intersections']
+                            'snaped_layer', 'Lines on nodes', 'Interpolate', 'Interpolated to Intersections', 'Splited lines']
         for layer_name in layers_to_delete:
             layer_id = project.mapLayersByName(layer_name)
             if layer_id:
                 project.removeMapLayer(layer_id[0])
         WateringUtils.delete_column(self,self.node_layer,"Unconected")
         WateringUtils.changeColors(self,self.node_layer,"","single")
+    
+    def deleteAllFeatures(self,layer):
+        layer.startEditing()
+        provider = layer.dataProvider()
+        feature_ids = [feature.id() for feature in layer.getFeatures()]
+        for feature in layer.getFeatures():
+            WateringUtils.addFeatureToBackupLayer(self, feature, layer)
+        provider.deleteFeatures(feature_ids)
+        layer.commitChanges()
+
+    def removeDuplicatePoints(self, layer):
+        unique_points = set()
+        provider = layer.dataProvider()
+        layer.startEditing()
+        for feature in layer.getFeatures():
+            point = feature.geometry().asPoint()
+            point_tuple = (point.x(), point.y())
+            if point_tuple in unique_points:
+                # If the coordinates are already present, delete the feature
+                WateringUtils.addFeatureToBackupLayer(self, feature, layer)
+                provider.deleteFeatures([feature.id()])
+            else:
+                # If the coordinates are not present, add them to the set
+                unique_points.add(point_tuple)
+        layer.commitChanges()

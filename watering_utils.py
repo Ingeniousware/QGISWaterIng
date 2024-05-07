@@ -4,7 +4,7 @@
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.utils import iface
-from qgis.core import Qgis, QgsProject, QgsFeatureRequest, QgsField,  QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCategorizedSymbolRenderer, QgsSymbol, QgsRendererCategory, edit, QgsSingleSymbolRenderer
+from qgis.core import Qgis, QgsProject, QgsFeatureRequest, QgsField,  QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCategorizedSymbolRenderer, QgsSymbol, QgsRendererCategory, edit, QgsSingleSymbolRenderer, QgsFeature
 from PyQt5.QtGui import QColor
 from qgis.PyQt.QtCore import QVariant
 from qgis.PyQt.QtWidgets import QProgressBar
@@ -490,6 +490,22 @@ class WateringUtils():
                 layer.updateFields()
                 return res
         return False
+    
+    def addFeatureToBackupLayer(self, feature, layer):
+        backup_layer_name = layer.name() + "_backup"
+        backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
+        backup_layer.startEditing()
+        
+        new_feat = QgsFeature(backup_layer.fields())
+        new_feat.setGeometry(feature.geometry())
+        new_feat.setAttributes(feature.attributes())
+        lastUpdateIndex = new_feat.fields().indexFromName('lastUpdate')
+        new_feat.setAttribute(lastUpdateIndex, WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
+        backup_layer.addFeature(new_feat)
+        
+        print(f"adding feature {new_feat} to {backup_layer}")
+            
+        backup_layer.commitChanges()
     
 class WateringTimer():
     timer = None 
