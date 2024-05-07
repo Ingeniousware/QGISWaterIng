@@ -4,9 +4,7 @@
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.utils import iface
-from qgis.core import Qgis, QgsProject, QgsFeatureRequest, QgsField,  QgsVectorLayer, QgsFields, QgsWkbTypes, QgsCategorizedSymbolRenderer, QgsSymbol, QgsRendererCategory, edit, QgsSingleSymbolRenderer
-from PyQt5.QtGui import QColor
-from qgis.PyQt.QtCore import QVariant
+from qgis.core import Qgis, QgsProject, QgsFeatureRequest, QgsFeature
 from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtCore import QVariant, QDateTime, QCoreApplication
 from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
@@ -425,71 +423,22 @@ class WateringUtils():
         
     def error_message(message):
         iface.messageBar().pushMessage(("Error"), (message), level=1, duration=5)
-
-    def createNewColumn(self, layerDest, name):
-        layer = QgsProject.instance().mapLayersByName(layerDest)[0]
-        if not layer:
-            raise Exception(f"Layer '{layerDest}' not found in the project.")
         
-        self.new_field_name = name
-        if len(self.new_field_name) > 10:
-            self.new_field_name = self.new_field_name[:10]
+    def add_feature_to_backup_layer(feature, layer):
+        backup_layer_name = layer.name() + "_backup"
+        backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
+        backup_layer.startEditing()
         
-        if layer.fields().indexFromName(self.new_field_name) != -1:
-            layer.startEditing()
-            layer.dataProvider().deleteAttributes([layer.fields().indexFromName(self.new_field_name)])
-            layer.commitChanges()
+        new_feat = QgsFeature(backup_layer.fields())
+        new_feat.setGeometry(feature.geometry())
+        new_feat.setAttributes(feature.attributes())
+        lastUpdateIndex = new_feat.fields().indexFromName('lastUpdate')
+        new_feat.setAttribute(lastUpdateIndex, WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
+        backup_layer.addFeature(new_feat)
         
-        if layer.fields().indexFromName(self.new_field_name) == -1:
-            layer.startEditing()
-            layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
-            layer.commitChanges()
+        print(f"adding feature {new_feat} to {backup_layer}")
             
-            layer.startEditing()
-            field_index = layer.fields().indexFromName(self.new_field_name)
-            default_value = ""
-            features = [(f.id(), {field_index: default_value}) for f in layer.getFeatures()]
-            layer.dataProvider().changeAttributeValues({f[0]: f[1] for f in features})
-            layer.commitChanges()
-    
-    def changeColors(self, layer, field_name, renderer_type):
-        if renderer_type == 'categorized':
-            # Create categories
-            categories = [] 
-            # Category for value 1 (red)
-            symbol1 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol1.setColor(QColor(255, 0, 0))  # Red color
-            category1 = QgsRendererCategory(1, symbol1, 'Unconnected')
-            categories.append(category1)  
-            # Category for value 0 (green)
-            symbol0 = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol0.setColor(QColor(0, 255, 0))  # Green color
-            category0 = QgsRendererCategory(None, symbol0, 'Connected')
-            categories.append(category0)
-            # Create the categorized symbol renderer
-            renderer = QgsCategorizedSymbolRenderer(field_name, categories)
-        else:
-            # Single symbol renderer
-            symbol = QgsSymbol.defaultSymbol(layer.geometryType())
-            symbol.setColor(QColor(255, 255, 255))  # Default to red color
-            renderer = QgsSingleSymbolRenderer(symbol)
-            
-        # Set the renderer to the layer
-        layer.setRenderer(renderer)
-        # Refresh the layer
-        layer.triggerRepaint()
-        # Add the layer to the map
-        QgsProject.instance().addMapLayer(layer)
-
-
-    def delete_column(self, layer, name):
-        field_index = layer.fields().indexFromName(name)
-        if field_index != -1:
-            with edit(layer):
-                res = layer.dataProvider().deleteAttributes([field_index])
-                layer.updateFields()
-                return res
-        return False
+        backup_layer.commitChanges()
     
 class WateringTimer():
     timer = None 
