@@ -22,6 +22,10 @@ class DeleteElementTool(QgsMapTool):
         
         found_features = self.test.identify(e.x(), e.y(), self.test.TopDownStopAtFirst, self.test.VectorLayer)
         
+        if not found_features:
+            WateringUtils.error_message( "No features found!" )
+            return
+    
         feature = found_features[0].mFeature
         layer = found_features[0].mLayer
         repo = self.scenarioUnitOfWork.getRepoByLayer(layer)
@@ -30,25 +34,8 @@ class DeleteElementTool(QgsMapTool):
             
         repo.deleteFeatureFromMapInteraction(feature)
         
-        self.addFeatureToBackupLayer(feature, layer)
- 
+        WateringUtils.add_feature_to_backup_layer(feature, layer)
                         
     def deactivate(self):
         print("Clicked to unselect button of deleting element.")
         #self.layer.removeSelection()
-    
-    def addFeatureToBackupLayer(self, feature, layer):
-        backup_layer_name = layer.name() + "_backup"
-        backup_layer = QgsProject.instance().mapLayersByName(backup_layer_name)[0]
-        backup_layer.startEditing()
-        
-        new_feat = QgsFeature(backup_layer.fields())
-        new_feat.setGeometry(feature.geometry())
-        new_feat.setAttributes(feature.attributes())
-        lastUpdateIndex = new_feat.fields().indexFromName('lastUpdate')
-        new_feat.setAttribute(lastUpdateIndex, WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
-        backup_layer.addFeature(new_feat)
-        
-        print(f"adding feature {new_feat} to {backup_layer}")
-            
-        backup_layer.commitChanges()
