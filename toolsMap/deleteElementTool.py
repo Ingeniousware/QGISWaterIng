@@ -22,6 +22,10 @@ class DeleteElementTool(QgsMapTool):
         
         found_features = self.test.identify(e.x(), e.y(), self.test.TopDownStopAtFirst, self.test.VectorLayer)
         
+        if not found_features:
+            WateringUtils.error_message( "No features found!" )
+            return
+    
         feature = found_features[0].mFeature
         layer = found_features[0].mLayer
         repo = self.scenarioUnitOfWork.getRepoByLayer(layer)
