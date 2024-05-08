@@ -4,6 +4,7 @@ from qgis.core import Qgis, QgsProject, QgsProcessingFeedback, QgsGeometry, QgsF
 import processing
 from PyQt5.QtWidgets import QMessageBox
 import uuid
+import datetime
 
 class NetworkReviewTool:
 
@@ -11,6 +12,11 @@ class NetworkReviewTool:
         self.iface = iface
         self.pipe_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
         self.node_layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+        self.reservoir_layer = QgsProject.instance().mapLayersByName("watering_reservoirs")[0]
+        self.tanks_layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
+        self.pumps_layer = QgsProject.instance().mapLayersByName("watering_pumps")[0]
+        self.valves_layer = QgsProject.instance().mapLayersByName("watering_valves")[0]
+
         self.project_path = WateringUtils.getProjectPath()
         self.scenario_id = WateringUtils.getScenarioId()
         # Temporary Layers
@@ -97,23 +103,31 @@ class NetworkReviewTool:
         layer = QgsVectorLayer(uri, "Interpolate", "memory")
         QgsProject.instance().addMapLayer(layer)
         self.interpolate_layer = QgsProject.instance().mapLayersByName("Interpolate")[0]
+
+        node_pipe_associations = {}
         for feature_x in self.pipe_layer.getFeatures():
             pipe_geom = feature_x.geometry()
             for feature_y in self.node_layer.getFeatures():
+                node_id = feature_y.id()
                 node_geom = feature_y.geometry()
-                if not node_geom.disjoint(pipe_geom):
-                    continue
-                else:
-                    # Calculate distance between point and MultiLineString
-                    distance = node_geom.distance(pipe_geom)
-                    if distance <= 5:
-                        # Get the point along the pipe which is closest to the node
-                        _, closest_point, _, _ = pipe_geom.closestSegmentWithContext(node_geom.asPoint())
-                        # Create a QgsGeometry object for the closest point
-                        closest_point_geom = QgsGeometry.fromPointXY(closest_point)
-                        new_feature = QgsFeature()
-                        new_feature.setGeometry(closest_point_geom)
-                        layer.dataProvider().addFeature(new_feature)
+                
+                # Calculate distance between point and MultiLineString
+                distance = node_geom.distance(pipe_geom)
+                if distance <= 5:
+                    # If node already associated with another pipe, skip
+                    if node_id in node_pipe_associations:
+                        continue
+                    # Get the point along the pipe which is closest to the node
+                    _, closest_point, _, _ = pipe_geom.closestSegmentWithContext(node_geom.asPoint())
+                    # Store association between node and pipe
+                    node_pipe_associations[node_id] = {'line_id': feature_x.id(), 'closest_point': closest_point}
+        # Interpolate points based on associations
+        for node_id, association in node_pipe_associations.items():
+            closest_point = association['closest_point']
+            closest_point_geom = QgsGeometry.fromPointXY(closest_point)
+            new_feature = QgsFeature()
+            new_feature.setGeometry(closest_point_geom)
+            layer.dataProvider().addFeature(new_feature)
 
     def snapPointTioPoint(self, layer_name, input, reference, behavior):
         # Define the parameters for the Snap geometries to layer tool
@@ -132,23 +146,25 @@ class NetworkReviewTool:
         self.snap_layer = self.process_result(result)
         
     def copyCoordinates(self, layer, newCoordinates, case):
-        id_column_name = "ID"
-
+        current_timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         layer.startEditing()
         # Get the features of both layers
-        layer_features = {f.attribute(id_column_name): f for f in layer.getFeatures()}
-        newSnap_features = {f.attribute(id_column_name): f for f in newCoordinates.getFeatures()}
+        layer_features = {f.attribute("ID"): f for f in layer.getFeatures()}
+        newSnap_features = {f.attribute("ID"): f for f in newCoordinates.getFeatures()}
         # Iterate through features in snapLayer and update coordinates in self.node_layer
         for feature_id, snap_feature in newSnap_features.items():
             feature = layer_features.get(feature_id)
             if case == 1:  # For pipes
                 if feature:
                     layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
+                    #layer.dataProvider().changeAttributeValues({feature.id(): {layer.fields().indexFromName("Last Mdf"): current_timestamp}})
                 else:
                     layer.addFeature(snap_feature)
             if case == 0:  # For nodes
                 if feature:
-                    layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})           
+                    layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
+                    # Update the "lastUpdate" column
+                    #layer.dataProvider().changeAttributeValues({feature.id(): {layer.fields().indexFromName("Last Mdf"): current_timestamp}})           
         layer.commitChanges()
 
 
@@ -190,7 +206,6 @@ class NetworkReviewTool:
     
         self.linesOnNodes = self.process_result(result)
 
-    @run_once
     def button(self):
         project = QgsProject.instance()
         if project.isDirty():
@@ -199,21 +214,10 @@ class NetworkReviewTool:
                                             "The current network has errors. Do you want to continue to fix the unconnected nodes?",
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
             if response == QMessageBox.Yes:
-                #node adjustment
-                self.intersectionLayer()
-                self.interpolatePointsToLines()
-                self.snapPointTioPoint("Interpolated to Intersections", self.interpolate_layer, self.intersections_layer,3)
-                self.snapPointTioPoint("Points to points",self.node_layer, self.snap_layer, 3)
-                self.copyCoordinates(self.node_layer, self.snap_layer,0)
-                self.removeDuplicatePoints(self.node_layer)
 
-                #pipes adjustment
-                self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 0)
-                self.create_lines_on_points(self.node_layer)
-                self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
-                self.deleteAllFeatures(self.pipe_layer)
-                self.copyCoordinates(self.pipe_layer, self.splited_lines,1)
-                self.cleanUpTemporaryData()
+                self.reviewProcess()
+                WateringUtils.delete_column(self.node_layer,"Unconected")
+                WateringUtils.changeColors(self.node_layer,"","single")
             
                 print("Finished fixing the network")
             elif response == QMessageBox.Cancel:
@@ -239,8 +243,8 @@ class NetworkReviewTool:
             layer_id = project.mapLayersByName(layer_name)
             if layer_id:
                 project.removeMapLayer(layer_id[0])
-        WateringUtils.delete_column(self.node_layer,"Unconected")
-        WateringUtils.changeColors(self.node_layer,"","single")
+        """ WateringUtils.delete_column(self.node_layer,"Unconected")
+        WateringUtils.changeColors(self.node_layer,"","single") """
     
     def deleteAllFeatures(self,layer):
         layer.startEditing()
@@ -251,18 +255,68 @@ class NetworkReviewTool:
         provider.deleteFeatures(feature_ids)
         layer.commitChanges()
 
-    def removeDuplicatePoints(self, layer):
+    def removeDuplicatePoints(self, layer, reference_layer=None):
         unique_points = set()
         provider = layer.dataProvider()
+        reference_points = set()
+        # If reference layer is provided, collect its points for comparison
+        if reference_layer:
+            reference_provider = reference_layer.dataProvider()
+            for feature in reference_layer.getFeatures():
+                point = feature.geometry().asPoint()
+                point_tuple = (point.x(), point.y())
+                reference_points.add(point_tuple)
         layer.startEditing()
         for feature in layer.getFeatures():
             point = feature.geometry().asPoint()
             point_tuple = (point.x(), point.y())
-            if point_tuple in unique_points:
-                # If the coordinates are already present, delete the feature
+            if point_tuple in unique_points or (reference_layer and point_tuple in reference_points):
+                # If the coordinates are already present in either layer, delete the feature
                 WateringUtils.add_feature_to_backup_layer(feature, layer)
                 provider.deleteFeatures([feature.id()])
             else:
                 # If the coordinates are not present, add them to the set
                 unique_points.add(point_tuple)
         layer.commitChanges()
+
+    def eliminateCloseNodes(self):
+        self.node_layer.startEditing()
+        for feature_x in self.node_layer.getFeatures():
+            node_geom_x = feature_x.geometry()
+            
+            for feature_y in self.node_layer.getFeatures():
+                if feature_x == feature_y:
+                    continue  # Skip self-comparison
+                node_geom_y = feature_y.geometry()
+                distance = node_geom_x.distance(node_geom_y)
+                # If distance is less than 5, delete one of the nodes
+                if distance < 5:
+                    WateringUtils.add_feature_to_backup_layer(feature_y, self.node_layer)
+                    self.node_layer.deleteFeature(feature_y.id())
+                    break 
+        self.node_layer.commitChanges()
+
+    @run_once
+    def reviewProcess(self):
+        #node adjustment
+        self.intersectionLayer()
+        #self.eliminateCloseNodes()
+        self.interpolatePointsToLines()
+        self.snapPointTioPoint("Interpolated to Intersections", self.interpolate_layer, self.intersections_layer,3)
+        self.snapPointTioPoint("Points to points",self.node_layer, self.snap_layer, 3)
+        self.copyCoordinates(self.node_layer, self.snap_layer,0)
+        self.removeDuplicatePoints(self.node_layer)
+
+        #pipes adjustment
+        self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 0)
+        self.create_lines_on_points(self.node_layer)
+        self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
+        self.deleteAllFeatures(self.pipe_layer)
+        self.copyCoordinates(self.pipe_layer, self.splited_lines,1)
+
+        #Other elements adjustment
+        self.snapPointTioPoint("Reservoirs to nodes", self.reservoir_layer, self.node_layer,3)
+        self.copyCoordinates(self.reservoir_layer, self.snap_layer,0)
+        #self.removeDuplicatePoints(self.node_layer, self.reservoir_layer)
+
+        self.cleanUpTemporaryData()
