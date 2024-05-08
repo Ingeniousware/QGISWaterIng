@@ -178,15 +178,18 @@ class NetworkReviewTool:
         id_field_index = self.splited_lines.fields().indexFromName("ID")
         down_node_field_index = self.splited_lines.fields().indexFromName("Down-Node")
         up_node_field_index = self.splited_lines.fields().indexFromName("Up-Node")
-        
+
         self.splited_lines.startEditing()
-        
+
         for feature in self.splited_lines.getFeatures():
             new_uuid = str(uuid.uuid4())[:10]
             down_node, up_node = self.getPipeNodes(feature)
-            self.splited_lines.changeAttributeValue(feature.id(), id_field_index, new_uuid)
-            self.splited_lines.changeAttributeValue(feature.id(), down_node_field_index, down_node)
-            self.splited_lines.changeAttributeValue(feature.id(), up_node_field_index, up_node)
+            attr_values = {
+                id_field_index: new_uuid,
+                down_node_field_index: str(down_node),
+                up_node_field_index: str(up_node)
+            }
+            self.splited_lines.changeAttributeValues(feature.id(), attr_values)
 
         self.splited_lines.commitChanges()
     
