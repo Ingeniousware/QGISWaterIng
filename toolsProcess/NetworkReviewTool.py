@@ -38,40 +38,33 @@ class NetworkReviewTool:
                                                 self.iface.tr("You must login to WaterIng first!"), 
                                                 level=1, duration=5)
             return
+        self.find_unconnected_nodes()
 
+    def find_unconnected_nodes(self):
         field_waterM_nodeFK = 'Unconected'
         unnconnected = 1
         WateringUtils.createNewColumn(self, "watering_demand_nodes", field_waterM_nodeFK)
 
         self.node_layer.startEditing()
-        
         field_index = self.node_layer.fields().indexFromName(field_waterM_nodeFK)
-
         pipe_features = list(self.pipe_layer.getFeatures())
         node_features = list(self.node_layer.getFeatures())
-        
         for feature_x in pipe_features:
             pipe_geom = feature_x.geometry()
-            
             for feature_y in node_features:
                 node_geom = feature_y.geometry()
-
                 if not node_geom.disjoint(pipe_geom):
                     continue
                 else:
                     # Calculate distance between point and MultiLineString
                     distance = node_geom.distance(pipe_geom)
-                
                     if distance <= 5:
                         self.node_layer.dataProvider().changeAttributeValues({feature_y.id(): {field_index: unnconnected}})
-        
         self.node_layer.commitChanges()
+        
         WateringUtils.changeColors(self.node_layer,field_waterM_nodeFK, "categorized")
 
         self.button()
-
-        self.iface.messageBar().pushMessage("Success", "Successfully identified unconnected nodes!", level=Qgis.Success, duration=6)
-        print("Update completed.")
 
     def run_once(func):
         def wrapper(*args, **kwargs):
@@ -218,7 +211,8 @@ class NetworkReviewTool:
                 self.reviewProcess()
                 WateringUtils.delete_column(self.node_layer,"Unconected")
                 WateringUtils.changeColors(self.node_layer,"","single")
-            
+
+                self.iface.messageBar().pushMessage("Success", "Successfully identified unconnected nodes!", level=Qgis.Success, duration=6)
                 print("Finished fixing the network")
             elif response == QMessageBox.Cancel:
                 print("Out")
