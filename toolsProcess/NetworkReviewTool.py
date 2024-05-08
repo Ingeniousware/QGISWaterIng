@@ -183,15 +183,61 @@ class NetworkReviewTool:
         self.splited_lines = self.process_result(result)
         
         id_field_index = self.splited_lines.fields().indexFromName("ID")
-    
+        down_node_field_index = self.splited_lines.fields().indexFromName("Down-Node")
+        up_node_field_index = self.splited_lines.fields().indexFromName("Up-Node")
+        
         self.splited_lines.startEditing()
         
         for feature in self.splited_lines.getFeatures():
             new_uuid = str(uuid.uuid4())[:10]
+            down_node, up_node = self.getPipeNodes(feature)
             self.splited_lines.changeAttributeValue(feature.id(), id_field_index, new_uuid)
+            self.splited_lines.changeAttributeValue(feature.id(), down_node_field_index, down_node)
+            self.splited_lines.changeAttributeValue(feature.id(), up_node_field_index, up_node)
 
         self.splited_lines.commitChanges()
+    
+    #START
+    def getPipeNodes(self, feature):
+        demand_nodes_layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+        tanks_layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
+        reservoirs_layer = QgsProject.instance().mapLayersByName("watering_reservoirs")[0]
         
+        polyline_geom = feature.geometry()
+
+        if polyline_geom.isMultipart():
+            lines = polyline_geom.asMultiPolyline()
+            start_point = lines[0][0]  
+            end_point = lines[-1][-1]  
+        else:
+            line = polyline_geom.asPolyline()
+            start_point = line[0]
+            end_point = line[-1]
+        
+        up_node = None
+        down_node = None
+
+        for layer in [demand_nodes_layer, tanks_layer, reservoirs_layer]:
+            up_node = self.find_matching_node(start_point, layer)
+            if up_node:
+                break
+
+        for layer in [demand_nodes_layer, tanks_layer, reservoirs_layer]:
+            down_node = self.find_matching_node(end_point, layer)
+            if down_node:
+                break
+            
+        return down_node, up_node
+        
+    def find_matching_node(self, point, node_layer):
+        tolerance=0.0001
+        for node in node_layer.getFeatures():
+            node_point = node.geometry().asPoint()
+            if point.distance(node_point) < tolerance:
+                return node["ID"]
+        return None
+    #END
+    
     def create_lines_on_points(self, input_layer):
         layer_name = "Lines on nodes"
         params = {
