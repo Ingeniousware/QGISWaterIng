@@ -200,6 +200,8 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
     
     def getPipeNodes(self, feature):
         demand_nodes_layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+        tanks_layer = QgsProject.instance().mapLayersByName("watering_tanks")[0]
+        reservoirs_layer = QgsProject.instance().mapLayersByName("watering_reservoirs")[0]
         
         polyline_geom = feature.geometry()
 
@@ -211,13 +213,20 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             line = polyline_geom.asPolyline()
             start_point = line[0]
             end_point = line[-1]
+        
+        up_node = None
+        down_node = None
 
-        #print("START POINT -> ", start_point)
-        #print("END POINT -> ", end_point)
-        
-        up_node = self.find_matching_node(start_point, demand_nodes_layer)
-        down_node = self.find_matching_node(end_point, demand_nodes_layer)
-        
+        for layer in [demand_nodes_layer, tanks_layer, reservoirs_layer]:
+            up_node = self.find_matching_node(start_point, layer)
+            if up_node:
+                break
+
+        for layer in [demand_nodes_layer, tanks_layer, reservoirs_layer]:
+            down_node = self.find_matching_node(end_point, layer)
+            if down_node:
+                break
+            
         return down_node, up_node
         
     def find_matching_node(self, point, node_layer):
