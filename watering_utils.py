@@ -441,9 +441,11 @@ class WateringUtils():
             
         backup_layer.commitChanges()
         
+        id_to_delete = feature.id()
+        
         layer.startEditing()
         
-        layer.deleteFeature(feature.id())
+        layer.deleteFeature(id_to_delete)
         
         layer.commitChanges()
 
