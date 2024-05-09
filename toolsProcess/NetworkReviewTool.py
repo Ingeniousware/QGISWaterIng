@@ -1,6 +1,6 @@
 import os
 from ..watering_utils import WateringUtils
-from qgis.core import Qgis, QgsProject, QgsProcessingFeedback, QgsGeometry, QgsFeature, QgsVectorLayer
+from qgis.core import Qgis, QgsProject, QgsProcessingFeedback, QgsGeometry, QgsFeature, QgsVectorLayer, QgsDistanceArea, QgsPointXY
 import processing
 from PyQt5.QtWidgets import QMessageBox
 import uuid
@@ -135,26 +135,14 @@ class NetworkReviewTool:
 
         self.snap_layer = self.process_result(result)
         
-    def copyCoordinates(self, layer, newCoordinates, case):
+    def copyCoordinates(self, layer, newCoordinates):
         layer.startEditing()
-        # Get the features of both layers
-        layer_features = {f.attribute("ID"): f for f in layer.getFeatures()}
-        newSnap_features = {f.attribute("ID"): f for f in newCoordinates.getFeatures()}
-        # Iterate through features in snapLayer and update coordinates in self.node_layer
-        for feature_id, snap_feature in newSnap_features.items():
-            feature = layer_features.get(feature_id)
-            if case == 1:  # For pipes
-                if feature:
-                    layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
-                else:
-                    layer.addFeature(snap_feature)
-            if case == 0:  # For nodes
-                if feature:
-                    layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
-                else:
-                    layer.addFeature(snap_feature)
+        # Get the features of newCoordinates layer
+        newSnap_features = newCoordinates.getFeatures()
+        # Add all features from newCoordinates to layer
+        for snap_feature in newSnap_features:
+            layer.addFeature(snap_feature)
         layer.commitChanges()
-
 
     def split_lines_with_lines(self, input_layer, split_layer):
         layer_name = "Splited lines"
@@ -175,14 +163,16 @@ class NetworkReviewTool:
         id_field_index = layer.fields().indexFromName("ID")
         down_node_field_index = layer.fields().indexFromName("Down-Node")
         up_node_field_index = layer.fields().indexFromName("Up-Node")
+        length_field_index = layer.fields().indexFromName("Length")
 
         layer.startEditing()
         if case == 0: #For pipes
             for feature in layer.getFeatures():
                 new_uuid = str(uuid.uuid4())[:10]
-                down_node, up_node = self.getPipeNodes(feature)
+                down_node, up_node, distance = self.getPipeNodes(feature)
                 attr_values = {
                     id_field_index: new_uuid,
+                    length_field_index: distance,
                     down_node_field_index: str(down_node),
                     up_node_field_index: str(up_node)
                 }
@@ -226,8 +216,11 @@ class NetworkReviewTool:
             down_node = self.find_matching_node(end_point, layer)
             if down_node:
                 break
-            
-        return down_node, up_node
+        # Calculate the length of the line
+        distance_area = QgsDistanceArea()
+        distance = distance_area.measureLine(start_point, end_point)
+
+        return down_node, up_node, distance
         
     def find_matching_node(self, point, node_layer):
         tolerance=0.0001
@@ -285,7 +278,7 @@ class NetworkReviewTool:
         # List of layer names to delete
         layers_to_delete = ['Intersections', 'Points to points', 'Lines to points',
                             'snaped_layer', 'Lines on nodes', 'Interpolate', 'Interpolated to Intersections', 
-                            'Splited lines', 'Reservoirs to nodes']
+                            'Splited lines', 'Reservoirs to nodes', 'Tanks to nodes']
         for layer_name in layers_to_delete:
             layer_id = project.mapLayersByName(layer_name)
             if layer_id:
@@ -339,31 +332,38 @@ class NetworkReviewTool:
 
     @run_once
     def reviewProcess(self):
-        #node adjustment
+        #Node adjustment
         self.intersectionLayer()
-        #self.eliminateCloseNodes()
+        self.eliminateCloseNodes()
         self.interpolatePointsToLines()
         self.snapPointTioPoint("Interpolated to Intersections", self.interpolate_layer, self.intersections_layer,3)
         self.snapPointTioPoint("Points to points",self.node_layer, self.snap_layer, 3)
         self.deleteAllFeatures(self.node_layer)
-        self.copyCoordinates(self.node_layer, self.snap_layer,0)
+        self.copyCoordinates(self.node_layer, self.snap_layer)
         self.update_attributes(self.node_layer, 1)
         self.removeDuplicatePoints(self.node_layer)
 
-        #pipes adjustment
+        #Pipes adjustment
         self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 0)
         self.create_lines_on_points(self.node_layer)
         self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
 
-        #Other elements adjustment
+        #Reservoir adjustment
         self.snapPointTioPoint("Reservoirs to nodes", self.reservoir_layer, self.node_layer,3)
-        self.copyCoordinates(self.reservoir_layer, self.snap_layer,0)
+        self.deleteAllFeatures(self.reservoir_layer)
+        self.copyCoordinates(self.reservoir_layer, self.snap_layer)
         self.update_attributes(self.reservoir_layer, 1)
         self.removeDuplicatePoints(self.node_layer, self.reservoir_layer)
+        #Tank adjustment
+        """ self.snapPointTioPoint("Tanks to nodes", self.tanks_layer, self.node_layer,3)
+        self.deleteAllFeatures(self.tanks_layer)
+        self.copyCoordinates(self.tanks_layer, self.snap_layer)
+        self.update_attributes(self.tanks_layer, 1)
+        self.removeDuplicatePoints(self.node_layer, self.tanks_layer) """
 
         #Continue on pipes
-        self.update_attributes(self.splited_lines, 0)
         self.deleteAllFeatures(self.pipe_layer)
-        self.copyCoordinates(self.pipe_layer, self.splited_lines,1)
+        self.copyCoordinates(self.pipe_layer, self.splited_lines)
+        self.update_attributes(self.pipe_layer, 0)
 
         self.cleanUpTemporaryData()
