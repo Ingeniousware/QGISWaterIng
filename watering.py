@@ -24,7 +24,6 @@ import json
 from .toolbarManager.toolbarToolManager import toolbarToolManager
 from .toolsMap.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacement
 from .toolsProcess.ImportINPFileTool import ImportINPFileTool
-from .toolsProcess.NetworkReviewTool import NetworkReviewTool
 from .toolsMap.InsertDemandNodeTool import InsertDemandNodeTool
 from .toolsMap.insertTankNodeTool import InsertTankNodeTool
 from .toolsMap.insertReservoirNodeTool import InsertReservoirNodeTool
@@ -255,13 +254,13 @@ class QGISPlugin_WaterIng:
         self.dlg.show() 
         if (self.dlg.exec_() == 1):
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork  
-            self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
+            self.actionManager = actionManager(os.environ.get('TOKEN'), self.dlg.current_scenario_fk, self.setActiveStateUndo, self.setActiveStateRedo) 
             if WateringUtils.isInternetConnection() and not self.hub_connection:        
                 self.setHubConnection()        
             self.updateActionStateOpen()
             self.updateActionScenarioStateOpen()
             self.setOnAttributeChange()
-            self.setStatusBarInfo(self.dlg.ProjectName, self.dlg.ScenarioName)
+            self.setStatusBarInfo(self.dlg.current_project_name, self.dlg.current_scenario_name)
                 
     def importINPFile(self):
         if WateringUtils.isScenarioNotOpened():
@@ -286,10 +285,6 @@ class QGISPlugin_WaterIng:
         toolImportINPFile = ImportINPFileTool(self.iface)
         self.toolbarToolManager.toolImportINPFile.setCurrentTool(toolImportINPFile)
         self.toolbarToolManager.toolImportINPFile.setEnabled(True)
-
-        toolReviewNetwork = NetworkReviewTool(self.iface)
-        self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
-        self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
     
         toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertDemandNode.setAction(self.toolbarToolManager.insertDemandNodeAction)
