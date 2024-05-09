@@ -106,7 +106,8 @@ class WateringUtils():
             
         return defaultUrl if projectServerUrl == "default text" else projectServerUrl
     
-    def getResponse(url, params):
+    def get_response(url, params):
+        absolute_url = WateringUtils.getServerUrl() + url
         try:
             response = requests.get(url, params=params,
                                     headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})
@@ -441,17 +442,6 @@ class WateringUtils():
             
         backup_layer.commitChanges()
 
-        #WateringUtils.delete_feature(feature, layer)
-        
-        """ id_to_delete = feature.id()
-        
-        layer.startEditing()
-        
-        #layer.dataProvider().deleteFeature(id_to_delete)
-        layer.dataProvider().deleteFeatures([feature.id()])
-        
-        layer.commitChanges() """
-
     def createNewColumn(self, layerDest, name):
         layer = QgsProject.instance().mapLayersByName(layerDest)[0]
         if not layer:
@@ -516,7 +506,29 @@ class WateringUtils():
                 layer.updateFields()
                 return res
         return False
+        
+    # New general methods
     
+    def requests_get(url, params):
+        absolute_url = WateringUtils.getServerUrl() + url
+        headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
+        try:
+            response = requests.get(absolute_url, params=params, headers=headers)
+            if response.status_code == 200:
+                return response
+            else:
+                WateringUtils.error_message("Failed request to Watering server with status code: {}".format(response.status_code))
+                return False
+        except requests.ConnectionError:
+            WateringUtils.error_message("No connection.")
+            return False
+        except requests.Timeout:
+            WateringUtils.error_message("Request to server timed out.")
+            return False
+        except Exception as e:
+            WateringUtils.error_message(f"Unable to connect to WaterIng. Error: {str(e)}")
+            return False
+
 class WateringTimer():
     timer = None 
 
