@@ -123,16 +123,13 @@ class NetworkReviewTool:
             layer.dataProvider().addFeature(new_feature)
 
     def snapPointTioPoint(self, layer_name, input, reference, behavior):
-        # Define the parameters for the Snap geometries to layer tool
         parameters = {
             'INPUT': input,
             'REFERENCE_LAYER': reference,
-            'TOLERANCE': 6.000,  # Set a suitable tolerance value
-            'BEHAVIOR': behavior,  # 0 for closest
+            'TOLERANCE': 5.000,  # Set a suitable tolerance value
+            'BEHAVIOR': behavior,
             'OUTPUT': 'memory:' + layer_name
         }
-
-        # Run the Snap geometries to layer tool
         feedback = QgsProcessingFeedback()
         result = processing.run("native:snapgeometries", parameters, feedback=feedback)
 
@@ -150,14 +147,11 @@ class NetworkReviewTool:
             if case == 1:  # For pipes
                 if feature:
                     layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
-                    #layer.dataProvider().changeAttributeValues({feature.id(): {layer.fields().indexFromName("Last Mdf"): current_timestamp}})
                 else:
                     layer.addFeature(snap_feature)
             if case == 0:  # For nodes
                 if feature:
                     layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
-                    # Update the "lastUpdate" column
-                    #layer.dataProvider().changeAttributeValues({feature.id(): {layer.fields().indexFromName("Last Mdf"): current_timestamp}})           
         layer.commitChanges()
 
 
@@ -174,7 +168,7 @@ class NetworkReviewTool:
         result = processing.run("qgis:splitwithlines", params, feedback=feedback)
         # Check if the tool ran successfully
         self.splited_lines = self.process_result(result)
-        
+        #Change to new attributes 
         id_field_index = self.splited_lines.fields().indexFromName("ID")
         down_node_field_index = self.splited_lines.fields().indexFromName("Down-Node")
         up_node_field_index = self.splited_lines.fields().indexFromName("Up-Node")
@@ -242,7 +236,6 @@ class NetworkReviewTool:
             'EXPRESSION': "make_line($geometry, translate($geometry, 0.9, 0.9))",
             'OUTPUT': 'memory:' + layer_name
         }
-        # Run the Snap geometries to layer tool
         feedback = QgsProcessingFeedback()
         result = processing.run("native:geometrybyexpression", params, feedback=feedback)
     
@@ -281,49 +274,43 @@ class NetworkReviewTool:
         project = QgsProject.instance()
         # List of layer names to delete
         layers_to_delete = ['Intersections', 'Points to points', 'Lines to points',
-                            'snaped_layer', 'Lines on nodes', 'Interpolate', 'Interpolated to Intersections', 'Splited lines']
+                            'snaped_layer', 'Lines on nodes', 'Interpolate', 'Interpolated to Intersections', 
+                            'Splited lines']
         for layer_name in layers_to_delete:
             layer_id = project.mapLayersByName(layer_name)
             if layer_id:
                 project.removeMapLayer(layer_id[0])
-        """ WateringUtils.delete_column(self.node_layer,"Unconected")
-        WateringUtils.changeColors(self.node_layer,"","single") """
     
     def deleteAllFeatures(self,layer):
-        layer.startEditing()
+        #layer.startEditing()
         provider = layer.dataProvider()
         feature_ids = [feature.id() for feature in layer.getFeatures()]
         for feature in layer.getFeatures():
             WateringUtils.add_feature_to_backup_layer(feature, layer)
-        provider.deleteFeatures(feature_ids)
-        layer.commitChanges()
+        #provider.deleteFeatures(feature_ids)
+        #layer.commitChanges()
 
     def removeDuplicatePoints(self, layer, reference_layer=None):
         unique_points = set()
-        provider = layer.dataProvider()
+        # Collect reference points for comparison if a reference layer is provided
         reference_points = set()
-        # If reference layer is provided, collect its points for comparison
         if reference_layer:
-            reference_provider = reference_layer.dataProvider()
             for feature in reference_layer.getFeatures():
                 point = feature.geometry().asPoint()
                 point_tuple = (point.x(), point.y())
                 reference_points.add(point_tuple)
-        layer.startEditing()
         for feature in layer.getFeatures():
             point = feature.geometry().asPoint()
             point_tuple = (point.x(), point.y())
+            # Check if the point is duplicate in the layer or the reference layer
             if point_tuple in unique_points or (reference_layer and point_tuple in reference_points):
-                # If the coordinates are already present in either layer, delete the feature
+                # Delete duplicate feature
                 WateringUtils.add_feature_to_backup_layer(feature, layer)
-                provider.deleteFeatures([feature.id()])
             else:
-                # If the coordinates are not present, add them to the set
+                # Add unique point to set
                 unique_points.add(point_tuple)
-        layer.commitChanges()
 
     def eliminateCloseNodes(self):
-        self.node_layer.startEditing()
         for feature_x in self.node_layer.getFeatures():
             node_geom_x = feature_x.geometry()
             
@@ -337,7 +324,6 @@ class NetworkReviewTool:
                     WateringUtils.add_feature_to_backup_layer(feature_y, self.node_layer)
                     self.node_layer.deleteFeature(feature_y.id())
                     break 
-        self.node_layer.commitChanges()
 
     @run_once
     def reviewProcess(self):
@@ -350,16 +336,16 @@ class NetworkReviewTool:
         self.copyCoordinates(self.node_layer, self.snap_layer,0)
         self.removeDuplicatePoints(self.node_layer)
 
-        #pipes adjustment
-        self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 0)
-        self.create_lines_on_points(self.node_layer)
-        self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
-        self.deleteAllFeatures(self.pipe_layer)
-        self.copyCoordinates(self.pipe_layer, self.splited_lines,1)
-
         #Other elements adjustment
         self.snapPointTioPoint("Reservoirs to nodes", self.reservoir_layer, self.node_layer,3)
         self.copyCoordinates(self.reservoir_layer, self.snap_layer,0)
-        #self.removeDuplicatePoints(self.node_layer, self.reservoir_layer)
+        self.removeDuplicatePoints(self.node_layer, self.reservoir_layer)
 
-        self.cleanUpTemporaryData()
+        #pipes adjustment
+        self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 0)
+        self.create_lines_on_points(self.node_layer)
+        #self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
+        #self.deleteAllFeatures(self.pipe_layer)
+        #self.copyCoordinates(self.pipe_layer, self.splited_lines,1)
+
+        #self.cleanUpTemporaryData()
