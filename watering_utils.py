@@ -440,14 +440,17 @@ class WateringUtils():
         print(f"adding feature {new_feat} to {backup_layer}")
             
         backup_layer.commitChanges()
+
+        #WateringUtils.delete_feature(feature, layer)
         
-        id_to_delete = feature.id()
+        """ id_to_delete = feature.id()
         
         layer.startEditing()
         
-        layer.deleteFeature(id_to_delete)
+        #layer.dataProvider().deleteFeature(id_to_delete)
+        layer.dataProvider().deleteFeatures([feature.id()])
         
-        layer.commitChanges()
+        layer.commitChanges() """
 
     def createNewColumn(self, layerDest, name):
         layer = QgsProject.instance().mapLayersByName(layerDest)[0]

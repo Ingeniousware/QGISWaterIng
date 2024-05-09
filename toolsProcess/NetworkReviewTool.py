@@ -136,7 +136,6 @@ class NetworkReviewTool:
         self.snap_layer = self.process_result(result)
         
     def copyCoordinates(self, layer, newCoordinates, case):
-        current_timestamp = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         layer.startEditing()
         # Get the features of both layers
         layer_features = {f.attribute("ID"): f for f in layer.getFeatures()}
@@ -152,6 +151,8 @@ class NetworkReviewTool:
             if case == 0:  # For nodes
                 if feature:
                     layer.dataProvider().changeGeometryValues({feature.id(): snap_feature.geometry()})
+                else:
+                    layer.addFeature(snap_feature)
         layer.commitChanges()
 
 
@@ -168,24 +169,33 @@ class NetworkReviewTool:
         result = processing.run("qgis:splitwithlines", params, feedback=feedback)
         # Check if the tool ran successfully
         self.splited_lines = self.process_result(result)
+
+    def update_attributes(self, layer, case):
         #Change to new attributes 
-        id_field_index = self.splited_lines.fields().indexFromName("ID")
-        down_node_field_index = self.splited_lines.fields().indexFromName("Down-Node")
-        up_node_field_index = self.splited_lines.fields().indexFromName("Up-Node")
+        id_field_index = layer.fields().indexFromName("ID")
+        down_node_field_index = layer.fields().indexFromName("Down-Node")
+        up_node_field_index = layer.fields().indexFromName("Up-Node")
 
-        self.splited_lines.startEditing()
+        layer.startEditing()
+        if case == 0: #For pipes
+            for feature in layer.getFeatures():
+                new_uuid = str(uuid.uuid4())[:10]
+                down_node, up_node = self.getPipeNodes(feature)
+                attr_values = {
+                    id_field_index: new_uuid,
+                    down_node_field_index: str(down_node),
+                    up_node_field_index: str(up_node)
+                }
+                layer.changeAttributeValues(feature.id(), attr_values)
+        else: #For Nodes
+             for feature in layer.getFeatures():
+                new_uuid = str(uuid.uuid4())[:10]
+                attr_values = {
+                    id_field_index: new_uuid
+                }
+                layer.changeAttributeValues(feature.id(), attr_values)
 
-        for feature in self.splited_lines.getFeatures():
-            new_uuid = str(uuid.uuid4())[:10]
-            down_node, up_node = self.getPipeNodes(feature)
-            attr_values = {
-                id_field_index: new_uuid,
-                down_node_field_index: str(down_node),
-                up_node_field_index: str(up_node)
-            }
-            self.splited_lines.changeAttributeValues(feature.id(), attr_values)
-
-        self.splited_lines.commitChanges()
+        layer.commitChanges()
     
     #START
     def getPipeNodes(self, feature):
@@ -275,20 +285,21 @@ class NetworkReviewTool:
         # List of layer names to delete
         layers_to_delete = ['Intersections', 'Points to points', 'Lines to points',
                             'snaped_layer', 'Lines on nodes', 'Interpolate', 'Interpolated to Intersections', 
-                            'Splited lines']
+                            'Splited lines', 'Reservoirs to nodes']
         for layer_name in layers_to_delete:
             layer_id = project.mapLayersByName(layer_name)
             if layer_id:
                 project.removeMapLayer(layer_id[0])
     
     def deleteAllFeatures(self,layer):
-        #layer.startEditing()
-        provider = layer.dataProvider()
-        feature_ids = [feature.id() for feature in layer.getFeatures()]
+        #Add to back up layer before deleting
         for feature in layer.getFeatures():
             WateringUtils.add_feature_to_backup_layer(feature, layer)
-        #provider.deleteFeatures(feature_ids)
-        #layer.commitChanges()
+        #Delete all features of a layer
+        layer.startEditing()
+        feature_ids = [feature.id() for feature in layer.getFeatures()]
+        layer.dataProvider().deleteFeatures(feature_ids)
+        layer.commitChanges()
 
     def removeDuplicatePoints(self, layer, reference_layer=None):
         unique_points = set()
@@ -306,6 +317,7 @@ class NetworkReviewTool:
             if point_tuple in unique_points or (reference_layer and point_tuple in reference_points):
                 # Delete duplicate feature
                 WateringUtils.add_feature_to_backup_layer(feature, layer)
+                layer.dataProvider().deleteFeatures([feature.id()])
             else:
                 # Add unique point to set
                 unique_points.add(point_tuple)
@@ -333,19 +345,25 @@ class NetworkReviewTool:
         self.interpolatePointsToLines()
         self.snapPointTioPoint("Interpolated to Intersections", self.interpolate_layer, self.intersections_layer,3)
         self.snapPointTioPoint("Points to points",self.node_layer, self.snap_layer, 3)
+        self.deleteAllFeatures(self.node_layer)
         self.copyCoordinates(self.node_layer, self.snap_layer,0)
+        self.update_attributes(self.node_layer, 1)
         self.removeDuplicatePoints(self.node_layer)
-
-        #Other elements adjustment
-        self.snapPointTioPoint("Reservoirs to nodes", self.reservoir_layer, self.node_layer,3)
-        self.copyCoordinates(self.reservoir_layer, self.snap_layer,0)
-        self.removeDuplicatePoints(self.node_layer, self.reservoir_layer)
 
         #pipes adjustment
         self.snapPointTioPoint("Lines to points",self.pipe_layer, self.node_layer, 0)
         self.create_lines_on_points(self.node_layer)
-        #self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
-        #self.deleteAllFeatures(self.pipe_layer)
-        #self.copyCoordinates(self.pipe_layer, self.splited_lines,1)
+        self.split_lines_with_lines(self.snap_layer, self.linesOnNodes)
 
-        #self.cleanUpTemporaryData()
+        #Other elements adjustment
+        self.snapPointTioPoint("Reservoirs to nodes", self.reservoir_layer, self.node_layer,3)
+        self.copyCoordinates(self.reservoir_layer, self.snap_layer,0)
+        self.update_attributes(self.reservoir_layer, 1)
+        self.removeDuplicatePoints(self.node_layer, self.reservoir_layer)
+
+        #Continue on pipes
+        self.update_attributes(self.splited_lines, 0)
+        self.deleteAllFeatures(self.pipe_layer)
+        self.copyCoordinates(self.pipe_layer, self.splited_lines,1)
+
+        self.cleanUpTemporaryData()
