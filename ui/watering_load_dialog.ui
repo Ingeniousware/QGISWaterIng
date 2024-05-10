@@ -287,7 +287,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="projects_box_2"/>
+        <widget class="QComboBox" name="clone_projects_box"/>
        </item>
        <item>
         <widget class="QLabel" name="scenarioLabel_2">
@@ -305,7 +305,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="scenarios_box_2"/>
+        <widget class="QComboBox" name="clone_scenarios_box"/>
        </item>
        <item>
         <widget class="QLabel" name="clone_title">

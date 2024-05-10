@@ -26,7 +26,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.online_projects_list = []
         self.offline_projects_list = []
         self.load_scenarios_list = []
-        self.load_offline_scenarios_list = []
+        self.offline_scenarios_list = []
+        self.clone_projects_list = []
         self.clone_scenarios_list = []
         self.merge_scenarios_list = []
         self.load_offline_scenarios = []
@@ -51,7 +52,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         else:
             self.set_online_projects_list()
             self.set_combo_boxes()
-
+            
+        self.set_clone_projects_combo_box()
+        
     def set_online_projects_list(self):
         self.online_projects_list = []
 
@@ -59,7 +62,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.online_projects_list.append((self.response.json()["data"][i]["name"],
                                        self.response.json()["data"][i]["serverKeyId"]))
 
-    def set_offline_projects_list(self):
+    def set_offline_projects_list(self, combo_box, scenarios_box):
         if os.path.exists(self.projects_json_file):
             with open(self.projects_json_file, 'r') as json_file:
                 self.projects_json_data = json.load(json_file)
@@ -67,16 +70,19 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             if self.projects_json_data:
                 self.offline_projects_list = self.get_offline_projects()
                 for i in range(0, len(self.offline_projects_list)):
-                    self.load_projects_box.addItem(self.offline_projects_list[i][1])
-                    
-                self.set_offline_scenarios()
-                self.load_projects_box.currentIndexChanged.connect(self.set_offline_scenarios)
+                    combo_box.addItem(self.offline_projects_list[i][1])
+                
+                print("scenarios_box", scenarios_box)
+                if scenarios_box is not None:
+                    print("True")
+                    self.set_offline_scenarios(combo_box, scenarios_box)
+                    combo_box.currentIndexChanged.connect(lambda : self.set_offline_scenarios(combo_box, scenarios_box))
         else:
             WateringUtils.error_message("No projects found locally. Connect to WaterIng and load a project from server.")
-
+            
     def run_offline_procedures(self):
         self.offline_mode = True
-        self.set_offline_projects_list()
+        self.set_offline_projects_list(self.load_projects_box, self.load_scenarios_box)
 
     def set_buttons_and_checkboxes(self):
         self.new_project_checkBox.clicked.connect(self.handle_new_tab_ui_elements)
@@ -84,11 +90,16 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.new_button.clicked.connect(self.create_new_scenario_procedures)
         self.load_button.clicked.connect(self.checkExistingProject)
         self.load_projects_box.currentIndexChanged.connect(self.handle_load_scenarios_box)
+        self.clone_button.clicked.connect(self.clone_scenario)
 
     def hide_ui_elements(self):
         self.handle_new_tab_ui_elements()
         self.handle_merge_tab_ui_elements()
 
+    def set_clone_projects_combo_box(self):
+        self.set_offline_projects_list(self.clone_projects_box, self.clone_scenarios_box)
+        self.set_offline_projects_list(self.clone_box, None)
+        
     def handle_new_tab_ui_elements(self):
         checked = self.new_project_checkBox.isChecked()
         self.new_project_label.setVisible(checked)
@@ -107,7 +118,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.set_project_combo_box(self.new_projects_box)
         self.set_project_combo_box(self.load_projects_box)
         self.set_scenario_combo_box(self.load_projects_box, self.load_scenarios_box, self.load_scenarios_list)
-
+        
     def set_project_combo_box(self, combo_box):
         combo_box.clear()
         if self.online_projects_list:
@@ -133,23 +144,21 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                                        response.json()["data"][i]["serverKeyId"]))
 
     def handle_load_scenarios_box(self):
-        if self.offline_mode:
-            self.set_offline_scenarios()
-        else:
+        if not self.offline_mode:
             self.set_scenario_combo_box(self.load_projects_box, self.load_scenarios_box, self.load_scenarios_list)
 
-    def set_offline_scenarios(self):
-        self.load_scenarios_box.clear()
-        self.load_offline_scenarios_list = []
-        current_index = self.load_projects_box.currentIndex()
+    def set_offline_scenarios(self, projects_box, scenarios_box):
+        scenarios_box.clear()
+        self.offline_scenarios_list.clear()
+        current_index = projects_box.currentIndex()
 
         self.current_project_fk = self.offline_projects_list[current_index][0]
         self.current_project_name = self.offline_projects_list[current_index][1]
-        self.load_offline_scenarios_list = self.get_offline_scenarios(self.current_project_fk)
+        self.offline_scenarios_list.extend(self.get_offline_scenarios(self.current_project_fk))
 
-        print("self.load_offline_scenarios_list", self.load_offline_scenarios_list)
-        for i in range(0, len(self.load_offline_scenarios_list)):
-            self.load_scenarios_box.addItem(self.load_offline_scenarios_list[i][0])
+        print("offline_scenarios_list", self.offline_scenarios_list)
+        for i in range(0, len(self.offline_scenarios_list)):
+            scenarios_box.addItem(self.offline_scenarios_list[i][0])
 
     def get_offline_projects(self):
         return [(key, value["name"]) for key, value in self.projects_json_data.items()]
@@ -282,7 +291,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     def start_project(self):
         current_index = self.load_scenarios_box.currentIndex()
-        scenarios = self.load_offline_scenarios_list if self.offline_mode else self.load_scenarios_list
+        scenarios = self.offline_scenarios_list if self.offline_mode else self.load_scenarios_list
 
         if scenarios and 0 <= current_index < len(scenarios):
             self.current_scenario_name, self.current_scenario_fk = scenarios[current_index][0], scenarios[current_index][1]
@@ -370,7 +379,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not self.offline_mode:
             self.updateProject(justCreated)
         else: 
-            self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.load_offline_scenarios_list[self.load_scenarios_box.currentIndex()][1])
+            self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.offline_scenarios_list[self.load_scenarios_box.currentIndex()][1])
         self.zoomToProject()
         self.done(True)
 
@@ -545,4 +554,64 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             
         self.run_offline_procedures()
     
+    def clone_scenario(self):
+        folder_path = WateringUtils.get_watering_folder()
+        fromProjectKeyID = self.listOfProjects[self.projects_box.currentIndex()][1]
+        fromProjectName = self.listOfProjects[self.projects_box.currentIndex()][0]
+        fromProjectKeyScenario = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
+        clonedScenarioName = self.listOfScenarios[self.scenarios_box.currentIndex()][0]
+        toProjectKeyID = self.listOfProjects[self.clone_box.currentIndex()][1]
+        toProjectKeyScenario = str(uuid.uuid4())
+        scenarioName = self.cloned_scenario_name.text() or clonedScenarioName + " Cloned Version"
+        
+        scenario_created = self.create_new_scenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
+        
+        if scenario_created:
+            self.clone_scenario_procedures(folder_path, fromProjectName, fromProjectKeyID, fromProjectKeyScenario, 
+                                toProjectKeyID, toProjectKeyScenario, scenarioName)
+        else:
+            WateringUtils.error_message("Couldn’t clone the scenario. Please try again.")
+    
+    def clone_scenario_procedures(self, folder_path, fromProjectName, fromProjectKeyID, 
+                       fromProjectKeyScenario, toProjectKeyID, 
+                       toProjectKeyScenario, clonedScenarioName):
+        
+        source_path = os.path.join(folder_path, fromProjectKeyID, fromProjectKeyScenario)
+        target_path = os.path.join(folder_path, toProjectKeyID, toProjectKeyScenario)
+
+        os.makedirs(target_path, exist_ok=True)
+
+        for item in os.listdir(source_path):
+            s = os.path.join(source_path, item)
+            d = os.path.join(target_path, item)
+            if os.path.isdir(s):
+                shutil.copytree(s, d, dirs_exist_ok=True)
+            else:
+                shutil.copy2(s, d)
+
+        creation_time = '1800-11-29T10:28:46.2756439Z' #WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        
+        projects_json_path = os.path.join(folder_path, 'projects.json')
+        
+        with open(projects_json_path, 'r+') as f:
+            projects = json.load(f)
+
+            if toProjectKeyID not in projects:
+                projects[toProjectKeyID] = {"name": "{}".format(fromProjectName),
+                                            "scenarios": {}}
+
+            projects[toProjectKeyID]["scenarios"][toProjectKeyScenario] = {
+                "name": "{}".format(clonedScenarioName),
+                "lastUpdated": "{}".format(creation_time)
+            }
+
+            f.seek(0)
+            json.dump(projects, f, indent=4)
+            f.truncate()
+        
+        return target_path   
+    
+    
+    
+
            
