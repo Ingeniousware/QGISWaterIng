@@ -27,6 +27,7 @@ class toolbarToolManager():
         # Actions
         self.editElementsAction = None
         self.toolImportINPFile = None
+        self.toolImportShapeFile = None
         self.toolReviewNetwork = None
         self.insertDemandNodeAction = None
         self.insertTankNodeAction = None
@@ -122,6 +123,18 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.toolImportINPFile.setCheckable(False)        
         self.toolImportINPFile.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        
+        # import shape file 
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/import.svg'
+        self.toolImportShapeFile = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Import Shape File'),
+            callback=self.activateActionTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.toolImportShapeFile.setCheckable(False)        
+        self.toolImportShapeFile.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # network review
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/automaticNetworkReview.svg'
@@ -334,6 +347,7 @@ class toolbarToolManager():
             
     def activateEditTool(self, checked):    
         editTools = [self.toolImportINPFile,
+                         self.toolImportShapeFile,
                          self.toolReviewNetwork,
                          self.insertDemandNodeAction,
                          self.insertTankNodeAction,
