@@ -256,13 +256,13 @@ class QGISPlugin_WaterIng:
         self.dlg.show() 
         if (self.dlg.exec_() == 1):
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork  
-            self.actionManager = actionManager(os.environ.get('TOKEN'), self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo) 
+            self.actionManager = actionManager(os.environ.get('TOKEN'), self.dlg.current_scenario_fk, self.setActiveStateUndo, self.setActiveStateRedo) 
             if WateringUtils.isInternetConnection() and not self.hub_connection:        
                 self.setHubConnection()        
             self.updateActionStateOpen()
             self.updateActionScenarioStateOpen()
             self.setOnAttributeChange()
-            self.setStatusBarInfo(self.dlg.ProjectName, self.dlg.ScenarioName)
+            self.setStatusBarInfo(self.dlg.current_project_name, self.dlg.current_scenario_name)
                 
     def importINPFile(self):
         if WateringUtils.isScenarioNotOpened():
@@ -295,7 +295,7 @@ class QGISPlugin_WaterIng:
         toolReviewNetwork = NetworkReviewTool(self.iface)
         self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
         self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
-    
+        
         toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertDemandNode.setAction(self.toolbarToolManager.insertDemandNodeAction)
         self.toolbarToolManager.insertDemandNodeAction.setCurrentTool(toolInsertDemandNode)
