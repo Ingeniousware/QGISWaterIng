@@ -24,6 +24,7 @@ import json
 from .toolbarManager.toolbarToolManager import toolbarToolManager
 from .toolsMap.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacement
 from .toolsProcess.ImportINPFileTool import ImportINPFileTool
+from .toolsProcess.ImportShapeFileTool import ImportShapeFileTool
 from .toolsProcess.NetworkReviewTool import NetworkReviewTool
 from .toolsMap.InsertDemandNodeTool import InsertDemandNodeTool
 from .toolsMap.insertTankNodeTool import InsertTankNodeTool
@@ -286,6 +287,10 @@ class QGISPlugin_WaterIng:
         toolImportINPFile = ImportINPFileTool(self.iface)
         self.toolbarToolManager.toolImportINPFile.setCurrentTool(toolImportINPFile)
         self.toolbarToolManager.toolImportINPFile.setEnabled(True)
+
+        toolImportShapeFile = ImportShapeFileTool(self.iface)
+        self.toolbarToolManager.toolImportShapeFile.setCurrentTool(toolImportShapeFile)
+        self.toolbarToolManager.toolImportShapeFile.setEnabled(True)
 
         toolReviewNetwork = NetworkReviewTool(self.iface)
         self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)

@@ -28,17 +28,11 @@ class NetworkReviewTool:
     
     def ExecuteAction(self):
         if WateringUtils.isScenarioNotOpened():
-            self.iface.messageBar().pushMessage(self.iface.tr(u"Error"), 
-                                                self.iface.tr(u"Load a project scenario first in Download Elements!"), 
-                                                level=1, duration=5)
-            return
-            
+            self.iface.messageBar().pushMessage(self.iface.tr(u"Error"), self.iface.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
         if os.environ.get('TOKEN') is None:
-            self.iface.messageBar().pushMessage(self.iface.tr("Error"), 
-                                                self.iface.tr("You must login to WaterIng first!"), 
-                                                level=1, duration=5)
-            return
-        self.find_unconnected_nodes()
+            self.iface.messageBar().pushMessage(self.iface.tr("Error"), self.iface.tr("You must login to WaterIng first!"), level=1, duration=5)
+        else:
+            self.find_unconnected_nodes()
 
     def find_unconnected_nodes(self):
         field_waterM_nodeFK = 'Unconected'
