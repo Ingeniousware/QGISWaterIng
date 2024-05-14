@@ -246,7 +246,7 @@ class QGISPlugin_WaterIng:
         self.dlg.show()
         if (self.dlg.exec_() == 1):
             if WateringUtils.isProjectOpened() and WateringUtils.isWateringProject():
-                self.setHubConnection()
+                #self.setHubConnection()
                 WateringUtils.setProjectMetadata("connection_status", "online")
         
     def addLoad(self):
