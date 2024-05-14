@@ -128,6 +128,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def set_scenario_combo_box(self, projects_box, scenarios_box, scenarios_list):
         project_index = projects_box.currentIndex()
         scenarios_box.clear()
+        scenarios_list.clear()
 
         if 0 <= project_index < len(self.online_projects_list):
             self.current_project_name, self.current_project_fk = self.online_projects_list[project_index]
@@ -292,7 +293,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def start_project(self):
         current_index = self.load_scenarios_box.currentIndex()
         scenarios = self.offline_scenarios_list if self.offline_mode else self.load_scenarios_list
-
+        print("scenarios: ", scenarios)
+        
         if scenarios and 0 <= current_index < len(scenarios):
             self.current_scenario_name, self.current_scenario_fk = scenarios[current_index][0], scenarios[current_index][1]
             self.open_scenario()
@@ -374,7 +376,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def open_watering_project(self, justCreated):
         self.scenario_folder = self.main_watering_folder + self.current_project_fk + "/" + self.current_scenario_fk + '/'
 
-        self.loadOpenStreetMapLayer()
         self.openProjectFromFolder()
         if not self.offline_mode:
             self.updateProject(justCreated)
@@ -388,7 +389,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.myScenarioUnitOfWork.loadAll()
 
         self.write_scenario_in_projects_file()
-        self.loadOpenStreetMapLayer()
         self.done(True)
         self.close()
 
@@ -431,7 +431,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             print(f"Failed to load project {project_path}.")
 
         self.createAndOpenGroups(scenario_path)
-
+        
     def createAndOpenGroups(self, scenario_path):
         project = QgsProject.instance()
 
@@ -457,11 +457,26 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                            'watering_waterMeter_backup.shp',
                            'watering_sensors_backup.shp']
 
+        all_layers_valid = True
+
         self.openGroup(shp_element_files, group_elements, scenario_path)
         self.openGroup(shp_filesMonitoring, group_sensors, scenario_path)
         self.openLayerGroupFalseVisibility(shp_backupFiles, scenario_path)
+        
+        for layer in QgsProject.instance().mapLayers().values():
+            if not layer.isValid():
+                all_layers_valid = False
+                print(f"Layer {layer.name()} is not valid and cannot be added.")
+                break
+
+        if all_layers_valid:
+            self.loadOpenStreetMapLayer()
+        else:
+            print("Some layers were invalid, delaying the loading of the Open Street Maps layer.")
+        
 
     def openGroup(self, group_list, group, scenario_path):
+        print("OPENING LAYERS OPENING LAYERS")
         for element_layer in group_list:
             layer_path = os.path.join(scenario_path, element_layer)
             layer_name = os.path.splitext(element_layer)[0]
@@ -488,8 +503,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         map_layer = "Open Street Maps"
         if not any(layer.name() == map_layer for layer in QgsProject.instance().mapLayers().values()):
             tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-            layer = QgsRasterLayer(tms, 'Open Street Maps', 'wms')
-            QgsProject.instance().addMapLayer(layer, True)
+            layer = QgsRasterLayer(tms,'Open Street Maps', 'wms')
+            QgsProject.instance().addMapLayer(layer, False)
+            root = QgsProject.instance().layerTreeRoot()
+            root.insertChildNode(5, QgsLayerTreeLayer(layer))
         else:
             print("Map already loaded")
 
