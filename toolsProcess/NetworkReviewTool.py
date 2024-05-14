@@ -320,8 +320,8 @@ class NetworkReviewTool:
                 distance = node_geom_x.distance(node_geom_y)
                 # If distance is less than 5, delete one of the nodes
                 if distance < 5:
-                    WateringUtils.add_feature_to_backup_layer(feature_y, self.node_layer)
                     self.node_layer.deleteFeature(feature_y.id())
+                    WateringUtils.add_feature_to_backup_layer(feature_y, self.node_layer)
                     break 
 
     @run_once
