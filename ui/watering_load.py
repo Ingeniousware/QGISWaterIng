@@ -54,6 +54,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.set_combo_boxes()
             
         self.set_clone_projects_combo_box()
+        self.newShpDirectory.setFilePath(self.main_watering_folder)
         
     def set_online_projects_list(self):
         self.online_projects_list = []

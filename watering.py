@@ -365,8 +365,8 @@ class QGISPlugin_WaterIng:
 
     def updateActionStateClose(self):
         print("Entering updateActionStateClose")
-        if QgsProject.instance().fileName():
-            self.cleanMarkers()
+        # if QgsProject.instance().fileName():
+        #     self.cleanMarkers()
         
         if self.project_info:
             iface.mainWindow().statusBar().removeWidget(self.project_info)
