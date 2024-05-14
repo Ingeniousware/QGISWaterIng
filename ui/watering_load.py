@@ -382,6 +382,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         else: 
             self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.offline_scenarios_list[self.load_scenarios_box.currentIndex()][1])
         self.zoomToProject()
+        self.writeWateringMetadata()
         self.done(True)
 
     def CreateLayers(self):
@@ -547,10 +548,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return group
     
     def writeWateringMetadata(self):
-        WateringUtils.setProjectMetadata("server_project_name", self.online_projects_list[self.load_projects_box.currentIndex()][0])
-        WateringUtils.setProjectMetadata("project_id", self.online_projects_list[self.load_projects_box.currentIndex()][1])
-        WateringUtils.setProjectMetadata("scenario_name", self.online_projects_list[self.load_scenarios_box.currentIndex()][0])
-        WateringUtils.setProjectMetadata("scenario_id", self.online_projects_list[self.load_scenarios_box.currentIndex()][1])
+        WateringUtils.setProjectMetadata("server_project_name", self.current_project_name)
+        WateringUtils.setProjectMetadata("project_id", self.current_project_fk)
+        WateringUtils.setProjectMetadata("scenario_name", self.current_scenario_name)
+        WateringUtils.setProjectMetadata("scenario_id", self.current_scenario_fk)
     
     def updateProject(self, justCreated):
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.current_scenario_fk)
