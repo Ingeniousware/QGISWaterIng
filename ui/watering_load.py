@@ -56,6 +56,14 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.set_clone_projects_combo_box()
         self.newShpDirectory.setFilePath(self.main_watering_folder)
         
+    def set_buttons_and_checkboxes(self):
+        self.new_project_checkBox.clicked.connect(self.handle_new_tab_ui_elements)
+        self.merge_new_scenario_checkBox.clicked.connect(self.handle_merge_tab_ui_elements)
+        self.new_button.clicked.connect(self.create_new_scenario_procedures)
+        self.load_button.clicked.connect(self.checkExistingProject)
+        self.load_projects_box.currentIndexChanged.connect(self.handle_load_scenarios_box)
+        self.clone_button.clicked.connect(self.clone_scenario)
+        
     def set_online_projects_list(self):
         self.online_projects_list = []
 
@@ -84,14 +92,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def run_offline_procedures(self):
         self.offline_mode = True
         self.set_offline_projects_list(self.load_projects_box, self.load_scenarios_box)
-
-    def set_buttons_and_checkboxes(self):
-        self.new_project_checkBox.clicked.connect(self.handle_new_tab_ui_elements)
-        self.merge_new_scenario_checkBox.clicked.connect(self.handle_merge_tab_ui_elements)
-        self.new_button.clicked.connect(self.create_new_scenario_procedures)
-        self.load_button.clicked.connect(self.checkExistingProject)
-        self.load_projects_box.currentIndexChanged.connect(self.handle_load_scenarios_box)
-        self.clone_button.clicked.connect(self.clone_scenario)
 
     def hide_ui_elements(self):
         self.handle_new_tab_ui_elements()
@@ -172,18 +172,36 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return []
 
     def create_new_scenario_procedures(self):
-        newProjectKeyId = uuid.uuid4()
-        newScenarioKeyId = uuid.uuid4()
+        newProjectKeyId = str(uuid.uuid4())
+        newScenarioKeyId = str(uuid.uuid4())
         newScenarioName = self.new_scenario_name.text() or "My Project Scenario"
-
+        projectName = self.new_project_name.text() or "My Project"
+        successfullyCreated = False
+        currentProjectsList = self.offline_projects_list if self.offline_mode else self.online_projects_list
+        
         if self.new_project_checkBox.isChecked():
-            self.create_new_project_and_scenario(newProjectKeyId, newScenarioKeyId)
-            return
+            successfullyCreated = self.create_new_project_and_scenario(newProjectKeyId, newScenarioKeyId, projectName)
+            if successfullyCreated:
+                self.current_project_fk = currentProjectsList[self.new_projects_box.currentIndex()][0]
+                self.current_scenario_fk = newScenarioKeyId
+                self.current_project_name = currentProjectsList[self.new_projects_box.currentIndex()][1]
+                self.current_scenario_name = newScenarioName
+        else:   
+            successfullyCreated = self.create_new_scenario(newScenarioKeyId, None, newScenarioName)
+            if successfullyCreated:
+                self.current_project_fk = newProjectKeyId
+                self.current_scenario_fk = newScenarioKeyId
+                self.current_project_name = projectName
+                self.current_scenario_name = newScenarioName
 
-        self.create_new_scenario(newScenarioKeyId, None, newScenarioName)
-
-    def create_new_project_and_scenario(self, projectKeyId, scenarioKeyId):
-        project_creation_success, createdProjectData = self.create_new_project(projectKeyId)
+        if successfullyCreated:
+            self.create_scenario_folder()
+            #load layers
+            self.CreateLayers()
+            self.open_watering_project(True)
+            
+    def create_new_project_and_scenario(self, projectKeyId, scenarioKeyId, projectName):
+        project_creation_success, createdProjectData = self.create_new_project(projectKeyId, projectName)
         if not project_creation_success:
             WateringUtils.error_message("Project creation failed. Please try again.")
             return False
@@ -199,8 +217,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         WateringUtils.success_message("Project and scenario created successfully!")
         return True
 
-    def create_new_project(self, keyId):
-        projectName = self.new_project_name.text()
+    def create_new_project(self, keyId, projectName):
         description = "Project created in QGIS WaterIng Plugin"
 
         newProjectJson = {
