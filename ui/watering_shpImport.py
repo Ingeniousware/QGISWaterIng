@@ -162,6 +162,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "vertices": vertices
             }
             self.postDMA(feature_json, name)
+            #print(feature_json)
             features.append(feature_json)
 
         QgsProject.instance().removeMapLayer(layer)
@@ -229,14 +230,13 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         return features
     
     def postDMA(self, json, name):
-
         headers = {'Authorization': "Bearer {}".format(self.token)}
         response = requests.post(self.UrlPost, json=json, headers=headers)
 
         if response.status_code == 200:
             print(f'"{name}" correctly uploaded')
             print(response)
-            #time.sleep(1)
+            time.sleep(1)
         else:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Warning)
