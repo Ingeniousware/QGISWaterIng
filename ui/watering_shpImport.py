@@ -23,12 +23,20 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         super(WateringShpImport, self).__init__(parent)
         self.setupUi(self)
         self.iface = iface
+        self.TabWidget.setTabVisible(0, False)
+        self.TabWidget.setTabVisible(1, False)
+        self.TabWidget.setTabVisible(2, False)
+        self.TabWidget.hide()
+        self.uploadShpFile.setEnabled(False)
+        self.LayerTypeCBox.setPlaceholderText("Please select the layer type you wish to import")
         self.LayerTypeCBox.addItem("Demand Nodes")
         self.LayerTypeCBox.addItem("Water DMA")
+        self.LayerTypeCBox.addItem("Hidrants")
+        self.LayerTypeCBox.currentIndexChanged.connect(self.checkUserControlState)
         self.token = os.environ.get('TOKEN')
-        #self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
         self.UrlPost = None
-        self.uploadShpFile.clicked.connect(self.addSelected_Layer)
+        self.loadLayerButton.clicked.connect(self.addSelected_Layer)
+        self.uploadShpFile.clicked.connect(self.get_cBox_index)
     
     def addSelected_Layer(self):
         self.file_path = self.newSHPDirectory.filePath()
@@ -43,8 +51,12 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 message_box.exec_()
             else:
                 QgsProject.instance().addMapLayer(vlayer)
-                self.close()
-                self.get_cBox_index()
+                self.TabWidget.show()
+                self.LayerTypeCBox.setEnabled(False)
+                self.attribute_matcher()
+                self.uploadShpFile.setEnabled(True)
+                #self.close()
+                #self.get_cBox_index()
         else:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Warning)
@@ -53,16 +65,52 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             message_box.setStandardButtons(QMessageBox.Ok)
             message_box.exec_()
 
+    def attribute_matcher(self):
+        fields = QgsProject.instance().mapLayersByName("New Layer")[0].fields()
+        index = self.LayerTypeCBox.currentIndex()
+        if index == 0:  # Demand Nodes
+            comboBoxes = [
+                (self.nameComboBox, "No match"),
+                (self.descriptionComboBox, "No match"),
+                (self.zComboBox, "No match"),
+                (self.demandComboBox, "No match"),
+                (self.emitterComboBox, "No match")
+            ]
+        elif index == 1: # Water DMA
+            comboBoxes = [
+                (self.nameDMAcomboBox, "No match"),
+                (self.descriptionDMAcomboBox, "No match")
+            ]
+        else:
+            return
+        for cBox, default_item in comboBoxes:
+            cBox.clear()
+            cBox.addItem(default_item)
+            for field in fields:
+                cBox.addItem(field.name())
+
+    def checkUserControlState(self):
+        index = self.LayerTypeCBox.currentIndex()
+        for i in range(self.TabWidget.count()):
+            self.TabWidget.setTabVisible(i, False)
+        if index == 0:
+            self.TabWidget.setTabVisible(0, True)
+        elif index == 1:
+            self.TabWidget.setTabVisible(1, True)
+        elif index == 2:
+            self.TabWidget.setTabVisible(2, True)
+
     def get_cBox_index(self):
         cBox_index = self.LayerTypeCBox.currentIndex()
         if cBox_index == 0:
             self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/DemandNode"
             print("The layer imported is of demand nodes")
             self.convert_point_to_json("New Layer")
-        else: 
+        if cBox_index == 1: 
             self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
             print("The layer imported is of water DMA")
             self.convert_polygon_to_json("New Layer")
+        self.close()
 
     def convert_polygon_to_json(self, layer_name):
         layer = QgsProject.instance().mapLayersByName(layer_name)[0]
@@ -85,8 +133,17 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
 
             server_key_id = str(uuid.uuid4())
             fk_scenario = WateringUtils.getScenarioId() 
-            name = feature.attribute("Name")
-            description = "Imported from Qgis"
+            ###Optimize later
+            if self.nameDMAcomboBox.currentText() == "No match":
+                name = "Demand Node"
+            else:
+                name = feature.attribute(self.nameDMAcomboBox.currentText())
+                
+            if self.descriptionDMAcomboBox.currentText() == "No match":
+                description = ""
+            else:
+                description = feature.attribute(self.descriptionDMAcomboBox.currentText())
+            ##### 
             sector_index = 0
             element_count = 0
             total_demand = 0
@@ -105,8 +162,9 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "vertices": vertices
             }
             self.postDMA(feature_json, name)
-        
             features.append(feature_json)
+
+        QgsProject.instance().removeMapLayer(layer)
         return features
     
     def convert_point_to_json(self, layer_name):
@@ -124,9 +182,32 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             transformed_point = transform.transform(point)
 
             server_key_id = str(uuid.uuid4())
-            scenario_fk = WateringUtils.getScenarioId() 
-            name = feature.attribute("Name")
-            description = "Imported from QGIS"
+            scenario_fk = WateringUtils.getScenarioId()
+
+            ###Optimize later
+            if self.nameComboBox.currentText() == "No match":
+                name = "Demand Node"
+            else:
+                name = feature.attribute(self.nameComboBox.currentText())
+                
+            if self.descriptionComboBox.currentText() == "No match":
+                description = ""
+            else:
+                description = feature.attribute(self.descriptionComboBox.currentText())
+
+            if self.zComboBox.currentText() == "No match":
+                z = 0
+            else:
+                z = feature.attribute(self.zComboBox.currentText())
+            if self.demandComboBox.currentText() == "No match":
+                baseDemand = 0
+            else:
+                baseDemand = feature.attribute(self.demandComboBox.currentText())
+            if self.emitterComboBox.currentText() == "No match":
+                emitterCoefficient = 0
+            else:
+                emitterCoefficient = feature.attribute(self.emitterComboBox.currentText())
+            ####
 
             feature_json = {
                 "serverKeyId": server_key_id,
@@ -135,19 +216,18 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "description": description,
                 "lng": transformed_point.x(),
                 "lat": transformed_point.y(),
-                "z": 0,
-                "baseDemand": 0,
-                "emitterCoeff": 0,
+                "z": z,
+                "baseDemand": baseDemand,
+                "emitterCoeff": emitterCoefficient,
                 "removed": False
             }
             self.postDMA(feature_json, name)
-            print(feature_json)
+            #print(feature_json)
             features.append(feature_json)
         
         QgsProject.instance().removeMapLayer(layer)
         return features
     
-
     def postDMA(self, json, name):
 
         headers = {'Authorization': "Bearer {}".format(self.token)}
