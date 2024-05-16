@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsVectorLayer
+from qgis.core import QgsProject, QgsVectorLayer, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtWidgets import QInputDialog, QLineEdit
 import os
 import json
 import uuid
+import datetime
 import time
 from ..watering_utils import WateringUtils
 import requests
@@ -22,25 +23,46 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         super(WateringShpImport, self).__init__(parent)
         self.setupUi(self)
         self.iface = iface
+        self.LayerTypeCBox.addItem("Demand Nodes")
+        self.LayerTypeCBox.addItem("Water DMA")
         self.token = os.environ.get('TOKEN')
-        self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
-        self.uploadShpFile.clicked.connect(lambda: self.addDMA_Layer(0))
+        #self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
+        self.UrlPost = None
+        self.uploadShpFile.clicked.connect(self.addSelected_Layer)
     
-    def addDMA_Layer(self, behavior):
+    def addSelected_Layer(self):
         self.file_path = self.newSHPDirectory.filePath()
-        vlayer = QgsVectorLayer(self.file_path, "New DMA Layer", "ogr")
-        if not vlayer.isValid():
-            print("Layer failed to load!")
+        if self.file_path.lower().endswith('.shp'):
+            vlayer = QgsVectorLayer(self.file_path, "New Layer", "ogr")
+            if not vlayer.isValid():
+                message_box = QMessageBox()
+                message_box.setIcon(QMessageBox.Warning)
+                message_box.setWindowTitle("Error")
+                message_box.setText("Layer failed to load!")
+                message_box.setStandardButtons(QMessageBox.Ok)
+                message_box.exec_()
+            else:
+                QgsProject.instance().addMapLayer(vlayer)
+                self.close()
+                self.get_cBox_index()
+        else:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Warning)
             message_box.setWindowTitle("Error")
-            message_box.setText("File not uploaded")
+            message_box.setText("Selected file is not a shapefile (.shp)")
             message_box.setStandardButtons(QMessageBox.Ok)
             message_box.exec_()
-        else:
-            QgsProject.instance().addMapLayer(vlayer)
-            self.close()
-            self.convert_polygon_to_json("New DMA Layer")
+
+    def get_cBox_index(self):
+        cBox_index = self.LayerTypeCBox.currentIndex()
+        if cBox_index == 0:
+            self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/DemandNode"
+            print("The layer imported is of demand nodes")
+            self.convert_point_to_json("New Layer")
+        else: 
+            self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
+            print("The layer imported is of water DMA")
+            self.convert_polygon_to_json("New Layer")
 
     def convert_polygon_to_json(self, layer_name):
         layer = QgsProject.instance().mapLayersByName(layer_name)[0]
@@ -69,7 +91,6 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             element_count = 0
             total_demand = 0
 
-            # Print feature attributes for debugging
             print("Name:", name)
             print("Description:", description)
 
@@ -83,33 +104,63 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "totalDemand": total_demand,
                 "vertices": vertices
             }
-            #Send DMA to server post
             self.postDMA(feature_json, name)
-            # Append the feature JSON to the list of features
+        
             features.append(feature_json)
-
         return features
     
+    def convert_point_to_json(self, layer_name):
+        layer = QgsProject.instance().mapLayersByName(layer_name)[0]
+        features = []
+
+        # Define the source and destination coordinate reference systems
+        crs_source = layer.crs()
+        crs_destination = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS84
+        transform = QgsCoordinateTransform(crs_source, crs_destination, QgsProject.instance())
+
+        for feature in layer.getFeatures():
+            geom = feature.geometry()
+            point = geom.asPoint()
+            transformed_point = transform.transform(point)
+
+            server_key_id = str(uuid.uuid4())
+            scenario_fk = WateringUtils.getScenarioId() 
+            name = feature.attribute("Name")
+            description = "Imported from QGIS"
+
+            feature_json = {
+                "serverKeyId": server_key_id,
+                "scenarioFK": scenario_fk,
+                "name": name,
+                "description": description,
+                "lng": transformed_point.x(),
+                "lat": transformed_point.y(),
+                "z": 0,
+                "baseDemand": 0,
+                "emitterCoeff": 0,
+                "removed": False
+            }
+            self.postDMA(feature_json, name)
+            print(feature_json)
+            features.append(feature_json)
+        
+        QgsProject.instance().removeMapLayer(layer)
+        return features
+    
+
     def postDMA(self, json, name):
 
         headers = {'Authorization': "Bearer {}".format(self.token)}
         response = requests.post(self.UrlPost, json=json, headers=headers)
 
         if response.status_code == 200:
-            print("DMA Uploaded")
-            message_box = QMessageBox()
-            message_box.setIcon(QMessageBox.Information)
-            message_box.setWindowTitle("Watering Shape")
-            message_box.setText(f'DMA "{name}" uploaded')
-            message_box.setStandardButtons(QMessageBox.Ok)
-            message_box.exec_()
-            # Close the message box after 1 second
-            time.sleep(1)
-            message_box.close()
+            print(f'"{name}" correctly uploaded')
+            print(response)
+            #time.sleep(1)
         else:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Warning)
-            message_box.setWindowTitle("Watering Shape")
+            message_box.setWindowTitle("Watering Shp")
             message_box.setText("Failed to upload file. Status code: {}".format(response.status_code))
             message_box.setStandardButtons(QMessageBox.Ok)
             message_box.exec_()
