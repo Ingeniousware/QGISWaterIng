@@ -248,6 +248,7 @@ class QGISPlugin_WaterIng:
             if WateringUtils.isProjectOpened() and WateringUtils.isWateringProject():
                 #self.setHubConnection()
                 WateringUtils.setProjectMetadata("connection_status", "online")
+            self.addLoad()
         
     def addLoad(self):
         #self.InitializeProjectToolbar()
