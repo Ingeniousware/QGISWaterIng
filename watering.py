@@ -293,9 +293,10 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.toolImportShapeFile.setCurrentTool(toolImportShapeFile)
         self.toolbarToolManager.toolImportShapeFile.setEnabled(True)
 
-        toolReviewNetwork = NetworkReviewTool(self.iface)
-        self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
-        self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
+        # Streaming tests
+        # toolReviewNetwork = NetworkReviewTool(self.iface)
+        # self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
+        # self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
         
         toolInsertDemandNode = InsertDemandNodeTool(self.canvas, self.scenarioUnitOFWork.waterDemandNodeRepository, self.actionManager, self.toolbarToolManager)
         toolInsertDemandNode.setAction(self.toolbarToolManager.insertDemandNodeAction)

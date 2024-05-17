@@ -5,6 +5,7 @@ from ..watering_utils import WateringUtils
 from .change import Change
 from datetime import datetime
 import pytz
+import json
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsWkbTypes
@@ -52,8 +53,9 @@ class AbstractRepository():
     def loadElements(self):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         url = WateringUtils.getServerUrl() + self.UrlGet
-        response =  requests.get(url, params=params_element, 
-                            headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})  
+        headers = {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}
+        
+        response = requests.get(url, params=params_element, headers=headers, stream=True)
         return response
 
     def loadChanges(self, lastUpdate):
@@ -79,12 +81,16 @@ class AbstractRepository():
         self.pr = self.currentLayer.dataProvider()
         self.pr.addAttributes(fields)
         self.currentLayer.updateFields()
-        
-        response_data = response.json()["data"]
 
         self.toAddFeatures = []
-        for elementJSON in response_data:            
-            self.addElementFromJSON(elementJSON)
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                chunk_data = chunk.decode('utf-8')
+                #response_data = chunk_data.json()
+                #response_data = json.loads(chunk_data).get("data", [])
+                #for elementJSON in chunk_data:
+                json_data = json.loads(chunk_data)
+                self.addElementFromJSON(json_data)
         
         self.pr.addFeatures(self.toAddFeatures)
         self.currentLayer.updateExtents()
@@ -92,23 +98,14 @@ class AbstractRepository():
         features = self.currentLayer.getFeatures()
         
         self.currentLayer.attributeValueChanged.connect(
-                        lambda feature_id, attribute_index, new_value, layer=self.Layer: 
-                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
-                )
+            lambda feature_id, attribute_index, new_value, layer=self.Layer: 
+            WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+        )
         
         self.currentLayer.geometryChanged.connect(
-                    lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
-                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
-                )
-        
-        #PRINT FEATURES
-        #print("FEATURES")
-        # Iterate through the features and print their attributes and geometry
-        #for feature in features:
-            #print(f'Feature ID: {feature.id()}')
-            #print(f'Attributes: {feature.attributes()}')
-            #print(f'Geometry: {feature.geometry().asWkt()}')  # Print geometry as Well-Known Text (WKT)
-
+            lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
+            WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+        )
         
     #When layer does not exists           
     def addElementFromJSON(self, elementJSON):
@@ -120,18 +117,13 @@ class AbstractRepository():
             geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
             feature.setGeometry(geometry)
 
-            #print(element)
-            for i in range(len(self.field_definitions)- self.numberLocalFieldsOnly):
-                #print("ATTTRIBUTE: ", self.field_definitions[i][0], "EEMTN", element[i+2])
-                feature.setAttribute(self.field_definitions[i][0], element[i+2])
-            
-            #print("Datetime: ", datetime.now())
+            for i in range(len(self.field_definitions) - self.numberLocalFieldsOnly):
+                feature.setAttribute(self.field_definitions[i][0], element[i + 2])
             
             feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
-            #self.currentLayer.dataProvider().addFeature(feature)
             self.toAddFeatures.append(feature)
-        except ValueError:
-              print("Error->" + ValueError)
+        except ValueError as e:
+            print("Error->", e)
 
     #When layer already exists
     def addElementFromSignalR(self, elementJSON):
