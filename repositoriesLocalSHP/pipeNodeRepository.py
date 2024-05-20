@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 import uuid
 from .abstract_repository import AbstractRepository
 from ..watering_utils import WateringUtils
@@ -15,7 +16,7 @@ class PipeNodeRepository(AbstractRepository):
     def __init__(self,token, project_path, scenarioFK):
         """Constructor."""
         super(PipeNodeRepository, self).__init__(token, scenarioFK)      
-        self.UrlGet = "/api/v1/WaterPipe"
+        self.UrlGet = "/api/v1/WaterPipe/stream"
         self.StorageShapeFile = os.path.join(project_path, "watering_pipes.shp")
         self.LayerName = "watering_pipes"
         self.FileQml =  project_path + "/" + self.LayerName + ".qml"
@@ -46,8 +47,8 @@ class PipeNodeRepository(AbstractRepository):
         self.PipeOfflineDict = {}
         
     def initializeRepository(self):
-        super(PipeNodeRepository, self).initializeRepository() 
-        self.openLayers(None, 0.7) 
+        super(PipeNodeRepository, self).initializeRepositoryStreamingData() 
+        self.openLayers(None, 0.7)
         self.createBackupLayer()
 
     def setElementSymbol(self, layer, layer_symbol, layer_size):
@@ -59,17 +60,33 @@ class PipeNodeRepository(AbstractRepository):
         layer.saveNamedStyle(self.FileQml)
         layer.triggerRepaint()
 
-    def createElementLayerFromServerResponse(self, serverResponse):
+    def createElementLayerFromServerStreamingResponse(self, response):
         print("CREATING PIPES")
         fields = self.setElementFields(self.field_definitions)
         self.currentLayer = QgsVectorLayer("LineString?crs=" + self.destCrs.authid(), "Line Layer", "memory")
         self.currentLayer.dataProvider().addAttributes(fields)
         self.currentLayer.updateFields()
         
-        response_data = serverResponse.json()["data"]
+        for chunk in response.iter_content(chunk_size=None):
+            if chunk:
+                chunk_data = chunk.decode('utf-8')
+                
+                self.buffer += chunk_data
 
-        for elementJSON in response_data:            
-            self.addElementFromJSON(elementJSON)
+                json_objects = self.buffer.split('\n')
+
+                self.buffer = json_objects.pop()
+                
+                for obj in json_objects:
+                    if obj.strip():
+                        data = json.loads(obj)
+                        print("data:", data)
+                        self.addElementFromJSON(data)
+
+        if self.buffer.strip():
+            data = json.loads(self.buffer)
+            print("data:", data)
+            self.addElementFromJSON(data)
 
             
     def addElementFromJSON(self, elementJSON):

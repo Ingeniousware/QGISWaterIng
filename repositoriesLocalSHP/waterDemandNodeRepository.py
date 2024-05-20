@@ -39,7 +39,7 @@ class WateringDemandNodeRepository(AbstractRepository):
         self.currentLayer = None
 
     def initializeRepository(self):
-        super(WateringDemandNodeRepository, self).initializeRepository()   
+        super(WateringDemandNodeRepository, self).initializeRepositoryStreamingData()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
         self.createBackupLayer()
 

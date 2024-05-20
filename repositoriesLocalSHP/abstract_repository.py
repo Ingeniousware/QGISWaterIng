@@ -26,6 +26,7 @@ class AbstractRepository():
         self.Layer = None
         self.ServerDict = {}
         self.OfflineDict = {}
+        self.buffer = ""
         self.Response = None
         self.FieldDefinitions = None
         self.Attributes = None
@@ -37,9 +38,17 @@ class AbstractRepository():
 
     def initializeRepository(self):
         #loading element from the API
-        serverResponse = self.loadElements()        
+        serverResponse = self.loadElements(False)        
         #Adding elements to shapefile
         self.createElementLayerFromServerResponse(serverResponse)              
+        #Write shapefile
+        self.writeShp()
+        
+    def initializeRepositoryStreamingData(self):
+        #loading element from the API
+        serverResponse = self.loadElements(True)        
+        #Adding elements to shapefile
+        self.createElementLayerFromServerStreamingResponse(serverResponse)              
         #Write shapefile
         self.writeShp()
         
@@ -50,12 +59,12 @@ class AbstractRepository():
     def unsetConnectorToServer(self):
         self.connectorToServer = None
 
-    def loadElements(self):
+    def loadElements(self, stream):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
         url = WateringUtils.getServerUrl() + self.UrlGet
         headers = {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}
         
-        response = requests.get(url, params=params_element, headers=headers, stream=True)
+        response = requests.get(url, params=params_element, headers=headers, stream=stream)
         return response
 
     def loadChanges(self, lastUpdate):
@@ -81,16 +90,58 @@ class AbstractRepository():
         self.pr = self.currentLayer.dataProvider()
         self.pr.addAttributes(fields)
         self.currentLayer.updateFields()
+        
+        response_data = response.json()["data"]
 
         self.toAddFeatures = []
-        for chunk in response.iter_content(chunk_size=8192):
+        for elementJSON in response_data:            
+            self.addElementFromJSON(elementJSON)
+        
+        self.pr.addFeatures(self.toAddFeatures)
+        self.currentLayer.updateExtents()
+        
+        features = self.currentLayer.getFeatures()
+        
+        self.currentLayer.attributeValueChanged.connect(
+                        lambda feature_id, attribute_index, new_value, layer=self.Layer: 
+                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                )
+        
+        self.currentLayer.geometryChanged.connect(
+                    lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
+                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+                )
+        
+    def createElementLayerFromServerStreamingResponse(self, response):
+        fields = self.setElementFields(self.field_definitions)
+        self.currentLayer = QgsVectorLayer("Point?crs=" + self.destCrs.authid(), "New Layer", "memory")
+        self.pr = self.currentLayer.dataProvider()
+        self.pr.addAttributes(fields)
+        self.currentLayer.updateFields()
+
+        self.toAddFeatures = []
+
+        
+        for chunk in response.iter_content(chunk_size=None):
             if chunk:
                 chunk_data = chunk.decode('utf-8')
-                #response_data = chunk_data.json()
-                #response_data = json.loads(chunk_data).get("data", [])
-                #for elementJSON in chunk_data:
-                json_data = json.loads(chunk_data)
-                self.addElementFromJSON(json_data)
+                
+                self.buffer += chunk_data
+
+                json_objects = self.buffer.split('\n')
+
+                self.buffer = json_objects.pop()
+                
+                for obj in json_objects:
+                    if obj.strip():
+                        data = json.loads(obj)
+                        print("data:", data)
+                        self.addElementFromJSON(data)
+
+        if self.buffer.strip():
+            data = json.loads(self.buffer)
+            print("data:", data)
+            self.addElementFromJSON(data)
         
         self.pr.addFeatures(self.toAddFeatures)
         self.currentLayer.updateExtents()

@@ -48,11 +48,8 @@ class scenarioUnitOfWork():
         self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK, self.list_of_elements)
         
     def loadAll(self):
-        # for element in self.list_of_elements:
-        #     element.initializeRepository()
-        
-        # Streaming tests
-        self.waterDemandNodeRepository.initializeRepository()
+        for element in self.list_of_elements:
+            element.initializeRepository()
             
     def updateAll(self):
         lastUpdate = WateringUtils.getLastUpdate()
