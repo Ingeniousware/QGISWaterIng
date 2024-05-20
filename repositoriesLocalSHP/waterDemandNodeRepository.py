@@ -12,7 +12,7 @@ class WateringDemandNodeRepository(AbstractRepository):
     def __init__(self,token, project_path, scenarioFK):
         """Constructor."""
         super(WateringDemandNodeRepository, self).__init__(token, scenarioFK)      
-        self.UrlGet = "/api/v1/DemandNode"
+        self.UrlGet = "/api/v1/DemandNode/stream"
         self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
         self.LayerName = "watering_demand_nodes"
         self.FileQml =  project_path + "/" + self.LayerName + ".qml"
@@ -39,7 +39,7 @@ class WateringDemandNodeRepository(AbstractRepository):
         self.currentLayer = None
 
     def initializeRepository(self):
-        super(WateringDemandNodeRepository, self).initializeRepository()   
+        super(WateringDemandNodeRepository, self).initializeRepositoryStreamingData()   
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
         self.createBackupLayer()
 
