@@ -349,11 +349,11 @@ class NetworkReviewTool:
         self.update_attributes(self.reservoir_layer, 1)
         self.removeDuplicatePoints(self.node_layer, self.reservoir_layer)
         #Tank adjustment
-        """ self.snapPointTioPoint("Tanks to nodes", self.tanks_layer, self.node_layer,3)
+        self.snapPointTioPoint("Tanks to nodes", self.tanks_layer, self.node_layer,3)
         self.deleteAllFeatures(self.tanks_layer)
         self.copyCoordinates(self.tanks_layer, self.snap_layer)
         self.update_attributes(self.tanks_layer, 1)
-        self.removeDuplicatePoints(self.node_layer, self.tanks_layer) """
+        self.removeDuplicatePoints(self.node_layer, self.tanks_layer)
 
         #Continue on pipes
         self.deleteAllFeatures(self.pipe_layer)

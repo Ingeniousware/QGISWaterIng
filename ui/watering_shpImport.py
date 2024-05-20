@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsVectorLayer
+from qgis.core import QgsProject, QgsVectorLayer, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtWidgets import QInputDialog, QLineEdit
 import os
 import json
 import uuid
+import datetime
 import time
 from ..watering_utils import WateringUtils
 import requests
@@ -22,25 +23,94 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         super(WateringShpImport, self).__init__(parent)
         self.setupUi(self)
         self.iface = iface
+        self.TabWidget.setTabVisible(0, False)
+        self.TabWidget.setTabVisible(1, False)
+        self.TabWidget.setTabVisible(2, False)
+        self.TabWidget.hide()
+        self.uploadShpFile.setEnabled(False)
+        self.LayerTypeCBox.setPlaceholderText("Please select the layer type you wish to import")
+        self.LayerTypeCBox.addItem("Demand Nodes")
+        self.LayerTypeCBox.addItem("Water DMA")
+        self.LayerTypeCBox.addItem("Hidrants")
+        self.LayerTypeCBox.currentIndexChanged.connect(self.checkUserControlState)
         self.token = os.environ.get('TOKEN')
-        self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
-        self.uploadShpFile.clicked.connect(lambda: self.addDMA_Layer(0))
+        self.UrlPost = None
+        self.loadLayerButton.clicked.connect(self.addSelected_Layer)
+        self.uploadShpFile.clicked.connect(self.get_cBox_index)
     
-    def addDMA_Layer(self, behavior):
+    def addSelected_Layer(self):
         self.file_path = self.newSHPDirectory.filePath()
-        vlayer = QgsVectorLayer(self.file_path, "New DMA Layer", "ogr")
-        if not vlayer.isValid():
-            print("Layer failed to load!")
+        if self.file_path.lower().endswith('.shp'):
+            vlayer = QgsVectorLayer(self.file_path, "New Layer", "ogr")
+            if not vlayer.isValid():
+                message_box = QMessageBox()
+                message_box.setIcon(QMessageBox.Warning)
+                message_box.setWindowTitle("Error")
+                message_box.setText("Layer failed to load!")
+                message_box.setStandardButtons(QMessageBox.Ok)
+                message_box.exec_()
+            else:
+                QgsProject.instance().addMapLayer(vlayer)
+                self.TabWidget.show()
+                self.LayerTypeCBox.setEnabled(False)
+                self.attribute_matcher()
+                self.uploadShpFile.setEnabled(True)
+                #self.close()
+                #self.get_cBox_index()
+        else:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Warning)
             message_box.setWindowTitle("Error")
-            message_box.setText("File not uploaded")
+            message_box.setText("Selected file is not a shapefile (.shp)")
             message_box.setStandardButtons(QMessageBox.Ok)
             message_box.exec_()
+
+    def attribute_matcher(self):
+        fields = QgsProject.instance().mapLayersByName("New Layer")[0].fields()
+        index = self.LayerTypeCBox.currentIndex()
+        if index == 0:  # Demand Nodes
+            comboBoxes = [
+                (self.nameComboBox, "No match"),
+                (self.descriptionComboBox, "No match"),
+                (self.zComboBox, "No match"),
+                (self.demandComboBox, "No match"),
+                (self.emitterComboBox, "No match")
+            ]
+        elif index == 1: # Water DMA
+            comboBoxes = [
+                (self.nameDMAcomboBox, "No match"),
+                (self.descriptionDMAcomboBox, "No match")
+            ]
         else:
-            QgsProject.instance().addMapLayer(vlayer)
-            self.close()
-            self.convert_polygon_to_json("New DMA Layer")
+            return
+        for cBox, default_item in comboBoxes:
+            cBox.clear()
+            cBox.addItem(default_item)
+            for field in fields:
+                cBox.addItem(field.name())
+
+    def checkUserControlState(self):
+        index = self.LayerTypeCBox.currentIndex()
+        for i in range(self.TabWidget.count()):
+            self.TabWidget.setTabVisible(i, False)
+        if index == 0:
+            self.TabWidget.setTabVisible(0, True)
+        elif index == 1:
+            self.TabWidget.setTabVisible(1, True)
+        elif index == 2:
+            self.TabWidget.setTabVisible(2, True)
+
+    def get_cBox_index(self):
+        cBox_index = self.LayerTypeCBox.currentIndex()
+        if cBox_index == 0:
+            self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/DemandNode"
+            print("The layer imported is of demand nodes")
+            self.convert_point_to_json("New Layer")
+        if cBox_index == 1: 
+            self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
+            print("The layer imported is of water DMA")
+            self.convert_polygon_to_json("New Layer")
+        self.close()
 
     def convert_polygon_to_json(self, layer_name):
         layer = QgsProject.instance().mapLayersByName(layer_name)[0]
@@ -63,13 +133,21 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
 
             server_key_id = str(uuid.uuid4())
             fk_scenario = WateringUtils.getScenarioId() 
-            name = feature.attribute("Name")
-            description = "Imported from Qgis"
+            ###Optimize later
+            if self.nameDMAcomboBox.currentText() == "No match":
+                name = "Demand Node"
+            else:
+                name = feature.attribute(self.nameDMAcomboBox.currentText())
+                
+            if self.descriptionDMAcomboBox.currentText() == "No match":
+                description = ""
+            else:
+                description = feature.attribute(self.descriptionDMAcomboBox.currentText())
+            ##### 
             sector_index = 0
             element_count = 0
             total_demand = 0
 
-            # Print feature attributes for debugging
             print("Name:", name)
             print("Description:", description)
 
@@ -83,33 +161,86 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "totalDemand": total_demand,
                 "vertices": vertices
             }
-            #Send DMA to server post
             self.postDMA(feature_json, name)
-            # Append the feature JSON to the list of features
+            #print(feature_json)
             features.append(feature_json)
 
+        QgsProject.instance().removeMapLayer(layer)
+        return features
+    
+    def convert_point_to_json(self, layer_name):
+        layer = QgsProject.instance().mapLayersByName(layer_name)[0]
+        features = []
+
+        # Define the source and destination coordinate reference systems
+        crs_source = layer.crs()
+        crs_destination = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS84
+        transform = QgsCoordinateTransform(crs_source, crs_destination, QgsProject.instance())
+
+        for feature in layer.getFeatures():
+            geom = feature.geometry()
+            point = geom.asPoint()
+            transformed_point = transform.transform(point)
+
+            server_key_id = str(uuid.uuid4())
+            scenario_fk = WateringUtils.getScenarioId()
+
+            ###Optimize later
+            if self.nameComboBox.currentText() == "No match":
+                name = "Demand Node"
+            else:
+                name = feature.attribute(self.nameComboBox.currentText())
+                
+            if self.descriptionComboBox.currentText() == "No match":
+                description = ""
+            else:
+                description = feature.attribute(self.descriptionComboBox.currentText())
+
+            if self.zComboBox.currentText() == "No match":
+                z = 0
+            else:
+                z = feature.attribute(self.zComboBox.currentText())
+            if self.demandComboBox.currentText() == "No match":
+                baseDemand = 0
+            else:
+                baseDemand = feature.attribute(self.demandComboBox.currentText())
+            if self.emitterComboBox.currentText() == "No match":
+                emitterCoefficient = 0
+            else:
+                emitterCoefficient = feature.attribute(self.emitterComboBox.currentText())
+            ####
+
+            feature_json = {
+                "serverKeyId": server_key_id,
+                "scenarioFK": scenario_fk,
+                "name": name,
+                "description": description,
+                "lng": transformed_point.x(),
+                "lat": transformed_point.y(),
+                "z": z,
+                "baseDemand": baseDemand,
+                "emitterCoeff": emitterCoefficient,
+                "removed": False
+            }
+            self.postDMA(feature_json, name)
+            #print(feature_json)
+            features.append(feature_json)
+        
+        QgsProject.instance().removeMapLayer(layer)
         return features
     
     def postDMA(self, json, name):
-
         headers = {'Authorization': "Bearer {}".format(self.token)}
         response = requests.post(self.UrlPost, json=json, headers=headers)
 
         if response.status_code == 200:
-            print("DMA Uploaded")
-            message_box = QMessageBox()
-            message_box.setIcon(QMessageBox.Information)
-            message_box.setWindowTitle("Watering Shape")
-            message_box.setText(f'DMA "{name}" uploaded')
-            message_box.setStandardButtons(QMessageBox.Ok)
-            message_box.exec_()
-            # Close the message box after 1 second
+            print(f'"{name}" correctly uploaded')
+            print(response)
             time.sleep(1)
-            message_box.close()
         else:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Warning)
-            message_box.setWindowTitle("Watering Shape")
+            message_box.setWindowTitle("Watering Shp")
             message_box.setText("Failed to upload file. Status code: {}".format(response.status_code))
             message_box.setStandardButtons(QMessageBox.Ok)
             message_box.exec_()
