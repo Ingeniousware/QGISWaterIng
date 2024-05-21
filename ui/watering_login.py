@@ -19,15 +19,13 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
         """Constructor."""
         super(WateringLogin, self).__init__(parent)
         self.setupUi(self)
-        self.loginBtn.clicked.connect(self.login)
-        self.buttonAcceptCancel.accepted.connect(self.nextDlg)
+        #self.loginBtn.clicked.connect(self.login)
+        self.buttonAcceptCancel.accepted.connect(self.login)
         self.buttonAcceptCancel.rejected.connect(self.close)
         self.token = None
         self.logged = False
             
     def login(self):
-        
-        #url_login = "api/v1/AuthManagement/Login"
         email = self.emailInput.text()
         password = self.passwordInput.text()
         
@@ -43,30 +41,23 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
             loginParams = {'email': "{}".format(email), 'password': "{}".format(password)}
             try:
                 response = requests.post(url_login, json=loginParams)
-                print(response)
                 if response.status_code == 200:
-                    self.errorLogin.setStyleSheet("color: lightgreen")
-                    self.errorLogin.setText("Login Successful.")
                     os.environ['TOKEN'] = response.json()["token"]
                     WateringTimer.setTokenTimer()
                     self.token = os.environ['TOKEN']
-                    self.logged = True
+                    self.nextDlg()
                 else:
                     self.errorLogin.setStyleSheet("color: red")
                     self.errorLogin.setText("Invalid email or password.")
             except requests.ConnectionError:
-                iface.messageBar().pushMessage(self.tr("Error"), self.tr("Failed to connect to the WaterIng, check your connection."), level=1, duration=5)
+                WateringUtils.error(self.tr("Failed to connect to the WaterIng, check your connection."))
             except requests.Timeout:
-                iface.messageBar().pushMessage(self.tr("Error"), self.tr("Request timed out."), level=1, duration=5)
+                WateringUtils.error(self.tr("Request timed out."))
             except:
-                iface.messageBar().pushMessage(self.tr("Error"), self.tr("Unable to connect to WaterIng."), level=1, duration=5)
-                
+                WateringUtils.error(self.tr("Unable to connect to WaterIng."))
                 
     def nextDlg(self):
-        if self.logged == False:
-            self.errorLogin.setStyleSheet("color: red")
-            self.errorLogin.setText("Complete the login to WaterIng.")
-        else:
-            #run Load Elements dialog
-            self.close()
-            self.done(True)  #self.close()  instead of just closing we call done(true) to return 1 as result of this dialog modal execution
+        # Usage of self.close() instead of just closing we call 
+        # done(true) to return 1 as result of this dialog modal execution
+        self.close()
+        self.done(True)
