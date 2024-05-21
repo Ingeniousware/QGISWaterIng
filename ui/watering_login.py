@@ -19,11 +19,9 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
         """Constructor."""
         super(WateringLogin, self).__init__(parent)
         self.setupUi(self)
-        #self.loginBtn.clicked.connect(self.login)
         self.buttonAcceptCancel.accepted.connect(self.login)
         self.buttonAcceptCancel.rejected.connect(self.close)
         self.token = None
-        self.logged = False
             
     def login(self):
         email = self.emailInput.text()
