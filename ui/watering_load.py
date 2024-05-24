@@ -54,6 +54,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.set_combo_boxes()
             
         self.set_clone_projects_combo_box()
+        self.set_merge_projects_combo_box()
         self.newShpDirectory.setFilePath(self.main_watering_folder)
         
     def set_buttons_and_checkboxes(self):
@@ -647,7 +648,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         return target_path   
     
-    
-    
-
+    def set_merge_projects_combo_box(self):
+        self.set_offline_projects_list(self.merge_projects_box_sourceA, self.merge_scenarios_box_sourceA)
+        self.set_offline_projects_list(self.merge_projects_box_sourceB, self.merge_scenarios_box_sourceB)
+        self.set_offline_projects_list(self.merge_box, None)
            

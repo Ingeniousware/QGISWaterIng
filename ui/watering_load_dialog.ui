@@ -393,7 +393,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="merge_projects_box"/>
+        <widget class="QComboBox" name="merge_projects_box_sourceA"/>
        </item>
        <item>
         <widget class="QLabel" name="scenarioLabel_4">
@@ -411,7 +411,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="merge_scenarios_box"/>
+        <widget class="QComboBox" name="merge_scenarios_box_sourceA"/>
        </item>
        <item>
         <widget class="QLabel" name="projectLabel_6">
@@ -429,7 +429,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="merge_projects_box_2"/>
+        <widget class="QComboBox" name="merge_projects_box_sourceB"/>
        </item>
        <item>
         <widget class="QLabel" name="scenarioLabel_5">
@@ -447,7 +447,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="merge_scenarios_box_2"/>
+        <widget class="QComboBox" name="merge_scenarios_box_sourceB"/>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
