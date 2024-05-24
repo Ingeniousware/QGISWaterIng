@@ -27,17 +27,18 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         self.TabWidget.setTabVisible(1, False)
         self.TabWidget.setTabVisible(2, False)
         self.TabWidget.hide()
-        self.uploadShpFile.setEnabled(False)
         self.LayerTypeCBox.setPlaceholderText("Please select the layer type you wish to import")
         self.LayerTypeCBox.addItem("Demand Nodes")
         self.LayerTypeCBox.addItem("Water DMA")
-        self.LayerTypeCBox.addItem("Hidrants")
+        self.LayerTypeCBox.addItem("Tanks")
         self.LayerTypeCBox.currentIndexChanged.connect(self.checkUserControlState)
-        self.token = os.environ.get('TOKEN')
-        self.UrlPost = None
+        self.uploadShpFile.setEnabled(False)
         self.loadLayerButton.clicked.connect(self.addSelected_Layer)
         self.uploadShpFile.clicked.connect(self.get_cBox_index)
-    
+        self.token = os.environ.get('TOKEN')
+        self.UrlPost = None
+        
+
     def addSelected_Layer(self):
         self.file_path = self.newSHPDirectory.filePath()
         if self.file_path.lower().endswith('.shp'):
@@ -55,8 +56,6 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 self.LayerTypeCBox.setEnabled(False)
                 self.attribute_matcher()
                 self.uploadShpFile.setEnabled(True)
-                #self.close()
-                #self.get_cBox_index()
         else:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Warning)
@@ -66,26 +65,38 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             message_box.exec_()
 
     def attribute_matcher(self):
-        fields = QgsProject.instance().mapLayersByName("New Layer")[0].fields()
+        layer = QgsProject.instance().mapLayersByName("New Layer")[0]
+        fields = layer.fields()
         index = self.LayerTypeCBox.currentIndex()
         if index == 0:  # Demand Nodes
             comboBoxes = [
-                (self.nameComboBox, "No match"),
-                (self.descriptionComboBox, "No match"),
-                (self.zComboBox, "No match"),
-                (self.demandComboBox, "No match"),
-                (self.emitterComboBox, "No match")
+                (self.nameComboBox),
+                (self.descriptionComboBox),
+                (self.zComboBox),
+                (self.demandComboBox),
+                (self.emitterComboBox)
             ]
         elif index == 1: # Water DMA
             comboBoxes = [
-                (self.nameDMAcomboBox, "No match"),
-                (self.descriptionDMAcomboBox, "No match")
+                (self.nameDMAcomboBox),
+                (self.descriptionDMAcomboBox)
+            ]
+        elif index == 2: # Tanks
+            comboBoxes = [
+                (self.nameTankscomboBox),
+                (self.descriptionTankscomboBox),
+                (self.zTankscomboBox),
+                (self.initTankscomboBox),
+                (self.minTankscomboBox),
+                (self.maxTankscomboBox),
+                (self.minVTankscomboBox),
+                (self.diameterTankscomboBox)
             ]
         else:
             return
-        for cBox, default_item in comboBoxes:
+        for cBox in comboBoxes:
             cBox.clear()
-            cBox.addItem(default_item)
+            cBox.addItem("No match")
             for field in fields:
                 cBox.addItem(field.name())
 
@@ -105,11 +116,14 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         if cBox_index == 0:
             self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/DemandNode"
             print("The layer imported is of demand nodes")
-            self.convert_point_to_json("New Layer")
-        if cBox_index == 1: 
+            self.convert_node_to_json("New Layer")
+        elif cBox_index == 1: 
             self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
             print("The layer imported is of water DMA")
             self.convert_polygon_to_json("New Layer")
+        elif cBox_index == 2: 
+            self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/TankNode"
+            print("The layer imported is of Tanks")
         self.close()
 
     def convert_polygon_to_json(self, layer_name):
@@ -168,10 +182,9 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         QgsProject.instance().removeMapLayer(layer)
         return features
     
-    def convert_point_to_json(self, layer_name):
+    def convert_node_to_json(self, layer_name):
         layer = QgsProject.instance().mapLayersByName(layer_name)[0]
         features = []
-
         # Define the source and destination coordinate reference systems
         crs_source = layer.crs()
         crs_destination = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS84
@@ -229,6 +242,45 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         QgsProject.instance().removeMapLayer(layer)
         return features
     
+    def convert_tank_to_json(self, layer_name):
+        layer = QgsProject.instance().mapLayersByName(layer_name)[0]
+        features = []
+        # Define the source and destination coordinate reference systems
+        crs_source = layer.crs()
+        crs_destination = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS84
+        transform = QgsCoordinateTransform(crs_source, crs_destination, QgsProject.instance())
+
+        for feature in layer.getFeatures():
+            geom = feature.geometry()
+            point = geom.asPoint()
+            transformed_point = transform.transform(point)
+
+            server_key_id = str(uuid.uuid4())
+            scenario_fk = str(uuid.uuid4())
+
+            name = feature.attribute(self.nameComboBox.currentText()) if self.nameComboBox.currentText() != "No match" else "string"
+            description = feature.attribute(self.descriptionComboBox.currentText()) if self.descriptionComboBox.currentText() != "No match" else "string"
+            z = feature.attribute(self.zComboBox.currentText()) if self.zComboBox.currentText() != "No match" else 0
+        
+            feature_json = {
+                "serverKeyId": server_key_id,
+                "scenarioFK": scenario_fk,
+                "name": name,
+                "description": description,
+                "lng": transformed_point.x(),
+                "lat": transformed_point.y(),
+                "z": z,
+                "initialLevel": 0,
+                "minimumLevel": 0,
+                "maximumLevel": 0,
+                "minimumVolume": 0,
+                "nominalDiameter": 0,
+                }
+            self.postDMA(feature_json, name)
+            features.append(feature_json)
+        
+        QgsProject.instance().removeMapLayer(layer)
+        return features
     def postDMA(self, json, name):
         headers = {'Authorization': "Bearer {}".format(self.token)}
         response = requests.post(self.UrlPost, json=json, headers=headers)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, Qgis, QgsPointXY, QgsVectorLayer
+from qgis.core import QgsProject, Qgis, QgsPointXY, QgsVectorLayer, QgsField, QgsFeature, QgsGeometry
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
@@ -336,6 +336,11 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
     
     def upLoadSensorFile(self):
         self.file_path = self.newSensorDirectory.filePath()
+
+        new_Layer = QgsVectorLayer("Point?crs=EPSG:3857", "New Sensor Layer", "memory")
+        QgsProject.instance().addMapLayer(new_Layer)
+        #WateringUtils.createNewColumn(self,"New Sensor Layer","Name")
+
         sensorCalc = sensorPlacementFromFile()
         try:
             sensors_names, data_names, d_values  = sensorCalc.read_csv(self.file_path)
@@ -353,10 +358,27 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
 
         order_data = sensorCalc.update_data_values(nodes_to_print)
         sensor_data = sensorCalc.calculate_distances(order_data)
+    
+        sensorName = 1
         for data in sensor_data:
-            self.insertSensor(data)       
+            #self.insertSensor(data)
+            finalName = f'Sensor {sensorName}'
+            self.copyCoordinates(new_Layer, data, finalName)
+            sensorName += 1
 
         self.close()
+    
+    def copyCoordinates(self, layer, new_point, name):
+        # Start editing the layer
+        layer.startEditing()
+        # Create a new feature
+        feature = QgsFeature()
+        feature.setGeometry(QgsGeometry.fromPointXY(new_point))
+        # Add the new feature to the layer
+        layer.addFeature(feature)
+        # Commit the changes to the layer
+        layer.commitChanges()
+
 
     def tableClickedChart(self, index):
         if index.isValid():
