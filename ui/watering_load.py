@@ -239,6 +239,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return False
 
     def create_new_scenario(self, keyId, projectKeyId, scenarioName):
+        if not self.online_projects_list:
+            WateringUtils.error_message("Functionality not available offline. Connect to Watering and try again.")
+            return
         if not projectKeyId:
             current_index = self.new_projects_box.currentIndex()
             projectId = self.online_projects_list[current_index][1]
