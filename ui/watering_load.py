@@ -77,7 +77,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.online_projects_list.append((self.response.json()["data"][i]["name"],
                                        self.response.json()["data"][i]["serverKeyId"]))
 
-    def set_offline_projects_list(self, combo_box, scenarios_box):
+    def set_offline_projects_list(self, combo_box, scenarios_box, scenarios_list):
         if os.path.exists(self.projects_json_file):
             with open(self.projects_json_file, 'r') as json_file:
                 self.projects_json_data = json.load(json_file)
@@ -88,24 +88,26 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                     combo_box.addItem(self.offline_projects_list[i][1])
                 
                 print("scenarios_box", scenarios_box)
-                if scenarios_box is not None:
+                if scenarios_box is not None or scenarios_list is not None:
                     print("True")
-                    self.set_offline_scenarios(combo_box, scenarios_box)
-                    combo_box.currentIndexChanged.connect(lambda : self.set_offline_scenarios(combo_box, scenarios_box))
+                    self.set_offline_scenarios(combo_box, scenarios_box, scenarios_list)
+                    combo_box.currentIndexChanged.connect(lambda : self.set_offline_scenarios(combo_box, scenarios_box, scenarios_list))
         else:
             WateringUtils.error_message("No projects found locally. Connect to WaterIng and load a project from server.")
             
     def run_offline_procedures(self):
         self.offline_mode = True
-        self.set_offline_projects_list(self.load_projects_box, self.load_scenarios_box)
+        self.offline_scenarios_list_load = []
+        self.set_offline_projects_list(self.load_projects_box, self.load_scenarios_box, self.offline_scenarios_list_load)
 
     def hide_ui_elements(self):
         self.handle_new_tab_ui_elements()
         self.handle_merge_tab_ui_elements()
 
     def set_clone_projects_combo_box(self):
-        self.set_offline_projects_list(self.clone_projects_box, self.clone_scenarios_box)
-        self.set_offline_projects_list(self.clone_box, None)
+        self.offline_scenarios_list_clone = []
+        self.set_offline_projects_list(self.clone_projects_box, self.clone_scenarios_box, self.offline_scenarios_list_clone)
+        self.set_offline_projects_list(self.clone_box, None, None)
         
     def handle_new_tab_ui_elements(self):
         checked = self.new_project_checkBox.isChecked()
@@ -155,18 +157,18 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not self.offline_mode:
             self.set_scenario_combo_box(self.load_projects_box, self.load_scenarios_box, self.load_scenarios_list)
 
-    def set_offline_scenarios(self, projects_box, scenarios_box):
+    def set_offline_scenarios(self, projects_box, scenarios_box, scenarios_list):
         scenarios_box.clear()
-        self.offline_scenarios_list.clear()
+        scenarios_list.clear()
         current_index = projects_box.currentIndex()
 
         self.current_project_fk = self.offline_projects_list[current_index][0]
         self.current_project_name = self.offline_projects_list[current_index][1]
-        self.offline_scenarios_list.extend(self.get_offline_scenarios(self.current_project_fk))
+        scenarios_list.extend(self.get_offline_scenarios(self.current_project_fk))
 
-        print("offline_scenarios_list", self.offline_scenarios_list)
-        for i in range(0, len(self.offline_scenarios_list)):
-            scenarios_box.addItem(self.offline_scenarios_list[i][0])
+        print("offline_scenarios_list", scenarios_list)
+        for i in range(0, len(scenarios_list)):
+            scenarios_box.addItem(scenarios_list[i][0])
 
     def get_offline_projects(self):
         return [(key, value["name"]) for key, value in self.projects_json_data.items()]
@@ -657,18 +659,21 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return target_path   
     
     def set_merge_projects_combo_box(self):
-        self.set_offline_projects_list(self.merge_projects_box_sourceA, self.merge_scenarios_box_sourceA)
-        self.set_offline_projects_list(self.merge_projects_box_sourceB, self.merge_scenarios_box_sourceB)
-        self.set_offline_projects_list(self.merge_box, None)
+        self.offline_scenarios_list_sourceA = []
+        self.offline_scenarios_list_sourceB = []
+        
+        self.set_offline_projects_list(self.merge_projects_box_sourceA, self.merge_scenarios_box_sourceA, self.offline_scenarios_list_sourceA)
+        self.set_offline_projects_list(self.merge_projects_box_sourceB, self.merge_scenarios_box_sourceB, self.offline_scenarios_list_sourceB)
+        self.set_offline_projects_list(self.merge_box, None, None)
     
     def initialize_merge(self):
         print("self.projects: ", self.offline_projects_list)
         print(" ----- ")
         
-        self.current_project_sourceA_fk = '2fce3272-b9e9-4e29-9f79-fa1aca9b0ccb'
-        self.current_scenario_sourceA_fk = '00409adb-041b-475d-a02c-a14c327e4ef6' 
-        self.current_project_sourceB_fk = 'e0073640-aa76-426c-9637-757145fad455'
-        self.current_scenario_sourceB_fk = '0b99ab9e-e512-4388-a207-fb4aeb624126'
+        self.current_project_sourceA_fk = self.offline_projects_list[self.merge_projects_box_sourceA.currentIndex()][0]
+        self.current_scenario_sourceA_fk = self.offline_scenarios_list_sourceA[self.merge_scenarios_box_sourceA.currentIndex()][1]
+        self.current_project_sourceB_fk = self.offline_projects_list[self.merge_scenarios_box_sourceB.currentIndex()][0]
+        self.current_scenario_sourceB_fk = self.offline_scenarios_list_sourceB[self.merge_scenarios_box_sourceB.currentIndex()][1]
         shps_list = ['watering_demand_nodes.shp', 
                     'watering_reservoirs.shp', 
                     'watering_tanks.shp', 
