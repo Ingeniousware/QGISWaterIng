@@ -726,7 +726,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.folderB = scenarioB_path
         self.output_folder = merged_project_path
         self.driver = ogr.GetDriverByName('ESRI Shapefile')
-        #merged = self.merge_shapefiles(shp_element_files)
+
         merged = self.merge_shapefiles2(self.folderA, self.folderB, shp_element_files)
         
         print("Merged: ", merged)
@@ -813,54 +813,3 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         
         WateringUtils.error_message("Scenario creation failed. Please try again.")
         return False
-    
-    def merge_shapefiles(self, shp_files):
-        for shp_file in shp_files:
-            self.merge_two_shapefiles(shp_file)
-
-    def merge_two_shapefiles(self, shp_file):
-        shp_path_A = os.path.join(self.folderA, shp_file)
-        shp_path_B = os.path.join(self.folderB, shp_file)
-        output_path = os.path.join(self.output_folder, shp_file)
-
-        dataSourceA = self.driver.Open(shp_path_A, 0) # 0 means read-only
-        if dataSourceA is None:
-            print(f"Failed to load {shp_path_A}")
-            return
-        layerA = dataSourceA.GetLayer()
-
-        if not os.path.exists(output_path):
-            dataSourceOut = self.driver.CreateDataSource(output_path)
-            layerOut = dataSourceOut.CreateLayer(layerA.GetName(), geom_type=layerA.GetGeomType())
-            self.copy_fields(layerA, layerOut)
-        else:
-            dataSourceOut = self.driver.Open(output_path, 1) # 1 means writeable
-            layerOut = dataSourceOut.GetLayer()
-
-        self.copy_features(layerA, layerOut)
-
-        dataSourceB = self.driver.Open(shp_path_B, 0)
-        if dataSourceB is None:
-            print(f"Failed to load {shp_path_B}")
-            return
-        layerB = dataSourceB.GetLayer()
-        self.copy_features(layerB, layerOut)
-
-        dataSourceA = None
-        dataSourceB = None
-        dataSourceOut = None
-        print(f"Successfully merged {shp_file} into {output_path}")
-
-    def copy_fields(self, layerIn, layerOut):
-        layerDefn = layerIn.GetLayerDefn()
-        for i in range(layerDefn.GetFieldCount()):
-            layerOut.CreateField(layerDefn.GetFieldDefn(i))
-
-    def copy_features(self, layerIn, layerOut):
-        for feature in layerIn:
-            outFeature = ogr.Feature(layerOut.GetLayerDefn())
-            outFeature.SetGeometry(feature.GetGeometryRef().Clone())
-            for i in range(feature.GetFieldCount()):
-                outFeature.SetField(layerOut.GetLayerDefn().GetFieldDefn(i).GetNameRef(), feature.GetField(i))
-            layerOut.CreateFeature(outFeature)
-            outFeature = None
