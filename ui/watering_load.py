@@ -6,6 +6,7 @@ import os, json, requests, glob, uuid, shutil, processing
 
 import os
 import geopandas as gpd
+import pandas as pd
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer
@@ -703,7 +704,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             shapefile_A = self.load_shapefile(shapefile_A_path)
             shapefile_B = self.load_shapefile(shapefile_B_path)
             if not shapefile_A.empty and not shapefile_B.empty:
-                merged_shapefile = shapefile_A.append(shapefile_B, ignore_index=True)
+                #merged_shapefile = shapefile_A.append(shapefile_B, ignore_index=True)
+                merged_shapefile = gpd.GeoDataFrame(pd.concat([shapefile_A, shapefile_B], ignore_index=True)).drop_duplicates(subset='geometry')
                 self.save_shapefile(merged_shapefile, shapefile_B_path)
         
         return f"Shapefiles in {projB_fk}/{scenB_fk} have been replaced with merged shapefiles."
