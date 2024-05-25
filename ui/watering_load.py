@@ -4,6 +4,9 @@ from ..watering_utils import WateringUtils
 
 import os, json, requests, glob, uuid, shutil, processing
 
+import os
+import geopandas as gpd
+
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer
 from qgis.core import  QgsWkbTypes, QgsLayerTreeGroup, QgsFeature,  QgsVectorFileWriter
@@ -658,158 +661,49 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.set_offline_projects_list(self.merge_box, None)
     
     def initialize_merge(self):
-        ...
+        print("self.projects: ", self.offline_projects_list)
+        print(" ----- ")
         
-    # OLD MERGE METHODS #
+        self.current_project_sourceA_fk = '2fce3272-b9e9-4e29-9f79-fa1aca9b0ccb'
+        self.current_scenario_sourceA_fk = '00409adb-041b-475d-a02c-a14c327e4ef6' 
+        self.current_project_sourceB_fk = 'e0073640-aa76-426c-9637-757145fad455'
+        self.current_scenario_sourceB_fk = '0b99ab9e-e512-4388-a207-fb4aeb624126'
+        shps_list = ['watering_demand_nodes.shp', 
+                    'watering_reservoirs.shp', 
+                    'watering_tanks.shp', 
+                    'watering_pumps.shp', 
+                    'watering_valves.shp',                   
+                    'watering_pipes.shp']
+        
+        print("RESULT : ")
+        print( self.merge_and_replace_shapefiles(self.current_project_sourceA_fk,
+                                          self.current_scenario_sourceA_fk,
+                                          self.current_project_sourceB_fk,
+                                          self.current_scenario_sourceB_fk,
+                                          shps_list) )
+        
+    # NEW MERGE SHPS METHODS #
     
-    def mergeScenarios(self):
-        folder_path = WateringUtils.get_watering_folder()
-        #checkExistingProject
-        # Scenario A
-        fromProjectAKeyID = self.listOfProjects[self.projects_box.currentIndex()][1]
-        fromProjectAName = self.listOfProjects[self.projects_box.currentIndex()][0]
-        fromProjectAKeyScenario = self.listOfScenarios[self.scenarios_box.currentIndex()][1]
-        clonedScenarioAName = self.listOfScenarios[self.scenarios_box.currentIndex()][0]
-        
-        self.ProjectFK = fromProjectAKeyID
-        self.checkExistingProject()
-        # Scenario B
-        fromProjectBKeyID = self.OfflineProjectsList[self.merge_projects_box.currentIndex()][1]
-        fromProjecBtName = self.OfflineProjectsList[self.merge_projects_box.currentIndex()][0]
-        fromProjectBKeyScenario = self.OfflineScenariosList[self.merge_scenarios_box.currentIndex()][1]
-        clonedScenarioBName = self.OfflineScenariosList[self.merge_scenarios_box.currentIndex()][0]
-        
-        # Merged Scenario - Scenario C
-        toProjectKeyID = self.OfflineProjectsList[self.merge_box.currentIndex()][1]
-        toProjectKeyScenario = str(uuid.uuid4())
-        
-        defaultMergedScenarioName = "Merged: " + clonedScenarioAName + " & " + clonedScenarioBName 
-        scenarioName = self.merged_scenario_name.text() or defaultMergedScenarioName
-        #scenario_created = self.createNewScenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
-        scenario_created = self.createNewScenarioForMerge(toProjectKeyScenario, toProjectKeyID, scenarioName)
-        #scenario_created = True
-        
-        print("fromProjectAKeyID", fromProjectAKeyID)
-        print("fromProjectAName", fromProjectAName)
-        print("fromProjectAKeyScenario", fromProjectAKeyScenario)
-        print("clonedScenarioAName", clonedScenarioAName)
-        
-        print("fromProjectBKeyID", fromProjectBKeyID)
-        print("fromProjecBtName", fromProjecBtName)
-        print("fromProjectBKeyScenario", fromProjectBKeyScenario)
-        print("clonedScenarioBName", clonedScenarioBName)
-        
-        print("toProjectKeyID", toProjectKeyID)
-        print("toProjectKeyScenario", toProjectKeyScenario)
-        
-        print("defaultMergedScenarioName", defaultMergedScenarioName)
-        if scenario_created:
-            merged_project_path = self.clone_scenario(folder_path, fromProjectAName, fromProjectAKeyID, fromProjectAKeyScenario, 
-                                                      toProjectKeyID, toProjectKeyScenario, scenarioName)
+    def get_shapefile_path(self, project_fk, scenario_fk, shp_name):
+        return os.path.join(self.main_watering_folder, project_fk, scenario_fk, shp_name)
+    
+    def load_shapefile(self, shapefile_path):
+        if os.path.exists(shapefile_path):
+            return gpd.read_file(shapefile_path)
         else:
-            WateringUtils.error_message("Couldn’t clone the scenario. Please try again."); return
-        
-        scenarioB_path = os.path.join(folder_path, fromProjectBKeyID, fromProjectBKeyScenario)
-        
-        
-        shp_element_files = ['watering_demand_nodes.shp', 
-                            'watering_reservoirs.shp', 
-                            'watering_tanks.shp', 
-                            'watering_pumps.shp', 
-                            'watering_valves.shp',                   
-                            'watering_pipes.shp',
-                            'watering_waterMeter.shp',
-                            'watering_sensors.shp']
-
-                
-        self.folderA = merged_project_path
-        self.folderB = scenarioB_path
-        self.output_folder = merged_project_path
-        self.driver = ogr.GetDriverByName('ESRI Shapefile')
-
-        merged = self.merge_shapefiles2(self.folderA, self.folderB, shp_element_files)
-        
-        print("Merged: ", merged)
+            raise FileNotFoundError(f"Shapefile not found: {shapefile_path}")
     
-    def merge_shapefiles2(self, folderA, folderB, shp_files):
-        print("folderA ",folderA )
-        print("folderB", folderB)
-        
-        verify_merged = 0
-        
-        for shp_file in shp_files:
-            shp_path_A = f"{folderA}/{shp_file}"
-            shp_path_B = f"{folderB}/{shp_file}"
-
-            print("shp_path_A: ", shp_path_A)
-            print("shp_path_B: ", shp_path_B)
-            print()
-            # Load the shapefiles as layers
-            layerA = QgsVectorLayer(shp_path_A, f"{shp_file}_A", "ogr")
-            layerB = QgsVectorLayer(shp_path_B, f"{shp_file}_B", "ogr")
-
-            if not layerA.isValid() or not layerB.isValid():
-                print(f"Failed to load layers for {shp_file}. Please check the file paths.")
-                continue
-            
-            # Add layers to the QGIS project
-            QgsProject.instance().addMapLayer(layerA, False)
-            QgsProject.instance().addMapLayer(layerB, False)
-
-            params = {
-                'LAYERS': [layerA, layerB],
-                'CRS': layerA.crs(),
-                'OUTPUT': f"{folderA}/{shp_file}_merged.shp"
-            }
-            result = processing.run("native:mergevectorlayers", params)
-
-            if result:
-                print(f"{shp_file} merged successfully.")
-                verify_merged = verify_merged + 1
-            else:
-                print(f"Failed to merge {shp_file}.")
-                return False
-            
-            # After merging, delete old shapefiles and rename new files
-        if verify_merged == len(shp_files):
-            for shp_file in shp_files:
-                old_files = [f"{folderA}/{shp_file}.{ext}" for ext in ['shp', 'dbf', 'shx', 'prj']]
-                for old_file in old_files:
-                    if os.path.exists(old_file):
-                        os.remove(old_file)
-                # Rename merged files to original names
-                for ext in ['shp', 'dbf', 'shx', 'prj']:
-                    os.rename(f"{folderA}/{shp_file}_merged.{ext}", f"{folderA}/{shp_file}.{ext}")
-
-        return True
-
+    def save_shapefile(self, gdf, path):
+        gdf.to_file(path)
     
-    def createNewScenarioForMerge(self, keyId, projectKeyId, scenarioName):
-        if not projectKeyId:
-            current_index = self.merge_box.currentIndex()
-            projectId = self.OfflineProjectsList[current_index][1]
-            print("current index: ", current_index)
-            print("projectID: ", projectId)
-        else:
-            projectId = projectKeyId
-            
-        description =  "Scenario created in QGIS WaterIng Plugin"
+    def merge_and_replace_shapefiles(self, projA_fk, scenA_fk, projB_fk, scenB_fk, shpsList):
+        for shp_name in shpsList:
+            shapefile_A_path = self.get_shapefile_path(projA_fk, scenA_fk, shp_name)
+            shapefile_B_path = self.get_shapefile_path(projB_fk, scenB_fk, shp_name)
+            shapefile_A = self.load_shapefile(shapefile_A_path)
+            shapefile_B = self.load_shapefile(shapefile_B_path)
+            if not shapefile_A.empty and not shapefile_B.empty:
+                merged_shapefile = shapefile_A.append(shapefile_B, ignore_index=True)
+                self.save_shapefile(merged_shapefile, shapefile_B_path)
         
-        newScenarioJson = {
-            "keyId": "{}".format(keyId),
-            "serverKeyId": "{}".format(keyId),
-            "fkWaterProject": "{}".format(projectId),
-            "name": "{}".format(scenarioName),
-            "description": "{}".format(description)
-        }
-        
-        url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
-        headers = {'Authorization': "Bearer {}".format(self.token)} 
-        response = requests.post(url, headers=headers, json=newScenarioJson)
-        print("response.text: ", response.text)
-        if response.status_code == 200:
-            WateringUtils.success_message("Scenario created successfully!")
-            return True
-        
-        WateringUtils.error_message("Scenario creation failed. Please try again.")
-        return False
+        return f"Shapefiles in {projB_fk}/{scenB_fk} have been replaced with merged shapefiles."
