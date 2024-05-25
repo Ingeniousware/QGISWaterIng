@@ -64,6 +64,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.load_button.clicked.connect(self.checkExistingProject)
         self.load_projects_box.currentIndexChanged.connect(self.handle_load_scenarios_box)
         self.clone_button.clicked.connect(self.clone_scenario)
+        self.merge_button.clicked.connect(self.initialize_merge)
         
     def set_online_projects_list(self):
         self.online_projects_list = []
@@ -240,7 +241,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     def create_new_scenario(self, keyId, projectKeyId, scenarioName):
         if not self.online_projects_list:
-            WateringUtils.error_message("Functionality not available offline. Connect to Watering and try again.")
+            WateringUtils.error_message(self.tr("Functionality not available offline. Connect to Watering and try again."))
             return
         if not projectKeyId:
             current_index = self.new_projects_box.currentIndex()
@@ -655,7 +656,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.set_offline_projects_list(self.merge_projects_box_sourceA, self.merge_scenarios_box_sourceA)
         self.set_offline_projects_list(self.merge_projects_box_sourceB, self.merge_scenarios_box_sourceB)
         self.set_offline_projects_list(self.merge_box, None)
-           
+    
+    def initialize_merge(self):
+        ...
+        
     # OLD MERGE METHODS #
     
     def mergeScenarios(self):
