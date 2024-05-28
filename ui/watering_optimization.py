@@ -369,14 +369,10 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.close()
     
     def copyCoordinates(self, layer, new_point, name):
-        # Start editing the layer
         layer.startEditing()
-        # Create a new feature
         feature = QgsFeature()
         feature.setGeometry(QgsGeometry.fromPointXY(new_point))
-        # Add the new feature to the layer
         layer.addFeature(feature)
-        # Commit the changes to the layer
         layer.commitChanges()
 
 

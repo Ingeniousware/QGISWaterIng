@@ -124,6 +124,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         elif cBox_index == 2: 
             self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/TankNode"
             print("The layer imported is of Tanks")
+            self.convert_tank_to_json("New Layer")
         self.close()
 
     def convert_polygon_to_json(self, layer_name):
@@ -261,7 +262,12 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             name = feature.attribute(self.nameComboBox.currentText()) if self.nameComboBox.currentText() != "No match" else "string"
             description = feature.attribute(self.descriptionComboBox.currentText()) if self.descriptionComboBox.currentText() != "No match" else "string"
             z = feature.attribute(self.zComboBox.currentText()) if self.zComboBox.currentText() != "No match" else 0
-        
+            initialLevel = feature.attribute(self.initTankscomboBox()) if self.initTankscomboBox() != "No match" else 0
+            minimumLevel = feature.attribute(self.minTankscomboBox()) if self.minTankscomboBox() != "No match" else 0
+            maximumLevel = feature.attribute(self.maxTankscomboBox()) if self.maxTankscomboBox() != "No match" else 0
+            minimumVolume = feature.attribute(self.minVTankscomboBox()) if self.minVTankscomboBox() != "No match" else 0
+            nominalDiameter = feature.attribute(self.diameterTankscomboBox()) if self.diameterTankscomboBox() != "No match" else 0
+
             feature_json = {
                 "serverKeyId": server_key_id,
                 "scenarioFK": scenario_fk,
@@ -270,17 +276,18 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "lng": transformed_point.x(),
                 "lat": transformed_point.y(),
                 "z": z,
-                "initialLevel": 0,
-                "minimumLevel": 0,
-                "maximumLevel": 0,
-                "minimumVolume": 0,
-                "nominalDiameter": 0,
+                "initialLevel": initialLevel,
+                "minimumLevel": minimumLevel,
+                "maximumLevel": maximumLevel,
+                "minimumVolume": minimumVolume,
+                "nominalDiameter": nominalDiameter,
                 }
             self.postDMA(feature_json, name)
             features.append(feature_json)
         
         QgsProject.instance().removeMapLayer(layer)
         return features
+    
     def postDMA(self, json, name):
         headers = {'Authorization': "Bearer {}".format(self.token)}
         response = requests.post(self.UrlPost, json=json, headers=headers)
