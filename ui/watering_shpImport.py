@@ -176,7 +176,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "totalDemand": total_demand,
                 "vertices": vertices
             }
-            self.postDMA(feature_json, name)
+            self.post_to_server(feature_json, name)
             #print(feature_json)
             features.append(feature_json)
 
@@ -236,7 +236,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "emitterCoeff": emitterCoefficient,
                 "removed": False
             }
-            self.postDMA(feature_json, name)
+            self.post_to_server(feature_json, name)
             #print(feature_json)
             features.append(feature_json)
         
@@ -282,13 +282,13 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "minimumVolume": minimumVolume,
                 "nominalDiameter": nominalDiameter,
                 }
-            self.postDMA(feature_json, name)
+            self.post_to_server(feature_json, name)
             features.append(feature_json)
         
         QgsProject.instance().removeMapLayer(layer)
         return features
     
-    def postDMA(self, json, name):
+    def post_to_server(self, json, name):
         headers = {'Authorization': "Bearer {}".format(self.token)}
         response = requests.post(self.UrlPost, json=json, headers=headers)
 
