@@ -605,8 +605,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         folder_path = WateringUtils.get_watering_folder()
         fromProjectKeyID = self.offline_projects_list[self.clone_projects_box.currentIndex()][0]
         fromProjectName = self.offline_projects_list[self.clone_projects_box.currentIndex()][1]
-        fromProjectKeyScenario = self.offline_scenarios_list[self.clone_scenarios_box.currentIndex()][1]
-        clonedScenarioName = self.offline_scenarios_list[self.clone_scenarios_box.currentIndex()][0]
+        fromProjectKeyScenario = self.offline_scenarios_list_clone[self.clone_scenarios_box.currentIndex()][1]
+        clonedScenarioName = self.offline_scenarios_list_clone[self.clone_scenarios_box.currentIndex()][0]
         toProjectKeyID = self.offline_projects_list[self.clone_box.currentIndex()][0]
         toProjectKeyScenario = str(uuid.uuid4())
         scenarioName = self.cloned_scenario_name.text() or clonedScenarioName + " Cloned Version"
