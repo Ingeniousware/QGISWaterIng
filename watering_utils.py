@@ -335,6 +335,7 @@ class WateringUtils():
 
         try:
             last_updated = data[WateringUtils.getProjectMetadata("project_id")]['scenarios'][scenario_key]['lastUpdated']
+            print("getting: ", last_updated)
             return last_updated
         except KeyError:
             return WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
@@ -391,6 +392,7 @@ class WateringUtils():
         return folder_path + 'projects.json'
     
     def update_last_updated(scenario_key):
+        print("UPDATED: ")
         file_path = WateringUtils.get_projects_json_path()
         if not os.path.exists(file_path):
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
@@ -403,6 +405,7 @@ class WateringUtils():
         project_key = WateringUtils.getProjectMetadata("project_id")
         if project_key in data and "scenarios" in data[project_key] and scenario_key in data[project_key]["scenarios"]:
             data[project_key]["scenarios"][scenario_key]["lastUpdated"] = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+            print("UPDATED: OKAY")
         else:
             print("Project or Scenario key not found in the provided JSON.")
             return

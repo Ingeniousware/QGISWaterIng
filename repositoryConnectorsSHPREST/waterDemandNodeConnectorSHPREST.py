@@ -73,7 +73,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'lat': "{}".format(y), 
                        'z': "{}".format(z),
                        'baseDemand': "{}".format(baseDemand),
-                       'emitterCoeff': "{}".format(emitterCoeff),}
+                       'emitterCoeff': "{}".format(emitterCoeff)}
         
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
@@ -137,3 +137,48 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         
         serverResponse = self.serverRepository.deleteFromServer(elementJSON)
         print(serverResponse)
+        
+    def feature_to_json_dict(self, feature):
+        print("reach feature_to_json_dict")
+        x = feature.geometry().asPoint().x()
+        y = feature.geometry().asPoint().y()
+        #transforming coordinates for the CRS of the server
+        transGeometry = QgsGeometry.fromPointXY(QgsPointXY(x, y))
+        transGeometry.transform(QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance()))
+        x = transGeometry.asPoint().x()
+        y = transGeometry.asPoint().y()
+
+        isNew = False
+        if len(feature["ID"]) == 10:
+            isNew = True
+            serverKeyId = str(uuid.uuid4())
+        else:
+            serverKeyId = feature["ID"]
+   
+        name = feature["Name"]
+        description = feature["Descript"]
+        z = feature["Z[m]"]
+        baseDemand = feature["B. Demand"]
+        emitterCoeff = feature["EmitterCoe"]
+        
+        elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
+                       'scenarioFK': "{}".format(self.ScenarioFK), 
+                       'name': "{}".format(name), 
+                       'description': "{}".format(description), 
+                       'lng': "{}".format(x), 
+                       'lat': "{}".format(y), 
+                       'z': "{}".format(z),
+                       'baseDemand': "{}".format(baseDemand),
+                       'emitterCoeff': "{}".format(emitterCoeff)}
+        
+        print("reach feature_to_json_dict end")
+        print(elementJSON)
+        return elementJSON
+    
+    def post_to_server(self, elementJSON):
+        serverResponse = self.serverRepository.postToServer(elementJSON)
+        print(" serverResponse NEW: ", serverResponse.text)
+        
+    def put_to_server(self, elementJSON):
+        serverResponse = self.serverRepository.newPutToServer(elementJSON)
+        print(" serverResponse NEW: ", serverResponse.text)

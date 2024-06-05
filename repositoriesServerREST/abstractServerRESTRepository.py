@@ -49,6 +49,15 @@ class abstractServerRESTRepository():
         headers = {'Authorization': "Bearer {}".format(self.Token)} 
         response = requests.put(self.UrlPut + "/" + str(serverKeyId), params=data, headers=headers, json=elementJSON)
         return response
+    
+    def newPutToServer(self, elementJSON):
+        """  print("putting -> ", elementJSON)
+        print(self.ScenarioFK)
+        print(self.Token) """
+        data = {'scenarioKeyId': self.ScenarioFK}
+        headers = {'Authorization': "Bearer {}".format(self.Token)} 
+        response = requests.put(self.UrlPut, params=data, headers=headers, json=elementJSON)
+        return response
         
 
     def deleteFromServer(self, elementJSON):

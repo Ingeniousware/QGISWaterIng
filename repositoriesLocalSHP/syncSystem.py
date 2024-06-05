@@ -40,33 +40,41 @@ class WateringSync():
     def synchronize(self):
         _lastUpdated_ = WateringUtils.get_last_updated(self.scenarioFK)
         self.sync_was_halted = False
-        lastUpdated = '2023-11-29T10:28:46.2756439Z'
         
         print("_lastUpdated_: ", _lastUpdated_)
+        print("reach 1")
         self.get_offline_changes(_lastUpdated_)
+        print("reach 2")
         self.get_server_changes(_lastUpdated_)
+        print("reach 2")
         self.synchronize_server_changes()
+        print("reach 2")
         self.synchronize_offline_changes() 
-        
-        if not self.sync_was_halted:
-            WateringUtils.clear_added_from_signalr(self.scenarioFK)
-            WateringUtils.update_last_updated(self.scenarioFK)
+
+        print("reach 2")
+        WateringUtils.clear_added_from_signalr(self.scenarioFK)
+        print("reach 3")
+        WateringUtils.update_last_updated(self.scenarioFK)
+                    
+        # if not self.sync_was_halted:
+        #     WateringUtils.clear_added_from_signalr(self.scenarioFK)
+        #     WateringUtils.update_last_updated(self.scenarioFK)
 
     def get_server_changes(self, lastUpdated):
         print("self.lastUpdate: ", lastUpdated)
         # Test variables
-        lastUpdated = '2023-11-29T10:28:46.2756439Z'
+        #lastUpdated = '2023-11-29T10:28:46.2756439Z'
         self.server_change_queue.clear()
         # End test variables
-        
+        print("here 2 ")
         for repo in self.repositories:
             layer = QgsProject.instance().mapLayersByName(repo.LayerName)[0]
-            if layer.featureCount() > 0:
-                response = repo.loadChanges(lastUpdated)
-                if response._content:
-                    data = response.json()
-                    if data:
-                        self.track_server_updates(repo, data)
+            if layer.isValid() and layer.featureCount() > 0:
+                    response = repo.loadChanges(lastUpdated)
+                    if response._content:
+                        data = response.json()
+                        if data:
+                            self.track_server_updates(repo, data)
                     
         print("server_change_queue: ", self.server_change_queue)
 
@@ -96,12 +104,23 @@ class WateringSync():
             self.processChange(change)
 
     def synchronize_offline_changes(self):
+        self.demand_nodes_case = []
+        
         while self.offline_change_queue:
             change = self.offline_change_queue.popleft()
             self.processChange(change)
             print("change: ", change)
             print("change data: ", change.data)
             print("change : change.layer_id.name()", change.layer_id.name())
+        
+        print("self.demand_nodes_case: ", self.demand_nodes_case)
+        finalJson = json.dumps(self.demand_nodes_case, indent=4)
+        for repo in self.repositories:
+            if change.layer_id.name() == "watering_demand_nodes":
+                if repo.connectorToServer:
+                    if self.demand_nodes_case:
+                        repo.connectorToServer.post_to_server(finalJson)
+
         # HERE
             
     def processChange(self, change):
@@ -157,13 +176,26 @@ class WateringSync():
         
     def process_update_on_server(self, change):
         connection_found = False
-        
+        print("process_update_on_server")
         for repo in self.repositories:
-            if change.layer_id.name() == repo.LayerName:
+            layer_name = change.layer_id.name()
+            print("layer name: ", layer_name)
+            if layer_name == "watering_demand_nodes":
                 if repo.connectorToServer:
-                    repo.connectorToServer.addElementToServer(change.data)
+                    print("here aa")
+                    dict = repo.connectorToServer.feature_to_json_dict(change.data)
+                    self.demand_nodes_case.append(dict)
+                    print("here aa2")
+                    print("self.demand_nodes_case ongoing: ", self.demand_nodes_case)
                     connection_found = True
-                    break
+            elif layer_name == repo.LayerName and layer_name != "watering_demand_nodes":
+                print("here aa3")
+                if repo.connectorToServer:
+                    print("here aa4")
+                    repo.connectorToServer.addElementToServer(change.data)
+                    print("here aa5")
+                    connection_found = True
+                break
                 
         if not connection_found:
             iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)

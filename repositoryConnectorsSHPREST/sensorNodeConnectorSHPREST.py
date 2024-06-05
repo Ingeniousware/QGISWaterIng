@@ -135,4 +135,5 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'serverKeyId': "{}".format(serverKeyId)}
         
         serverResponse = self.serverRepository.deleteFromServer(elementJSON)
+        
     
