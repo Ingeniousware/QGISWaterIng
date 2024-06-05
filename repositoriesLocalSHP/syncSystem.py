@@ -36,20 +36,37 @@ class WateringSync():
 
     def initializeRepository(self):
         ...
+        
+    def synchronize(self):
+        _lastUpdated_ = WateringUtils.get_last_updated(self.scenarioFK)
+        self.sync_was_halted = False
+        lastUpdated = '2023-11-29T10:28:46.2756439Z'
+        
+        print("_lastUpdated_: ", _lastUpdated_)
+        self.get_offline_changes(_lastUpdated_)
+        self.get_server_changes(_lastUpdated_)
+        self.synchronize_server_changes()
+        self.synchronize_offline_changes() 
+        
+        if not self.sync_was_halted:
+            WateringUtils.clear_added_from_signalr(self.scenarioFK)
+            WateringUtils.update_last_updated(self.scenarioFK)
 
     def get_server_changes(self, lastUpdated):
         print("self.lastUpdate: ", lastUpdated)
         # Test variables
-        #test_lastUpdate = '2023-11-29T10:28:46.2756439Z'
+        lastUpdated = '2023-11-29T10:28:46.2756439Z'
         self.server_change_queue.clear()
         # End test variables
         
         for repo in self.repositories:
-            response = repo.loadChanges(lastUpdated)
-            if response._content:
-                data = response.json()
-                if data:
-                    self.track_server_updates(repo, data)
+            layer = QgsProject.instance().mapLayersByName(repo.LayerName)[0]
+            if layer.featureCount() > 0:
+                response = repo.loadChanges(lastUpdated)
+                if response._content:
+                    data = response.json()
+                    if data:
+                        self.track_server_updates(repo, data)
                     
         print("server_change_queue: ", self.server_change_queue)
 
@@ -72,20 +89,6 @@ class WateringSync():
     def track_offline_updates(self, repo, lastUpdated):
         changes_list = repo.getOfflineUpdates(lastUpdated)
         self.offline_change_queue.extend(changes_list)
-
-    def synchronize(self):
-        _lastUpdated_ = WateringUtils.get_last_updated(self.scenarioFK)
-        self.sync_was_halted = False
-        
-        print("_lastUpdated_: ", _lastUpdated_)
-        self.get_offline_changes(_lastUpdated_)
-        self.get_server_changes(_lastUpdated_)
-        self.synchronize_server_changes()
-        self.synchronize_offline_changes() 
-        
-        if not self.sync_was_halted:
-            WateringUtils.clear_added_from_signalr(self.scenarioFK)
-            WateringUtils.update_last_updated(self.scenarioFK)
         
     def synchronize_server_changes(self):
         while self.server_change_queue:
@@ -96,6 +99,10 @@ class WateringSync():
         while self.offline_change_queue:
             change = self.offline_change_queue.popleft()
             self.processChange(change)
+            print("change: ", change)
+            print("change data: ", change.data)
+            print("change : change.layer_id.name()", change.layer_id.name())
+        # HERE
             
     def processChange(self, change):
         try:
