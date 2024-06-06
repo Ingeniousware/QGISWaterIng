@@ -137,12 +137,15 @@ class AbstractRepository():
                     if obj.strip():
                         data = json.loads(obj)
                         print("data:", data)
-                        self.addElementFromJSON(data)
+                        print("data type 2: ", type(data))
+                        for feature in data["data"]:
+                            self.addElementFromJSON(feature)
 
         if self.buffer.strip():
             data = json.loads(self.buffer)
-            print("data:", data)
-            self.addElementFromJSON(data)
+            print("data 1 :", data)
+            for feature in data["data"]:
+                self.addElementFromJSON(feature)
         
         self.pr.addFeatures(self.toAddFeatures)
         self.currentLayer.updateExtents()

@@ -30,7 +30,7 @@ class WateringDemandNodeRepository(AbstractRepository):
         ]
     
         self.features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
-                               "z","baseDemand","emitterCoeff","demandPatternFK"]
+                         "z","baseDemand","emitterCoeff","demandPatternFK"]
 
         self.LayerType = "Point?crs="
         
