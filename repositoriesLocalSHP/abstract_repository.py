@@ -61,6 +61,7 @@ class AbstractRepository():
 
     def loadElements(self, stream):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
+        relative_path = self.UrlGet + "/stream" if stream else self.UrlGet
         url = WateringUtils.getServerUrl() + self.UrlGet
         headers = {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}
         
