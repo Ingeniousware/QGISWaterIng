@@ -29,6 +29,7 @@ class toolbarToolManager():
         self.toolImportINPFile = None
         self.toolImportShapeFile = None
         self.toolReviewNetwork = None
+        self.toolDemandPattern = None
         self.insertDemandNodeAction = None
         self.insertTankNodeAction = None
         self.insertWaterPipeAction = None
@@ -146,6 +147,17 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.toolReviewNetwork.setCheckable(False)        
         self.toolReviewNetwork.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # demand patterns
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/automaticNetworkReview.svg'
+        self.toolDemandPattern = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Demand Patterns'),
+            callback=self.activateActionTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.toolDemandPattern.setCheckable(False)        
+        self.toolDemandPattern.setEnabled(not WateringUtils.isScenarioNotOpened())
 
            
         # Demand Nodes
@@ -349,6 +361,7 @@ class toolbarToolManager():
         editTools = [self.toolImportINPFile,
                          self.toolImportShapeFile,
                          self.toolReviewNetwork,
+                         self.toolDemandPattern,
                          self.insertDemandNodeAction,
                          self.insertTankNodeAction,
                          self.insertWaterPipeAction,
