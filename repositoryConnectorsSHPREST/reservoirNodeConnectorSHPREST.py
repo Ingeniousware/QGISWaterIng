@@ -128,8 +128,11 @@ class reservoirNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 while self.lifoAddedElements.full():
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
+            return True
+        
         else: 
             print("Failed on sendig Water Reservoir Node to the server")
+            return False
 
     
 

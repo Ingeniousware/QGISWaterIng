@@ -137,9 +137,11 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 while self.lifoAddedElements.full():
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
+            return True
+        
         else: 
             print("Failed on sendig Water Tank Node to the server. Status Code: ", serverResponse.status_code, " text: ", serverResponse.text)
-
+            return False
     
 
     def removeElementFromServer(self, serverKeyId):

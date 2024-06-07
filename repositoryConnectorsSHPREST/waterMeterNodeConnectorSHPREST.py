@@ -124,8 +124,11 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 while self.lifoAddedElements.full():
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
+            return True
+        
         else: 
             print("Failed on sendig Water Meter to the server")
+            return False
 
     
 

@@ -131,8 +131,12 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 while self.lifoAddedElements.full():
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
+            
+            return True
+        
         else: 
             print("Failed on sendig Pipe Node to the server")
+            return False
 
     def removeElementFromServer(self, serverKeyId):
         elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 

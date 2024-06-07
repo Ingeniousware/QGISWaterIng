@@ -137,9 +137,11 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 while self.lifoAddedElements.full():
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
+            return True
+        
         else: 
             print("Failed on sendig Valve Tank Node to the server")
-
+            return False
     
 
     def removeElementFromServer(self, serverKeyId):
