@@ -46,7 +46,7 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
         self.createNewButton.hide()
 
     def fetch_data(self):
-        time.sleep(1)
+        time.sleep(.1)
         url = f"{WateringUtils.getServerUrl()}/api/v1/Patterns/?&scenarioKeyId={self.ScenarioFK}"
         headers = {'Authorization': "Bearer {}".format(self.token)}
         self.currentData = []
@@ -75,6 +75,7 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
             print(f"Failed to fetch data: {response.status_code}")
 
     def current_values_selected_comboBox(self):
+        time.sleep(1)
         scenario_name = self.comboBox.currentText()
         scenario_details = next((item for item in self.currentData if item["name"] == scenario_name), None)
         if scenario_details:
