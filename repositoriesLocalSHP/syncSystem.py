@@ -1,6 +1,7 @@
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsCoordinateTransform, QgsWkbTypes
 from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
+from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import iface
 from ..watering_utils import WateringUtils
 from .change import Change
@@ -109,9 +110,13 @@ class WateringSync():
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
-                    repo.connectorToServer.addElementToServer(change.data)
-                    connection_found = True
-                    break
+                    server_push_success = repo.connectorToServer.addElementToServer(change.data)
+                    if not server_push_success:
+                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        break
+                    else:
+                        connection_found = True
+                        break
                 
         if not connection_found:
             iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)
@@ -154,9 +159,14 @@ class WateringSync():
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
-                    repo.connectorToServer.addElementToServer(change.data)
-                    connection_found = True
-                    break
+                    server_push_success = repo.connectorToServer.addElementToServer(change.data)
+                    if not server_push_success:
+                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        break
+                    else:
+                        connection_found = True
+                        break
+
                 
         if not connection_found:
             iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)
@@ -205,9 +215,13 @@ class WateringSync():
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
-                    repo.connectorToServer.removeElementFromServer(change.data["ID"])
-                    connection_found = True
-                    break
+                    server_push_success = repo.connectorToServer.removeElementFromServer(change.data["ID"])
+                    if not server_push_success:
+                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        break
+                    else:
+                        connection_found = True
+                        break
 
         if not connection_found:
             iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)

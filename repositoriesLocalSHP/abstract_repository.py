@@ -507,7 +507,9 @@ class AbstractRepository():
         if self.connectorToServer:
             if features_to_add:
                 for feature in features_to_add:
-                    self.connectorToServer.addElementToServer(feature)
+                    server_push_success = self.connectorToServer.addElementToServer(feature)
+            if not server_push_success:
+                QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
         else:
             print("no connector")
 
