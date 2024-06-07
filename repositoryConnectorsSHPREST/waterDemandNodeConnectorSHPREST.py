@@ -137,5 +137,4 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 
                        'serverKeyId': "{}".format(serverKeyId)}
         
-        serverResponse = self.serverRepository.deleteFromServer(elementJSON)
-        print(serverResponse)
+        return (self.serverRepository.deleteFromServer(elementJSON) == 200)

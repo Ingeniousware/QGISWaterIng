@@ -12,6 +12,7 @@ from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointX
 from PyQt5.QtCore import QFileInfo, QDateTime
 from PyQt5.QtCore import QDateTime, Qt, QVariant
 from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import iface
 
 class AbstractRepository():

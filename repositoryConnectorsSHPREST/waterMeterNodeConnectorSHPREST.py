@@ -136,5 +136,5 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 
                        'serverKeyId': "{}".format(serverKeyId)}
         
-        serverResponse = self.serverRepository.deleteFromServer(elementJSON)
+        return (self.serverRepository.deleteFromServer(elementJSON) == 200)
     
