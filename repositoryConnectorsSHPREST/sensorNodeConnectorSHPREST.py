@@ -125,8 +125,11 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 while self.lifoAddedElements.full():
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
+            return True
+        
         else: 
             print("Failed on sendig Water Sensor Node to the server: ", serverResponse.status_code)
+            return False
 
     
 
@@ -134,5 +137,5 @@ class sensorNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 
                        'serverKeyId': "{}".format(serverKeyId)}
         
-        serverResponse = self.serverRepository.deleteFromServer(elementJSON)
+        return (self.serverRepository.deleteFromServer(elementJSON) == 200)
     

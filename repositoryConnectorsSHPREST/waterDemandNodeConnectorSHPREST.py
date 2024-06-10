@@ -125,9 +125,11 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 while self.lifoAddedElements.full():
                     keyIdToEliminate = self.lifoAddedElements.get()
                     self.lastAddedElements.pop(keyIdToEliminate) 
+            return True
+        
         else: 
             print("Failed on sendig Water Demand Node to the server: ", serverResponse.status_code)
-
+            return False
     
 
     def removeElementFromServer(self, serverKeyId):
@@ -135,5 +137,4 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 
                        'serverKeyId': "{}".format(serverKeyId)}
         
-        serverResponse = self.serverRepository.deleteFromServer(elementJSON)
-        print(serverResponse)
+        return (self.serverRepository.deleteFromServer(elementJSON) == 200)

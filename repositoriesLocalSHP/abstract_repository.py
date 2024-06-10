@@ -12,6 +12,7 @@ from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointX
 from PyQt5.QtCore import QFileInfo, QDateTime
 from PyQt5.QtCore import QDateTime, Qt, QVariant
 from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import iface
 
 class AbstractRepository():
@@ -61,6 +62,7 @@ class AbstractRepository():
 
     def loadElements(self, stream):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
+        relative_path = self.UrlGet + "/stream" if stream else self.UrlGet
         url = WateringUtils.getServerUrl() + self.UrlGet
         headers = {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}
         
@@ -136,12 +138,15 @@ class AbstractRepository():
                     if obj.strip():
                         data = json.loads(obj)
                         print("data:", data)
-                        self.addElementFromJSON(data)
+                        print("data type 2: ", type(data))
+                        for feature in data["data"]:
+                            self.addElementFromJSON(feature)
 
         if self.buffer.strip():
             data = json.loads(self.buffer)
-            print("data:", data)
-            self.addElementFromJSON(data)
+            print("data 1 :", data)
+            for feature in data["data"]:
+                self.addElementFromJSON(feature)
         
         self.pr.addFeatures(self.toAddFeatures)
         self.currentLayer.updateExtents()
@@ -503,7 +508,9 @@ class AbstractRepository():
         if self.connectorToServer:
             if features_to_add:
                 for feature in features_to_add:
-                    self.connectorToServer.addElementToServer(feature)
+                    server_push_success = self.connectorToServer.addElementToServer(feature)
+            if not server_push_success:
+                QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
         else:
             print("no connector")
 

@@ -1,16 +1,15 @@
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsCoordinateTransform, QgsWkbTypes
 from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
+from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import iface
 from ..watering_utils import WateringUtils
 from .change import Change
 from collections import deque
 import json
-        
+
 class WateringSync():
-    def __init__(self,token, project_path, scenarioFK, 
-                 repositories):
-        
+    def __init__(self, token, project_path, scenarioFK, repositories):
         self.server_change_queue = deque()
         self.offline_change_queue = deque()
         
@@ -86,16 +85,22 @@ class WateringSync():
         if not self.sync_was_halted:
             WateringUtils.clear_added_from_signalr(self.scenarioFK)
             WateringUtils.update_last_updated(self.scenarioFK)
+            return True
+        return False
         
     def synchronize_server_changes(self):
         while self.server_change_queue:
             change = self.server_change_queue.popleft()
             self.processChange(change)
+            if self.sync_was_halted:
+                break
 
     def synchronize_offline_changes(self):
         while self.offline_change_queue:
             change = self.offline_change_queue.popleft()
             self.processChange(change)
+            if self.sync_was_halted:
+                break
             
     def processChange(self, change):
         try:
@@ -105,17 +110,14 @@ class WateringSync():
             print(f"Unknown change type: {change.change_type}")
         
     def process_add_to_server(self, change):
-        connection_found = False
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
-                    repo.connectorToServer.addElementToServer(change.data)
-                    connection_found = True
-                    break
-                
-        if not connection_found:
-            iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)
-            self.sync_was_halted = True
+                    server_push_success = repo.connectorToServer.addElementToServer(change.data)
+                    if not server_push_success:
+                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        self.sync_was_halted = True
+                        break
                 
     def process_add_to_offline(self, change):
         print(f"Adding element in {change.layer_id}: {change.feature_id} from server to offline")
@@ -127,7 +129,7 @@ class WateringSync():
         geom_type = self.layer.geometryType()
 
         if geom_type == QgsWkbTypes.PointGeometry:
-            point = QgsPointXY(change.data[-1][0],change.data[-1][1])  
+            point = QgsPointXY(change.data[-1][0], change.data[-1][1])  
             feature.setGeometry(QgsGeometry.fromPointXY(point))
 
         elif geom_type == QgsWkbTypes.LineGeometry:
@@ -149,18 +151,14 @@ class WateringSync():
         self.layer.commitChanges()
         
     def process_update_on_server(self, change):
-        connection_found = False
-        
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
-                    repo.connectorToServer.addElementToServer(change.data)
-                    connection_found = True
-                    break
-                
-        if not connection_found:
-            iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)
-            self.sync_was_halted = True
+                    server_push_success = repo.connectorToServer.addElementToServer(change.data)
+                    if not server_push_success:
+                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        self.sync_was_halted = True
+                        break
             
     def process_update_in_offline(self, change):
         layer_name = change.layer_id.name()
@@ -200,18 +198,14 @@ class WateringSync():
         self.layer.commitChanges()
          
     def process_delete_on_server(self, change):
-        connection_found = False
-
         for repo in self.repositories:
             if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
-                    repo.connectorToServer.removeElementFromServer(change.data["ID"])
-                    connection_found = True
-                    break
-
-        if not connection_found:
-            iface.messageBar().pushMessage("Error", "Failed to connect to WaterIng Server, restart the connection.", level=1, duration=5)
-            self.sync_was_halted = True
+                    server_push_success = repo.connectorToServer.removeElementFromServer(change.data["ID"])
+                    if not server_push_success:
+                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        self.sync_was_halted = True
+                        break
             
     def process_delete_in_offline(self, change):
         print(f"Delete element in {change.layer_id}: {id} from server to offline")
@@ -310,4 +304,3 @@ class WateringSync():
         
         self.layer.addFeature(feature)
         self.layer.commitChanges()
-        

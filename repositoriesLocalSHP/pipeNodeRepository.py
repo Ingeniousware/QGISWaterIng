@@ -16,7 +16,7 @@ class PipeNodeRepository(AbstractRepository):
     def __init__(self,token, project_path, scenarioFK):
         """Constructor."""
         super(PipeNodeRepository, self).__init__(token, scenarioFK)      
-        self.UrlGet = "/api/v1/WaterPipe/stream"
+        self.UrlGet = "/api/v1/WaterPipe"
         self.StorageShapeFile = os.path.join(project_path, "watering_pipes.shp")
         self.LayerName = "watering_pipes"
         self.FileQml =  project_path + "/" + self.LayerName + ".qml"

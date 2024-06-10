@@ -12,7 +12,7 @@ class WateringDemandNodeRepository(AbstractRepository):
     def __init__(self,token, project_path, scenarioFK):
         """Constructor."""
         super(WateringDemandNodeRepository, self).__init__(token, scenarioFK)      
-        self.UrlGet = "/api/v1/DemandNode/stream"
+        self.UrlGet = "/api/v1/DemandNode"
         self.StorageShapeFile = os.path.join(project_path, "watering_demand_nodes.shp")
         self.LayerName = "watering_demand_nodes"
         self.FileQml =  project_path + "/" + self.LayerName + ".qml"
@@ -30,7 +30,7 @@ class WateringDemandNodeRepository(AbstractRepository):
         ]
     
         self.features = ["lng", "lat", "serverKeyId","lastModified", "name","description",
-                               "z","baseDemand","emitterCoeff","demandPatternFK"]
+                         "z","baseDemand","emitterCoeff","demandPatternFK"]
 
         self.LayerType = "Point?crs="
         
