@@ -81,12 +81,14 @@ class PipeNodeRepository(AbstractRepository):
                     if obj.strip():
                         data = json.loads(obj)
                         print("data:", data)
-                        self.addElementFromJSON(data)
+                        for feature in data["data"]:
+                            self.addElementFromJSON(feature)
 
         if self.buffer.strip():
             data = json.loads(self.buffer)
             print("data:", data)
-            self.addElementFromJSON(data)
+            for feature in data["data"]:
+                self.addElementFromJSON(feature)
 
             
     def addElementFromJSON(self, elementJSON):
