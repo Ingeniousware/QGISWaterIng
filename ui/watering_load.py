@@ -7,6 +7,7 @@ import os, json, requests, glob, uuid, shutil, processing
 import os
 import geopandas as gpd
 import pandas as pd
+import time
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer
@@ -59,6 +60,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             
         self.set_clone_projects_combo_box()
         self.set_merge_projects_combo_box()
+        self.initialize_progress_bar()
         self.newShpDirectory.setFilePath(self.main_watering_folder)
         
     def set_buttons_and_checkboxes(self):
@@ -69,7 +71,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.load_projects_box.currentIndexChanged.connect(self.handle_load_scenarios_box)
         self.clone_button.clicked.connect(self.clone_scenario)
         self.merge_button.clicked.connect(self.initialize_merge)
-        
+    
     def set_online_projects_list(self):
         self.online_projects_list = []
 
@@ -123,6 +125,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.merge_name_scenario_label.setVisible(checked)
         self.merged_scenario_name.setVisible(checked)
 
+    def initialize_progress_bar(self):
+        self.progressBar.hide()
+        self.progressBar.setRange(0, 100)
+        
     def set_combo_boxes(self):
         self.set_project_combo_box(self.new_projects_box)
         self.set_project_combo_box(self.load_projects_box)
@@ -206,6 +212,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.create_scenario_folder()
             #load layers
             self.CreateLayers()
+            
             self.open_watering_project(True)
             
     def create_new_project_and_scenario(self, projectKeyId, scenarioKeyId, projectName):
@@ -320,6 +327,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.start_project()
 
     def start_project(self):
+        self.progressBar.show()
+        self.progressBar.setRange(0, 100)
+        self.progressBar.setValue(0)
+        
         current_index = self.load_scenarios_box.currentIndex()
         scenarios = self.offline_scenarios_list if self.offline_mode else self.load_scenarios_list
         print("scenarios: ", scenarios)
@@ -327,10 +338,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if scenarios and 0 <= current_index < len(scenarios):
             self.current_scenario_name, self.current_scenario_fk = scenarios[current_index][0], scenarios[current_index][1]
             self.open_scenario()
+            self.progressBar.setValue(10)
         else:
             self.handle_failed_project_load()
-
+        
         self.done(True)
+        self.progressBar.hide()
         self.close()
 
     def open_scenario(self):
@@ -367,6 +380,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return scenario_in_metadata and scenario_in_folder
 
     def create_new_project_from_server(self):
+        self.progressBar.setValue(20)
         if self.offline_mode: return False
 
         #project name
@@ -383,7 +397,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         #create scenario folder
         self.create_scenario_folder()
-
+        self.progressBar.setValue(30)
+        
         #load layers
         self.CreateLayers()
 
@@ -404,21 +419,25 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
     def open_watering_project(self, justCreated):
         self.scenario_folder = self.main_watering_folder + self.current_project_fk + "/" + self.current_scenario_fk + '/'
-
+        self.progressBar.setValue(45)
         self.openProjectFromFolder()
+        self.progressBar.setValue(60)
         if not self.offline_mode:
             self.updateProject(justCreated)
         else: 
             self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.offline_scenarios_list[self.load_scenarios_box.currentIndex()][1])
         self.zoomToProject()
+        self.progressBar.setValue(70)
         self.writeWateringMetadata()
+        self.progressBar.setValue(90)
         self.done(True)
 
     def CreateLayers(self):
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.current_scenario_fk)
-        self.myScenarioUnitOfWork.loadAll()
+        self.myScenarioUnitOfWork.loadAll(self.progressBar)
 
         self.write_scenario_in_projects_file()
+        self.progressBar.setValue(100)
         self.done(True)
         self.close()
 
