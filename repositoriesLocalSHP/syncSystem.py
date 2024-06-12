@@ -115,7 +115,7 @@ class WateringSync():
                 if repo.connectorToServer:
                     server_push_success = repo.connectorToServer.addElementToServer(change.data)
                     if not server_push_success:
-                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        QMessageBox.information(None, "Synchronization Error", "Unable to sync with the server at this moment. Try again later.")
                         self.sync_was_halted = True
                         break
                 
@@ -156,7 +156,7 @@ class WateringSync():
                 if repo.connectorToServer:
                     server_push_success = repo.connectorToServer.addElementToServer(change.data)
                     if not server_push_success:
-                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        QMessageBox.information(None, "Synchronization Error", "Unable to sync with the server at this moment. Try again later.")
                         self.sync_was_halted = True
                         break
             
@@ -203,7 +203,7 @@ class WateringSync():
                 if repo.connectorToServer:
                     server_push_success = repo.connectorToServer.removeElementFromServer(change.data["ID"])
                     if not server_push_success:
-                        QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
+                        QMessageBox.information(None, "Synchronization Error", "Unable to sync with the server at this moment. Try again later.")
                         self.sync_was_halted = True
                         break
             

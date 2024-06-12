@@ -259,9 +259,9 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             server_key_id = str(uuid.uuid4())
             scenario_fk = str(uuid.uuid4())
 
-            name = feature.attribute(self.nameComboBox.currentText()) if self.nameComboBox.currentText() != "No match" else "string"
-            description = feature.attribute(self.descriptionComboBox.currentText()) if self.descriptionComboBox.currentText() != "No match" else "string"
-            z = feature.attribute(self.zComboBox.currentText()) if self.zComboBox.currentText() != "No match" else 0
+            name = feature.attribute(self.nameTankscomboBox.currentText()) if self.nameTankscomboBox.currentText() != "No match" else "string"
+            description = feature.attribute(self.descriptionTankscomboBox.currentText()) if self.descriptionTankscomboBox.currentText() != "No match" else "string"
+            z = feature.attribute(self.zTankscomboBox.currentText()) if self.zTankscomboBox.currentText() != "No match" else 0
             initialLevel = feature.attribute(self.initTankscomboBox()) if self.initTankscomboBox() != "No match" else 0
             minimumLevel = feature.attribute(self.minTankscomboBox()) if self.minTankscomboBox() != "No match" else 0
             maximumLevel = feature.attribute(self.maxTankscomboBox()) if self.maxTankscomboBox() != "No match" else 0
