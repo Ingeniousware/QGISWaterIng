@@ -5,15 +5,14 @@ from qgis.core import QgsProject
 from qgis.utils import iface
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem
+from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem,  QApplication, QMessageBox
 from ..watering_utils import WateringUtils
 
 import os
 import requests
+import sys
 from requests.exceptions import SSLError, ConnectionError
 from time import sleep
-import time
-import json
 
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -193,7 +192,10 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
                 else:
                     rowData.append(None)
             data.append(rowData)
-            self.upload_new_data_to_server(rowData)
+            response = self.upload_new_data_to_server(rowData)
+        if response.status_code == 200:
+            QMessageBox.information(None, "Success", "The new values were updated successfully.")
+            self.close()
         return data
 
     def upload_new_data_to_server(self, rowdata):
@@ -213,9 +215,8 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
         print(data_json)
         #response = requests.post(url, json=data_json, headers=headers)
         response = self.make_post_request(url, data_json, headers)
-        """ if response.status_code == 200:
-            print("Sent") """
-    
+        return response
+
     def delete_pattern(self):
         url = f"{WateringUtils.getServerUrl()}/api/v1/Patterns/{self.serverKeyId}"
         headers = {'Authorization': "Bearer {}".format(self.token)}
@@ -264,7 +265,7 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
             try:
                 response = requests.post(url, json=data, headers=headers)
                 response.raise_for_status()  # Raise HTTPError for bad responses
-                return response.json()  # Assuming you want to return the JSON response
+                return response  # Assuming you want to return the JSON response
             except SSLError as ssl_err:
                 print(f'SSLError occurred: {ssl_err}')
             except ConnectionError as conn_err:
