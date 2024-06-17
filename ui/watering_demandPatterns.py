@@ -10,6 +10,8 @@ from ..watering_utils import WateringUtils
 
 import os
 import requests
+from requests.exceptions import SSLError, ConnectionError
+from time import sleep
 import time
 import json
 
@@ -27,6 +29,9 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         self.serverKeyId = None
         self.ownerKeyId = None 
+        self.data = []
+        self.fetch_data()
+        self.setup_table()
         self.loadDemandPatterns.clicked.connect(self.populate_table)
         self.uploadPatterns.clicked.connect(self.read_table_data)
         self.createNewButton.clicked.connect(self.create_pattern)
@@ -36,17 +41,25 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
         self.removeValue.clicked.connect(lambda: self.add_or_delete_value(1))
         self.createCheckBox.clicked.connect(self.new_pattern_checkBox)
         self.deletePattern.clicked.connect(self.delete_pattern)
-        self.getValues.clicked.connect(self.get_selected_rows_values)
+        self.deleteValues.clicked.connect(self.get_selected_rows_values)
         self.comboBox.currentIndexChanged.connect(self.current_values_selected_comboBox)
-        self.data = []
-        self.fetch_data()
-        self.pattern_list = []
         self.createPatternLavel.hide()
         self.newPatternLine.hide()
         self.createNewButton.hide()
 
+    def setup_table(self):
+        # Assuming self.tableWidget is already defined and initialized
+        self.tableWidget.setRowCount(1)  # Initialize with one empty row
+        self.tableWidget.setColumnCount(5)  # Set the number of columns
+        self.tableWidget.setHorizontalHeaderLabels(["ServerKeyId", "PatternFK", "Minute", "Value", "OwnerKeyId"])  
+        self.tableWidget.setColumnHidden(0, True)
+        self.tableWidget.setColumnHidden(1, True)
+        self.tableWidget.setColumnHidden(4, True)
+        # Optional: Initialize the first row with empty items
+        for col_idx in range(5):
+            self.tableWidget.setItem(0, col_idx, QTableWidgetItem(""))
+
     def fetch_data(self):
-        time.sleep(.1)
         url = f"{WateringUtils.getServerUrl()}/api/v1/Patterns/?&scenarioKeyId={self.ScenarioFK}"
         headers = {'Authorization': "Bearer {}".format(self.token)}
         self.currentData = []
@@ -55,6 +68,10 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
             data = response.json().get("data", [])
             self.data = data
             self.comboBox.clear()
+            # Add default value to the combo box
+            default_value = "Select a pattern"
+            self.comboBox.addItem(default_value)
+            self.comboBox.setCurrentIndex(0)
             for item in data:
                 scenarioName = item.get("name")
                 keyId = item.get("serverKeyId")
@@ -70,12 +87,10 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
                     "description": description,
                     "ownerKeyId": owners
                 })
-                #print(f"Name: {scenarioName}, KeyId: {keyId}, Description: {description}, Owners: {owners}")
         else:
             print(f"Failed to fetch data: {response.status_code}")
 
     def current_values_selected_comboBox(self):
-        time.sleep(1)
         scenario_name = self.comboBox.currentText()
         scenario_details = next((item for item in self.currentData if item["name"] == scenario_name), None)
         if scenario_details:
@@ -85,6 +100,7 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
             print(self.ownerKeyId)
         else:
             print(f"No details found for {scenario_name}")
+        self.tableWidget.clearContents()
 
     def create_pattern(self):
         url = WateringUtils.getServerUrl() + "/api/v1/Patterns"
@@ -101,20 +117,32 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
             print("Pattern created successfully.")
         else:
             print("Failed to create pattern. Status code:", response.status_code)
-        self.upload_new_data_to_server(['', '', 0, 0, ''])
         self.fetch_data()
         self.createPatternLavel.hide()
         self.newPatternLine.hide()
         self.createNewButton.hide()
 
     def add_or_delete_value(self, case):
-        if case == 0:
+        if case == 0: #ADD
             current_row_count = self.tableWidget.rowCount()
             self.tableWidget.insertRow(current_row_count)
-        elif case == 1:
+        elif case == 1: #DELETE
             selected_rows = set(index.row() for index in self.tableWidget.selectedIndexes())
-            for row in sorted(selected_rows, reverse=True):
-                self.tableWidget.removeRow(row)
+            
+            if not selected_rows:
+                last_row = self.tableWidget.rowCount() - 1
+                if last_row >= 0:
+                    has_values = any(self.tableWidget.item(last_row, column) is not None and self.tableWidget.item(last_row, column).text() != ''
+                                    for column in range(self.tableWidget.columnCount()))
+                    if not has_values:
+                        self.tableWidget.removeRow(last_row)
+            else:
+                for row in sorted(selected_rows, reverse=True):
+                    # Check if the row has any values
+                    has_values = any(self.tableWidget.item(row, column) is not None and self.tableWidget.item(row, column).text() != ''
+                                    for column in range(self.tableWidget.columnCount()))
+                    if not has_values:
+                        self.tableWidget.removeRow(row)
 
     def new_pattern_checkBox(self):
         if self.createCheckBox.isChecked():
@@ -127,6 +155,9 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
             self.createNewButton.hide()
 
     def populate_table(self):
+        self.newValue.setEnabled(True)
+        self.removeValue.setEnabled(True)
+
         section = None
         for item in self.data:
             if item['name'] == self.comboBox.currentText():
@@ -151,9 +182,6 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
             for col_idx, value in enumerate(point.values()):
                 self.tableWidget.setItem(row_idx, col_idx, QTableWidgetItem(str(value)))
 
-        self.newValue.setEnabled(True)
-        self.removeValue.setEnabled(True)
-
     def read_table_data(self):
         data = []
         for row in range(self.tableWidget.rowCount()):
@@ -170,6 +198,9 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
 
     def upload_new_data_to_server(self, rowdata):
         serverKeyId, patternFK, timePattern, value, ownerKeyId = rowdata
+        if not timePattern or not value:
+            print("Incomplete data, cannot upload.")
+            return
         url = WateringUtils.getServerUrl() + "/api/v1/Patterns/points"
         headers = {'Authorization': "Bearer {}".format(self.token)}
         data_json = {
@@ -179,21 +210,20 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
                     "value": value,
                     "ownerKeyId": self.ownerKeyId
                     }
-                
-        response = requests.post(url, json=data_json, headers=headers)
-        if response.status_code == 200:
-            print("Sent")
+        print(data_json)
+        #response = requests.post(url, json=data_json, headers=headers)
+        response = self.make_post_request(url, data_json, headers)
+        """ if response.status_code == 200:
+            print("Sent") """
     
     def delete_pattern(self):
-        url = WateringUtils.getServerUrl() + "/api/v1/Patterns/" + self.serverKeyId
+        url = f"{WateringUtils.getServerUrl()}/api/v1/Patterns/{self.serverKeyId}"
         headers = {'Authorization': "Bearer {}".format(self.token)}
-        print(url)
         try:
             response = requests.delete(url, headers=headers)
-            response.raise_for_status()  # Raise an exception for unsuccessful status codes
+            response.raise_for_status()
             self.fetch_data()
         except requests.exceptions.RequestException as e:
-            # Handle network errors, server errors, etc.
             print(f"Error deleting pattern: {e}")
 
     def get_selected_rows_values(self):
@@ -207,10 +237,45 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
                     row_data.append(item.text())
                 else:
                     row_data.append('')
+            self.delete_selection_data(row_data)
             rows_data.append(row_data)
         print(rows_data)
+
+        selected_rows = set(index.row() for index in self.tableWidget.selectedIndexes())
+        for row in sorted(selected_rows, reverse=True):    
+            self.tableWidget.removeRow(row)
         return rows_data
     
-    def delete_selection_data(self):
+    def delete_selection_data(self, pointToDelete):
+        if not pointToDelete:
+            print("No point selected for deletion.")
+            return
+        pointId = pointToDelete[0]
+        url = f"{WateringUtils.getServerUrl()}/api/v1/Patterns/points/{pointId}"
+        headers = {'Authorization': "Bearer {}".format(self.token)}
+        try:
+            response = requests.delete(url, headers=headers)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"Error deleting point: {e}")
+    
+    def make_post_request(self, url, data, headers=None, max_retries=5, backoff_factor=0.3):
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(url, json=data, headers=headers)
+                response.raise_for_status()  # Raise HTTPError for bad responses
+                return response.json()  # Assuming you want to return the JSON response
+            except SSLError as ssl_err:
+                print(f'SSLError occurred: {ssl_err}')
+            except ConnectionError as conn_err:
+                print(f'ConnectionError occurred: {conn_err}')
+            except requests.HTTPError as http_err:
+                print(f'HTTPError occurred: {http_err}')
+            except requests.RequestException as req_err:
+                print(f'RequestException occurred: {req_err}')
+            
+            sleep_time = backoff_factor * (2 ** attempt)
+            print(f'Retrying in {sleep_time} seconds...')
+            sleep(sleep_time)
 
-        ...
+        raise Exception('Max retries exceeded')
