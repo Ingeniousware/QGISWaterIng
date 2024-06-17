@@ -57,6 +57,16 @@ if defined QGIS_DIR (
     ) else (
         echo Successfully installed signalrcore.
     )
+
+    :: Use pip from the OSGeo4W environment to install wntr
+    echo Installing wntr...
+    pip install wntr
+
+    if errorlevel 1 (
+        echo Failed to install wntr.
+    ) else (
+        echo Successfully installed wntr.
+    )
 ) else (
     echo QGIS directory not found in Program Files.
 )

@@ -39,6 +39,10 @@ fi
 echo "Installing Python package: signalrcore..."
 $QGIS_PYTHON_PATH -m pip install signalrcore
 
+# Install wntr using QGIS's Python
+echo "Installing Python package: wntr..."
+$QGIS_PYTHON_PATH -m pip install wntr
+
 # Determine QGIS plugins directory path for macOS
 QGIS_PLUGIN_DIR="$HOME/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins"
 

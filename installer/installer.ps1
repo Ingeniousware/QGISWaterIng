@@ -29,6 +29,11 @@ Write-Host "Installing signalrcore..."
 Start-Process -FilePath $qgisPythonExe -ArgumentList "-m", "pip", "install", "signalrcore" -Wait -NoNewWindow
 Write-Host "signalrcore installation complete."
 
+# Install wntr using QGIS Python
+Write-Host "Installing wntr..."
+Start-Process -FilePath $qgisPythonExe -ArgumentList "-m", "pip", "install", "wntr" -Wait -NoNewWindow
+Write-Host "wntr installation complete."
+
 # Configure the Python SSL module
 Write-Host "Configuring Python SSL module..."
 Start-Process -FilePath $qgisPythonExe -ArgumentList "-m", "pip", "install", "--upgrade", "pip" -Wait -NoNewWindow
