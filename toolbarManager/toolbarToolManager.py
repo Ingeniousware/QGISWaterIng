@@ -149,7 +149,7 @@ class toolbarToolManager():
         self.toolReviewNetwork.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # demand patterns
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/automaticNetworkReview.svg'
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_pattern_GT.svg'
         self.toolDemandPattern = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr(u'Demand Patterns'),
