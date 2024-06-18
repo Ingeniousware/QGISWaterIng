@@ -11,6 +11,7 @@ from ..watering_utils import WateringUtils
 from ..ui.watering_datachannels import WateringDatachannels
 from ..ui.watering_optimization import WaterOptimization
 from ..ui.watering_analysis import WateringAnalysis
+from ..ui.watering_pumpModels import WateringPumpModels
 from ..toolsMap.toolbarAction import toolbarAction
 from ..ActionManagement.identifyElementAction import WateringIdentifyTool
 
@@ -42,6 +43,7 @@ class toolbarToolManager():
         self.selectElementAction = None
         self.wateringIdentifyAction = None
         self.openOptimizationManagerAction = None
+        self.openPumpModels = None
         self.readAnalysisAction = None
         self.readMeasurementsAction = None
         self.undoAction = None
@@ -292,6 +294,16 @@ class toolbarToolManager():
         self.insertSensorNodeAction.setCheckable(True)        
         self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
+        # Pump Models
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimization.svg'
+        self.openPumpModels = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Pump Models'),
+            callback=self.wateringPumpModels,
+            toolbar = None,
+            parent=self.parentWindow)        
+        self.openPumpModels.setEnabled(not WateringUtils.isScenarioNotOpened())
+
     def addMapToolButtonAction(
         self,
         icon_path,
@@ -387,7 +399,7 @@ class toolbarToolManager():
                 
     def activateOptimizationTool(self, checked):
         optimizationTools = [self.openOptimizationManagerAction,
-                            self.insertSensorNodeAction,]
+                            self.insertSensorNodeAction, self.openPumpModels]
         
         if checked:
             for tool in optimizationTools:
@@ -408,6 +420,16 @@ class toolbarToolManager():
             iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
         else:            
             dlg = WaterOptimization()
+            dlg.show()
+            dlg.exec_()
+
+    def wateringPumpModels(self, second):
+        if WateringUtils.isScenarioNotOpened():
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+        else:            
+            dlg = WateringPumpModels()
             dlg.show()
             dlg.exec_()
             

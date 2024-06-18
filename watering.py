@@ -365,6 +365,7 @@ class QGISPlugin_WaterIng:
             print("before setting to true")
             self.toolbarToolManager.readAnalysisAction.setEnabled(True)                            
             self.toolbarToolManager.openOptimizationManagerAction.setEnabled(True)
+            self.toolbarToolManager.openPumpModels.setEnabled(True)
             self.toolbarToolManager.readMeasurementsAction.setEnabled(True)
             print("After setting to true")
     
@@ -381,6 +382,7 @@ class QGISPlugin_WaterIng:
         actions = [self.toolbarToolManager.readAnalysisAction,
                     self.toolbarToolManager.insertSensorNodeAction,
                     self.toolbarToolManager.openOptimizationManagerAction,
+                    self.toolbarToolManager.openPumpModels,
                     self.toolbarToolManager.readMeasurementsAction,
                     self.toolbarToolManager.insertDemandNodeAction,
                     self.toolbarToolManager.insertTankNodeAction,
