@@ -120,7 +120,15 @@ class WateringUtils():
                 iface.messageBar().pushMessage(("Error"), ("Request timed out."), level=1, duration=5)
         except:
             iface.messageBar().pushMessage(("Error"), ("Unable to connect to WaterIng."), level=1, duration=5)
-                
+    
+    def send_post_request(url, json_data, headers, error_message):
+        try:
+            response = requests.post(url, json=json_data, headers=headers)
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            QMessageBox.information(None, "Error", WateringUtils.tr(error_message))
+                        
     def translateMeasurements(self, status):
         conditions = {
             0: "Unknown",
