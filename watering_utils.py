@@ -121,13 +121,14 @@ class WateringUtils():
         except:
             iface.messageBar().pushMessage(("Error"), ("Unable to connect to WaterIng."), level=1, duration=5)
     
-    def send_post_request(url, json_data, headers, error_message):
+    def send_post_request(url, params, json_data, headers, error_message):
         try:
-            response = requests.post(url, json=json_data, headers=headers)
+            response = requests.post(url, params=params, json=json_data, headers=headers)
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
             QMessageBox.information(None, "Error", WateringUtils.tr(error_message))
+            return False
                         
     def translateMeasurements(self, status):
         conditions = {

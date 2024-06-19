@@ -243,8 +243,10 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         url = WateringUtils.getServerUrl() + "/api/v1/ProjectWaterNetworks"
         headers = {'Authorization': "Bearer {}".format(self.token)} 
-        response = requests.post(url, headers=headers, json=newProjectJson)
 
+        error_message = "Failed to create new project. Try again later."
+        response = WateringUtils.send_post_request(url, None, newProjectJson, headers, error_message)
+        
         if response.status_code == 200:
             WateringUtils.success_message("Project created successfully!")
             return True, response

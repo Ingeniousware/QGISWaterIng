@@ -38,7 +38,9 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
         else:
             loginParams = {'email': "{}".format(email), 'password': "{}".format(password)}
             try:
-                response = requests.post(url_login, json=loginParams)
+                error_message = "Failed to log in. Please try again later."
+                response = WateringUtils.send_post_request(url_login, None, loginParams, None, error_message)
+                
                 if response.status_code == 200:
                     os.environ['TOKEN'] = response.json()["token"]
                     WateringTimer.setTokenTimer()
@@ -48,11 +50,11 @@ class WateringLogin(QtWidgets.QDialog, FORM_CLASS):
                     self.errorLogin.setStyleSheet("color: red")
                     self.errorLogin.setText("Invalid email or password.")
             except requests.ConnectionError:
-                WateringUtils.error(self.tr("Failed to connect to the WaterIng, check your connection."))
+                WateringUtils.error_message(self.tr("Failed to connect to the WaterIng, check your connection."))
             except requests.Timeout:
-                WateringUtils.error(self.tr("Request timed out."))
+                WateringUtils.error_message(self.tr("Request timed out."))
             except:
-                WateringUtils.error(self.tr("Unable to connect to WaterIng."))
+                WateringUtils.error_message(self.tr("Unable to connect to WaterIng."))
                 
     def nextDlg(self):
         # Usage of self.close() instead of just closing we call 
