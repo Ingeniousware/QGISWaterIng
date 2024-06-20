@@ -59,11 +59,12 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
             self.tableWidget.setItem(0, col_idx, QTableWidgetItem(""))
 
     def fetch_data(self):
-        url = f"{WateringUtils.getServerUrl()}/api/v1/Patterns/?&scenarioKeyId={self.ScenarioFK}"
-        headers = {'Authorization': "Bearer {}".format(self.token)}
+        url = f"/api/v1/Patterns/?&scenarioKeyId={self.ScenarioFK}"
         self.currentData = []
-        response = requests.get(url, headers=headers)
-        if response.status_code == 200:
+        response = WateringUtils.requests_get(url, None)
+        if response == False:
+            print("Error")
+        elif response.status_code == 200:
             data = response.json().get("data", [])
             self.data = data
             self.comboBox.clear()
@@ -102,7 +103,7 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
         self.tableWidget.clearContents()
 
     def create_pattern(self):
-        url = WateringUtils.getServerUrl() + "/api/v1/Patterns"
+        url = "/api/v1/Patterns"
         data = {
                 "serverKeyId": "",
                 "ownerKeyId": self.ScenarioFK,
@@ -110,12 +111,12 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
                 "description": "",
                 "points": []
                 }
-        headers = {'Authorization': "Bearer {}".format(self.token)}
-        response = requests.post(url, json=data, headers=headers)
-        if response.status_code == 200:
+        response = WateringUtils.requests_post(url, json=data)
+        if response == False:
+            print("Failed to create pattern.")
+        elif response.status_code == 200:
             print("Pattern created successfully.")
-        else:
-            print("Failed to create pattern. Status code:", response.status_code)
+        
         self.fetch_data()
         self.createPatternLavel.hide()
         self.newPatternLine.hide()
@@ -213,7 +214,6 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
                     "ownerKeyId": self.ownerKeyId
                     }
         print(data_json)
-        #response = requests.post(url, json=data_json, headers=headers)
         response = self.make_post_request(url, data_json, headers)
         return response
 

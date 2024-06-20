@@ -528,6 +528,66 @@ class WateringUtils():
         except Exception as e:
             WateringUtils.error_message(f"Unable to connect to WaterIng. Error: {str(e)}")
             return False
+        
+    def requests_post(url, json):
+        absolute_url = WateringUtils.getServerUrl() + url
+        headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
+        try:
+            response = requests.post(absolute_url, json=json, headers=headers)
+            if response.status_code == 200:
+                return response
+            else:
+                WateringUtils.error_message("Failed request to Watering server with status code: {}".format(response.status_code))
+                return False
+        except requests.ConnectionError:
+            WateringUtils.error_message("No connection.")
+            return False
+        except requests.Timeout:
+            WateringUtils.error_message("Request to server timed out.")
+            return False
+        except Exception as e:
+            WateringUtils.error_message(f"Unable to connect to WaterIng. Error: {str(e)}")
+            return False
+        
+    def requests_put(url, json):
+        absolute_url = WateringUtils.getServerUrl() + url
+        headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
+        try:
+            response = requests.put(absolute_url, json=json, headers=headers)
+            if response.status_code == 200:
+                return response
+            else:
+                WateringUtils.error_message("Failed request to Watering server with status code: {}".format(response.status_code))
+                return False
+        except requests.ConnectionError:
+            WateringUtils.error_message("No connection.")
+            return False
+        except requests.Timeout:
+            WateringUtils.error_message("Request to server timed out.")
+            return False
+        except Exception as e:
+            WateringUtils.error_message(f"Unable to connect to WaterIng. Error: {str(e)}")
+            return False
+        
+    def requests_delete(url):
+        absolute_url = WateringUtils.getServerUrl() + url
+        headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
+        try:
+            response = requests.delete(absolute_url, headers=headers)
+            if response.status_code == 200:
+                return response
+            else:
+                WateringUtils.error_message("Failed request to Watering server with status code: {}".format(response.status_code))
+                return False
+        except requests.ConnectionError:
+            WateringUtils.error_message("No connection.")
+            return False
+        except requests.Timeout:
+            WateringUtils.error_message("Request to server timed out.")
+            return False
+        except Exception as e:
+            WateringUtils.error_message(f"Unable to connect to WaterIng. Error: {str(e)}")
+            return False
 
 class WateringTimer():
     timer = None 

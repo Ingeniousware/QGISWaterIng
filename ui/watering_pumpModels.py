@@ -21,18 +21,25 @@ class WateringPumpModels(QtWidgets.QDialog, FORM_CLASS):
         self.token = os.environ.get('TOKEN')
 
         self.initUI()
-        self.testButton.clicked.connect(self.addNewPump)
+        self.openAddNewButton.clicked.connect(self.openAddNewPumpSection)
+        self.addNewButton.clicked.connect(self.addNewPump)
+        self.cancelButton.clicked.connect(self.cancelAddNewPump)
+        self.addNewButton.hide()
+        self.cancelButton.hide()
+        self.newPumpLabel.hide()
 
     def loadPumpModels(self):
         url = f'/api/v1/PumpModel/getlist?&scenarioFK={self.ScenarioFK}'
         response = WateringUtils.requests_get(url, None)
-        data = response.json()
+        if response == False:
+            print("error")
+        else:
+            data = response.json()
         return data
 
     def initUI(self):
         layout = QVBoxLayout()
         data = self.loadPumpModels()
-        
         self.pump_widgets = []
         
         for pump in data['data']:
@@ -58,7 +65,6 @@ class WateringPumpModels(QtWidgets.QDialog, FORM_CLASS):
                 'delete_button': delete_button,
                 'pump_name_label': pump_name_label
             })
-        
         container_widget = QWidget()
         container_widget.setLayout(layout)
         self.scrollArea.setWidget(container_widget)
@@ -94,60 +100,91 @@ class WateringPumpModels(QtWidgets.QDialog, FORM_CLASS):
         edit_button.hide()
         delete_button.hide()
         pump_name_label.hide()
-        
-        # Remove existing widgets
-        pump_widget['layout'].removeWidget(edit_button)
-        pump_widget['layout'].removeWidget(delete_button)
-        pump_widget['layout'].removeWidget(pump_name_label)
-        
+    
         # Create line edit and save/cancel buttons
         pump_name_edit = QtWidgets.QLineEdit(pump['name'])
         pump_widget['layout'].addWidget(pump_name_edit)
         
         save_button = QPushButton('Save')
-        save_button.clicked.connect(lambda: self.save_pump(pump, pump_name_edit))
+        save_button.clicked.connect(lambda: self.save_pump_changes(pump, pump_name_edit))
         pump_widget['layout'].addWidget(save_button)
         
         cancel_button = QPushButton('Cancel')
         cancel_button.clicked.connect(lambda: self.cancel_edit(pump, pump_name_edit))
         pump_widget['layout'].addWidget(cancel_button)
-        
+    
         # Update widget dictionary
         pump_widget['pump_name_edit'] = pump_name_edit
         pump_widget['save_button'] = save_button
         pump_widget['cancel_button'] = cancel_button
         
-        # Update UI
         self.scrollArea.update()
 
-    def save_pump(self, pump, pump_name_edit):
+    def save_pump_changes(self, pump, pump_name_edit):
         new_name = pump_name_edit.text()
-        print(f"Saving changes for pump: {pump['name']} to {new_name}")
-        
-        # Perform save operation (update API, database, etc.)
-        # Example: You will need to implement the actual update logic here.
-        # Once updated, update pump name label and reset UI
-        pump['name'] = new_name
-        self.initUI()
+        url = "/api/v1/PumpModel"
+        json = {
+                "serverKeyId": pump['serverKeyId'],
+                "name": new_name,
+                "headCurveFK": None,
+                "headCurve": None,
+                "efficiencyCurveFK": None,
+                "efficiencyCurve": None,
+                "updateCoefABCFromPoints": False,
+                "updateCoefDEFromPoints": False,
+                "scenarioKeyId": self.ScenarioFK
+            }
+        response = WateringUtils.requests_put(url, json=json)
+        if response == False:
+            print("error")
+        elif response.status_code == 200:
+            print(f"Saving changes for pump: {pump['name']} to {new_name}")
+            pump['name'] = new_name
+            self.initUI()
 
     def cancel_edit(self, pump, pump_name_edit):
         print(f"Cancelling edit for pump: {pump['name']}")
         
-        # Remove edit widgets and restore original view
         self.initUI()
 
-    def create_pump_handler(self, pump, handler):
-        return lambda: handler(pump)
-
     def delete_pump(self, pump):
-        print(f"Deleting pump: {pump['name']}")
-        url = f"{WateringUtils.getServerUrl()}/api/v1/PumpModel/{pump['serverKeyId']}"
-        headers = {'Authorization': "Bearer {}".format(self.token)}
-        response = requests.delete(url, headers=headers)
-        if response.status_code == 200:
-            print("Pump deleted successfully.")
+        url = f"/api/v1/PumpModel/{pump['serverKeyId']}"
+        response = WateringUtils.requests_delete(url)
+        if response == False:
+            print("error")
+        elif response.status_code == 200:
+            print(f'Pump {pump["name"]} deleted successfully.')
             self.initUI()
 
+    def openAddNewPumpSection(self):
+        self.addNewButton.show()
+        self.cancelButton.show()
+        self.newPumpLabel.show()
+    
     def addNewPump(self):
-        print("Its Working")
-        #The json to add a new pump check with Idel
+        namePumpModel = self.newPumpLabel.text()
+        url = "/api/v1/PumpModel/"
+        json = {
+                "serverKeyId": "",
+                "name": namePumpModel,
+                "headCurveFK": None,
+                "headCurve": None,
+                "efficiencyCurveFK": None,
+                "efficiencyCurve": None,
+                "updateCoefABCFromPoints": False,
+                "updateCoefDEFromPoints": False,
+                "scenarioKeyId": self.ScenarioFK
+            }
+        response = WateringUtils.requests_post(url, json)
+        if response == False:
+            print("error")
+        elif response.status_code == 200:
+            print(f'Add new pump model - {namePumpModel}')
+        self.cancelAddNewPump()
+
+    def cancelAddNewPump(self):
+        self.addNewButton.hide()
+        self.cancelButton.hide()
+        self.newPumpLabel.hide()
+        self.newPumpLabel.clear()
+        self.initUI()
