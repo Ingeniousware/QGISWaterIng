@@ -247,7 +247,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         error_message = "Failed to create new project. Try again later."
         response = WateringUtils.send_post_request(url, None, newProjectJson, headers, error_message)
         
-        if response.status_code == 200:
+        if response and response.status_code == 200:
             WateringUtils.success_message("Project created successfully!")
             return True, response
 

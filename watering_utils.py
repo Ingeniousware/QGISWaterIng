@@ -127,7 +127,8 @@ class WateringUtils():
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
-            QMessageBox.information(None, "Error", WateringUtils.tr(error_message))
+            if error_message is not False:
+                QMessageBox.information(None, "Error", WateringUtils.tr(error_message))
             return False
                         
     def translateMeasurements(self, status):
