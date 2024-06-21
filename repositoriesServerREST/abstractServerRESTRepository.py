@@ -35,8 +35,9 @@ class abstractServerRESTRepository():
         print(self.ScenarioFK)
         print(self.Token) """
         data = {'scenarioKeyId': self.ScenarioFK}
-        headers = {'Authorization': "Bearer {}".format(self.Token)} 
-        response = requests.post(self.UrlPost, params=data, headers=headers, json=elementJSON)
+        headers = {'Authorization': "Bearer {}".format(self.Token)}
+        error_message = "Failed to send element to server. Try again later."
+        response = WateringUtils.send_post_request(self.UrlPost, data, elementJSON, headers, error_message)
         return response
         
     
