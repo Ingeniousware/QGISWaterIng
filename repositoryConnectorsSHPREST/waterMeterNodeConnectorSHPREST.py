@@ -43,8 +43,7 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         print("Water Valve Node removed after push from server")
 
 
-    def addElementToServer(self, feature):
-        
+    def getElementJson(self, feature):
         x = feature.geometry().asPoint().x()
         y = feature.geometry().asPoint().y()
         #transforming coordinates for the CRS of the server
@@ -68,16 +67,21 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         formatted_date = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
             
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
-                       'fkScenario': "{}".format(self.ScenarioFK), 
-                       'name': "{}".format(name), 
-                       'description': "{}".format(description),
-                       #'installedDate': "{}".format(formatted_date), 
-                       'lng': "{}".format(x), 
-                       'lat': "{}".format(y),
-                       'meterstate': "{}".format(meterState), 
-                       'functionalType': "{}".format(functType),
-                       'connectedToNodeFK': "{}".format(connectedToNodeFK)
-                      }
+                        'fkScenario': "{}".format(self.ScenarioFK), 
+                        'name': "{}".format(name), 
+                        'description': "{}".format(description),
+                        #'installedDate': "{}".format(formatted_date), 
+                        'lng': "{}".format(x), 
+                        'lat': "{}".format(y),
+                        'meterstate': "{}".format(meterState), 
+                        'functionalType': "{}".format(functType),
+                        'connectedToNodeFK': "{}".format(connectedToNodeFK)
+                        }
+        
+        return elementJSON, isNew, serverKeyId
+    
+    def addElementToServer(self, feature):
+        elementJSON, isNew, serverKeyId = self.getElementJson(feature)
     
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
@@ -129,8 +133,6 @@ class waterMeterNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         else: 
             print("Failed on sendig Water Meter to the server")
             return False
-
-    
 
     def removeElementFromServer(self, serverKeyId):
         elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 
