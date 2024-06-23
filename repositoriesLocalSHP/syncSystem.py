@@ -61,7 +61,7 @@ class WateringSync():
         
         for repo in self.repositories:
             self.track_offline_updates(repo, lastUpdated)
-        
+
         print("offline_change_queue: ", self.offline_change_queue)
         
     def track_server_updates(self, repo, data):
@@ -103,6 +103,7 @@ class WateringSync():
                 break
             
     def processChange(self, change):
+        #self.addToServerDict
         try:
             process_method = self.change_handlers[change.change_type]
             process_method(change)
@@ -111,6 +112,7 @@ class WateringSync():
         
     def process_add_to_server(self, change):
         for repo in self.repositories:
+            self.elementsJson = []
             if change.layer_id.name() == repo.LayerName:
                 if repo.connectorToServer:
                     server_push_success = repo.connectorToServer.addElementToServer(change.data)

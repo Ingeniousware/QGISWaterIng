@@ -36,6 +36,7 @@ class AbstractRepository():
         self.connectorToServer = None
         self.currentLayer = None
         self.numberLocalFieldsOnly = 1
+        self.syncAddingChanges = []
 
     def initializeRepository(self):
         #loading element from the API
@@ -439,7 +440,8 @@ class AbstractRepository():
         for feature in self.Layer.getFeatures():
             adjusted_feature_lastUpdated = self.adjustedDatetime(feature['lastUpdate'])
             if (len(str(feature['ID'])) == 10):
-                    self.offlineChangesList.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
+                self.offlineChangesList.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
+                self.syncAddingChanges.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
             if (adjusted_feature_lastUpdated > lastUpdated) and (len(str(feature['ID'])) == 36):
                     self.offlineChangesList.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
 
@@ -453,7 +455,14 @@ class AbstractRepository():
             adjusted_feature_lastUpdated = self.adjustedDatetime(feature['lastUpdate'])
             if adjusted_feature_lastUpdated > lastUpdated:
                 self.offlineChangesList.append(Change(self.Layer, feature['ID'], "delete_from_offline", feature))
-                    
+    
+    def getFeatureJsons(self):
+        self.jsonsList = []
+        for change in self.syncAddingChanges:
+            if self.connectorToServer:
+                self.jsonsList.append(self.connectorToServer.getElementJson(change.data))
+                
+                
     # NEW_SYNC_METHODS_END
     
     def getOfflineDict(self, lastUpdated):
