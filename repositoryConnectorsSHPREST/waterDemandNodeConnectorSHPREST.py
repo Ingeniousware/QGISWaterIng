@@ -41,9 +41,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         self.localRepository.deleteElement(paraminput[0])
         print("Water Demand Node removed after push from server")
 
-
-    def addElementToServer(self, feature):
-        
+    def getElementJson(self, feature):
         x = feature.geometry().asPoint().x()
         y = feature.geometry().asPoint().y()
         #transforming coordinates for the CRS of the server
@@ -74,7 +72,12 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'z': "{}".format(z),
                        'baseDemand': "{}".format(baseDemand),
                        'emitterCoeff': "{}".format(emitterCoeff),}
-        
+
+        return elementJSON, isNew, serverKeyId
+    
+    def addElementToServer(self, feature):
+        elementJSON, isNew, serverKeyId = self.getElementJson(feature)
+                
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
         while self.lifoAddedElements.full():
