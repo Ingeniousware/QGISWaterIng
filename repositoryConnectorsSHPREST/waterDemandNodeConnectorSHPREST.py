@@ -73,7 +73,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'baseDemand': "{}".format(baseDemand),
                        'emitterCoeff': "{}".format(emitterCoeff)}
 
-        return elementJSON, isNew, serverKeyId
+        return elementJSON, isNew, serverKeyId, feature["ID"]
     
     def addElementToServer(self, feature):
         elementJSON, isNew, serverKeyId = self.getElementJson(feature)
@@ -144,3 +144,25 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
     
     def postMultipleElements(self, elementsJSONlist):
         self.serverRepository.postMultipleElements(elementsJSONlist)
+        
+    def update_layer_features(self, elementsJSONlist):
+        layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+
+        if not layer:
+            print("Layer not found")
+            return
+
+        layer.startEditing()
+
+        for element in elementsJSONlist:
+            serverKeyId = element[0]['serverKeyId']
+            current_feature_id = element[1]
+
+            for feature in layer.getFeatures():
+                if feature['ID'] == current_feature_id:
+                    feature['ID'] = serverKeyId
+                    layer.updateFeature(feature)
+                    break
+
+        layer.commitChanges()
+        print("Layer features updated successfully.")

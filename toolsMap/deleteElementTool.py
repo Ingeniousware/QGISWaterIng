@@ -32,7 +32,7 @@ class DeleteElementTool(QgsMapTool):
         print("repo: ", repo)
         layer.removeSelection()
             
-        #repo.deleteFeatureFromMapInteraction(feature)
+        repo.deleteFeatureFromMapInteraction(feature)
         
         WateringUtils.add_feature_to_backup_layer(feature, layer)
                         

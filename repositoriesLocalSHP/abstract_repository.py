@@ -466,8 +466,14 @@ class AbstractRepository():
         deletions_list = self.getFeatureJsons(self.syncDeletingChanges)
         
         self.postMultipleElements(additions_list)
+        self.connectorToServer.update_layer_features(additions_list)
+        
         self.putMultipleElements(updates_list)
+        self.connectorToServer.update_layer_features(updates_list)
+        
         self.deleteMultipleElements(deletions_list)
+        
+    
         
     def getFeatureJsons(self, elements_list):
         jsonsList = []
@@ -475,19 +481,19 @@ class AbstractRepository():
         if elements_list and self.connectorToServer:
             for change in elements_list:
                 if self.connectorToServer:
-                    response , _, _ =  self.connectorToServer.getElementJson(change.data)
-                    jsonsList.append(response)
+                    response , _, _, featureID =  self.connectorToServer.getElementJson(change.data)
+                    jsonsList.append((response, featureID))
         
         return jsonsList
 
     def postMultipleElements(self, jsonsList):
-        self.connectorToServer.postMultipleElements(jsonsList)
+        self.connectorToServer.serverRepository.postMultipleElements(jsonsList)
     
     def putMultipleElements(self, jsonsList):
-       self.connectorToServer.putMultipleElements(jsonsList) 
+       self.connectorToServer.serverRepository.putMultipleElements(jsonsList) 
        
     def deleteMultipleElements(self, jsonsList):
-        self.connectorToServer.deleteMultipleElements(jsonsList) 
+        self.connectorToServer.serverRepository.deleteMultipleElements(jsonsList) 
        
     # NEW_SYNC_METHODS_END
     
