@@ -31,6 +31,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
         self.LayerTypeCBox.addItem("Demand Nodes")
         self.LayerTypeCBox.addItem("Water DMA")
         self.LayerTypeCBox.addItem("Tanks")
+        self.LayerTypeCBox.addItem("Sensors")
         self.LayerTypeCBox.currentIndexChanged.connect(self.checkUserControlState)
         self.uploadShpFile.setEnabled(False)
         self.loadLayerButton.clicked.connect(self.addSelected_Layer)
@@ -92,6 +93,12 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 (self.minVTankscomboBox),
                 (self.diameterTankscomboBox)
             ]
+        elif index == 3: # Water Sensors
+            comboBoxes = [
+                (self.sensorNameCBox),
+                (self.sensorDescriptCBox),
+                (self.sensorZCBox)
+            ]
         else:
             return
         for cBox in comboBoxes:
@@ -110,6 +117,8 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             self.TabWidget.setTabVisible(1, True)
         elif index == 2:
             self.TabWidget.setTabVisible(2, True)
+        elif index == 3:
+            self.TabWidget.setTabVisible(3, True)
 
     def get_cBox_index(self):
         cBox_index = self.LayerTypeCBox.currentIndex()
@@ -125,6 +134,10 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/TankNode"
             print("The layer imported is of Tanks")
             self.convert_tank_to_json("New Layer")
+        elif cBox_index == 3: 
+            self.UrlPost = WateringUtils.getServerUrl() + "/api/v1/SensorStation"
+            print("The layer imported is of Sensors")
+            self.convert_sensor_to_json("New Layer")
         self.close()
 
     def convert_polygon_to_json(self, layer_name):
@@ -239,7 +252,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             self.post_to_server(feature_json, name)
             #print(feature_json)
             features.append(feature_json)
-        
+        print(features)
         QgsProject.instance().removeMapLayer(layer)
         return features
     
@@ -284,18 +297,70 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 }
             self.post_to_server(feature_json, name)
             features.append(feature_json)
+        # Save features as JSON to a file
+        with open("/Users/alejandrorodriguez/Documents/Courses/Data Science/Personal Projects/Jumapa/Json to Qgis/Data.json", 'w') as file:
+            json.dump(features, file, indent=4)
         
+        QgsProject.instance().removeMapLayer(layer)
+        return features
+    
+    def convert_sensor_to_json(self, layer_name):
+        layer = QgsProject.instance().mapLayersByName(layer_name)[0]
+        features = []
+        # Define the source and destination coordinate reference systems
+        crs_source = layer.crs()
+        crs_destination = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS84
+        transform = QgsCoordinateTransform(crs_source, crs_destination, QgsProject.instance())
+
+        for feature in layer.getFeatures():
+            geom = feature.geometry()
+            point = geom.asPoint()
+            transformed_point = transform.transform(point)
+
+            server_key_id = str(uuid.uuid4())
+            scenario_fk = WateringUtils.getScenarioId()
+
+            ### Optimize later Adapt ui correctly
+            if self.sensorNameCBox.currentText() == "No match":
+                name = "Sensor"
+            else:
+                name = feature.attribute(self.sensorNameCBox.currentText())
+                    
+            if self.sensorDescriptCBox.currentText() == "No match":
+                description = ""
+            else:
+                description = feature.attribute(self.sensorDescriptCBox.currentText())
+
+            if self.sensorZCBox.currentText() == "No match":
+                z = 0
+            else:
+                z = feature.attribute(self.sensorZCBox.currentText())
+
+            feature_json = {
+                "serverKeyId": server_key_id,
+                "scenarioFK": scenario_fk,
+                "name": name,
+                "description": description,
+                "lng": transformed_point.x(),
+                "lat": transformed_point.y(),
+                "z": z
+            }
+            
+            self.post_to_server(feature_json, name)
+            features.append(feature_json)
+        print(features)
         QgsProject.instance().removeMapLayer(layer)
         return features
     
     def post_to_server(self, json, name):
         headers = {'Authorization': "Bearer {}".format(self.token)}
         response = requests.post(self.UrlPost, json=json, headers=headers)
+        #response = WateringUtils.requests_post(self.UrlPost, json)
 
         if response.status_code == 200:
             print(f'"{name}" correctly uploaded')
             print(response)
-            time.sleep(1)
+            #time.sleep(1.5)
         else:
             message_box = QMessageBox()
             message_box.setIcon(QMessageBox.Warning)
