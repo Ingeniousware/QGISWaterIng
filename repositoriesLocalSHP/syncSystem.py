@@ -77,6 +77,10 @@ class WateringSync():
         self.sync_was_halted = False
         
         print("_lastUpdated_: ", _lastUpdated_)
+        
+        # TESTS
+        _lastUpdated_ = "1800-01-01 12:00:00"
+        
         self.get_offline_changes(_lastUpdated_)
         self.get_server_changes(_lastUpdated_)
         self.synchronize_server_changes()
@@ -98,8 +102,9 @@ class WateringSync():
     def synchronize_offline_changes(self):
         for repo in self.repositories:
             print("repo: ", repo)
-            repo.getFeatureJsons()
-            
+            repo.initMultiElementsPosting()
+        
+        
         # while self.offline_change_queue:
         #     change = self.offline_change_queue.popleft()
         #     self.processChange(change)

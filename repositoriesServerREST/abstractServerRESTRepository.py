@@ -46,29 +46,45 @@ class abstractServerRESTRepository():
             return response.text
         except requests.exceptions.RequestException as e:
             return f"Request error: {e}"
-        
-    def send_post_request(url, params, json_data, headers, error_message):
+
+    def make_put_request(self, session, url, data, headers, params, serverKeyId):
         try:
-            response = requests.post(url, params=params, json=json_data, headers=headers)
-            response.raise_for_status()
-            return response
+            response = session.put(url + "/" + str(serverKeyId), params=params, json=data, headers=headers)
+            return response.text
         except requests.exceptions.RequestException as e:
-            if error_message is not False:
-                #QMessageBox.information(None, "Error", WateringUtils.tr(error_message))
-                return False
+            return f"Request error: {e}"
+    
+    def make_delete_request(self, session, url, headers, serverKeyId):
+        try:
+            response = session.delete(url + "/" + str(serverKeyId), headers=headers)
+            return response.text
+        except requests.exceptions.RequestException as e:
+            return f"Request error: {e}"
     
     def postMultipleElements(self, list_of_elementsJSON):
         params = {'scenarioKeyId': self.ScenarioFK}
         headers = {'Authorization': "Bearer {}".format(self.Token)}
-        print("list_of_elementsJSON : ", list_of_elementsJSON)
+
         with requests.Session() as session:
             with ThreadPoolExecutor(max_workers=10) as executor:
                 futures = [executor.submit(self.make_post_request, session, self.UrlPost, data, headers, params) for data in list_of_elementsJSON]
-                for future in as_completed(futures):
-                    print("response.text: ")
-                    print("response.text:", future.result())
     
+    def putMultipleElements(self, list_of_elementsJSON):
+        params = {'scenarioKeyId': self.ScenarioFK}
+        headers = {'Authorization': "Bearer {}".format(self.Token)}
 
+        with requests.Session() as session:
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                futures = [executor.submit(self.make_put_request, session, self.UrlPut, data, headers, params, data['serverKeyId']) for data in list_of_elementsJSON]
+
+    def deleteMultipleElements(self, list_of_elementsJSON):
+        params = {'scenarioKeyId': self.ScenarioFK}
+        headers = {'Authorization': "Bearer {}".format(self.Token)}
+        with requests.Session() as session:
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                futures = [executor.submit(self.make_delete_request, session, self.UrlPost, headers, data['serverKeyId']) for data in list_of_elementsJSON]
+
+        
     def putToServer(self, elementJSON, serverKeyId):
         """  print("putting -> ", elementJSON)
         print(self.ScenarioFK)
