@@ -96,11 +96,15 @@ class WateringSync():
                 break
 
     def synchronize_offline_changes(self):
-        while self.offline_change_queue:
-            change = self.offline_change_queue.popleft()
-            self.processChange(change)
-            if self.sync_was_halted:
-                break
+        for repo in self.repositories:
+            print("repo: ", repo)
+            repo.getFeatureJsons()
+            
+        # while self.offline_change_queue:
+        #     change = self.offline_change_queue.popleft()
+        #     self.processChange(change)
+        #     if self.sync_was_halted:
+        #         break
             
     def processChange(self, change):
         #self.addToServerDict
@@ -111,15 +115,16 @@ class WateringSync():
             print(f"Unknown change type: {change.change_type}")
         
     def process_add_to_server(self, change):
-        for repo in self.repositories:
-            self.elementsJson = []
-            if change.layer_id.name() == repo.LayerName:
-                if repo.connectorToServer:
-                    server_push_success = repo.connectorToServer.addElementToServer(change.data)
-                    if not server_push_success:
-                        QMessageBox.information(None, "Synchronization Error", "Unable to sync with the server at this moment. Try again later.")
-                        self.sync_was_halted = True
-                        break
+        print("on test")
+        # for repo in self.repositories:
+        #     self.elementsJson = []
+        #     if change.layer_id.name() == repo.LayerName:
+        #         if repo.connectorToServer:
+        #             server_push_success = repo.connectorToServer.addElementToServer(change.data)
+        #             if not server_push_success:
+        #                 QMessageBox.information(None, "Synchronization Error", "Unable to sync with the server at this moment. Try again later.")
+        #                 self.sync_was_halted = True
+        #                 break
                 
     def process_add_to_offline(self, change):
         print(f"Adding element in {change.layer_id}: {change.feature_id} from server to offline")

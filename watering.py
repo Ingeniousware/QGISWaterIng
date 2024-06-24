@@ -294,9 +294,9 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.toolImportShapeFile.setCurrentTool(toolImportShapeFile)
         self.toolbarToolManager.toolImportShapeFile.setEnabled(True)
 
-        toolReviewNetwork = NetworkReviewTool(self.iface)
-        self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
-        self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
+        # toolReviewNetwork = NetworkReviewTool(self.iface)
+        # self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
+        # self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
 
         toolDemandPattern = DemandPatternTool(self.iface)
         self.toolbarToolManager.toolDemandPattern.setCurrentTool(toolDemandPattern)

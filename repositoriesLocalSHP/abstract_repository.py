@@ -67,7 +67,7 @@ class AbstractRepository():
         url = WateringUtils.getServerUrl() + self.UrlGet
         headers = {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}
         
-        response = requests.get(url, params=params_element, headers=headers, stream=stream)
+        response = requests.get(url, params=params_element, headers=headers, stream=stream, verify=False)
         return response
 
     def loadChanges(self, lastUpdate):
@@ -457,11 +457,18 @@ class AbstractRepository():
                 self.offlineChangesList.append(Change(self.Layer, feature['ID'], "delete_from_offline", feature))
     
     def getFeatureJsons(self):
-        self.jsonsList = []
+        jsonsList = []
         for change in self.syncAddingChanges:
             if self.connectorToServer:
-                self.jsonsList.append(self.connectorToServer.getElementJson(change.data))
-                
+                response , _, _ =  self.connectorToServer.getElementJson(change.data)
+                print("response from getElementJson: ", response)
+                jsonsList.append(response)
+
+        self.postMultipleElements(jsonsList)
+
+    def postMultipleElements(self, jsonsList):
+        if self.connectorToServer:
+             self.connectorToServer.postMultipleElements(jsonsList)
                 
     # NEW_SYNC_METHODS_END
     

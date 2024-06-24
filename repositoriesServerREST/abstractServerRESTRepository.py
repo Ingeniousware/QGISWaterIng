@@ -1,5 +1,6 @@
 import requests
 from ..watering_utils import WateringUtils
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
 from qgis.core import QgsGeometry, QgsFeature, QgsCoordinateTransform, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest
@@ -28,8 +29,7 @@ class abstractServerRESTRepository():
         
     def getFromServer(self, elementJSON):
         ...
-
-
+    
     def postToServer(self, elementJSON):
         """ print("posting -> ", elementJSON)
         print(self.ScenarioFK)
@@ -39,7 +39,34 @@ class abstractServerRESTRepository():
         error_message = "Failed to send element to server. Try again later."
         response = WateringUtils.send_post_request(self.UrlPost, data, elementJSON, headers, error_message)
         return response
+
+    def make_post_request(self, session, url, data, headers, params):
+        try:
+            response = session.post(url, params=params, json=data, headers=headers)
+            return response.text
+        except requests.exceptions.RequestException as e:
+            return f"Request error: {e}"
         
+    def send_post_request(url, params, json_data, headers, error_message):
+        try:
+            response = requests.post(url, params=params, json=json_data, headers=headers)
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            if error_message is not False:
+                #QMessageBox.information(None, "Error", WateringUtils.tr(error_message))
+                return False
+    
+    def postMultipleElements(self, list_of_elementsJSON):
+        params = {'scenarioKeyId': self.ScenarioFK}
+        headers = {'Authorization': "Bearer {}".format(self.Token)}
+        print("list_of_elementsJSON : ", list_of_elementsJSON)
+        with requests.Session() as session:
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                futures = [executor.submit(self.make_post_request, session, self.UrlPost, data, headers, params) for data in list_of_elementsJSON]
+                for future in as_completed(futures):
+                    print("response.text: ")
+                    print("response.text:", future.result())
     
 
     def putToServer(self, elementJSON, serverKeyId):

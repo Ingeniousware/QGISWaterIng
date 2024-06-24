@@ -29,7 +29,7 @@ class toolbarToolManager():
         self.editElementsAction = None
         self.toolImportINPFile = None
         self.toolImportShapeFile = None
-        self.toolReviewNetwork = None
+        #self.toolReviewNetwork = None
         self.toolDemandPattern = None
         self.insertDemandNodeAction = None
         self.insertTankNodeAction = None
@@ -140,15 +140,15 @@ class toolbarToolManager():
         self.toolImportShapeFile.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # network review
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/automaticNetworkReview.svg'
-        self.toolReviewNetwork = self.addMapToolButtonAction(
-            icon_path,
-            text=WateringUtils.tr(u'Network Review'),
-            callback=self.activateActionTool,
-            toolbar = None,
-            parent=self.parentWindow)
-        self.toolReviewNetwork.setCheckable(False)        
-        self.toolReviewNetwork.setEnabled(not WateringUtils.isScenarioNotOpened())
+        # icon_path = ':/plugins/QGISPlugin_WaterIng/images/automaticNetworkReview.svg'
+        # self.toolReviewNetwork = self.addMapToolButtonAction(
+        #     icon_path,
+        #     text=WateringUtils.tr(u'Network Review'),
+        #     callback=self.activateActionTool,
+        #     toolbar = None,
+        #     parent=self.parentWindow)
+        # self.toolReviewNetwork.setCheckable(False)        
+        # self.toolReviewNetwork.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # demand patterns
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_pattern_GT.svg'
@@ -372,7 +372,7 @@ class toolbarToolManager():
     def activateEditTool(self, checked):    
         editTools = [self.toolImportINPFile,
                          self.toolImportShapeFile,
-                         self.toolReviewNetwork,
+                         #self.toolReviewNetwork,
                          self.toolDemandPattern,
                          self.insertDemandNodeAction,
                          self.insertTankNodeAction,
