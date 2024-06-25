@@ -100,19 +100,16 @@ class WateringSync():
                 break
 
     def synchronize_offline_changes(self):
+        WateringUtils.setProjectMetadata("elementsPostingInProgress", "true")
+        
         for repo in self.repositories:
             if repo.connectorToServer:
                 repo.initMultiElementsPosting()
             else:
                 self.sync_was_halted = True
                 break
-        
-        
-        # while self.offline_change_queue:
-        #     change = self.offline_change_queue.popleft()
-        #     self.processChange(change)
-        #     if self.sync_was_halted:
-        #         break
+            
+        WateringUtils.setProjectMetadata("elementsPostingInProgress", "default text")
             
     def processChange(self, change):
         #self.addToServerDict

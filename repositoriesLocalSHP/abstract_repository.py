@@ -188,8 +188,8 @@ class AbstractRepository():
     def addElementFromSignalR(self, elementJSON):
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         id_already_in_offline = self.hasFeatureWithId(layer, elementJSON['serverKeyId'])
-        
-        if not id_already_in_offline:
+
+        if not id_already_in_offline and not self.multiElementsPostingInProgress():
             print("Adding from signal r")
             element = [elementJSON[field] for field in self.features]
             print("element: ", element)
@@ -473,8 +473,6 @@ class AbstractRepository():
         
         self.deleteMultipleElements(deletions_list)
         
-    
-        
     def getFeatureJsons(self, elements_list):
         jsonsList = []
         
@@ -675,4 +673,7 @@ class AbstractRepository():
         request = QgsFeatureRequest().setFilterExpression(query)
         features = layer.getFeatures(request)
         return any(features)
+    
+    def multiElementsPostingInProgress(self):
+        return WateringUtils.getProjectMetadata("elementsPostingInProgress") != "default text"
     

@@ -76,7 +76,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         return elementJSON, isNew, serverKeyId, feature["ID"]
     
     def addElementToServer(self, feature):
-        elementJSON, isNew, serverKeyId = self.getElementJson(feature)
+        elementJSON, isNew, serverKeyId, _ = self.getElementJson(feature)
                 
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
