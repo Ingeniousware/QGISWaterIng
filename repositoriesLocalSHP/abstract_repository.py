@@ -461,17 +461,17 @@ class AbstractRepository():
                 self.syncDeletingChanges.append(Change(self.Layer, feature['ID'], "delete_from_offline", feature))
     
     def initMultiElementsPosting(self):
-        additions_list = self.getFeatureJsons(self.syncAddingChanges)
-        updates_list = self.getFeatureJsons(self.syncUpdatingChanges)
-        deletions_list = self.getFeatureJsons(self.syncDeletingChanges)
-        
-        self.postMultipleElements(additions_list)
-        self.connectorToServer.update_layer_features(additions_list)
-        
-        self.putMultipleElements(updates_list)
-        self.connectorToServer.update_layer_features(updates_list)
-        
-        self.deleteMultipleElements(deletions_list)
+        change_types = [
+            ('syncAddingChanges', self.postMultipleElements),
+            ('syncUpdatingChanges', self.putMultipleElements),
+            ('syncDeletingChanges', self.deleteMultipleElements)
+        ]
+
+        for change_type, process_method in change_types:
+            changes_list = self.getFeatureJsons(getattr(self, change_type))
+            if changes_list:
+                process_method(changes_list)
+                self.connectorToServer.update_layer_features(changes_list)
         
     def getFeatureJsons(self, elements_list):
         jsonsList = []
