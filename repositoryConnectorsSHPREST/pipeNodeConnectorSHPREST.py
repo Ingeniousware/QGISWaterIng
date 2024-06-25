@@ -230,7 +230,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             if point.distance(node_point) < tolerance:
                 return node["ID"]
         return None
-    
+        
     def update_layer_features(self, elementsJSONlist):
         layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
 
@@ -246,8 +246,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
             for feature in layer.getFeatures():
                 if feature['ID'] == current_feature_id:
-                    feature['ID'] = serverKeyId
-                    layer.updateFeature(feature)
+                    layer.changeAttributeValue(feature.id(), feature.fieldNameIndex('ID'), serverKeyId)
                     break
 
         layer.commitChanges()

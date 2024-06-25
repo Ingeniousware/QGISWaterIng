@@ -160,8 +160,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
             for feature in layer.getFeatures():
                 if feature['ID'] == current_feature_id:
-                    feature['ID'] = serverKeyId
-                    layer.updateFeature(feature)
+                    layer.changeAttributeValue(feature.id(), feature.fieldNameIndex('ID'), serverKeyId)
                     break
 
         layer.commitChanges()
