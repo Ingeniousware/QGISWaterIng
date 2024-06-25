@@ -420,6 +420,64 @@ class WateringUtils():
         with open(file_path, 'w') as file:
             json.dump(data, file, indent=4)
             
+    def write_data_in_projects_json(scenario_key, key, insert_data):
+        file_path = WateringUtils.get_projects_json_path()
+        if not os.path.exists(file_path):
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                json.dump({}, file)
+
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+
+        project_key = WateringUtils.getProjectMetadata("project_id")
+        if project_key in data and "scenarios" in data[project_key] and scenario_key in data[project_key]["scenarios"]:
+            data[project_key]["scenarios"][scenario_key][key] = insert_data
+        else:
+            print("Project or Scenario key not found in the provided JSON.")
+            return
+
+        with open(file_path, 'w') as file:
+            json.dump(data, file, indent=4)
+    
+    def get_data_from_projects_json(scenario_key, key):
+        file_path = WateringUtils.get_projects_json_path()
+        if not os.path.exists(file_path):
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, 'w') as file:
+                json.dump({}, file)
+
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+
+        project_key = WateringUtils.getProjectMetadata("project_id")
+        if project_key in data and "scenarios" in data[project_key] and scenario_key in data[project_key]["scenarios"]:
+            return data[project_key]["scenarios"][scenario_key].get(key, "Key not found.")
+        else:
+            print("Project or Scenario key not found in the provided JSON.")
+            return None
+        
+    def delete_data_in_projects_json(scenario_key, key):
+        file_path = WateringUtils.get_projects_json_path()
+        if not os.path.exists(file_path):
+            print("JSON file does not exist.")
+            return
+
+        with open(file_path, 'r') as file:
+            data = json.load(file)
+
+        project_key = WateringUtils.getProjectMetadata("project_id")
+        if project_key in data and "scenarios" in data[project_key] and scenario_key in data[project_key]["scenarios"]:
+            if key in data[project_key]["scenarios"][scenario_key]:
+                del data[project_key]["scenarios"][scenario_key][key]
+                with open(file_path, 'w') as file:
+                    json.dump(data, file, indent=4)
+                print(f"Key '{key}' and its value have been deleted.")
+            else:
+                print(f"Key '{key}' not found in the scenario '{scenario_key}'.")
+        else:
+            print("Project or Scenario key not found in the provided JSON.")
+            
     def is_server_key_id_absent(layer, serverKeyId):
         query = f"\"id\" = '{serverKeyId}'"
         request = QgsFeatureRequest().setFilterExpression(query)
