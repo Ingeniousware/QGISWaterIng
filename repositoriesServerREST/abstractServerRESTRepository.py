@@ -42,21 +42,21 @@ class abstractServerRESTRepository():
 
     def make_post_request(self, session, url, data, headers, params):
         try:
-            response = session.post(url, params=params, json=data, headers=headers)
+            response = session.post(url, params=params, json=data, headers=headers, verify=False)
             return response
         except requests.exceptions.RequestException as e:
             return f"Request error: {e}"
 
     def make_put_request(self, session, url, data, headers, params, serverKeyId):
         try:
-            response = session.put(url + "/" + str(serverKeyId), params=params, json=data, headers=headers)
+            response = session.put(url + "/" + str(serverKeyId), params=params, json=data, headers=headers, verify=False)
             return response
         except requests.exceptions.RequestException as e:
             return f"Request error: {e}"
     
     def make_delete_request(self, session, url, headers, serverKeyId):
         try:
-            response = session.delete(url + "/" + str(serverKeyId), headers=headers)
+            response = session.delete(url + "/" + str(serverKeyId), headers=headers, verify=False)
             return response
         except requests.exceptions.RequestException as e:
             return f"Request error: {e}"
@@ -91,7 +91,7 @@ class abstractServerRESTRepository():
         print(self.Token) """
         data = {'scenarioKeyId': self.ScenarioFK}
         headers = {'Authorization': "Bearer {}".format(self.Token)} 
-        response = requests.put(self.UrlPut + "/" + str(serverKeyId), params=data, headers=headers, json=elementJSON)
+        response = requests.put(self.UrlPut + "/" + str(serverKeyId), params=data, headers=headers, json=elementJSON, verify=False)
         return response
         
 

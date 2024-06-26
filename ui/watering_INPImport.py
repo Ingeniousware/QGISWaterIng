@@ -71,7 +71,7 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
             with open(self.output_file_path, 'rb') as file:
                 file_data = file.read()
         
-            response = requests.post(url_API, params=data, files = {'file': (self.output_file_name, file_data)} , headers=headers)
+            response = requests.post(url_API, params=data, files = {'file': (self.output_file_name, file_data)} , headers=headers, verify=False)
 
             if response.status_code == 200:
                 print("File uploaded successfully!")

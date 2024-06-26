@@ -290,7 +290,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
     
     def post_to_server(self, json, name):
         headers = {'Authorization': "Bearer {}".format(self.token)}
-        response = requests.post(self.UrlPost, json=json, headers=headers)
+        response = requests.post(self.UrlPost, json=json, headers=headers, verify=False)
 
         if response.status_code == 200:
             print(f'"{name}" correctly uploaded')

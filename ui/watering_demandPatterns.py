@@ -263,7 +263,7 @@ class WateringDemandPatterns(QtWidgets.QDialog, FORM_CLASS):
     def make_post_request(self, url, data, headers=None, max_retries=5, backoff_factor=0.3):
         for attempt in range(max_retries):
             try:
-                response = requests.post(url, json=data, headers=headers)
+                response = requests.post(url, json=data, headers=headers, verify=False)
                 response.raise_for_status()  # Raise HTTPError for bad responses
                 return response  # Assuming you want to return the JSON response
             except SSLError as ssl_err:

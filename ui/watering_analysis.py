@@ -83,7 +83,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             
         try:
             # Get water analysis
-            response_analysis = requests.get(url_analysis, params=params, headers={'Authorization': "Bearer {}".format(self.token)})
+            response_analysis = requests.get(url_analysis, params=params, headers={'Authorization': "Bearer {}".format(self.token)}, verify=False)
             response_analysis.raise_for_status()
 
             analysis_data = response_analysis.json()["data"]
@@ -94,7 +94,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
 
             #For simulator combo box in executions
             url_simulators = url_analysis + "/simulators"
-            response_simulators = requests.get(url_simulators, params=params, headers={'Authorization': "Bearer {}".format(self.token)})
+            response_simulators = requests.get(url_simulators, params=params, headers={'Authorization': "Bearer {}".format(self.token)}, verify=False)
             response_simulators.raise_for_status()
 
             simulator_data = response_simulators.json()["data"]
@@ -293,7 +293,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         headers = {'Authorization': f"Bearer {self.token}"}
         
         try:
-            response = requests.post(url, params=params, headers=headers, json=data_json)
+            response = requests.post(url, params=params, headers=headers, json=data_json, verify=False)
             if response.status_code == 200:
                 print("Analysis uploaded successfully!")
                 self.show_message("Water Analysis", "Analysis Executed Correctly", QMessageBox.Information)

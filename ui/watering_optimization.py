@@ -57,7 +57,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         params = {'scenarioKeyId': "{}".format(self.ScenarioFK), 'showRemoved': False}
         response = requests.get(url_optimization, params=params,
-                                headers={'Authorization': "Bearer {}".format(self.token)})
+                                headers={'Authorization': "Bearer {}".format(self.token)}, verify=False)
         
         for i in range(0, response.json()["total"]):
             self.problem_box.addItem(response.json()["data"][i]["name"])
@@ -88,7 +88,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         problemFK = self.Solutions[index]
         params = {'problemKeyId': "{}".format(problemFK)}
         response = requests.get(self.Url, params=params,
-                   headers={'Authorization': "Bearer {}".format(self.token)})
+                   headers={'Authorization': "Bearer {}".format(self.token)}, verify=False)
         
         data = response.json()["data"]
         total = response.json()["total"]
@@ -220,7 +220,7 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         "solutionSource": "string",
         "status": "0"}
     
-        requests.post(self.Url, json=post_message,headers={'Authorization': "Bearer {}".format(self.token)})
+        requests.post(self.Url, json=post_message,headers={'Authorization': "Bearer {}".format(self.token)}, verify=False)
         
         self.cleanMarkers()
         self.removeInsertAction()

@@ -45,7 +45,7 @@ class getDataRepository:
         headers={'Authorization': "Bearer {}".format(self.token)}
         selectColumns = ['value', 'timeStamp']
 
-        response_analysis = requests.get(url_Measurements, params=params, headers=headers)
+        response_analysis = requests.get(url_Measurements, params=params, headers=headers, verify=False)
         response_analysis.raise_for_status()
         data = response_analysis.json()["data"]
 

@@ -278,7 +278,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
         headers = {'Authorization': "Bearer {}".format(self.token)} 
-        response = requests.post(url, headers=headers, json=newScenarioJson)
+        response = requests.post(url, headers=headers, json=newScenarioJson, verify=False)
         print("response.text: ", response.text)
         if response.status_code == 200:
             WateringUtils.success_message("Scenario created successfully!")

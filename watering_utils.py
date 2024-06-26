@@ -110,7 +110,7 @@ class WateringUtils():
         absolute_url = WateringUtils.getServerUrl() + url
         try:
             response = requests.get(url, params=params,
-                                    headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})
+                                    headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}, verify=False)
             if response.status_code == 200:
                     return response
                 
@@ -123,7 +123,7 @@ class WateringUtils():
     
     def send_post_request(url, params, json_data, headers, error_message):
         try:
-            response = requests.post(url, params=params, json=json_data, headers=headers)
+            response = requests.post(url, params=params, json=json_data, headers=headers, verify=False)
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
@@ -581,7 +581,7 @@ class WateringUtils():
         absolute_url = WateringUtils.getServerUrl() + url
         headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
         try:
-            response = requests.get(absolute_url, params=params, headers=headers)
+            response = requests.get(absolute_url, params=params, headers=headers, verify=False)
             if response.status_code == 200:
                 return response
             else:
@@ -601,7 +601,7 @@ class WateringUtils():
         absolute_url = WateringUtils.getServerUrl() + url
         headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
         try:
-            response = requests.post(absolute_url, json=json, headers=headers)
+            response = requests.post(absolute_url, json=json, headers=headers, verify=False)
             if response.status_code == 200:
                 return response
             else:
@@ -621,7 +621,7 @@ class WateringUtils():
         absolute_url = WateringUtils.getServerUrl() + url
         headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
         try:
-            response = requests.put(absolute_url, json=json, headers=headers)
+            response = requests.put(absolute_url, json=json, headers=headers, verify=False)
             if response.status_code == 200:
                 return response
             else:

@@ -80,7 +80,7 @@ class AbstractRepository():
                           'pageSize': "100"}
         
         response = requests.get(changes_url, params=params_changes, 
-                            headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))})
+                            headers={'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}, verify=False)
         return response
         
     def setElementFields(self, fields_definitions):

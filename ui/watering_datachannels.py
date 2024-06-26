@@ -80,7 +80,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
         params = {'projectKeyId': "{}".format(self.ProjectFK)}
         response_analysis = requests.get(url_DataSources, params=params,
-                                headers={'Authorization': "Bearer {}".format(self.token)})
+                                headers={'Authorization': "Bearer {}".format(self.token)}, verify=False)
 
         for i in range(0, response_analysis.json()["total"]):
             self.datasource_box.addItem(response_analysis.json()["data"][i]["name"])
@@ -101,7 +101,7 @@ class WateringDatachannels(QtWidgets.QDialog, FORM_CLASS):
         self.ProjectFK = QgsProject.instance().readEntry("watering","project_id","default text")[0]
         params = {'projectKeyId': "{}".format(self.ProjectFK), 'sourceKeyId': "{}".format(self.SourceFK)}
         response_analysis = requests.get(url_DataChannels, params=params,
-                                headers={'Authorization': "Bearer {}".format(self.token)})
+                                headers={'Authorization': "Bearer {}".format(self.token)}, verify=False)
 
         for i in range(0, response_analysis.json()["total"]):
             self.datachannels_box.addItem(response_analysis.json()["data"][i]["name"])
