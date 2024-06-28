@@ -143,6 +143,10 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
     def convert_polygon_to_json(self, layer_name):
         layer = QgsProject.instance().mapLayersByName(layer_name)[0]
         features = []
+        # Define the source and destination coordinate reference systems
+        crs_source = layer.crs()
+        crs_destination = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS84
+        transform = QgsCoordinateTransform(crs_source, crs_destination, QgsProject.instance())
 
         for feature in layer.getFeatures():
             geom = feature.geometry()
@@ -152,10 +156,11 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             for i in range(n):
                 coordinateList = polygon[0][i]
                 for point in coordinateList:
+                    transformed_point = transform.transform(point)
                     vertices.append({
                         "vertexFK": str(uuid.uuid4()),
-                        "lng": point.x(),
-                        "lat": point.y(),
+                        "lng": transformed_point.x(),
+                        "lat": transformed_point.y(),
                         "order": 0
                     })
 
@@ -192,7 +197,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             self.post_to_server(feature_json, name)
             #print(feature_json)
             features.append(feature_json)
-
+        print(features)
         QgsProject.instance().removeMapLayer(layer)
         return features
     
@@ -249,8 +254,8 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "emitterCoeff": emitterCoefficient,
                 "removed": False
             }
-            self.post_to_server(feature_json, name)
-            #print(feature_json)
+            #self.post_to_server(feature_json, name)
+            
             features.append(feature_json)
         print(features)
         QgsProject.instance().removeMapLayer(layer)
