@@ -58,10 +58,10 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             serverKeyId = feature["ID"]
    
         name = feature["Name"]
-        description = feature["Descript"]
-        z = feature["Z[m]"]
-        baseDemand = feature["B. Demand"]
-        emitterCoeff = feature["EmitterCoe"]
+        description = feature["Descript"] if feature["Descript"] else ""
+        z = feature["Z[m]"] if feature["Z[m]"] else 0
+        baseDemand = feature["B. Demand"] if feature["B. Demand"] else 0
+        emitterCoeff = feature["EmitterCoe"] if feature["EmitterCoe"] else 0
         
         elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
                        'scenarioFK': "{}".format(self.ScenarioFK), 
@@ -71,12 +71,12 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'lat': "{}".format(y), 
                        'z': "{}".format(z),
                        'baseDemand': "{}".format(baseDemand),
-                       'emitterCoeff': "{}".format(emitterCoeff),}
+                       'emitterCoeff': "{}".format(emitterCoeff)}
 
-        return elementJSON, isNew, serverKeyId
+        return elementJSON, isNew, serverKeyId, feature["ID"]
     
     def addElementToServer(self, feature):
-        elementJSON, isNew, serverKeyId = self.getElementJson(feature)
+        elementJSON, isNew, serverKeyId, _ = self.getElementJson(feature)
                 
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
@@ -141,3 +141,27 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'serverKeyId': "{}".format(serverKeyId)}
         
         return (self.serverRepository.deleteFromServer(elementJSON) == 200)
+    
+    def postMultipleElements(self, elementsJSONlist):
+        self.serverRepository.postMultipleElements(elementsJSONlist)
+        
+    def update_layer_features(self, elementsJSONlist):
+        layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+
+        if not layer:
+            print("Layer not found")
+            return
+
+        layer.startEditing()
+
+        for element in elementsJSONlist:
+            serverKeyId = element[0]['serverKeyId']
+            current_feature_id = element[1]
+
+            for feature in layer.getFeatures():
+                if feature['ID'] == current_feature_id:
+                    layer.changeAttributeValue(feature.id(), feature.fieldNameIndex('ID'), serverKeyId)
+                    break
+
+        layer.commitChanges()
+        print("Layer features updated successfully.")

@@ -45,6 +45,11 @@ class scenarioUnitOfWork():
         self.layer_names = {repo.LayerName: repo for repo in self.list_of_elements}
 
     def initializeSyncSystem(self):
+        # TESTS
+        #list_of_elements_nodes_only = [self.waterDemandNodeRepository]
+        #self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK, list_of_elements_nodes_only)
+        
+        #working code
         self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK, self.list_of_elements)
         
     def loadAll(self, progressBar):

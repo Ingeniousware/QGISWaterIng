@@ -115,7 +115,17 @@ class toolbarToolManager():
         self.wateringIdentifyAction.setCheckable(True)        
         #self.wateringIdentifyAction.toggled.connect(self.activateWateringIdentifyTool)
         
-
+        # Network Review
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/automaticNetworkReview.svg'
+        self.toolReviewNetwork = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Network Review'),
+            callback=self.activateActionTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.toolReviewNetwork.setCheckable(False)       
+        self.toolReviewNetwork.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
         # import elements
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/import.svg'
         self.toolImportINPFile = self.addMapToolButtonAction(
@@ -138,17 +148,6 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.toolImportShapeFile.setCheckable(False)        
         self.toolImportShapeFile.setEnabled(not WateringUtils.isScenarioNotOpened())
-
-        # network review
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/automaticNetworkReview.svg'
-        self.toolReviewNetwork = self.addMapToolButtonAction(
-            icon_path,
-            text=WateringUtils.tr(u'Network Review'),
-            callback=self.activateActionTool,
-            toolbar = None,
-            parent=self.parentWindow)
-        self.toolReviewNetwork.setCheckable(False)        
-        self.toolReviewNetwork.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # demand patterns
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/icon_pattern_GT.svg'
@@ -371,19 +370,19 @@ class toolbarToolManager():
             
     def activateEditTool(self, checked):    
         editTools = [self.toolImportINPFile,
-                         self.toolImportShapeFile,
-                         self.toolReviewNetwork,
-                         self.toolDemandPattern,
-                         self.insertDemandNodeAction,
-                         self.insertTankNodeAction,
-                         self.insertWaterPipeAction,
-                         self.insertReservoirNodeAction,
-                         self.insertValveNodeAction,
-                         self.insertPumpNodeAction,
-                         self.insertWaterMeterNodeAction,
-                         self.toolDeleteElementAction, 
-                         self.undoAction,
-                         self.redoAction]
+                     self.toolImportShapeFile,
+                     self.toolReviewNetwork,
+                     self.toolDemandPattern,
+                     self.insertDemandNodeAction,
+                     self.insertTankNodeAction,
+                     self.insertWaterPipeAction,
+                     self.insertReservoirNodeAction,
+                     self.insertValveNodeAction,
+                     self.insertPumpNodeAction,
+                     self.insertWaterMeterNodeAction,
+                     self.toolDeleteElementAction, 
+                     self.undoAction,
+                     self.redoAction]
         
         if checked:
             for tool in editTools:

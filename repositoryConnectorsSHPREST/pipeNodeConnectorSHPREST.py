@@ -41,8 +41,7 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         self.localRepository.deleteElement(paraminput[0])
         print("Water Pipe Node removed after push from server")
 
-    def addElementToServer(self, feature):
-        
+    def getElementJson(self, feature):
         isNew = False
         if len(str(feature["ID"])) == 10:
             isNew = True
@@ -58,35 +57,28 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         initialStatus = 1
         currentStatus = 1
         
-        #nodeUpFK = WateringUtils.getProjectMetadata("nodeUpFK")
-        nodeUpName = "string"
-        #nodeDownFK = WateringUtils.getProjectMetadata("nodeDownFK")
-        nodeDownName = "string"
-        
         nodeDownFK, nodeUpFK = self.getPipeNodes(feature)
-        
-        #print(nodeDownFK, nodeUpFK)
-        
         vertices = self.getVertices(feature, nodeDownFK, nodeUpFK)
-        #length = self.getPipeLength(vertices)
             
         elementJSON = {
             "serverKeyId": "{}".format(serverKeyId),
             "scenarioFK": "{}".format(self.ScenarioFK),
             "nodeUpFK": "{}".format(nodeUpFK),
-            "nodeUpName": "{}".format(nodeUpName),
             "nodeDownFK": "{}".format(nodeDownFK),
-            "nodeDownName": "{}".format(nodeDownName),
             "name": "{}".format(name),
             "description": "{}".format(description),
             "vertices": vertices,
             "diameterInt": "{}".format(diameterInt),
-            #"length": "{}".format(length),
             "roughnessAbsolute": "{}".format(roughnessAbsolute),
             "roughnessCoefficient": "{}".format(roughnessCoefficient),
             "initialStatus": "{}".format(initialStatus),
             "currentStatus": "{}".format(currentStatus)
         }
+        
+        return elementJSON, isNew, serverKeyId, feature["ID"]
+    
+    def addElementToServer(self, feature):
+        elementJSON, isNew, serverKeyId, _ = self.getElementJson(feature)
         
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
@@ -102,7 +94,6 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             print("pipe is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
-        #print("pipes server response: ", serverResponse.text)
         if serverResponse.status_code == 200:
             print("Water Pipe Node was sent succesfully to the server")
             
@@ -165,7 +156,6 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                 self.processPoint(point, vertices, order)
                 order = order + 1
 
-        #print("VERTICES: ", vertices)
         return vertices
 
     def processPoint(self, point, vertices, order):
@@ -240,3 +230,24 @@ class pipeNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             if point.distance(node_point) < tolerance:
                 return node["ID"]
         return None
+        
+    def update_layer_features(self, elementsJSONlist):
+        layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
+
+        if not layer:
+            print("Layer not found")
+            return
+
+        layer.startEditing()
+
+        for element in elementsJSONlist:
+            serverKeyId = element[0]['serverKeyId']
+            current_feature_id = element[1]
+
+            for feature in layer.getFeatures():
+                if feature['ID'] == current_feature_id:
+                    layer.changeAttributeValue(feature.id(), feature.fieldNameIndex('ID'), serverKeyId)
+                    break
+
+        layer.commitChanges()
+        print("Layer features updated successfully.")

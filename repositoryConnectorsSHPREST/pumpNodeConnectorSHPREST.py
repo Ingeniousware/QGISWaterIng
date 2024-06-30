@@ -46,9 +46,7 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         self.localRepository.deleteElement(paraminput[0])
         print("Water Pump Node removed after push from server")
 
-
-    def addElementToServer(self, feature):
-        
+    def getElementJson(self, feature):          
         x = feature.geometry().asPoint().x()
         y = feature.geometry().asPoint().y()
         #transforming coordinates for the CRS of the server
@@ -81,6 +79,10 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                        'relativeSpeed': "{}".format(speed)
                         }
         
+        return elementJSON, isNew, serverKeyId, feature["ID"]
+    
+    def addElementToServer(self, feature):
+        elementJSON, isNew, serverKeyId, _ = self.getElementJson(feature)
 
         self.lastAddedElements[str(serverKeyId)] = 1
         self.lifoAddedElements.put(str(serverKeyId))
@@ -143,11 +145,29 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             print("Failed on sendig Pump Tank Node to the server")
             return False
 
-    
-
     def removeElementFromServer(self, serverKeyId):
         elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 
                        'serverKeyId': "{}".format(serverKeyId)}
         
         return (self.serverRepository.deleteFromServer(elementJSON) == 200)
-    
+        
+    def update_layer_features(self, elementsJSONlist):
+        layer = QgsProject.instance().mapLayersByName("watering_pumps")[0]
+
+        if not layer:
+            print("Layer not found")
+            return
+
+        layer.startEditing()
+
+        for element in elementsJSONlist:
+            serverKeyId = element[0]['serverKeyId']
+            current_feature_id = element[1]
+
+            for feature in layer.getFeatures():
+                if feature['ID'] == current_feature_id:
+                    layer.changeAttributeValue(feature.id(), feature.fieldNameIndex('ID'), serverKeyId)
+                    break
+
+        layer.commitChanges()
+        print("Layer features updated successfully.")

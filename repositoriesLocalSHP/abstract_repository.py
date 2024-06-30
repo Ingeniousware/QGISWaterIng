@@ -37,6 +37,8 @@ class AbstractRepository():
         self.currentLayer = None
         self.numberLocalFieldsOnly = 1
         self.syncAddingChanges = []
+        self.syncUpdatingChanges = []
+        self.syncDeletingChanges = []
 
     def initializeRepository(self):
         #loading element from the API
@@ -67,7 +69,7 @@ class AbstractRepository():
         url = WateringUtils.getServerUrl() + self.UrlGet
         headers = {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}
         
-        response = requests.get(url, params=params_element, headers=headers, stream=stream)
+        response = requests.get(url, params=params_element, headers=headers, stream=stream, verify=False)
         return response
 
     def loadChanges(self, lastUpdate):
@@ -186,8 +188,8 @@ class AbstractRepository():
     def addElementFromSignalR(self, elementJSON):
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         id_already_in_offline = self.hasFeatureWithId(layer, elementJSON['serverKeyId'])
-        
-        if not id_already_in_offline:
+
+        if not id_already_in_offline and not self.multiElementsPostingInProgress():
             print("Adding from signal r")
             element = [elementJSON[field] for field in self.features]
             print("element: ", element)
@@ -443,8 +445,9 @@ class AbstractRepository():
                 self.offlineChangesList.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
                 self.syncAddingChanges.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
             if (adjusted_feature_lastUpdated > lastUpdated) and (len(str(feature['ID'])) == 36):
-                    self.offlineChangesList.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
-
+                self.offlineChangesList.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
+                self.syncUpdatingChanges.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
+                
     def getDeletedElementsFromOffline(self, lastUpdated):
         backup_layer_name = self.LayerName + "_backup.shp"
         
@@ -455,14 +458,41 @@ class AbstractRepository():
             adjusted_feature_lastUpdated = self.adjustedDatetime(feature['lastUpdate'])
             if adjusted_feature_lastUpdated > lastUpdated:
                 self.offlineChangesList.append(Change(self.Layer, feature['ID'], "delete_from_offline", feature))
+                self.syncDeletingChanges.append(Change(self.Layer, feature['ID'], "delete_from_offline", feature))
     
-    def getFeatureJsons(self):
-        self.jsonsList = []
-        for change in self.syncAddingChanges:
-            if self.connectorToServer:
-                self.jsonsList.append(self.connectorToServer.getElementJson(change.data))
-                
-                
+    def initMultiElementsPosting(self):
+        change_types = [
+            ('syncAddingChanges', self.postMultipleElements),
+            ('syncUpdatingChanges', self.putMultipleElements),
+            ('syncDeletingChanges', self.deleteMultipleElements)
+        ]
+
+        for change_type, process_method in change_types:
+            changes_list = self.getFeatureJsons(getattr(self, change_type))
+            if changes_list:
+                process_method(changes_list)
+                self.connectorToServer.update_layer_features(changes_list)
+        
+    def getFeatureJsons(self, elements_list):
+        jsonsList = []
+        
+        if elements_list and self.connectorToServer:
+            for change in elements_list:
+                if self.connectorToServer:
+                    response , _, _, featureID =  self.connectorToServer.getElementJson(change.data)
+                    jsonsList.append((response, featureID))
+        
+        return jsonsList
+
+    def postMultipleElements(self, jsonsList):
+        self.connectorToServer.serverRepository.postMultipleElements(jsonsList)
+    
+    def putMultipleElements(self, jsonsList):
+       self.connectorToServer.serverRepository.putMultipleElements(jsonsList) 
+       
+    def deleteMultipleElements(self, jsonsList):
+        self.connectorToServer.serverRepository.deleteMultipleElements(jsonsList) 
+       
     # NEW_SYNC_METHODS_END
     
     def getOfflineDict(self, lastUpdated):
@@ -643,4 +673,7 @@ class AbstractRepository():
         request = QgsFeatureRequest().setFilterExpression(query)
         features = layer.getFeatures(request)
         return any(features)
+    
+    def multiElementsPostingInProgress(self):
+        return WateringUtils.getProjectMetadata("elementsPostingInProgress") != "default text"
     
