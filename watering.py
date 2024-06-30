@@ -123,8 +123,6 @@ class QGISPlugin_WaterIng:
         self.actionManager = None
         self.toolbarToolManager = None
         self.project_info = None
-        
-        self.getCertificate()
 
     
 
@@ -251,6 +249,7 @@ class QGISPlugin_WaterIng:
 
     def addLogin(self):
         print("Check Internet Connection: ", WateringUtils.isInternetConnection())
+        self.getWateringCertificate()
         self.dlg = WateringLogin()
         self.dlg.show()
         if (self.dlg.exec_() == 1):
@@ -260,14 +259,14 @@ class QGISPlugin_WaterIng:
             self.addLoad()
         
     def addLoad(self):
-        #self.InitializeProjectToolbar()
         print("calling watering load dialog")
         self.dlg = WateringLoad()
         self.dlg.show() 
         if (self.dlg.exec_() == 1):
             self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork  
             self.actionManager = actionManager(os.environ.get('TOKEN'), self.dlg.current_scenario_fk, self.setActiveStateUndo, self.setActiveStateRedo) 
-            if WateringUtils.isInternetConnection() and not self.hub_connection:        
+            if WateringUtils.isInternetConnection() and not self.hub_connection:     
+                print("setting hub connection")   
                 self.setHubConnection()        
             self.updateActionStateOpen()
             self.updateActionScenarioStateOpen()
@@ -301,9 +300,9 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.toolImportShapeFile.setCurrentTool(toolImportShapeFile)
         self.toolbarToolManager.toolImportShapeFile.setEnabled(True)
 
-        # toolReviewNetwork = NetworkReviewTool(self.iface)
-        # self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
-        # self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
+        toolReviewNetwork = NetworkReviewTool(self.iface)
+        self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
+        self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
 
         toolDemandPattern = DemandPatternTool(self.iface)
         self.toolbarToolManager.toolDemandPattern.setCurrentTool(toolDemandPattern)
@@ -652,7 +651,7 @@ class QGISPlugin_WaterIng:
         self.project_info = QLabel(f" Project: {project_name} | Scenario: {scenario_name} ", status_bar)
         status_bar.addWidget(self.project_info, 1)
 
-    def getCertificate(self):
+    def getWateringCertificate(self):
         url = WateringUtils.getServerUrl()
         cert_pem = self.get_certificate("dev.watering.online")
         self.add_certificate_to_qgis(cert_pem)
