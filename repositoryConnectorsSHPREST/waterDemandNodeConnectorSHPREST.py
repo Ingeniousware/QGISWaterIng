@@ -87,7 +87,7 @@ class waterDemandNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         if (isNew): serverResponse = self.serverRepository.postToServer(elementJSON)
         else: serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
 
-        if serverResponse.status_code == 200:
+        if serverResponse and serverResponse.status_code == 200:
             print("Water Demand Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
             
