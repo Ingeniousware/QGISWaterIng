@@ -99,7 +99,7 @@ class valveNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         
         print("VALVE RESPONSE: ", serverResponse.text)
         
-        if serverResponse.status_code == 200:
+        if serverResponse and serverResponse.status_code == 200:
             print("Water Valve Node was sent succesfully to the server")
             #writing the server key id to the element that has been created
             

@@ -102,7 +102,7 @@ class tankNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             print("tank is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
-        if serverResponse.status_code == 200:
+        if serverResponse and serverResponse.status_code == 200:
             print("Water Tank Node was sent succesfully to the server")
  
             if isNew:

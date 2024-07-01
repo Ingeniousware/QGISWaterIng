@@ -88,7 +88,7 @@ class reservoirNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             print("Reservoir is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
         
-        if serverResponse.status_code == 200:
+        if serverResponse and serverResponse.status_code == 200:
             print("Water Reservoir Node was sent succesfully to the server")
             
             if isNew:
