@@ -21,9 +21,7 @@ import json
 
 import ssl
 import socket
-from OpenSSL import crypto
 from qgis.core import QgsSettings
-
 
 # Import the code for the dialog
 
@@ -652,7 +650,6 @@ class QGISPlugin_WaterIng:
         status_bar.addWidget(self.project_info, 1)
 
     def getWateringCertificate(self):
-        url = WateringUtils.getServerUrl()
         cert_pem = self.get_certificate("dev.watering.online")
         self.add_certificate_to_qgis(cert_pem)
         
@@ -667,15 +664,16 @@ class QGISPlugin_WaterIng:
         return cert
 
     def add_certificate_to_qgis(self, cert_pem):
-        cert = crypto.load_certificate(crypto.FILETYPE_PEM, cert_pem)
         settings = QgsSettings()
-        cert_pem_str = crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode('utf-8')
+        cert_pem_str = cert_pem.strip()
         trusted_certs = settings.value('network/ssl/trustedCertificates', [], type=str)
+
         if cert_pem_str not in trusted_certs:
             trusted_certs.append(cert_pem_str)
             settings.setValue('network/ssl/trustedCertificates', trusted_certs)
             print("Certificate added to trusted certificates.")
         else:
             print("Certificate is already trusted.")
+        
         trusted_certs = settings.value('network/ssl/trustedCertificates', [], type=str)
         print("Trusted Certificates:", trusted_certs)
