@@ -446,7 +446,7 @@ class AbstractRepository():
                 self.syncAddingChanges.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
             if (adjusted_feature_lastUpdated > lastUpdated) and (len(str(feature['ID'])) == 36):
                 self.offlineChangesList.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
-                self.syncUpdatingChanges.append(Change(self.Layer, feature['ID'], "add_from_offline", feature))
+                self.syncUpdatingChanges.append(Change(self.Layer, feature['ID'], "update_from_offline", feature))
                 
     def getDeletedElementsFromOffline(self, lastUpdated):
         backup_layer_name = self.LayerName + "_backup.shp"
