@@ -470,7 +470,11 @@ class QGISPlugin_WaterIng:
         self.thread.start()
     
     def onSynchButtonClicked(self):
-        self.scenarioUnitOFWork.newUpdateAll()
+        if self.hub_connection and self.scenarioUnitOFWork:
+            self.scenarioUnitOFWork.newUpdateAll()
+            return
+        
+        WateringUtils.error_message("Sync function is currently unavailable. Please open a project or press the connection button to proceed.")
             
     def synchSingleClicked(self):
         print("Synch button single Clicked!")
@@ -538,7 +542,7 @@ class QGISPlugin_WaterIng:
     def setWateringConnection(self):
         connection_status = WateringUtils.getProjectMetadata("connection_status")
         
-        if self.connectionStatusAction.isChecked():
+        if self.connectionStatusAction.isChecked() and not self.hub_connection:
             self.setHubConnection()
         else:
             if self.syncManager:
