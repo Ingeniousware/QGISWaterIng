@@ -250,10 +250,15 @@ class NetworkReviewTool:
                 self.reviewProcess()
                 WateringUtils.delete_column(self.node_layer,"Unconected")
                 WateringUtils.changeColors(self.node_layer,"","single")
-
                 self.iface.messageBar().pushMessage("Success", "Successfully identified unconnected nodes!", level=Qgis.Success, duration=6)
                 print("Finished fixing the network")
+            elif response == QMessageBox.No:
+                WateringUtils.delete_column(self.node_layer,"Unconected")
+                WateringUtils.changeColors(self.node_layer,"","single")
+                return
             elif response == QMessageBox.Cancel:
+                WateringUtils.delete_column(self.node_layer,"Unconected")
+                WateringUtils.changeColors(self.node_layer,"","single")
                 print("Out")
                 return
             

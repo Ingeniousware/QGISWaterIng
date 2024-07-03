@@ -254,7 +254,7 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
                 "emitterCoeff": emitterCoefficient,
                 "removed": False
             }
-            #self.post_to_server(feature_json, name)
+            self.post_to_server(feature_json, name)
             
             features.append(feature_json)
         print(features)
@@ -359,10 +359,10 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
     
     def post_to_server(self, json, name):
         headers = {'Authorization': "Bearer {}".format(self.token)}
-        response = requests.post(self.UrlPost, json=json, headers=headers)
-        #response = WateringUtils.requests_post(self.UrlPost, json)
+        #response = requests.post(self.UrlPost, json=json, headers=headers)
+        response = WateringUtils.requests_post(self.UrlPost, json)
 
-        if response.status_code == 200:
+        """ if response.status_code == 200:
             print(f'"{name}" correctly uploaded')
             print(response)
             #time.sleep(1.5)
@@ -372,4 +372,4 @@ class WateringShpImport(QtWidgets.QDialog, FORM_CLASS):
             message_box.setWindowTitle("Watering Shp")
             message_box.setText("Failed to upload file. Status code: {}".format(response.status_code))
             message_box.setStandardButtons(QMessageBox.Ok)
-            message_box.exec_()
+            message_box.exec_() """
