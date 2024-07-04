@@ -1,7 +1,7 @@
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 from qgis.utils import iface
-from qgis.gui import QgsMapTool
+from qgis.gui import QgsMapTool, QgsMapToolPan
 from PyQt5.QtCore import Qt
 
 from functools import partial
@@ -24,6 +24,7 @@ class toolbarToolManager():
         self.canvas = canvas
         self.toolbar = toolbar
         self.parentWindow = parentWindow
+        self.panTool = QgsMapToolPan(canvas)
 
         # Actions
         self.editElementsAction = None
@@ -366,8 +367,7 @@ class toolbarToolManager():
             self.activeToolController = toolControllerAction
         else:
             self.activeToolController = None
-        
-            
+                
     def activateEditTool(self, checked):    
         editTools = [self.toolImportINPFile,
                      self.toolImportShapeFile,
@@ -388,13 +388,11 @@ class toolbarToolManager():
             for tool in editTools:
                 self.toolbar.addAction(tool)
         else:
+            self.canvas.setMapTool(self.panTool)
             for tool in editTools:
                 self.toolbar.removeAction(tool)
                 
                 tool.setChecked(False)
-                
-                if tool.MapTool and isinstance(tool, QgsMapTool):
-                    self.canvas.unsetMapTool(tool.MapTool)
                 
     def activateOptimizationTool(self, checked):
         optimizationTools = [self.openOptimizationManagerAction,
@@ -404,13 +402,11 @@ class toolbarToolManager():
             for tool in optimizationTools:
                 self.toolbar.addAction(tool)
         else:
+            self.canvas.setMapTool(self.panTool)
             for tool in optimizationTools:
                 self.toolbar.removeAction(tool)
                 
                 tool.setChecked(False)
-                
-                if tool.MapTool:
-                    self.canvas.unsetMapTool(tool.MapTool)
 
     def waterOptimization(self, second):
         if WateringUtils.isScenarioNotOpened():
