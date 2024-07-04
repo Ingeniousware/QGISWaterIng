@@ -189,23 +189,25 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         newProjectKeyId = str(uuid.uuid4())
         newScenarioKeyId = str(uuid.uuid4())
         newScenarioName = self.new_scenario_name.text() or "My Project Scenario"
-        projectName = self.new_project_name.text() or "My Project"
         successfullyCreated = False
         currentProjectsList = self.offline_projects_list if self.offline_mode else self.online_projects_list
         
         if self.new_project_checkBox.isChecked():
+            print("project checked ")
             successfullyCreated = self.create_new_project_and_scenario(newProjectKeyId, newScenarioKeyId, projectName)
-            if successfullyCreated:
-                self.current_project_fk = currentProjectsList[self.new_projects_box.currentIndex()][0]
-                self.current_scenario_fk = newScenarioKeyId
-                self.current_project_name = currentProjectsList[self.new_projects_box.currentIndex()][1]
-                self.current_scenario_name = newScenarioName
-        else:   
-            successfullyCreated = self.create_new_scenario(newScenarioKeyId, None, newScenarioName)
+            projectName = self.new_project_name.text() or "My Watering Project"
             if successfullyCreated:
                 self.current_project_fk = newProjectKeyId
                 self.current_scenario_fk = newScenarioKeyId
                 self.current_project_name = projectName
+                self.current_scenario_name = newScenarioName
+        else:   
+            print("project unchecked ")
+            successfullyCreated = self.create_new_scenario(newScenarioKeyId, None, newScenarioName)
+            if successfullyCreated:
+                self.current_project_fk = currentProjectsList[self.new_projects_box.currentIndex()][0]
+                self.current_scenario_fk = newScenarioKeyId
+                self.current_project_name = currentProjectsList[self.new_projects_box.currentIndex()][1]
                 self.current_scenario_name = newScenarioName
 
         if successfullyCreated:
@@ -657,7 +659,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             else:
                 shutil.copy2(s, d)
 
-        creation_time = '1800-11-29T10:28:46.2756439Z' #WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
+        creation_time = '1800-11-29T10:28:46.2756439Z' 
         
         projects_json_path = os.path.join(folder_path, 'projects.json')
         
