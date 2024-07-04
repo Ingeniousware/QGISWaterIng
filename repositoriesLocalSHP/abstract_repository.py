@@ -14,6 +14,7 @@ from PyQt5.QtCore import QDateTime, Qt, QVariant
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import iface
+from qgis.gui import QgsMapCanvas
 
 class AbstractRepository():
 
@@ -254,6 +255,7 @@ class AbstractRepository():
         else:
             print("Failed to commit changes.")
 
+        QgsMapCanvas().refresh()
         return feature
 
     def deleteFeatureFromMapInteraction(self, feature):
