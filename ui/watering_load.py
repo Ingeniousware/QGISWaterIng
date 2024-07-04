@@ -679,6 +679,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             json.dump(projects, f, indent=4)
             f.truncate()
         
+        print("reached cloning end")
         return target_path   
     
     def set_merge_projects_combo_box(self):
