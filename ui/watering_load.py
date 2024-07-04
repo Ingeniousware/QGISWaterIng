@@ -205,9 +205,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             print("project unchecked ")
             successfullyCreated = self.create_new_scenario(newScenarioKeyId, None, newScenarioName)
             if successfullyCreated:
-                self.current_project_fk = currentProjectsList[self.new_projects_box.currentIndex()][0]
+                self.current_project_fk = currentProjectsList[self.new_projects_box.currentIndex()][1]
                 self.current_scenario_fk = newScenarioKeyId
-                self.current_project_name = currentProjectsList[self.new_projects_box.currentIndex()][1]
+                self.current_project_name = currentProjectsList[self.new_projects_box.currentIndex()][0]
                 self.current_scenario_name = newScenarioName
 
         if successfullyCreated:
