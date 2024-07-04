@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 # Import QGis
-from qgis.core import QgsProject, Qgis
+from qgis.core import QgsProject, Qgis, QgsNetworkAccessManager
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker, QgsMapToolIdentify
 from qgis.utils import iface
-from PyQt5.QtCore import QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal, QUrl
+from qgis.PyQt.QtNetwork import QNetworkRequest
 from PyQt5.QtCore import QTimer
 
 from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
@@ -654,8 +655,11 @@ class QGISPlugin_WaterIng:
         status_bar.addWidget(self.project_info, 1)
 
     def getWateringCertificate(self):
-        cert_pem = self.get_certificate("dev.watering.online")
-        self.add_certificate_to_qgis(cert_pem)
+        req = QNetworkRequest(QUrl('https://dev.watering.online'))
+        reply = QgsNetworkAccessManager.instance().get(req)
+        print("reply : ", reply)
+        #cert_pem = self.get_certificate("dev.watering.online")
+        #self.add_certificate_to_qgis(cert_pem)
         
     def get_certificate(self, hostname):
         conn = ssl.create_default_context().wrap_socket(
