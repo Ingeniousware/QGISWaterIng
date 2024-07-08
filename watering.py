@@ -611,6 +611,7 @@ class QGISPlugin_WaterIng:
             self.hub_connection = None
             
     def setOnAttributeChange(self):
+        print(" setOnAttributeChange : ")
         layer_list = ['watering_tanks',
                       'watering_demand_nodes',
                       'watering_pumps',

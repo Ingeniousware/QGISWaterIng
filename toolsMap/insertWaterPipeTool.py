@@ -1,7 +1,7 @@
 from ..ActionManagement.insertPipeAction import insertPipeAction
 from ..ActionManagement.insertNodeAction import insertNodeAction
 from .insertAbstractTool import InsertAbstractTool
-from qgis.gui import QgsVertexMarker, QgsMapTool, QgsRubberBand, Qgis
+from qgis.gui import QgsVertexMarker, QgsMapTool, QgsRubberBand, Qgis, QgsMapCanvas
 from qgis.core import QgsPoint, QgsGeometry, QgsProject, QgsPointXY, QgsWkbTypes
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
@@ -172,6 +172,7 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.rubberBand1.setColor(QColor(240, 40, 40))
         self.rubberBand1.setWidth(1)
         self.rubberBand1.setLineStyle(Qt.SolidLine)
+        QgsMapCanvas().refresh()
     
     def createMovingPartOfPipe(self, lastPoint, movingPoint):
         pointsMovingLine = []
@@ -184,3 +185,4 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.rubberBand2.setColor(QColor(240, 40, 40))
         self.rubberBand2.setWidth(1)
         self.rubberBand2.setLineStyle(Qt.DashLine)
+        QgsMapCanvas().refresh()

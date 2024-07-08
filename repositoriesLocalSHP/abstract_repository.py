@@ -487,12 +487,15 @@ class AbstractRepository():
         return jsonsList
 
     def postMultipleElements(self, jsonsList):
+        print(" postMultipleElements called : ", jsonsList)
         self.connectorToServer.serverRepository.postMultipleElements(jsonsList)
     
     def putMultipleElements(self, jsonsList):
+       print(" putMultipleElements called : ", jsonsList)
        self.connectorToServer.serverRepository.putMultipleElements(jsonsList) 
        
     def deleteMultipleElements(self, jsonsList):
+        print(" putMultipleElements called : ", jsonsList)
         self.connectorToServer.serverRepository.deleteMultipleElements(jsonsList) 
        
     # NEW_SYNC_METHODS_END
