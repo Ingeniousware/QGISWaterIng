@@ -36,7 +36,7 @@ class NetworkReviewTool:
 
     def find_unconnected_nodes(self):
         field_waterM_nodeFK = 'Unconected'
-        unnconnected = 1
+        unconnected = 1
         WateringUtils.createNewColumn(self, "watering_demand_nodes", field_waterM_nodeFK)
 
         self.node_layer.startEditing()
@@ -53,7 +53,7 @@ class NetworkReviewTool:
                     # Calculate distance between point and MultiLineString
                     distance = node_geom.distance(pipe_geom)
                     if distance <= 5:
-                        self.node_layer.dataProvider().changeAttributeValues({feature_y.id(): {field_index: unnconnected}})
+                        self.node_layer.dataProvider().changeAttributeValues({feature_y.id(): {field_index: unconnected}})
         self.node_layer.commitChanges()
         
         WateringUtils.changeColors(self.node_layer,field_waterM_nodeFK, "categorized")
@@ -253,13 +253,14 @@ class NetworkReviewTool:
                 self.iface.messageBar().pushMessage("Success", "Successfully identified unconnected nodes!", level=Qgis.Success, duration=6)
                 print("Finished fixing the network")
             elif response == QMessageBox.No:
-                WateringUtils.delete_column(self.node_layer,"Unconected")
-                WateringUtils.changeColors(self.node_layer,"","single")
+                """ WateringUtils.delete_column(self.node_layer,"Unconected")
+                WateringUtils.changeColors(self.node_layer,"","single") """
+                print("Out by No")
                 return
             elif response == QMessageBox.Cancel:
                 WateringUtils.delete_column(self.node_layer,"Unconected")
                 WateringUtils.changeColors(self.node_layer,"","single")
-                print("Out")
+                print("Out by Cancel")
                 return
             
     def process_result(self, result):
@@ -329,7 +330,7 @@ class NetworkReviewTool:
                     WateringUtils.add_feature_to_backup_layer(feature_y, self.node_layer)
                     break 
 
-    @run_once
+    #@run_once
     def reviewProcess(self):
         #Node adjustment
         self.intersectionLayer()
@@ -353,6 +354,7 @@ class NetworkReviewTool:
         self.copyCoordinates(self.reservoir_layer, self.snap_layer)
         self.update_attributes(self.reservoir_layer, 1)
         self.removeDuplicatePoints(self.node_layer, self.reservoir_layer)
+
         #Tank adjustment
         self.snapPointTioPoint("Tanks to nodes", self.tanks_layer, self.node_layer,3)
         self.deleteAllFeatures(self.tanks_layer)
