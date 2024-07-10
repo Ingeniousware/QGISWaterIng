@@ -611,27 +611,44 @@ class QGISPlugin_WaterIng:
             self.hub_connection = None
             
     def setOnAttributeChange(self):
-        layer_list = ['watering_tanks',
-                      'watering_demand_nodes',
-                      'watering_pumps',
-                      'watering_pipes',
-                      'watering_reservoirs',
-                      'watering_sensors',
-                      'watering_valves',
-                      'watering_waterMeter']
+        layer_list = [
+            'watering_tanks',
+            'watering_demand_nodes',
+            'watering_pumps',
+            'watering_pipes',
+            'watering_reservoirs',
+            'watering_sensors',
+            'watering_valves',
+            'watering_waterMeter'
+        ]
+        
+        print("Setting up attribute and geometry change listeners for layers:")
         
         for layer in layer_list:
-            real_layer = QgsProject.instance().mapLayersByName(layer)[0]
+            print(f"Processing layer: {layer}")
+            real_layer = QgsProject.instance().mapLayersByName(layer)
             
-            real_layer.attributeValueChanged.connect(
-                        lambda feature_id, attribute_index, new_value, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem: 
-                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer, sync)
-                )
+            if not real_layer:
+                print(f"Layer {layer} not found in the project.")
+                continue
             
-            real_layer.geometryChanged.connect(
-                    lambda feature_id, old_geometry, new_geometry, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem: 
-                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync)
-                )
+            real_layer = real_layer[0]
+            print(f"Connected to real layer: {real_layer.name()}")
+            
+            def on_attribute_change(feature_id, attribute_index, new_value, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem):
+                print(f"Attribute changed in layer {layer.name()}: feature_id={feature_id}, attribute_index={attribute_index}, new_value={new_value}")
+                WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer, sync)
+            
+            def on_geometry_change(feature_id, old_geometry, new_geometry, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem):
+                print(f"Geometry changed in layer {layer.name()}: feature_id={feature_id}, old_geometry={old_geometry}, new_geometry={new_geometry}")
+                WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync)
+            
+            real_layer.attributeValueChanged.connect(on_attribute_change)
+            real_layer.geometryChanged.connect(on_geometry_change)
+
+        print("Setup complete.")
+
+
     
     def onSynchFinished(self):
         iface.messageBar().pushMessage("Success", "Synchronization completed successfully!", level=Qgis.Success, duration=6)

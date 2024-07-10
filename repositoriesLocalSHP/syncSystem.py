@@ -44,11 +44,34 @@ class WateringSync():
         # End test variables
         
         for repo in self.repositories:
-            response = repo.loadChanges(lastUpdated)
-            if response._content:
-                data = response.json()
+            try:
+                print(f"Loading changes for repository: {repo}")
+                response = repo.loadChanges(lastUpdated)
+                
+                if response.status_code != 200:
+                    print(f"Failed to load changes for repository {repo}: {response.status_code} {response.reason}; Log: {response.text}")
+                    continue
+                
+                if not response._content:
+                    print(f"No content received from repository {repo}")
+                    continue
+
+                try:
+                    data = response.json()
+                except ValueError as e:
+                    print(f"Error parsing JSON response from repository {repo}: {e}")
+                    continue
+                
                 if data:
+                    print(f"Tracking updates for repository {repo}")
                     self.track_server_updates(repo, data)
+                else:
+                    print(f"No data to update for repository {repo}")
+
+            except Exception as e:
+                print(f"An error occurred while processing repository {repo}: {e};")
+
+        print("Repository synchronization complete.")
                     
         print("server_change_queue: ", self.server_change_queue)
 

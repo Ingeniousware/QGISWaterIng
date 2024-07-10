@@ -432,7 +432,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.offline_scenarios_list[self.load_scenarios_box.currentIndex()][1])
         self.zoomToProject()
         self.progressBar.setValue(70)
-        self.writeWateringMetadata()
+        WateringUtils.writeWateringMetadata(self.current_project_name, self.current_project_fk, self.current_scenario_name, self.current_scenario_fk)
         self.progressBar.setValue(90)
         self.done(True)
 
@@ -598,12 +598,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 project.removeMapLayer(child.layerId())
 
         return group
-    
-    def writeWateringMetadata(self):
-        WateringUtils.setProjectMetadata("server_project_name", self.current_project_name)
-        WateringUtils.setProjectMetadata("project_id", self.current_project_fk)
-        WateringUtils.setProjectMetadata("scenario_name", self.current_scenario_name)
-        WateringUtils.setProjectMetadata("scenario_id", self.current_scenario_fk)
     
     def updateProject(self, justCreated):
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.current_scenario_fk)

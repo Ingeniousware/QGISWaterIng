@@ -106,6 +106,12 @@ class WateringUtils():
             
         return defaultUrl if projectServerUrl == "default text" else projectServerUrl
     
+    def writeWateringMetadata(project_name, project_fk, scenario_name, scenario_fk):
+        WateringUtils.setProjectMetadata("server_project_name", project_name)
+        WateringUtils.setProjectMetadata("project_id", project_fk)
+        WateringUtils.setProjectMetadata("scenario_name", scenario_name)
+        WateringUtils.setProjectMetadata("scenario_id", scenario_fk)
+        
     def get_response(url, params):
         absolute_url = WateringUtils.getServerUrl() + url
         try:
