@@ -96,8 +96,10 @@ class AbstractRepository():
         self.pr = self.currentLayer.dataProvider()
         self.pr.addAttributes(fields)
         self.currentLayer.updateFields()
-        
-        response_data = response.json()["data"]
+
+        response_json = response.json()
+        if "data" in response_json:
+            response_data = response_json["data"]
 
         self.toAddFeatures = []
         for elementJSON in response_data:            
