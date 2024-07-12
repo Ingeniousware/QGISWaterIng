@@ -108,18 +108,6 @@ class AbstractRepository():
             
             self.pr.addFeatures(self.toAddFeatures)
             self.currentLayer.updateExtents()
-            
-            features = self.currentLayer.getFeatures()
-            
-            self.currentLayer.attributeValueChanged.connect(
-                            lambda feature_id, attribute_index, new_value, layer=self.Layer: 
-                            WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
-                    )
-            
-            self.currentLayer.geometryChanged.connect(
-                        lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
-                        WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
-                    )
         
     def createElementLayerFromServerStreamingResponse(self, response):
         fields = self.setElementFields(self.field_definitions)
@@ -130,7 +118,6 @@ class AbstractRepository():
 
         self.toAddFeatures = []
 
-        
         for chunk in response.iter_content(chunk_size=None):
             if chunk:
                 chunk_data = chunk.decode('utf-8')
@@ -157,18 +144,6 @@ class AbstractRepository():
         
         self.pr.addFeatures(self.toAddFeatures)
         self.currentLayer.updateExtents()
-        
-        features = self.currentLayer.getFeatures()
-        
-        self.currentLayer.attributeValueChanged.connect(
-            lambda feature_id, attribute_index, new_value, layer=self.Layer: 
-            WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
-        )
-        
-        self.currentLayer.geometryChanged.connect(
-            lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
-            WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
-        )
         
     #When layer does not exists           
     def addElementFromJSON(self, elementJSON):
