@@ -5,10 +5,14 @@ from qgis.core import QgsProject, QgsVectorLayer, QgsCoordinateReferenceSystem, 
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
 class AbstractShpImport():
+
     def __init__(self):
         #Constructor.
         self.token = os.environ.get('TOKEN')
         scenario_fk = WateringUtils.getScenarioId()
+    
+    def shpProcessing(self, layer_name):
+        ...
     
     def addSelected_Layer(self, file_path):
         if file_path.lower().endswith('.shp'):
@@ -33,6 +37,3 @@ class AbstractShpImport():
             message_box.setText("Selected file is not a shapefile (.shp)")
             message_box.setStandardButtons(QMessageBox.Ok)
             message_box.exec_()
-    
-    def shpProcessing(self, layer_name):
-        ...

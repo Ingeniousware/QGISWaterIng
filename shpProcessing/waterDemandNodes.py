@@ -5,6 +5,10 @@ from ..watering_utils import WateringUtils
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
 class ImportDemandNodesShp(AbstractShpImport):
+    
+    def __init__(self):
+            #Constructor.
+            super(ImportDemandNodesShp, self).__init__()
 
     def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]

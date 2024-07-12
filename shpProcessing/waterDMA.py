@@ -9,12 +9,16 @@ from ..watering_utils import WateringUtils
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
 class ImportDMAShp(AbstractShpImport):
+    def __init__(self):
+            #Constructor.
+            super(ImportDMAShp, self).__init__()
     
     def post_to_server(json, name):
         headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
         UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
         #response = WateringUtils.requests_post(UrlPost, json)
         response = requests.post(UrlPost, json=json, headers=headers)
+        print(response)
 
     def shpProcessing(self, layer_name):
             layer = QgsProject.instance().mapLayersByName(layer_name)[0]

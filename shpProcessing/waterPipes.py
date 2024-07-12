@@ -7,6 +7,10 @@ from ..shpProcessing.abstractShpImport import AbstractShpImport
 
 class ImportPipesShp(AbstractShpImport):
 
+    def __init__(self):
+            #Constructor.
+            super(ImportPipesShp, self).__init__()
+
     def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]
         pipes_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
