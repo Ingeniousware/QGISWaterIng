@@ -24,6 +24,7 @@ class AbstractRepository():
         self.ScenarioFK = scenarioFK
         self.sourceCrs = QgsCoordinateReferenceSystem(4326)
         self.destCrs = QgsCoordinateReferenceSystem(3857)
+        self.currentCRS = QgsCoordinateReferenceSystem(3857)
         self.Layer = None
         self.buffer = ""
         self.FieldDefinitions = None
