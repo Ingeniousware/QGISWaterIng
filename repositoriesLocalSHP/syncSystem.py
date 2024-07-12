@@ -16,11 +16,8 @@ class WateringSync():
         # Name = operation + responsible side
         self.change_handlers = {
             "add_from_server": self.process_add_to_offline,
-            "add_from_offline": self.process_add_to_server,
             "update_from_server": self.process_update_in_offline,
-            "update_from_offline": self.process_update_on_server,
-            "delete_from_server": self.process_delete_in_offline,
-            "delete_from_offline": self.process_delete_on_server
+            "delete_from_server": self.process_delete_in_offline
         }
         
         self.token = token
@@ -92,20 +89,18 @@ class WateringSync():
         self.server_change_queue.extend(changes_list)
 
     def track_offline_updates(self, repo, lastUpdated):
-        changes_list = repo.getOfflineUpdates(lastUpdated)
-        self.offline_change_queue.extend(changes_list)
+        repo.getOfflineUpdates(lastUpdated)
 
     def synchronize(self):
-        _lastUpdated_ = WateringUtils.get_last_updated(self.scenarioFK)
+        lastUpdated = WateringUtils.get_last_updated(self.scenarioFK)
         self.sync_was_halted = False
         
-        print("_lastUpdated_: ", _lastUpdated_)
-        
         # TESTS
-        #_lastUpdated_ = "1800-01-01 12:00:00"
+        #lastUpdated = "1800-01-01 12:00:00"
+        print("Watering Log: lastUpdated: ", lastUpdated)
         
-        self.get_offline_changes(_lastUpdated_)
-        self.get_server_changes(_lastUpdated_)
+        self.get_offline_changes(lastUpdated)
+        self.get_server_changes(lastUpdated)
         self.synchronize_server_changes()
         self.synchronize_offline_changes() 
         
@@ -135,24 +130,11 @@ class WateringSync():
         WateringUtils.setProjectMetadata("elementsPostingInProgress", "default text")
             
     def processChange(self, change):
-        #self.addToServerDict
         try:
             process_method = self.change_handlers[change.change_type]
             process_method(change)
         except KeyError:
             print(f"Unknown change type: {change.change_type}")
-        
-    def process_add_to_server(self, change):
-        print("on test")
-        # for repo in self.repositories:
-        #     self.elementsJson = []
-        #     if change.layer_id.name() == repo.LayerName:
-        #         if repo.connectorToServer:
-        #             server_push_success = repo.connectorToServer.addElementToServer(change.data)
-        #             if not server_push_success:
-        #                 QMessageBox.information(None, "Synchronization Error", "Unable to sync with the server at this moment. Try again later.")
-        #                 self.sync_was_halted = True
-        #                 break
                 
     def process_add_to_offline(self, change):
         print(f"Adding element in {change.layer_id}: {change.feature_id} from server to offline")
@@ -184,16 +166,6 @@ class WateringSync():
 
         self.layer.addFeature(feature)
         self.layer.commitChanges()
-        
-    def process_update_on_server(self, change):
-        for repo in self.repositories:
-            if change.layer_id.name() == repo.LayerName:
-                if repo.connectorToServer:
-                    server_push_success = repo.connectorToServer.addElementToServer(change.data)
-                    if not server_push_success:
-                        QMessageBox.information(None, "Synchronization Error", "Unable to sync with the server at this moment. Try again later.")
-                        self.sync_was_halted = True
-                        break
             
     def process_update_in_offline(self, change):
         layer_name = change.layer_id.name()
@@ -231,16 +203,6 @@ class WateringSync():
             self.layer.dataProvider().changeGeometryValues({feature_id: new_geometry})
 
         self.layer.commitChanges()
-         
-    def process_delete_on_server(self, change):
-        for repo in self.repositories:
-            if change.layer_id.name() == repo.LayerName:
-                if repo.connectorToServer:
-                    server_push_success = repo.connectorToServer.removeElementFromServer(change.data["ID"])
-                    if not server_push_success:
-                        QMessageBox.information(None, "Synchronization Error", "Unable to sync with the server at this moment. Try again later.")
-                        self.sync_was_halted = True
-                        break
             
     def process_delete_in_offline(self, change):
         print(f"Delete element in {change.layer_id}: {id} from server to offline")
@@ -252,18 +214,6 @@ class WateringSync():
             self.layer.startEditing()
             self.layer.deleteFeature(feature_to_delete.id())
             self.layer.commitChanges()
-
-    def save_offline_changes_to_project(self):
-       serialized_changes = json.dumps([change.__dict__ for change in self.offline_change_queue])
-       QgsProject.instance().writeEntry("WateringSync", "Changes", serialized_changes)
-
-    def load_offline_changes_from_project(self):
-       success, serialized_changes = QgsProject.instance().readEntry("WateringSync", "Changes", "")
-       if success:
-           changes_list = json.loads(serialized_changes)
-           for change_dict in changes_list:
-               change = Change(**change_dict)
-               self.offline_change_queue.append(change)
     
     def get_field_definitions(self):
         if not self.layer: return []
@@ -281,9 +231,6 @@ class WateringSync():
             feature_ = feature; break
 
         return feature_
-
-    def handle_update_line_layer(self, change):
-        ...
     
     def handle_update_point_layer(self, change):
         self.layer.startEditing()
