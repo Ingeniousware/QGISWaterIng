@@ -101,24 +101,25 @@ class AbstractRepository():
         if "data" in response_json:
             response_data = response_json["data"]
 
-        self.toAddFeatures = []
-        for elementJSON in response_data:            
-            self.addElementFromJSON(elementJSON)
-        
-        self.pr.addFeatures(self.toAddFeatures)
-        self.currentLayer.updateExtents()
-        
-        features = self.currentLayer.getFeatures()
-        
-        self.currentLayer.attributeValueChanged.connect(
-                        lambda feature_id, attribute_index, new_value, layer=self.Layer: 
-                        WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
-                )
-        
-        self.currentLayer.geometryChanged.connect(
-                    lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
-                    WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
-                )
+        if response_data:
+            self.toAddFeatures = []
+            for elementJSON in response_data:            
+                self.addElementFromJSON(elementJSON)
+            
+            self.pr.addFeatures(self.toAddFeatures)
+            self.currentLayer.updateExtents()
+            
+            features = self.currentLayer.getFeatures()
+            
+            self.currentLayer.attributeValueChanged.connect(
+                            lambda feature_id, attribute_index, new_value, layer=self.Layer: 
+                            WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer)
+                    )
+            
+            self.currentLayer.geometryChanged.connect(
+                        lambda feature_id, old_geometry, new_geometry, layer=self.Layer: 
+                        WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer)
+                    )
         
     def createElementLayerFromServerStreamingResponse(self, response):
         fields = self.setElementFields(self.field_definitions)
