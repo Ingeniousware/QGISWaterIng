@@ -24,14 +24,9 @@ class AbstractRepository():
         self.ScenarioFK = scenarioFK
         self.sourceCrs = QgsCoordinateReferenceSystem(4326)
         self.destCrs = QgsCoordinateReferenceSystem(3857)
-        self.currentCRS = QgsCoordinateReferenceSystem(3857)
         self.Layer = None
-        self.ServerDict = {}
-        self.OfflineDict = {}
         self.buffer = ""
-        self.Response = None
         self.FieldDefinitions = None
-        self.Attributes = None
         self.toAddFeatures = None
         self.pr = None
         self.connectorToServer = None
@@ -66,7 +61,6 @@ class AbstractRepository():
 
     def loadElements(self, stream):
         params_element = {'ScenarioFK': "{}".format(self.ScenarioFK)}
-        relative_path = self.UrlGet + "/stream" if stream else self.UrlGet
         url = WateringUtils.getServerUrl() + self.UrlGet
         headers = {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}
         
@@ -250,11 +244,6 @@ class AbstractRepository():
         if self.connectorToServer:
             self.connectorToServer.removeElementFromServer(feature["ID"])
 
-    def setDefaultValues(self, feature):
-        ...
-
-        
-
     def writeShp(self):
         writer = QgsVectorFileWriter.writeAsVectorFormat(self.currentLayer, self.StorageShapeFile, "utf-8", self.currentLayer.crs(), "ESRI Shapefile")
         
@@ -274,7 +263,6 @@ class AbstractRepository():
             QgsProject.instance().addMapLayer(element_layer, False)
             print("opened successfully:", element_layer.name())
 
-
     def setElementSymbol(self, layer, layer_symbol, layer_size):
         renderer = layer.renderer()
         symbol = renderer.symbol()
@@ -285,90 +273,11 @@ class AbstractRepository():
             symbol.symbolLayer(0).setStrokeColor(self.StrokeColor)
         layer.triggerRepaint()
     
-    def generalUpdate(self, lastUpdated):  
-        lastUpdated = self.adjustedDatetime(lastUpdated)
-        self.ServerDict = {}
-        self.OfflineDict = {}
-        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        
-        self.FieldDefinitions = [t[0] for t in self.field_definitions[1:-self.numberLocalFieldsOnly]]
-        self.Attributes = self.features[3:]
-        
-        self.getServerDict(lastUpdated) 
-        self.getOfflineDict(lastUpdated)
-        
-        server_keys = set(self.ServerDict.keys())
-        offline_keys = set(self.OfflineDict.keys())
-
-        # Deleting in BackupLayerElements from server
-        self.deleteElementsInBackupLayers(lastUpdated)
-        
-        #Add Element from server to offline
-        for element_id in server_keys - offline_keys:
-            self.addElementToOffline(element_id)
-        
-        #Add offline-elements from offline to server
-        self.updateAddElementToServer()
-        
-        # Deleted elements from server
-        self.handleDeletedElementsFromServer()
-           
-        #Update Element
-        for element_id in server_keys & offline_keys:
-            if self.ServerDict[element_id][1:] != self.OfflineDict[element_id][1:]:
-                self.updateElement(element_id, lastUpdated)
-
-    def deleteElementsInBackupLayers(self, lastUpdatedToServer):
-        backup_layer_name = self.LayerName + "_backup.shp"
-        
-        backup_file_path = os.path.dirname(self.StorageShapeFile) + "/" + backup_layer_name
-        layer = QgsVectorLayer(backup_file_path, "layer", "ogr")
-        
-        if not layer.isValid():
-            print(f"Failed to load layer: {backup_layer_name}")
-            return 
-
-        current_time = WateringUtils.getDateTimeNow()
-        for feature in layer.getFeatures():
-            if feature['lastUpdate'] > lastUpdatedToServer: 
-                layer.changeAttributeValue(feature.id(), layer.fields().indexFromName('lastUpdate'), current_time)
-                self.connectorToServer.removeElementFromServer(feature["ID"])
-                
-    def getElementsIdsFromLayer(self, layer):
-        ids = []
-        for feature in layer.getFeatures():
-            ids.append(feature["ID"])
-        return ids
-
-    def cleanLayer(self, layer):
-        layer.startEditing()
-        all_feature_ids = [feature.id() for feature in layer.getFeatures()]
-
-        success = layer.dataProvider().deleteFeatures(all_feature_ids)
-    
-        if success:
-            layer.commitChanges()
-            print("All features deleted and changes committed.")
-        else:
-            layer.rollback()
-            print("Changes were rolled back.")
-    
-    def getServerDict(self, lastUpdated):
-        self.Response = self.loadElements()
-
-        data = self.Response.json()["data"]
-        for element in data:
-            attributes  = [element[self.Attributes[i]] for i in range(len(self.Attributes))]
-            attributes.append(self.getTransformedCrs(element["lng"], element["lat"]))    
-            self.ServerDict[element["serverKeyId"]] = attributes
-            
-    # NEW_SYNC_METHODS_START
-    
+    # Sync methods start
     def buildIndex(self):
         return set(feature['ID'] for feature in self.Layer.getFeatures())
 
     def processChange(self, change):
-        
         if "serverKeyId" in change:
             change_id = change["serverKeyId"]
             
@@ -378,10 +287,6 @@ class AbstractRepository():
             if self.LayerName == "watering_pipes":
                 attributes_definitions = self.features[1:]
                 attributes = [change[attributes_definitions[i]] for i in range(len(attributes_definitions))]
-                #points = [self.getPipeTransformedCrs(QgsPointXY(vertex['lng'], vertex['lat'])) for vertex in change["vertices"]]
-                #points = [QgsPointXY(vertex['lng'], vertex['lat']) for vertex in change["vertices"]]
-                #geometry = QgsGeometry.fromPolylineXY(points)
-                #geometry.transform(QgsCoordinateTransform(self.sourceCrs, self.destCrs, QgsProject.instance()))
                 attributes.append(change["vertices"])
             else:
                 attributes_definitions = self.features[3:]
@@ -392,16 +297,12 @@ class AbstractRepository():
                 return Change(self.Layer, change_id, "update_from_server", attributes)
                 
             return Change(self.Layer, change_id, "add_from_server", attributes)
-    
-    def processChangeLineLayer(self, change):
-        ...
         
     def getServerUpdates(self, data):
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.idIndex = self.buildIndex()
         self.addedFromSignalR = WateringUtils.get_added_from_signalr(self.ScenarioFK)
         self.changesList = [self.processChange(change) for change in data if change["serverKeyId"] not in self.addedFromSignalR]
-        print("changes lsit: ", self.changesList)
         return self.changesList
     
     def elementExistsInOffline(self, id):
@@ -473,124 +374,8 @@ class AbstractRepository():
     def deleteMultipleElements(self, jsonsList):
         self.connectorToServer.serverRepository.deleteMultipleElements(jsonsList) 
        
-    # NEW_SYNC_METHODS_END
-    
-    def getOfflineDict(self, lastUpdated):
-        for feature in self.Layer.getFeatures():
-            attributes = [feature[self.FieldDefinitions[i]] for i in range(len(self.FieldDefinitions))]
-
-            print(attributes)
-            
-            if len(attributes) > 2 and (not attributes[2]):
-                attributes[2] = None
-                
-            geom = feature.geometry()
-            point = geom.asPoint()
-            attributes.append((point.x(), point.y()))
-
-            self.OfflineDict[feature["ID"]] = attributes
-
-    def addElementToOffline(self, id):
-        print(f"Adding element in {self.LayerName}: {id}")
-        
-        feature = QgsFeature(self.Layer.fields())
-        feature.setAttribute("ID", id)
-        feature.setGeometry(QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0],
-                                                               self.ServerDict[id][-1][1])))
-        
-        self.Layer.startEditing()
-        
-        for i, field in enumerate(self.FieldDefinitions):
-            feature[field] = self.ServerDict[id][i]
-        
-        feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
-        
-        self.Layer.addFeature(feature)
-        self.Layer.commitChanges()
-    
-    def handleDeletedElementsFromServer(self):
-        elements_deleted_from_server = [id for id in self.OfflineDict if (len(str(id)) != 10) and id not in self.ServerDict]
-        
-        if elements_deleted_from_server:
-            ids_to_delete = [feature.id() for feature in self.Layer.getFeatures() if feature["ID"] in elements_deleted_from_server]
-            
-            self.Layer.startEditing()
-            
-            self.Layer.deleteFeatures(ids_to_delete)
-
-            self.Layer.commitChanges()
-        
-    def updateAddElementToServer(self):
-        features_to_add= [feature for feature in self.Layer.getFeatures() if (len(str(feature['ID'])) == 10)
-                          and (feature['ID'] in self.OfflineDict)]
-
-        if self.connectorToServer:
-            if features_to_add:
-                for feature in features_to_add:
-                    server_push_success = self.connectorToServer.addElementToServer(feature)
-            if not server_push_success:
-                QMessageBox.information(None, "Synchronization Error", "Synchronization failed due to server connection issues. Please try again shortly.")
-        else:
-            print("no connector")
-
-    def deleteElement(self, id, lastUpdatedFromServer):
-        print("ID in delete element: ", id)
-        print(f"Deleting existing element in {self.LayerName}: {id}")
-        
-        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        
-        features_to_delete = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
-
-        self.Layer.startEditing()
-        
-        for feature in features_to_delete:
-            if id in self.ServerDict:
-                if feature['lastUpdate'] < self.ServerDict[id][0]:
-                    self.Layer.deleteFeature(feature.id())
-            
-        self.Layer.commitChanges()
-
-        
-    def updateElement(self, id, lastUpdated):
-        self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
-        
-        features = [feature for feature in self.Layer.getFeatures() if feature['ID'] == id]
-
-        self.Layer.startEditing()
-        
-        for feature in features:
-            if (id in self.ServerDict) and (id in self.OfflineDict):
-                serverDictLastUpdated = self.adjustedDatetime(self.ServerDict[id][0])
-                offlineDictLastUpdated = self.adjustedDatetime(feature['lastUpdate'])
-                print("time at server -> ", self.ServerDict[id][0], " time at offline -> ", feature['lastUpdate'])
-                if serverDictLastUpdated > offlineDictLastUpdated and serverDictLastUpdated > lastUpdated:
-                    print("option 1 -> from server to offline")
-                    self.Layer.startEditing()
-
-                    attrs = {}
-
-                    for i in range(len(self.FieldDefinitions) - self.numberLocalFieldsOnly):
-                        field_index = self.Layer.fields().indexOf(self.FieldDefinitions[i])
-                        attrs[field_index] = self.ServerDict[id][i]
-
-                    last_update_index = self.Layer.fields().indexOf('lastUpdate')
-                    attrs[last_update_index] = WateringUtils.getDateTimeNow()
-
-                    self.Layer.dataProvider().changeAttributeValues({feature.id(): attrs})
-
-                    new_geometry = QgsGeometry.fromPointXY(QgsPointXY(self.ServerDict[id][-1][0], self.ServerDict[id][-1][1]))
-                    self.Layer.dataProvider().changeGeometryValues({feature.id(): new_geometry})
-
-                    self.Layer.commitChanges()
-                    
-                # If online feature has been modified and it´s already in the server
-                elif (len(str(feature['ID'])) == 36) and (offlineDictLastUpdated > lastUpdated):
-                    print("option 2 -> from offline to server")
-                    if self.connectorToServer:
-                        self.connectorToServer.addElementToServer(feature)
-        
-        self.Layer.commitChanges()
-        
+    # Sync methods end
+     
     def getTransformedCrs(self, lng, lat):
         source_crs = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS 84
         dest_crs = QgsCoordinateReferenceSystem("EPSG:3857")   # Web Mercator
@@ -600,15 +385,6 @@ class AbstractRepository():
         point = geom.asPoint()
         
         return (point.x(), point.y())
-    
-    """def adjustedDatetime(self, dt_str):
-        main_part, microseconds = dt_str.split('.')
-
-        microseconds = microseconds.ljust(6, '0')[:6]  
-
-        full_str = main_part + '.' + microseconds
-
-        return datetime.fromisoformat(full_str)"""
     
     def adjustedDatetime(self, dt_str):
         #return datetime.fromisoformat(dt_str.replace("Z", ""))
@@ -633,20 +409,6 @@ class AbstractRepository():
         key = "backup_layer_path" + self.LayerName
         WateringUtils.setProjectMetadata(key, backup_layer_path)
         value = WateringUtils.getProjectMetadata(key)
-        
-    def transformTimezone(self, time):
-        
-        input_format = "%Y-%m-%dT%H:%M:%S.%fZ"
-        output_format = "%Y/%m/%d %H:%M:%S.%f"
-        
-        original_datetime = datetime.strptime(time, input_format)
-        
-        target_timezone = pytz.timezone('UTC')
-        target_datetime = original_datetime.astimezone(target_timezone)
-        
-        formatted_datetime_str = target_datetime.strftime(output_format)
-        
-        return formatted_datetime_str
     
     def hasFeatureWithId(self, layer, id_value):
         query = '"ID" = {}'.format(id_value)
