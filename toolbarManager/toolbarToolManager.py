@@ -239,6 +239,16 @@ class toolbarToolManager():
         self.insertWaterMeterNodeAction.setCheckable(True)        
         self.insertWaterMeterNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         
+        # Sensors
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.svg'
+        self.insertSensorNodeAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Add Sensor Node'),
+            callback=self.activateMapTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.insertSensorNodeAction.setCheckable(True)        
+        self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         
         # Undo
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/backward.svg'
@@ -282,17 +292,6 @@ class toolbarToolManager():
             toolbar = None,
             parent=self.parentWindow)
         self.openOptimizationManagerAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-
-        # Sensors
-        icon_path = ':/plugins/QGISPlugin_WaterIng/images/sensor.svg'
-        self.insertSensorNodeAction = self.addMapToolButtonAction(
-            icon_path,
-            text=WateringUtils.tr(u'Add Sensor Node'),
-            callback=self.activateMapTool,
-            toolbar = None,
-            parent=self.parentWindow)
-        self.insertSensorNodeAction.setCheckable(True)        
-        self.insertSensorNodeAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Pump Models
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/optimization.svg'
@@ -380,6 +379,7 @@ class toolbarToolManager():
                      self.insertValveNodeAction,
                      self.insertPumpNodeAction,
                      self.insertWaterMeterNodeAction,
+                     self.insertSensorNodeAction,
                      self.toolDeleteElementAction, 
                      self.undoAction,
                      self.redoAction]
@@ -395,8 +395,7 @@ class toolbarToolManager():
                 tool.setChecked(False)
                 
     def activateOptimizationTool(self, checked):
-        optimizationTools = [self.openOptimizationManagerAction,
-                            self.insertSensorNodeAction, self.openPumpModels]
+        optimizationTools = [self.openOptimizationManagerAction, self.openPumpModels]
         
         if checked:
             for tool in optimizationTools:

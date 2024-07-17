@@ -385,7 +385,6 @@ class QGISPlugin_WaterIng:
             self.project_info = None
             
         actions = [self.toolbarToolManager.readAnalysisAction,
-                    self.toolbarToolManager.insertSensorNodeAction,
                     self.toolbarToolManager.openOptimizationManagerAction,
                     self.toolbarToolManager.openPumpModels,
                     self.toolbarToolManager.readMeasurementsAction,
