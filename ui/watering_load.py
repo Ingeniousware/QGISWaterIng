@@ -11,10 +11,10 @@ import time
 
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer
-from qgis.core import  QgsWkbTypes, QgsLayerTreeGroup, QgsFeature,  QgsVectorFileWriter
+from qgis.core import  QgsWkbTypes, QgsLayerTreeGroup, QgsFeature, QgsField, edit
 from qgis.utils import iface
 from PyQt5.QtWidgets import QMessageBox, QLabel, QDockWidget
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QVariant
 from functools import partial
 from osgeo import ogr
 
@@ -45,6 +45,16 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.main_watering_folder = WateringUtils.get_watering_folder()
         self.projects_json_file = WateringUtils.get_projects_json_path()
         self.projects_json_data = None
+        
+        self.shp_element_files = ['watering_demand_nodes.shp', 
+                                  'watering_reservoirs.shp', 
+                                  'watering_tanks.shp', 
+                                  'watering_pumps.shp', 
+                                  'watering_valves.shp',                   
+                                  'watering_pipes.shp']
+
+        self.shp_filesMonitoring = ['watering_waterMeter.shp',
+                                    'watering_sensors.shp']
         
         self.initialize_repository()
         self.hide_ui_elements()
@@ -491,16 +501,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         group_elements = self.checkCreateInitializeGroup(project, "WaterIng Network Layout")
         group_sensors = self.checkCreateInitializeGroup(project, "Sensors")
 
-        shp_element_files = ['watering_demand_nodes.shp', 
-                            'watering_reservoirs.shp', 
-                            'watering_tanks.shp', 
-                            'watering_pumps.shp', 
-                            'watering_valves.shp',                   
-                            'watering_pipes.shp']
-
-        shp_filesMonitoring = ['watering_waterMeter.shp',
-                               'watering_sensors.shp']
-
         shp_backupFiles = ['watering_demand_nodes_backup.shp', 
                            'watering_reservoirs_backup.shp', 
                            'watering_tanks_backup.shp', 
@@ -512,8 +512,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         all_layers_valid = True
 
-        self.openGroup(shp_element_files, group_elements, scenario_path)
-        self.openGroup(shp_filesMonitoring, group_sensors, scenario_path)
+        self.openGroup(self.shp_element_files, group_elements, scenario_path)
+        self.openGroup(self.shp_filesMonitoring, group_sensors, scenario_path)
         self.openLayerGroupFalseVisibility(shp_backupFiles, scenario_path)
         
         for layer in QgsProject.instance().mapLayers().values():
@@ -619,62 +619,92 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.run_offline_procedures()
     
     def clone_scenario(self):
+        print("Cloning: Entering clone_scenario method")
         folder_path = WateringUtils.get_watering_folder()
+        print(f"Cloning: folder_path: {folder_path}")
+        
         fromProjectKeyID = self.offline_projects_list[self.clone_projects_box.currentIndex()][0]
+        print(f"Cloning: fromProjectKeyID: {fromProjectKeyID}")
+        
         fromProjectName = self.offline_projects_list[self.clone_projects_box.currentIndex()][1]
+        print(f"Cloning: fromProjectName: {fromProjectName}")
+        
         fromProjectKeyScenario = self.offline_scenarios_list_clone[self.clone_scenarios_box.currentIndex()][1]
+        print(f"Cloning: fromProjectKeyScenario: {fromProjectKeyScenario}")
+        
         clonedScenarioName = self.offline_scenarios_list_clone[self.clone_scenarios_box.currentIndex()][0]
+        print(f"Cloning: clonedScenarioName: {clonedScenarioName}")
+        
         toProjectKeyID = self.offline_projects_list[self.clone_box.currentIndex()][0]
+        print(f"Cloning: toProjectKeyID: {toProjectKeyID}")
+        
         toProjectKeyScenario = str(uuid.uuid4())
+        print(f"Cloning: toProjectKeyScenario: {toProjectKeyScenario}")
+        
         scenarioName = self.cloned_scenario_name.text() or clonedScenarioName + " Cloned Version"
+        print(f"Cloning: scenarioName: {scenarioName}")
         
         scenario_created = self.create_new_scenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
+        print(f"Cloning: scenario_created: {scenario_created}")
         
         if scenario_created:
             self.clone_scenario_procedures(folder_path, fromProjectName, fromProjectKeyID, fromProjectKeyScenario, 
                                 toProjectKeyID, toProjectKeyScenario, scenarioName)
         else:
-            WateringUtils.error_message("Couldn’t clone the scenario. Please try again.")
-    
+            WateringUtils.error_message("Cloning: Couldn’t clone the scenario. Please try again.")
+        
     def clone_scenario_procedures(self, folder_path, fromProjectName, fromProjectKeyID, 
-                       fromProjectKeyScenario, toProjectKeyID, 
-                       toProjectKeyScenario, clonedScenarioName):
+                    fromProjectKeyScenario, toProjectKeyID, 
+                    toProjectKeyScenario, clonedScenarioName):
+        print("Cloning: Entering clone_scenario_procedures method")
         
         source_path = os.path.join(folder_path, fromProjectKeyID, fromProjectKeyScenario)
+        print(f"Cloning: source_path: {source_path}")
+        
         target_path = os.path.join(folder_path, toProjectKeyID, toProjectKeyScenario)
-
+        print(f"Cloning: target_path: {target_path}")
+        
         os.makedirs(target_path, exist_ok=True)
+        print(f"Cloning: Created target path: {target_path}")
 
         for item in os.listdir(source_path):
             s = os.path.join(source_path, item)
             d = os.path.join(target_path, item)
+            print(f"Cloning: Copying item: {item} from {s} to {d}")
             if os.path.isdir(s):
                 shutil.copytree(s, d, dirs_exist_ok=True)
             else:
                 shutil.copy2(s, d)
 
-        creation_time = '1800-11-29T10:28:46.2756439Z' 
+        creation_time = '1800-11-29T10:28:46.2756439Z'
+        print(f"Cloning: creation_time: {creation_time}")
         
         projects_json_path = os.path.join(folder_path, 'projects.json')
+        print(f"Cloning: projects_json_path: {projects_json_path}")
         
         with open(projects_json_path, 'r+') as f:
+            print(f"Cloning: Opening projects.json file")
             projects = json.load(f)
+            print(f"Cloning: Loaded projects: {projects}")
 
             if toProjectKeyID not in projects:
                 projects[toProjectKeyID] = {"name": "{}".format(fromProjectName),
                                             "scenarios": {}}
+                print(f"Cloning: Added new project ID: {toProjectKeyID} with name: {fromProjectName}")
 
             projects[toProjectKeyID]["scenarios"][toProjectKeyScenario] = {
                 "name": "{}".format(clonedScenarioName),
                 "lastUpdated": "{}".format(creation_time)
             }
+            print(f"Cloning: Added new scenario: {toProjectKeyScenario} with name: {clonedScenarioName}")
 
             f.seek(0)
             json.dump(projects, f, indent=4)
             f.truncate()
-        
-        print("reached cloning end")
-        return target_path   
+            print("Cloning: Updated projects.json file")
+
+        print("Cloning: Reached cloning end")
+        return target_path
     
     def set_merge_projects_combo_box(self):
         self.offline_scenarios_list_sourceA = []

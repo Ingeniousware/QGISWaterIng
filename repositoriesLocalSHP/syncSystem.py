@@ -1,12 +1,11 @@
 from qgis.core import QgsField, QgsFields, QgsProject, QgsVectorLayer, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsCoordinateReferenceSystem, QgsLayerTreeLayer
-from qgis.core import QgsGeometry, QgsFeature, QgsLineString, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsCoordinateTransform, QgsWkbTypes
-from PyQt5.QtCore import QFileInfo, QDateTime, QDateTime, Qt
+from qgis.core import QgsGeometry, QgsFeature, edit, QgsPointXY, QgsVectorFileWriter, QgsExpression, QgsFeatureRequest, QgsCoordinateTransform, QgsWkbTypes
+from PyQt5.QtCore import QVariant, QDateTime, QDateTime, Qt
 from PyQt5.QtWidgets import QMessageBox
 from qgis.utils import iface
 from ..watering_utils import WateringUtils
-from .change import Change
 from collections import deque
-import json
+import json, uuid
 
 class WateringSync():
     def __init__(self, token, project_path, scenarioFK, repositories):
@@ -98,6 +97,10 @@ class WateringSync():
         # TESTS
         #lastUpdated = "1800-01-01 12:00:00"
         print("Watering Log: lastUpdated: ", lastUpdated)
+        
+        if lastUpdated <= '2000-01-01T00:00:00.0000000Z':
+            print("Sync: after cloning, reset all elements as not added.")
+            self.cleanup_field_id(self.repositories)
         
         self.get_offline_changes(lastUpdated)
         self.get_server_changes(lastUpdated)
@@ -286,3 +289,25 @@ class WateringSync():
         
         self.layer.addFeature(feature)
         self.layer.commitChanges()
+        
+    def cleanup_field_id(self, shp_element_files):
+        for shp in shp_element_files:
+            print(f"Cloning: Processing layer: {shp}")
+            
+            layer = QgsProject.instance().mapLayersByName(shp.LayerName)[0]
+            
+            if not layer.isValid():
+                print(f"Cloning: Failed to load layer: {layer.name()}")
+                continue
+            
+            with edit(layer):
+                if 'ID' not in [field.name() for field in layer.fields()]:
+                    layer.dataProvider().addAttributes([QgsField("ID", QVariant.String)])
+                    layer.updateFields()
+
+                for feature in layer.getFeatures():
+                    feature.setAttribute(feature.fieldNameIndex('ID'), str(uuid.uuid4())[:10])
+                    layer.updateFeature(feature)
+
+            layer.commitChanges()
+            print(f"Cloning: Updated 'ID' field for all features in {layer.name()}")
