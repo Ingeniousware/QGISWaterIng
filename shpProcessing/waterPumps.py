@@ -47,8 +47,8 @@ class ImportPumpsShp(AbstractShpImport):
             new_feature.setAttribute("Name", name)
             new_feature.setAttribute("Descript", description)
             new_feature.setAttribute("Z[m]", z)
-            new_feature.setAttribute("Model Fk", modelFK)
-            new_feature.setAttribute("Rel. Speed", relativeSpeed)
+            new_feature.setAttribute("Model FK", modelFK)
+            new_feature.setAttribute("Rel.Speed", relativeSpeed)
 
             # Add the feature to the destination layer
             destination_layer.startEditing()
