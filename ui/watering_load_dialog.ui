@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>659</width>
-    <height>502</height>
+    <height>512</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -63,7 +63,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab_2">
       <attribute name="title">
@@ -448,6 +448,19 @@
        </item>
        <item>
         <widget class="QComboBox" name="merge_scenarios_box_sourceB"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
