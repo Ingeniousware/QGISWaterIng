@@ -247,7 +247,7 @@ class NetworkReviewTool:
                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
             if response == QMessageBox.Yes:
 
-                self.reviewProcess()
+                #self.reviewProcess()
                 WateringUtils.delete_column(self.node_layer,"Unconected")
                 WateringUtils.changeColors(self.node_layer,"","single")
                 self.iface.messageBar().pushMessage("Success", "Successfully identified unconnected nodes!", level=Qgis.Success, duration=6)

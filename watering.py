@@ -31,6 +31,7 @@ from .toolsMap.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacemen
 from .toolsProcess.ImportINPFileTool import ImportINPFileTool
 from .toolsProcess.ImportShapeFileTool import ImportShapeFileTool
 from .toolsProcess.NetworkReviewTool import NetworkReviewTool
+from .toolsProcess.SelectionReviewTool import SelectionReviewTool
 from .toolsProcess.DemandPatternTool import DemandPatternTool
 from .toolsMap.InsertDemandNodeTool import InsertDemandNodeTool
 from .toolsMap.insertTankNodeTool import InsertTankNodeTool
@@ -299,6 +300,10 @@ class QGISPlugin_WaterIng:
         toolReviewNetwork = NetworkReviewTool(self.iface)
         self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
         self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
+
+        toolSelectionReview = SelectionReviewTool(self.iface)
+        self.toolbarToolManager.toolSelectionReview.setCurrentTool(toolSelectionReview)
+        self.toolbarToolManager.toolSelectionReview.setEnabled(True)
 
         toolDemandPattern = DemandPatternTool(self.iface)
         self.toolbarToolManager.toolDemandPattern.setCurrentTool(toolDemandPattern)
