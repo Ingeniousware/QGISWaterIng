@@ -102,9 +102,6 @@ class QGISPlugin_WaterIng:
         self.canvas = iface.mapCanvas()
         QgsProject.instance().cleared.connect(self.updateActionStateClose)
         QgsProject.instance().readProject.connect(self.updateActionStateOpen)
-
-
-        #self.readMeasurementsAction = None
                                                   
         # Toolbar
         self.activeMapTool = None
@@ -372,6 +369,7 @@ class QGISPlugin_WaterIng:
             self.toolbarToolManager.openOptimizationManagerAction.setEnabled(True)
             self.toolbarToolManager.openPumpModels.setEnabled(True)
             self.toolbarToolManager.readMeasurementsAction.setEnabled(True)
+            self.toolbarToolManager.waterBalanceAction.setEnabled(True)
             print("After setting to true")
     
 
@@ -388,6 +386,7 @@ class QGISPlugin_WaterIng:
                     self.toolbarToolManager.openOptimizationManagerAction,
                     self.toolbarToolManager.openPumpModels,
                     self.toolbarToolManager.readMeasurementsAction,
+                    self.toolbarToolManager.waterBalanceAction,
                     self.toolbarToolManager.insertDemandNodeAction,
                     self.toolbarToolManager.insertTankNodeAction,
                     self.toolbarToolManager.insertReservoirNodeAction,

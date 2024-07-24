@@ -9,6 +9,7 @@ import os
 
 from ..watering_utils import WateringUtils
 from ..ui.watering_datachannels import WateringDatachannels
+from ..ui.watering_waterBalance import WateringWaterBalance
 from ..ui.watering_optimization import WaterOptimization
 from ..ui.watering_analysis import WateringAnalysis
 from ..ui.watering_pumpModels import WateringPumpModels
@@ -47,6 +48,7 @@ class toolbarToolManager():
         self.openPumpModels = None
         self.readAnalysisAction = None
         self.readMeasurementsAction = None
+        self.waterBalanceAction = None
         self.undoAction = None
         self.redoAction = None
         
@@ -91,6 +93,17 @@ class toolbarToolManager():
         self.optimizationToolsAction.setCheckable(True)        
         #self.optimizationToolsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         self.optimizationToolsAction.toggled.connect(self.activateOptimizationTool)
+
+        # Monitoring Tools        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/monitoring.svg'
+        self.monitoringToolsAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Monitoring Tools'),
+            callback=self.activeControllerTool,
+            toolbar = self.toolbar,
+            parent=self.parentWindow)
+        self.monitoringToolsAction.setCheckable(True)        
+        self.monitoringToolsAction.toggled.connect(self.activateMonitoringTool)
         
         # Measurements
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/monitoring.svg'
@@ -98,11 +111,19 @@ class toolbarToolManager():
             icon_path,
             text=WateringUtils.tr(u'Get Measurements'),
             callback= self.activateMeasurementTool,
-            toolbar = self.toolbar,
+            toolbar = None,
             parent=self.parentWindow)
         self.readMeasurementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
-        #self.readMeasurementsAction.setCheckable(True)        
-        #self.readMeasurementsAction.toggled.connect(self.activateMeasurementTool)
+
+        # Water Balance
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/monitoring.svg'
+        self.waterBalanceAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Water Balance'),        
+            callback= self.waterBalanceTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.waterBalanceAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Identify
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/select.svg'
@@ -406,6 +427,19 @@ class toolbarToolManager():
                 self.toolbar.removeAction(tool)
                 
                 tool.setChecked(False)
+    
+    def activateMonitoringTool(self, checked):
+        monitoringTools = [self.readMeasurementsAction, self.waterBalanceAction]
+        
+        if checked:
+            for tool in monitoringTools:
+                self.toolbar.addAction(tool)
+        else:
+            self.canvas.setMapTool(self.panTool)
+            for tool in monitoringTools:
+                self.toolbar.removeAction(tool)
+                
+                tool.setChecked(False)
 
     def waterOptimization(self, second):
         if WateringUtils.isScenarioNotOpened():
@@ -440,6 +474,16 @@ class toolbarToolManager():
             except:
                 iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"No data source available for the project."), level=1, duration=5)
     
+    def waterBalanceTool(self, second):
+        if WateringUtils.isScenarioNotOpened():
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+        else:            
+            dlg = WateringWaterBalance()
+            dlg.show()
+            dlg.exec_()
+
     def activateWaterAnalysisTool(self):
         if WateringUtils.isScenarioNotOpened():
             iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
