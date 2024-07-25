@@ -1,9 +1,11 @@
 import os
 from PyQt5.QtWidgets import QMessageBox
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QColor
 from qgis.gui import QgsMapTool, QgsRubberBand
 from qgis.core import QgsFeatureRequest, QgsRectangle, QgsWkbTypes, QgsGeometry, QgsPointXY, QgsMapLayer, QgsProject
 from ..watering_utils import WateringUtils
+from ..ui.watering_selection_review import WateringSelectionReview
 
 class SelectionReviewTool:
 
@@ -51,17 +53,60 @@ class RectangleSelectionTool(QgsMapTool):
         self.rubberBand = QgsRubberBand(canvas, QgsWkbTypes.PolygonGeometry)
         self.startPoint = None
         self.endPoint = None
+        self.isDrawing = False
 
     def canvasPressEvent(self, event):
-        self.startPoint = self.toMapCoordinates(event.pos())
-        self.rubberBand.reset(QgsWkbTypes.PolygonGeometry)
+        if event.button() == Qt.LeftButton:
+            if not self.isDrawing:
+                self.startPoint = self.toMapCoordinates(event.pos())
+                self.rubberBand.reset(QgsWkbTypes.PolygonGeometry)
+                self.isDrawing = True
+            else:
+                self.endPoint = self.toMapCoordinates(event.pos())
+                self.isDrawing = False
+                self.drawRectangle()
 
-    def canvasReleaseEvent(self, event):
-        self.endPoint = self.toMapCoordinates(event.pos())
+    def canvasMoveEvent(self, event):
+        if self.isDrawing and self.startPoint:
+            self.endPoint = self.toMapCoordinates(event.pos())
+            rect = QgsRectangle(self.startPoint, self.endPoint)
+            points = [
+                QgsPointXY(rect.xMinimum(), rect.yMinimum()),
+                QgsPointXY(rect.xMaximum(), rect.yMinimum()),
+                QgsPointXY(rect.xMaximum(), rect.yMaximum()),
+                QgsPointXY(rect.xMinimum(), rect.yMaximum()),
+                QgsPointXY(rect.xMinimum(), rect.yMinimum())
+            ]
+            self.rubberBand.setToGeometry(QgsGeometry.fromPolygonXY([points]), None)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self.rubberBand.reset(QgsWkbTypes.PolygonGeometry)
+            self.startPoint = None
+            self.endPoint = None
+            self.isDrawing = False
+        elif event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:
+            if not self.isDrawing and self.startPoint and self.endPoint:
+                self.printSelectedFeatures()
+
+    def drawRectangle(self):
+        if not self.startPoint or not self.endPoint:
+            return
+        rect = QgsRectangle(self.startPoint, self.endPoint)
+        points = [
+            QgsPointXY(rect.xMinimum(), rect.yMinimum()),
+            QgsPointXY(rect.xMaximum(), rect.yMinimum()),
+            QgsPointXY(rect.xMaximum(), rect.yMaximum()),
+            QgsPointXY(rect.xMinimum(), rect.yMaximum()),
+            QgsPointXY(rect.xMinimum(), rect.yMinimum())
+        ]
+        self.rubberBand.setToGeometry(QgsGeometry.fromPolygonXY([points]), None)
+
+    def printSelectedFeatures(self):
         rect = QgsRectangle(self.startPoint, self.endPoint)
         if rect.isNull():
             return
-        
+
         features = []
         for layer in self.canvas.layers():
             if layer.type() == QgsMapLayer.VectorLayer:
@@ -74,24 +119,12 @@ class RectangleSelectionTool(QgsMapTool):
                         
         print("Total features found: ", len(features))
         self.featuresIdentified.emit(features)
-
-        self.rubberBand.reset(QgsWkbTypes.PolygonGeometry)
-        self.startPoint = None
-        self.endPoint = None
-
-    def canvasMoveEvent(self, event):
-        if not self.startPoint:
-            return
-        self.endPoint = self.toMapCoordinates(event.pos())
-        rect = QgsRectangle(self.startPoint, self.endPoint)
-        points = [
-            QgsPointXY(rect.xMinimum(), rect.yMinimum()),
-            QgsPointXY(rect.xMaximum(), rect.yMinimum()),
-            QgsPointXY(rect.xMaximum(), rect.yMaximum()),
-            QgsPointXY(rect.xMinimum(), rect.yMaximum()),
-            QgsPointXY(rect.xMinimum(), rect.yMinimum())
-        ]
-        self.rubberBand.setToGeometry(QgsGeometry.fromPolygonXY([points]), None)
+        self.runSelectionReviewDialog(features)
+        
+    def runSelectionReviewDialog(self, features_list):
+        dlg = WateringSelectionReview(features_list)
+        dlg.show()
+        dlg.exec_()
 
     def deactivate(self):
         QgsMapTool.deactivate(self)
