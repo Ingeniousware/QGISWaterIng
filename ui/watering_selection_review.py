@@ -27,7 +27,7 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
         self.populateTableView(self.node_node_list, ["Node 1", "Node 2", "Distance"], self.tableViewNodeVsNode)
         self.populateTableView(self.node_pipe_list, ["Node", "Pipe", "Distance"], self.tableViewNodeVsPipe)
         self.nodeVsNodeCheckBox.stateChanged.connect(self.updateCheckboxText)
-
+        self.nodeVsPipeCheckBox.stateChanged.connect(self.updateCheckboxText)
 
     def populateTableView(self, data_list, headers, table_view):
         features_count = len(data_list)
@@ -50,11 +50,18 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
             print("TableView: ", table_view)
             print("Row: ", row)
             
-    def updateNodeVsNodeCheckboxText(self):
-        if self.nodeVsNodeCheckBox.isChecked():
-            self.nodeVsNodeCheckBox.setText("Merge Node 2 into Node 1")
-        else:
-            self.nodeVsNodeCheckBox.setText("Merge Node 1 into Node 2")
+    def updateCheckboxText(self):
+        sender = self.sender()
+        if sender == self.nodeVsNodeCheckBox:
+            if self.nodeVsNodeCheckBox.isChecked():
+                self.nodeVsNodeCheckBox.setText("Merge Node 2 into Node 1")
+            else:
+                self.nodeVsNodeCheckBox.setText("Merge Node 1 into Node 2")
+        elif sender == self.nodeVsPipeCheckBox:
+            if self.nodeVsPipeCheckBox.isChecked():
+                self.nodeVsPipeCheckBox.setText("Connect Node to Pipe")
+            else:
+                self.nodeVsPipeCheckBox.setText("Connect Pipe to Node")
             
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):

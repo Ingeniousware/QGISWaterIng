@@ -69,7 +69,10 @@
        <item row="1" column="0">
         <widget class="QCheckBox" name="nodeVsNodeCheckBox">
          <property name="text">
-          <string>Merge node 2 in 1</string>
+          <string>Merge Node 2 into Node 1</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -88,9 +91,12 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
-            <widget class="QCheckBox" name="checkBox">
+            <widget class="QCheckBox" name="nodeVsPipeCheckBox">
              <property name="text">
-              <string>Connect node to pipe</string>
+              <string>Connect Node to Pipe</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
