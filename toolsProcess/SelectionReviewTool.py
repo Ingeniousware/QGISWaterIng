@@ -111,7 +111,7 @@ class RectangleSelectionTool(QgsMapTool):
                         features.append(feature)
 
         if not features:
-            return
+            return []
 
         distances = []
         for feature1, feature2 in itertools.combinations(features, 2):

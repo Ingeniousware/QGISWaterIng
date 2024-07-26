@@ -23,11 +23,12 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
         self.node_pipe_list = node_pipe_list
         self.initializeRepository()
         
-
     def initializeRepository(self):
         self.populateTableView(self.node_node_list, ["Node 1", "Node 2", "Distance"], self.tableViewNodeVsNode)
         self.populateTableView(self.node_pipe_list, ["Node", "Pipe", "Distance"], self.tableViewNodeVsPipe)
-    
+        self.nodeVsNodeCheckBox.stateChanged.connect(self.updateCheckboxText)
+
+
     def populateTableView(self, data_list, headers, table_view):
         features_count = len(data_list)
 
@@ -39,8 +40,22 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
             table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
             table_view.setModel(proxy_model)
             table_view.setSortingEnabled(True)
+            table_view.clicked.connect(lambda index: self.on_row_clicked(index, table_view))
 
-    
+    def on_row_clicked(self, index, table_view):
+        if index.isValid():
+            row = index.row()
+            table_view.selectRow(row)
+            print("Index: ", index)
+            print("TableView: ", table_view)
+            print("Row: ", row)
+            
+    def updateNodeVsNodeCheckboxText(self):
+        if self.nodeVsNodeCheckBox.isChecked():
+            self.nodeVsNodeCheckBox.setText("Merge Node 2 into Node 1")
+        else:
+            self.nodeVsNodeCheckBox.setText("Merge Node 1 into Node 2")
+            
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
         super(TableModel, self).__init__()
