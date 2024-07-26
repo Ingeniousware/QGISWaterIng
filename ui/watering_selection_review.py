@@ -24,8 +24,8 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
         self.initializeRepository()
         
     def initializeRepository(self):
-        self.populateTableView(self.node_node_list, ["Node 1", "Node 2", "Distance"], self.tableViewNodeVsNode)
-        self.populateTableView(self.node_pipe_list, ["Node", "Pipe", "Distance"], self.tableViewNodeVsPipe)
+        self.populateTableView(self.node_node_list, ["Node 1", "Node 2", "Distance", "Node1_fID", "Node2_fID"], self.tableViewNodeVsNode)
+        self.populateTableView(self.node_pipe_list, ["Node", "Pipe", "Distance", "Node_fID", "Pipe_fID"], self.tableViewNodeVsPipe)
         self.nodeVsNodeCheckBox.stateChanged.connect(self.updateCheckboxText)
         self.nodeVsPipeCheckBox.stateChanged.connect(self.updateCheckboxText)
 
@@ -42,13 +42,25 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
             table_view.setSortingEnabled(True)
             table_view.clicked.connect(lambda index: self.on_row_clicked(index, table_view))
 
+            table_view.setColumnHidden(len(headers) - 2, True)  # Hide Node1_fID
+            table_view.setColumnHidden(len(headers) - 1, True)  # Hide Node2_fID
+            
     def on_row_clicked(self, index, table_view):
         if index.isValid():
             row = index.row()
             table_view.selectRow(row)
+            visible_columns = table_view.model().columnCount()
+            hidden_columns_start = visible_columns - 2 # 2 == hidden columns (fID_1 and fID_2)
+
             print("Index: ", index)
             print("TableView: ", table_view)
             print("Row: ", row)
+            
+            visible_data = [table_view.model().data(table_view.model().index(row, col)) for col in range(visible_columns - 2)]
+            print("Visible Data: ", visible_data)
+            
+            hidden_data = [table_view.model().data(table_view.model().index(row, col)) for col in range(hidden_columns_start, visible_columns)]
+            print("Hidden Data: ", hidden_data)
             
     def updateCheckboxText(self):
         sender = self.sender()

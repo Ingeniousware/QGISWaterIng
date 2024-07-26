@@ -118,12 +118,12 @@ class RectangleSelectionTool(QgsMapTool):
             geom1 = feature1.geometry()
             geom2 = feature2.geometry()
             distance = geom1.distance(geom2)
-            distances.append([feature1.attribute('Name'), feature2.attribute('Name'), distance])
+            distances.append([feature1.attribute('Name'), feature2.attribute('Name'), distance, feature1.id(), feature2.id()])
             print(f"Distance between {feature1.attribute('Name')} and {feature2.attribute('Name')}: {distance}")
 
         distance_array = []
         for item in distances:
-            distance_array.append([item[0], item[1], item[2]])
+            distance_array.append([item[0], item[1], item[2], item[3], item[4]])
 
         print(distance_array)
         return distance_array
@@ -165,13 +165,13 @@ class RectangleSelectionTool(QgsMapTool):
                 geom1 = node.geometry()
                 geom2 = pipe.geometry()
                 distance = geom1.distance(geom2)
-                distances.append([node.attribute('name'), pipe.attribute('name'), distance])
-                print(f"Distance between {node.attribute('name')} and {pipe.attribute('name')}: {distance}")
+                distances.append([node.attribute('Name'), pipe.attribute('Name'), distance, node.id(), pipe.id()])
+                print(f"Distance between {node.attribute('Name')} and {pipe.attribute('Name')}: {distance}")
 
         # Example array creation
         distance_array = []
         for item in distances:
-            distance_array.append([item[0], item[1], item[2]])
+            distance_array.append([item[0], item[1], item[2], item[3], item[4]])
 
         print(distance_array)
         return distance_array
