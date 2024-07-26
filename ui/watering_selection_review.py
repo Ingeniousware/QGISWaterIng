@@ -1,5 +1,5 @@
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, Qgis, QgsField, QgsFeatureRequest
+from qgis.core import QgsProject, Qgis, QgsGeometry, QgsFeatureRequest
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
@@ -47,8 +47,7 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
         if self.tableViewNodeVsNode.model().rowCount() == 0:
             WateringUtils.error_message("The table is empty. Please add nodes to the table first.")
             return
-        
-        # Get the selected row
+
         selected_row = self.tableViewNodeVsNode.selectionModel().currentIndex().row()
         if selected_row != -1:
             node1_fID = int(self.tableViewNodeVsNode.model().data(self.tableViewNodeVsNode.model().index(selected_row, 3)))
@@ -61,26 +60,52 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
             WateringUtils.error_message("No selection. Please select a row in the table.")
 
     def mergeNodes(self, node1_fID, node2_fID, merge_node2_into_node1):
-        layer = QgsProject.instance().mapLayersByName('watering_demand_nodes')[0]
-        node1 = next(layer.getFeatures(QgsFeatureRequest(node1_fID)))
-        node2 = next(layer.getFeatures(QgsFeatureRequest(node2_fID)))
-        
-        if node1 and node2:
-            if merge_node2_into_node1:
-                target_node, source_node = node1, node2
-            else:
-                target_node, source_node = node2, node1
-            
-            #target_node.setGeometry(target_node.geometry().combine(source_node.geometry()))
-            
-            layer.startEditing()
-            layer.updateFeature(target_node)
-            layer.deleteFeature(source_node.id()) #TODO - create Watering Utils delete feature
-            layer.commitChanges()
-            
-            WateringUtils.success_message("Nodes merged successfully")
-        else:
+        node_layer = QgsProject.instance().mapLayersByName('watering_demand_nodes')[0]
+        pipe_layer = QgsProject.instance().mapLayersByName('watering_pipes')[0]
+
+        node1 = next(node_layer.getFeatures(QgsFeatureRequest(node1_fID)), None)
+        node2 = next(node_layer.getFeatures(QgsFeatureRequest(node2_fID)), None)
+
+        if not node1 or not node2:
             WateringUtils.error_message("One or both nodes not found")
+            return
+
+        target_node, source_node = (node1, node2) if merge_node2_into_node1 else (node2, node1)
+
+        node_layer.startEditing()
+
+        target_node_geom = target_node.geometry().asPoint()
+        source_node_geom = source_node.geometry().asPoint()
+
+        pipe_layer.startEditing()
+        source_node_id = source_node["Name"]
+        target_node_id = target_node["Name"]
+
+        for pipe in pipe_layer.getFeatures():
+            updated = False
+            pipe_geom = pipe.geometry()
+
+            if pipe["Up-Node"] == source_node_id:
+                new_geom = QgsGeometry.fromPolyline([target_node_geom, pipe_geom.asPolyline()[-1]])
+                pipe.setGeometry(new_geom)
+                pipe["Up-Node"] = target_node_id
+                updated = True
+            if pipe["Down-Node"] == source_node_id:
+                new_geom = QgsGeometry.fromPolyline([pipe_geom.asPolyline()[0], target_node_geom])
+                pipe.setGeometry(new_geom)
+                pipe["Down-Node"] = target_node_id
+                updated = True
+
+            if updated:
+                pipe_layer.updateFeature(pipe)
+
+        node_layer.deleteFeature(source_node.id())
+        
+        node_layer.commitChanges()
+        pipe_layer.commitChanges()
+
+        WateringUtils.success_message("Nodes and pipes updated and merged successfully")
+
 
     def on_row_clicked(self, index, table_view):
         if index.isValid():
