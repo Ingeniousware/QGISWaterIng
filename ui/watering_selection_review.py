@@ -15,31 +15,31 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_selection_review_dialog.ui'))
 
 class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, features, parent=None):
+    def __init__(self, node_node_list, node_pipe_list , parent=None):
         """Constructor."""
         super(WateringSelectionReview, self).__init__(parent)
         self.setupUi(self)
-        self.features = features
+        self.node_node_list = node_node_list
+        self.node_pipe_list = node_pipe_list
         self.initializeRepository()
+        
 
     def initializeRepository(self):
-        features_count = len(self.features) 
+        self.populateTableView(self.node_node_list, ["Node 1", "Node 2", "Distance"], self.tableViewNodeVsNode)
+        self.populateTableView(self.node_pipe_list, ["Node", "Pipe", "Distance"], self.tableViewNodeVsPipe)
+    
+    def populateTableView(self, data_list, headers, table_view):
+        features_count = len(data_list)
 
         if features_count > 0:
-            matrix_table = []
-            for i in range(0, 1):
-                # matrix_table.append()
-                matrix_table = [ [1 ,2 ,3 ],
-                                 [4 ,5 ,6 ],
-                                 [7 ,8 ,9 ]]
-            headers = ["Node 1", "Node 2", "Distance"]         
-            model = TableModel(matrix_table, headers)
-            proxyModel = QSortFilterProxyModel()
-            proxyModel.setSourceModel(model)
-            
-            self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-            self.tableView.setModel(proxyModel)
-            self.tableView.setSortingEnabled(True)
+            model = TableModel(data_list, headers)
+            proxy_model = QSortFilterProxyModel()
+            proxy_model.setSourceModel(model)
+
+            table_view.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            table_view.setModel(proxy_model)
+            table_view.setSortingEnabled(True)
+
     
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
