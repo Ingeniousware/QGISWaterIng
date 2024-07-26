@@ -44,6 +44,11 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
             table_view.setColumnHidden(len(headers) - 1, True)  # Hide Node2_fID
    
     def onNodeXNodeBtnClicked(self):
+        if self.tableViewNodeVsNode.model().rowCount() == 0:
+            WateringUtils.error_message("The table is empty. Please add nodes to the table first.")
+            return
+        
+        # Get the selected row
         selected_row = self.tableViewNodeVsNode.selectionModel().currentIndex().row()
         if selected_row != -1:
             node1_fID = int(self.tableViewNodeVsNode.model().data(self.tableViewNodeVsNode.model().index(selected_row, 3)))
