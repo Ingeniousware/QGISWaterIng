@@ -1,5 +1,5 @@
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, Qgis, QgsGeometry, QgsFeatureRequest
+from qgis.core import QgsProject, Qgis, QgsGeometry, QgsFeatureRequest, QgsWkbTypes, QgsPoint, QgsPointXY
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
@@ -59,6 +59,9 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
         else:
             WateringUtils.error_message("No selection. Please select a row in the table.")
 
+    def points_are_equal(self, point1, point2, tolerance=0.01):
+           return point1.distance(point2) <= tolerance
+
     def mergeNodes(self, node1_fID, node2_fID, merge_node2_into_node1):
         node_layer = QgsProject.instance().mapLayersByName('watering_demand_nodes')[0]
         pipe_layer = QgsProject.instance().mapLayersByName('watering_pipes')[0]
@@ -75,38 +78,53 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
         node_layer.startEditing()
 
         target_node_geom = target_node.geometry().asPoint()
+
         source_node_geom = source_node.geometry().asPoint()
 
         pipe_layer.startEditing()
-        source_node_id = source_node["Name"]
-        target_node_id = target_node["Name"]
 
-        for pipe in pipe_layer.getFeatures():
-            updated = False
-            pipe_geom = pipe.geometry()
+        matching_pipe, matching_vertex = self.find_vertex_within_tolerance(source_node_geom, pipe_layer, 0.01)
+        
+        if matching_pipe and matching_vertex:
+            geom = matching_pipe.geometry()
+            new_polyline = []
+            for polyline in geom.asMultiPolyline():
+                new_polyline.append([
+                    QgsPointXY(target_node_geom) if QgsPointXY(vertex) == matching_vertex else vertex
+                    for vertex in polyline
+                ])
+            matching_pipe.setGeometry(QgsGeometry.fromMultiPolylineXY(new_polyline))
+            
+            pipe_layer.updateFeature(matching_pipe)
 
-            if pipe["Up-Node"] == source_node_id:
-                new_geom = QgsGeometry.fromPolyline([target_node_geom, pipe_geom.asPolyline()[-1]])
-                pipe.setGeometry(new_geom)
-                pipe["Up-Node"] = target_node_id
-                updated = True
-            if pipe["Down-Node"] == source_node_id:
-                new_geom = QgsGeometry.fromPolyline([pipe_geom.asPolyline()[0], target_node_geom])
-                pipe.setGeometry(new_geom)
-                pipe["Down-Node"] = target_node_id
-                updated = True
-
-            if updated:
-                pipe_layer.updateFeature(pipe)
-
-        node_layer.deleteFeature(source_node.id())
+        node_layer.deleteFeature(source_node.id()) #TODO : delete Pipe if length goes to 0 after merging
         
         node_layer.commitChanges()
+
         pipe_layer.commitChanges()
 
         WateringUtils.success_message("Nodes and pipes updated and merged successfully")
 
+    def find_vertex_within_tolerance(self, point, polyline_layer, tolerance):
+        for feature in polyline_layer.getFeatures():
+            geom = feature.geometry()
+            
+            for polyline in geom.asMultiPolyline():
+                for vertex in polyline:
+                    vertex_point = QgsPointXY(vertex)
+                    if point.distance(vertex_point) <= tolerance:
+                        return feature, vertex_point
+        
+        return None, None
 
+    def find_matching_node(self, point, node_layer):
+        tolerance=0.0001
+        for node in node_layer.getFeatures():
+            node_point = node.geometry().asPoint()
+            if point.distance(node_point) < tolerance:
+                return node["ID"]
+        return None
+    
     def on_row_clicked(self, index, table_view):
         if index.isValid():
             row = index.row()
