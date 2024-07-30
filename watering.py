@@ -642,14 +642,14 @@ class QGISPlugin_WaterIng:
                 print(f"Attribute changed in layer {layer.name()}: feature_id={feature_id}, attribute_index={attribute_index}, new_value={new_value}")
                 WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer, sync)
             
-            def on_geometry_change(feature_id, old_geometry, new_geometry, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem):
-                print(f"Geometry changed in layer {layer.name()}: feature_id={feature_id}, old_geometry={old_geometry}, new_geometry={new_geometry}")
-                WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync)
+            # def on_geometry_change(feature_id, new_geometry, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem):
+            #     print(f"Geometry changed in layer {layer.name()}: feature_id={feature_id}, new_geometry={new_geometry}")
+            #     WateringUtils.onGeometryChange(feature_id, new_geometry, layer, sync)
             
             real_layer.attributeValueChanged.connect(on_attribute_change)
-            real_layer.geometryChanged.connect(on_geometry_change)
+            #real_layer.geometryChanged.connect(lambda fid, geom: on_geometry_change(fid, geom, real_layer, self.scenarioUnitOFWork.syncSystem))
 
-        print("Setup complete.")
+            print("Setup complete.")
 
 
     
