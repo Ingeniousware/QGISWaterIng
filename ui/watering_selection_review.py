@@ -1,9 +1,13 @@
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, Qgis, QgsGeometry, QgsFeatureRequest, QgsWkbTypes, QgsPoint, QgsPointXY
+from qgis.core import QgsFeature, QgsSymbol, QgsRendererCategory, QgsCategorizedSymbolRenderer
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
 from PyQt5.QtWidgets import QHeaderView
+from qgis.PyQt.QtGui import QColor
+from qgis.core import QgsRuleBasedRenderer, QgsSymbol, QgsFillSymbol
+
 
 import os
 from ..watering_utils import WateringUtils
@@ -119,18 +123,22 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
             row = index.row()
             table_view.selectRow(row)
             visible_columns = table_view.model().columnCount()
-            hidden_columns_start = visible_columns - 2 # 2 == hidden columns (fID_1 and fID_2)
+            hidden_columns_start = visible_columns - 2  # 2 == hidden columns (fID_1 and fID_2)
 
-            print("Index: ", index)
-            print("TableView: ", table_view)
-            print("Row: ", row)
-            
-            visible_data = [table_view.model().data(table_view.model().index(row, col)) for col in range(visible_columns - 2)]
-            print("Visible Data: ", visible_data)
-            
             hidden_data = [table_view.model().data(table_view.model().index(row, col)) for col in range(hidden_columns_start, visible_columns)]
             print("Hidden Data: ", hidden_data)
             
+            node1_fID = int(hidden_data[0])
+            node2_fID = int(hidden_data[1])
+
+            self.highlight_features([node1_fID, node2_fID])
+
+    def highlight_features(self, feature_ids):
+        node_layer = QgsProject.instance().mapLayersByName('watering_demand_nodes')[0]
+
+        node_layer.removeSelection()
+        node_layer.selectByIds(feature_ids)
+    
     def updateCheckboxText(self):
         sender = self.sender()
         if sender == self.nodeVsNodeCheckBox:
