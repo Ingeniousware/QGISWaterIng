@@ -59,9 +59,6 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
         else:
             WateringUtils.error_message("No selection. Please select a row in the table.")
 
-    def points_are_equal(self, point1, point2, tolerance=0.01):
-           return point1.distance(point2) <= tolerance
-
     def mergeNodes(self, node1_fID, node2_fID, merge_node2_into_node1):
         node_layer = QgsProject.instance().mapLayersByName('watering_demand_nodes')[0]
         pipe_layer = QgsProject.instance().mapLayersByName('watering_pipes')[0]
@@ -116,14 +113,6 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
                         return feature, vertex_point
         
         return None, None
-
-    def find_matching_node(self, point, node_layer):
-        tolerance=0.0001
-        for node in node_layer.getFeatures():
-            node_point = node.geometry().asPoint()
-            if point.distance(node_point) < tolerance:
-                return node["ID"]
-        return None
     
     def on_row_clicked(self, index, table_view):
         if index.isValid():
