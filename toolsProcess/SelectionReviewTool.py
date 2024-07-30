@@ -136,7 +136,6 @@ class RectangleSelectionTool(QgsMapTool):
         nodes = []
         pipes = []
 
-        # Collect features from watering_demand_nodes
         for layer in self.canvas.layers():
             if layer.type() == QgsMapLayer.VectorLayer and layer.name() == 'watering_demand_nodes':
                 tree_layer = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
@@ -145,8 +144,7 @@ class RectangleSelectionTool(QgsMapTool):
                     for feature in layer.getFeatures(request):
                         print(f"Node found: {feature.id()}")
                         nodes.append(feature)
-
-        # Collect features from watering_pipes
+                        
         for layer in self.canvas.layers():
             if layer.type() == QgsMapLayer.VectorLayer and layer.name() == 'watering_pipes':
                 tree_layer = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
@@ -168,7 +166,6 @@ class RectangleSelectionTool(QgsMapTool):
                 distances.append([node.attribute('Name'), pipe.attribute('Name'), distance, node.id(), pipe.id()])
                 print(f"Distance between {node.attribute('Name')} and {pipe.attribute('Name')}: {distance}")
 
-        # Example array creation
         distance_array = []
         for item in distances:
             distance_array.append([item[0], item[1], item[2], item[3], item[4]])

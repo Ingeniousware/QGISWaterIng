@@ -1,5 +1,5 @@
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, Qgis, QgsField, QgsFeatureRequest
+from qgis.core import QgsProject, Qgis, QgsGeometry, QgsFeatureRequest, QgsWkbTypes, QgsPoint, QgsPointXY
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, QSortFilterProxyModel
 from qgis.utils import iface
@@ -44,6 +44,10 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
             table_view.setColumnHidden(len(headers) - 1, True)  # Hide Node2_fID
    
     def onNodeXNodeBtnClicked(self):
+        if self.tableViewNodeVsNode.model().rowCount() == 0:
+            WateringUtils.error_message("The table is empty. Please add nodes to the table first.")
+            return
+
         selected_row = self.tableViewNodeVsNode.selectionModel().currentIndex().row()
         if selected_row != -1:
             node1_fID = int(self.tableViewNodeVsNode.model().data(self.tableViewNodeVsNode.model().index(selected_row, 3)))
@@ -56,27 +60,60 @@ class WateringSelectionReview(QtWidgets.QDialog, FORM_CLASS):
             WateringUtils.error_message("No selection. Please select a row in the table.")
 
     def mergeNodes(self, node1_fID, node2_fID, merge_node2_into_node1):
-        layer = QgsProject.instance().mapLayersByName('watering_demand_nodes')[0]
-        node1 = next(layer.getFeatures(QgsFeatureRequest(node1_fID)))
-        node2 = next(layer.getFeatures(QgsFeatureRequest(node2_fID)))
-        
-        if node1 and node2:
-            if merge_node2_into_node1:
-                target_node, source_node = node1, node2
-            else:
-                target_node, source_node = node2, node1
-            
-            #target_node.setGeometry(target_node.geometry().combine(source_node.geometry()))
-            
-            layer.startEditing()
-            layer.updateFeature(target_node)
-            layer.deleteFeature(source_node.id()) #TODO - create Watering Utils delete feature
-            layer.commitChanges()
-            
-            WateringUtils.success_message("Nodes merged successfully")
-        else:
-            WateringUtils.error_message("One or both nodes not found")
+        node_layer = QgsProject.instance().mapLayersByName('watering_demand_nodes')[0]
+        pipe_layer = QgsProject.instance().mapLayersByName('watering_pipes')[0]
 
+        node1 = next(node_layer.getFeatures(QgsFeatureRequest(node1_fID)), None)
+        node2 = next(node_layer.getFeatures(QgsFeatureRequest(node2_fID)), None)
+
+        if not node1 or not node2:
+            WateringUtils.error_message("One or both nodes not found")
+            return
+
+        target_node, source_node = (node1, node2) if merge_node2_into_node1 else (node2, node1)
+
+        node_layer.startEditing()
+
+        target_node_geom = target_node.geometry().asPoint()
+
+        source_node_geom = source_node.geometry().asPoint()
+
+        pipe_layer.startEditing()
+
+        matching_pipe, matching_vertex = self.find_vertex_within_tolerance(source_node_geom, pipe_layer, 0.01)
+        
+        if matching_pipe and matching_vertex:
+            geom = matching_pipe.geometry()
+            new_polyline = []
+            for polyline in geom.asMultiPolyline():
+                new_polyline.append([
+                    QgsPointXY(target_node_geom) if QgsPointXY(vertex) == matching_vertex else vertex
+                    for vertex in polyline
+                ])
+            matching_pipe.setGeometry(QgsGeometry.fromMultiPolylineXY(new_polyline))
+            
+            pipe_layer.updateFeature(matching_pipe)
+
+        node_layer.deleteFeature(source_node.id()) #TODO : delete Pipe if length goes to 0 after merging
+        
+        node_layer.commitChanges()
+
+        pipe_layer.commitChanges()
+
+        WateringUtils.success_message("Nodes and pipes updated and merged successfully")
+
+    def find_vertex_within_tolerance(self, point, polyline_layer, tolerance):
+        for feature in polyline_layer.getFeatures():
+            geom = feature.geometry()
+            
+            for polyline in geom.asMultiPolyline():
+                for vertex in polyline:
+                    vertex_point = QgsPointXY(vertex)
+                    if point.distance(vertex_point) <= tolerance:
+                        return feature, vertex_point
+        
+        return None, None
+    
     def on_row_clicked(self, index, table_view):
         if index.isValid():
             row = index.row()
