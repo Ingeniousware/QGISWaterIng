@@ -31,6 +31,7 @@ from .toolsMap.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacemen
 from .toolsProcess.ImportINPFileTool import ImportINPFileTool
 from .toolsProcess.ImportShapeFileTool import ImportShapeFileTool
 from .toolsProcess.NetworkReviewTool import NetworkReviewTool
+from .toolsProcess.SelectionReviewTool import SelectionReviewTool
 from .toolsProcess.DemandPatternTool import DemandPatternTool
 from .toolsMap.InsertDemandNodeTool import InsertDemandNodeTool
 from .toolsMap.insertTankNodeTool import InsertTankNodeTool
@@ -299,6 +300,10 @@ class QGISPlugin_WaterIng:
         toolReviewNetwork = NetworkReviewTool(self.iface)
         self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
         self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
+
+        toolSelectionReview = SelectionReviewTool(self.iface)
+        self.toolbarToolManager.toolSelectionReview.setCurrentTool(toolSelectionReview)
+        self.toolbarToolManager.toolSelectionReview.setEnabled(True)
 
         toolDemandPattern = DemandPatternTool(self.iface)
         self.toolbarToolManager.toolDemandPattern.setCurrentTool(toolDemandPattern)
@@ -637,14 +642,14 @@ class QGISPlugin_WaterIng:
                 print(f"Attribute changed in layer {layer.name()}: feature_id={feature_id}, attribute_index={attribute_index}, new_value={new_value}")
                 WateringUtils.onChangesInAttribute(feature_id, attribute_index, new_value, layer, sync)
             
-            def on_geometry_change(feature_id, old_geometry, new_geometry, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem):
-                print(f"Geometry changed in layer {layer.name()}: feature_id={feature_id}, old_geometry={old_geometry}, new_geometry={new_geometry}")
-                WateringUtils.onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync)
+            # def on_geometry_change(feature_id, new_geometry, layer=real_layer, sync=self.scenarioUnitOFWork.syncSystem):
+            #     print(f"Geometry changed in layer {layer.name()}: feature_id={feature_id}, new_geometry={new_geometry}")
+            #     WateringUtils.onGeometryChange(feature_id, new_geometry, layer, sync)
             
             real_layer.attributeValueChanged.connect(on_attribute_change)
-            real_layer.geometryChanged.connect(on_geometry_change)
+            #real_layer.geometryChanged.connect(lambda fid, geom: on_geometry_change(fid, geom, real_layer, self.scenarioUnitOFWork.syncSystem))
 
-        print("Setup complete.")
+            print("Setup complete.")
 
 
     

@@ -32,6 +32,7 @@ class toolbarToolManager():
         self.toolImportINPFile = None
         self.toolImportShapeFile = None
         self.toolReviewNetwork = None
+        self.toolSelectionReview = None
         self.toolDemandPattern = None
         self.insertDemandNodeAction = None
         self.insertTankNodeAction = None
@@ -147,6 +148,17 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.toolReviewNetwork.setCheckable(False)       
         self.toolReviewNetwork.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # Selection Review
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/automaticNetworkReview.svg'
+        self.toolSelectionReview = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr(u'Selection Review'),
+            callback=self.activateActionTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.toolSelectionReview.setCheckable(False)       
+        self.toolSelectionReview.setEnabled(not WateringUtils.isScenarioNotOpened())
         
         # import elements
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/import.svg'
@@ -392,6 +404,7 @@ class toolbarToolManager():
         editTools = [self.toolImportINPFile,
                      self.toolImportShapeFile,
                      self.toolReviewNetwork,
+                     self.toolSelectionReview,
                      self.toolDemandPattern,
                      self.insertDemandNodeAction,
                      self.insertTankNodeAction,
