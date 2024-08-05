@@ -35,20 +35,27 @@ class WateringWaterBalance(QtWidgets.QDialog, FORM_CLASS):
         data = response.json().get("data", [])
         self.data = data
 
-        self.update_table_widget(data)
+        self.update_table_widget(data, 0)
 
-    def update_table_widget(self, data):
+    def update_table_widget(self, data, case):
         self.tableWidget.clear()
         self.tableWidget.setRowCount(0)
-        self.tableWidget.setColumnCount(6)
 
-        headers = ["Requested Date Time", "Initial Date Time", "End Date Time", "Description", "Open", "Delete"]
+        headers = []
+        if case == 0:
+            headers = ["Requested Date Time", "Initial Date Time", "End Date Time", "Description", "Open", "Delete"]
+        elif case == 1:
+            headers = ["Name", "Water Meter Key", "Read Before Period", "Read Start Period", "Read End Period", "Read After Period", "Consumption Estimated"]
+        
+        self.tableWidget.setColumnCount(len(headers))
         self.tableWidget.setHorizontalHeaderLabels(headers)
 
+        add_row_method = self.add_table_row if case == 0 else self.add_table_row2
         for item in data:
-            self.add_table_row(item)
+            add_row_method(item)
 
         self.tableWidget.resizeColumnsToContents()
+
     
     def create_button_rows(self, name):
         # Create a QPushButton and set its properties
@@ -97,7 +104,40 @@ class WateringWaterBalance(QtWidgets.QDialog, FORM_CLASS):
         delete.clicked.connect(lambda: self.delete_item(keyId))
 
     def open_item(self, keyId):
+        url = f'/api/v1/WaterConsumption/getfromrequest?&projectKeyId={self.ProjectFK}&calculationRequestFK={keyId}'
+        response = WateringUtils.requests_get(url, params=None)
+        data = response.json().get("data", [])
+        self.update_table_widget(data, 1)
         print(f"Open button clicked for item with serverKeyId: {keyId}")
 
+
     def delete_item(self, keyId):
+        url = f"/api/v1/WaterBalanceCalculationRequest/{keyId}"
+        response = WateringUtils.requests_delete(url)
+        self.fetch_data()
         print(f"Delete button clicked for item with serverKeyId: {keyId}")
+
+    def add_table_row2(self, item):
+        rowPosition = self.tableWidget.rowCount()
+        self.tableWidget.insertRow(rowPosition)
+
+        name = item.get("name")
+        waterMeterKey = item.get("waterMeterKey")
+        readBeforePeriodDateTime = item.get("readBeforePeriodDateTime")
+        readStartPeriodDateTime = item.get("readStartPeriodDateTime")
+        readEndPeriodDateTime = item.get("readEndPeriodDateTime")
+        readAfterPeriodDateTime = item.get("readAfterPeriodDateTime")
+        consumptionEstimated = item.get("consumptionEstimated")
+    
+        if isinstance(waterMeterKey, int):
+            waterMeterKey = str(waterMeterKey)
+        if isinstance(consumptionEstimated, float):
+            consumptionEstimated = str(consumptionEstimated)
+
+        self.tableWidget.setItem(rowPosition, 0, QTableWidgetItem(name))
+        self.tableWidget.setItem(rowPosition, 1, QTableWidgetItem(waterMeterKey))
+        self.tableWidget.setItem(rowPosition, 2, QTableWidgetItem(readBeforePeriodDateTime))
+        self.tableWidget.setItem(rowPosition, 3, QTableWidgetItem(readStartPeriodDateTime))
+        self.tableWidget.setItem(rowPosition, 4, QTableWidgetItem(readEndPeriodDateTime))
+        self.tableWidget.setItem(rowPosition, 5, QTableWidgetItem(readAfterPeriodDateTime))
+        self.tableWidget.setItem(rowPosition, 6, QTableWidgetItem(consumptionEstimated))
