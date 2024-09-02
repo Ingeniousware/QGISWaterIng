@@ -48,12 +48,12 @@ class ImportDMAShp(AbstractShpImport):
                 server_key_id = str(uuid.uuid4())
                 fk_scenario = WateringUtils.getScenarioId() 
                 ###Optimize later
-                if self.nameDMAcomboBox.currentText() == "No match":
+                if self.nameDMAcomboBox.currentText() == "No match" or feature.attribute(self.nameDMAcomboBox.currentText()) == None:
                     name = "Water DMA"
                 else:
                     name = feature.attribute(self.nameDMAcomboBox.currentText())
                     
-                if self.descriptionDMAcomboBox.currentText() == "No match":
+                if self.descriptionDMAcomboBox.currentText() == "No match" or feature.attribute(self.descriptionDMAcomboBox.currentText()) == None:
                     description = ""
                 else:
                     description = feature.attribute(self.descriptionDMAcomboBox.currentText())
@@ -73,6 +73,7 @@ class ImportDMAShp(AbstractShpImport):
                     "sectorIndex": sector_index,
                     "elementCount": element_count,
                     "totalDemand": total_demand,
+                    "visible": True,
                     "vertices": vertices
                 }
                 ImportDMAShp.post_to_server(feature_json, name)
