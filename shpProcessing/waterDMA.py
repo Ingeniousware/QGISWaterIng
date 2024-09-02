@@ -17,6 +17,7 @@ class ImportDMAShp(AbstractShpImport):
         headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
         UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
         #response = WateringUtils.requests_post(UrlPost, json)
+        print (json)
         response = requests.post(UrlPost, json=json, headers=headers)
         print(response)
 
@@ -48,7 +49,7 @@ class ImportDMAShp(AbstractShpImport):
                 fk_scenario = WateringUtils.getScenarioId() 
                 ###Optimize later
                 if self.nameDMAcomboBox.currentText() == "No match":
-                    name = "Demand Node"
+                    name = "Water DMA"
                 else:
                     name = feature.attribute(self.nameDMAcomboBox.currentText())
                     
