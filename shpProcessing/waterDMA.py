@@ -14,11 +14,11 @@ class ImportDMAShp(AbstractShpImport):
             super(ImportDMAShp, self).__init__()
     
     def post_to_server(json, name):
-        headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
-        UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
-        #response = WateringUtils.requests_post(UrlPost, json)
-        print (json)
-        response = requests.post(UrlPost, json=json, headers=headers)
+        #headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
+        #UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
+        url = "/api/v1/WaterDMA/withcoordinates"
+        response = WateringUtils.requests_post(url, json)
+        #response = requests.post(UrlPost, json=json, headers=headers)
         print(response)
 
     def shpProcessing(self, layer_name):
