@@ -48,7 +48,7 @@ class TankNodeRepository(AbstractRepository):
 
     def setDefaultValues(self, feature):
         name = "tankName"
-        description = "tank form QGIS"
+        description = "tank from QGIS"
         z = 0
         initialLevel = 3
         minimumLevel = 1

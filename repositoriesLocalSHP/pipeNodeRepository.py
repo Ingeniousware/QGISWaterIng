@@ -172,7 +172,7 @@ class PipeNodeRepository(AbstractRepository):
     
     def setDefaultValues(self, feature):
         name = "pipeName"
-        description = "pipe form QGIS"
+        description = "pipe from QGIS"
         diameter = 0.2
         roughnessAbsolute = 0.045
         roughnessCoefficient = 150

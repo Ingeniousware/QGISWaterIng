@@ -45,7 +45,7 @@ class WateringDemandNodeRepository(AbstractRepository):
 
     def setDefaultValues(self, feature):
         name = "nodeName"
-        description = "node form QGIS"
+        description = "node from QGIS"
         baseDemand = 5
         z = 0
 

@@ -42,7 +42,7 @@ class ReservoirNodeRepository(AbstractRepository):
         
     def setDefaultValues(self, feature):
         name = "reservorName"
-        description = "reservoir form QGIS"
+        description = "reservoir from QGIS"
         z = 0
         head = 0
 

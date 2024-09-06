@@ -49,7 +49,7 @@ class ValveNodeRepository(AbstractRepository):
         
     def setDefaultValues(self, feature):
         name = "valveName"
-        description = "valve form QGIS"
+        description = "valve from QGIS"
         z = 0
         typeValve = 1
         minorLossCoef = 0

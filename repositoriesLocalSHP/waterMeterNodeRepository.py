@@ -57,3 +57,14 @@ class WaterMeterNodeRepository(AbstractRepository):
         if self.StrokeColor:
             symbol.symbolLayer(0).setStrokeColor(self.StrokeColor)
         layer.triggerRepaint()
+        
+    def setDefaultValues(self, feature):
+        name = "waterMeterName"
+        description = "water meter from QGIS"
+        meterstate = 0
+        functionalType = 0
+
+        feature.setAttribute("Name", name)
+        feature.setAttribute("Descript", description)
+        feature.setAttribute("Meterstate", meterstate)
+        feature.setAttribute("FunctType", functionalType)     

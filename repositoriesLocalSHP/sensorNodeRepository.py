@@ -40,7 +40,7 @@ class SensorNodeRepository(AbstractRepository):
 
     def setDefaultValues(self, feature):
         name = "sensorNameNew"
-        description = "sensor form QGIS"
+        description = "sensor from QGIS"
         z = 0
 
         feature.setAttribute("Name", name)
