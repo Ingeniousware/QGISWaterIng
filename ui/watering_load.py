@@ -516,10 +516,15 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.openGroup(self.shp_filesMonitoring, group_sensors, scenario_path)
         self.openLayerGroupFalseVisibility(shp_backupFiles, scenario_path)
         
+        map_layer = "Open Street Maps"
         for layer in QgsProject.instance().mapLayers().values():
             if not layer.isValid():
                 all_layers_valid = False
                 print(f"Layer {layer.name()} is not valid and cannot be added.")
+                break
+            if layer.name() == map_layer:
+                layer.renderer().setOpacity(0.5)  
+                print("Open street layer found XXX")
                 break
 
         if all_layers_valid:
@@ -557,6 +562,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not any(layer.name() == map_layer for layer in QgsProject.instance().mapLayers().values()):
             tms = 'type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png'
             layer = QgsRasterLayer(tms,'Open Street Maps', 'wms')
+            print("Map setting opacity XXX")  
+            layer.renderer().setOpacity(0.5)         
             QgsProject.instance().addMapLayer(layer, False)
             root = QgsProject.instance().layerTreeRoot()
             root.insertChildNode(5, QgsLayerTreeLayer(layer))
