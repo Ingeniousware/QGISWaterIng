@@ -1,13 +1,18 @@
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsVectorLayer, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeatureRequest
-from PyQt5.QtWidgets import QTableWidgetItem, QPushButton, QWidget, QHBoxLayout
+from qgis.core import QgsProject, QgsVectorLayer, QgsFeatureRequest, QgsRendererCategory, QgsCategorizedSymbolRenderer, QgsMarkerSymbol, QgsSvgMarkerSymbolLayer
+from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5 import uic
 import os
 from ..watering_utils import WateringUtils
-import requests
+from enum import Enum
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'watering_getlastmeasurement_dialog.ui'))
+
+class ChannelState(Enum):
+    DISCONNECTED = 0
+    WARNING = (3, 4)
+    CRITICAL = (5, 6, 7)
 
 class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
     
@@ -17,15 +22,16 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         self.setupUi(self)
         self.ScenarioFK = WateringUtils.getScenarioId()
         self.ProjectFK = WateringUtils.getProjectId()
+        self.normalSensors = []
+        self.disconnectedSensors = []
+        self.criticalSensors = []
+        self.warningSensors = []
         self.token = os.environ.get('TOKEN')
         self.fetch_data()
     
     def fetch_data(self):
-        print(self.ProjectFK)
-        print(self.ScenarioFK)
-        
         url = f"/api/v1/MeasurementChannels"
-        params = {'ScenarioFK': "{}".format(self.ScenarioFK)}
+        params = {'projectKeyId': "{}".format(self.ProjectFK)}
 
         self.currentData = []
 
@@ -37,12 +43,11 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         if response.status_code != 200:
             print(f"Unexpected response status code: {response.status_code}")
             return
-        print(response.text)
+        
         data = response.json().get("data", [])
         self.data = data
-
+        
         if data is not None: 
-            print(data)
             self.update_table_widget(data)
 
     def update_table_widget(self, data):
@@ -50,25 +55,38 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         self.tv_getLastOnlineMeasurement.setRowCount(0)
 
         headers = ["Sensor", "Channel State", "Data channel", "Last Value", "Last Changed"]
-        
+
         self.tv_getLastOnlineMeasurement.setColumnCount(len(headers))
         self.tv_getLastOnlineMeasurement.setHorizontalHeaderLabels(headers)
+
+        header = self.tv_getLastOnlineMeasurement.horizontalHeader()
+        header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
 
         for item in data:
             self.add_table_row(item)
 
-        self.tv_getLastOnlineMeasurement.resizeColumnsToContents()
+        self.update_sensor_symbols()
 
     def add_table_row(self, item):
         rowPosition = self.tv_getLastOnlineMeasurement.rowCount()
         self.tv_getLastOnlineMeasurement.insertRow(rowPosition)
-
-        sensorName = self.find_feature_by_sensor_name(item.get("sensorStationFK"))
-        channelState = self.convert_channel_state(item.get("channelState"))
+        
+        sensorId = item.get("sensorStationFK")
+        sensorName = self.find_feature_by_sensor_name(sensorId)
+        channelStateInt = item.get("channelState")
+        channelState = self.convert_channel_state(channelStateInt)
         dataChannelName = item.get("name")
         lastValue = item.get("lastValue")
         lastChanged = item.get("lastChange")
 
+        if channelStateInt == ChannelState.DISCONNECTED.value:
+            self.disconnectedSensors.append(sensorId)
+        elif channelStateInt in ChannelState.WARNING.value:
+            self.warningSensors.append(sensorId)
+        elif channelStateInt in ChannelState.CRITICAL.value:
+            self.criticalSensors.append(sensorId)
+        else:
+            self.normalSensors.append(sensorId)
         
         self.tv_getLastOnlineMeasurement.setItem(rowPosition, 0, QTableWidgetItem(sensorName))
         self.tv_getLastOnlineMeasurement.setItem(rowPosition, 1, QTableWidgetItem(channelState))
@@ -89,24 +107,66 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         return channel_state_mapping.get(channelState, "Unknown State")
     
     def find_feature_by_sensor_name(self, sensorId):
-        # Access the watering_sensors layer from the current project
         layer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
         
         if not layer:
             print("Layer not found.")
             return None
 
-        # Create a request to filter by the sensor name (assuming it's stored in the 'id' field)
         request = QgsFeatureRequest()
-        request.setFilterExpression(f'"id" = \'{sensorId}\'')  # Using an expression to filter by 'id'
+        request.setFilterExpression(f'"id" = \'{sensorId}\'') 
 
-        # Search for the feature
         features = layer.getFeatures(request)
         
         for feature in features:
-            # Return the feature if found
             return feature['Name']
         
-        # If no feature is found, return None
         print(f"No feature found with sensor name: {sensorId}")
         return None
+
+    def update_sensor_symbols(self):
+        selectedLayer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
+
+        categories = []
+        for sensor_id in self.disconnectedSensors:
+            symbol = QgsMarkerSymbol.createSimple({})
+            svgStyle = {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Disconnected.svg",
+                'size': '10'
+            }
+            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+            categories.append(category)
+
+        for sensor_id in self.warningSensors:
+            symbol = QgsMarkerSymbol.createSimple({})
+            svgStyle = {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Warning.svg",
+                'size': '10'
+            }
+            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+            categories.append(category)
+
+        for sensor_id in self.criticalSensors:
+            symbol = QgsMarkerSymbol.createSimple({})
+            svgStyle = {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Critical.svg",
+                'size': '10'
+            }
+            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+            categories.append(category)
+
+        renderer = QgsCategorizedSymbolRenderer('id', categories)
+
+        if renderer is not None:
+            selectedLayer.setRenderer(renderer)
+
+        selectedLayer.triggerRepaint()
