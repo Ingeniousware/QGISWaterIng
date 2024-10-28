@@ -164,6 +164,18 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
             category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
             categories.append(category)
 
+        for sensor_id in self.normalSensors:
+            symbol = QgsMarkerSymbol.createSimple({})
+            svgStyle = {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT.svg",
+                'size': '10'
+            }
+            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+            categories.append(category)
+            
         renderer = QgsCategorizedSymbolRenderer('id', categories)
 
         if renderer is not None:
