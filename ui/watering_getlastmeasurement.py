@@ -46,7 +46,6 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         
         data = response.json().get("data", [])
         self.data = data
-        print(data)
         
         if data is not None: 
             self.update_table_widget(data)
@@ -66,7 +65,6 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         for item in data:
             self.add_table_row(item)
 
-        # Update sensor symbols after processing all data
         self.update_sensor_symbols()
 
     def add_table_row(self, item):
@@ -118,30 +116,23 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         request = QgsFeatureRequest()
         request.setFilterExpression(f'"id" = \'{sensorId}\'') 
 
-        # Search for the feature
         features = layer.getFeatures(request)
         
         for feature in features:
-            # Return the feature if found
             return feature['Name']
         
-        # If no feature is found, return None
         print(f"No feature found with sensor name: {sensorId}")
         return None
 
     def update_sensor_symbols(self):
         selectedLayer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
 
-        # Define categories and determine icons
         categories = []
         for sensor_id in self.disconnectedSensors:
             symbol = QgsMarkerSymbol.createSimple({})
             svgStyle = {
                 'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Disconnected.svg",
-                'fill': '#0000ff',
-                'outline': '#000000',
-                'outline-width': '6.8',
-                'size': '6'
+                'size': '10'
             }
             symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
             if symbol_layer is not None:
@@ -153,10 +144,7 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
             symbol = QgsMarkerSymbol.createSimple({})
             svgStyle = {
                 'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Warning.svg",
-                'fill': '#0000ff',
-                'outline': '#000000',
-                'outline-width': '6.8',
-                'size': '6'
+                'size': '10'
             }
             symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
             if symbol_layer is not None:
@@ -168,10 +156,7 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
             symbol = QgsMarkerSymbol.createSimple({})
             svgStyle = {
                 'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Critical.svg",
-                'fill': '#0000ff',
-                'outline': '#000000',
-                'outline-width': '6.8',
-                'size': '6'
+                'size': '10'
             }
             symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
             if symbol_layer is not None:
@@ -179,10 +164,8 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
             category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
             categories.append(category)
 
-        # Create renderer object
         renderer = QgsCategorizedSymbolRenderer('id', categories)
 
-        # Assign the created renderer to the layer
         if renderer is not None:
             selectedLayer.setRenderer(renderer)
 
