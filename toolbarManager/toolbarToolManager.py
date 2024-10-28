@@ -10,6 +10,7 @@ import os
 from ..watering_utils import WateringUtils
 from ..ui.watering_datachannels import WateringDatachannels
 from ..ui.watering_waterBalance import WateringWaterBalance
+from ..ui.watering_getlastmeasurement import WateringOnlineMeasurements
 from ..ui.watering_optimization import WaterOptimization
 from ..ui.watering_analysis import WateringAnalysis
 from ..ui.watering_pumpModels import WateringPumpModels
@@ -50,6 +51,7 @@ class toolbarToolManager():
         self.readAnalysisAction = None
         self.readMeasurementsAction = None
         self.waterBalanceAction = None
+        self.getLastMeasurementAction = None
         self.undoAction = None
         self.redoAction = None
         
@@ -126,6 +128,16 @@ class toolbarToolManager():
             parent=self.parentWindow)
         self.waterBalanceAction.setEnabled(not WateringUtils.isScenarioNotOpened())
 
+        # Get Last Online Measurement
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/monitoring.svg'
+        self.getLastMeasurementAction = self.addMapToolButtonAction(
+            icon_path,
+            text= WateringUtils.tr(u'Get Last Online Measurement'),        
+            callback= self.getLastOnlineMeasurementTool,
+            toolbar = None,
+            parent=self.parentWindow)
+        self.getLastMeasurementAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
         # Identify
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/select.svg'
         self.wateringIdentifyAction = self.addMapToolButtonAction(
@@ -442,7 +454,7 @@ class toolbarToolManager():
                 tool.setChecked(False)
     
     def activateMonitoringTool(self, checked):
-        monitoringTools = [self.readMeasurementsAction, self.waterBalanceAction]
+        monitoringTools = [self.readMeasurementsAction, self.waterBalanceAction, self.getLastMeasurementAction]
         
         if checked:
             for tool in monitoringTools:
@@ -451,7 +463,6 @@ class toolbarToolManager():
             self.canvas.setMapTool(self.panTool)
             for tool in monitoringTools:
                 self.toolbar.removeAction(tool)
-                
                 tool.setChecked(False)
 
     def waterOptimization(self, second):
@@ -505,3 +516,13 @@ class toolbarToolManager():
         else:
             self.analysisDockPanel.initializeRepository()
             self.analysisDockPanel.show()
+            
+    def getLastOnlineMeasurementTool(self, second):
+        if WateringUtils.isScenarioNotOpened():
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"Load a project scenario first in Download Elements!"), level=1, duration=5)
+        if os.environ.get('TOKEN') == None:
+            iface.messageBar().pushMessage(WateringUtils.tr(u"Error"), WateringUtils.tr(u"You must connect to WaterIng!"), level=1, duration=5)
+        else:            
+            dlg = WateringOnlineMeasurements()
+            dlg.show()
+            dlg.exec_()

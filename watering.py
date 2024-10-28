@@ -375,6 +375,7 @@ class QGISPlugin_WaterIng:
             self.toolbarToolManager.openPumpModels.setEnabled(True)
             self.toolbarToolManager.readMeasurementsAction.setEnabled(True)
             self.toolbarToolManager.waterBalanceAction.setEnabled(True)
+            self.toolbarToolManager.getLastMeasurementAction.setEnabled(True)
             print("After setting to true")
     
 
@@ -392,6 +393,7 @@ class QGISPlugin_WaterIng:
                     self.toolbarToolManager.openPumpModels,
                     self.toolbarToolManager.readMeasurementsAction,
                     self.toolbarToolManager.waterBalanceAction,
+                    self.toolbarToolManager.getLastMeasurementAction,
                     self.toolbarToolManager.insertDemandNodeAction,
                     self.toolbarToolManager.insertTankNodeAction,
                     self.toolbarToolManager.insertReservoirNodeAction,
