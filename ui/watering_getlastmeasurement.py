@@ -1,6 +1,6 @@
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsVectorLayer, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeatureRequest
-from PyQt5.QtWidgets import QTableWidgetItem, QPushButton, QWidget, QHBoxLayout
+from qgis.core import QgsProject, QgsVectorLayer, QgsFeatureRequest, QgsRendererCategory, QgsCategorizedSymbolRenderer, QgsMarkerSymbol, QgsSvgMarkerSymbolLayer
+from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5 import uic
 import os
 from ..watering_utils import WateringUtils
@@ -66,6 +66,9 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         for item in data:
             self.add_table_row(item)
 
+        # Update sensor symbols after processing all data
+        self.update_sensor_symbols()
+
     def add_table_row(self, item):
         rowPosition = self.tv_getLastOnlineMeasurement.rowCount()
         self.tv_getLastOnlineMeasurement.insertRow(rowPosition)
@@ -84,6 +87,8 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
             self.warningSensors.append(sensorId)
         elif channelStateInt in ChannelState.CRITICAL.value:
             self.criticalSensors.append(sensorId)
+        else:
+            self.normalSensors.append(sensorId)
         
         self.tv_getLastOnlineMeasurement.setItem(rowPosition, 0, QTableWidgetItem(sensorName))
         self.tv_getLastOnlineMeasurement.setItem(rowPosition, 1, QTableWidgetItem(channelState))
@@ -123,4 +128,62 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         # If no feature is found, return None
         print(f"No feature found with sensor name: {sensorId}")
         return None
-    
+
+    def update_sensor_symbols(self):
+        selectedLayer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
+
+        # Define categories and determine icons
+        categories = []
+        for sensor_id in self.disconnectedSensors:
+            symbol = QgsMarkerSymbol.createSimple({})
+            svgStyle = {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Disconnected.svg",
+                'fill': '#0000ff',
+                'outline': '#000000',
+                'outline-width': '6.8',
+                'size': '6'
+            }
+            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+            categories.append(category)
+
+        for sensor_id in self.warningSensors:
+            symbol = QgsMarkerSymbol.createSimple({})
+            svgStyle = {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Warning.svg",
+                'fill': '#0000ff',
+                'outline': '#000000',
+                'outline-width': '6.8',
+                'size': '6'
+            }
+            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+            categories.append(category)
+
+        for sensor_id in self.criticalSensors:
+            symbol = QgsMarkerSymbol.createSimple({})
+            svgStyle = {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Critical.svg",
+                'fill': '#0000ff',
+                'outline': '#000000',
+                'outline-width': '6.8',
+                'size': '6'
+            }
+            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+            categories.append(category)
+
+        # Create renderer object
+        renderer = QgsCategorizedSymbolRenderer('id', categories)
+
+        # Assign the created renderer to the layer
+        if renderer is not None:
+            selectedLayer.setRenderer(renderer)
+
+        selectedLayer.triggerRepaint()
