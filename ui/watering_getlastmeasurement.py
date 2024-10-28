@@ -125,44 +125,51 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         return None
 
     def update_sensor_symbols(self):
+        if not (self.normalSensors or self.criticalSensors or self.warningSensors or self.disconnectedSensors):
+            return
+
         selectedLayer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
 
         categories = []
-        for sensor_id in self.disconnectedSensors:
-            symbol = QgsMarkerSymbol.createSimple({})
-            svgStyle = {
-                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Disconnected.svg",
-                'size': '10'
-            }
-            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
-            if symbol_layer is not None:
-                symbol.changeSymbolLayer(0, symbol_layer)
-            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
-            categories.append(category)
 
-        for sensor_id in self.warningSensors:
-            symbol = QgsMarkerSymbol.createSimple({})
-            svgStyle = {
-                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Warning.svg",
-                'size': '10'
-            }
-            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
-            if symbol_layer is not None:
-                symbol.changeSymbolLayer(0, symbol_layer)
-            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
-            categories.append(category)
+        if self.disconnectedSensors:
+            for sensor_id in self.disconnectedSensors:
+                symbol = QgsMarkerSymbol.createSimple({})
+                svgStyle = {
+                    'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Disconnected.svg",
+                    'size': '10'
+                }
+                symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+                if symbol_layer is not None:
+                    symbol.changeSymbolLayer(0, symbol_layer)
+                category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+                categories.append(category)
 
-        for sensor_id in self.criticalSensors:
-            symbol = QgsMarkerSymbol.createSimple({})
-            svgStyle = {
-                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Critical.svg",
-                'size': '10'
-            }
-            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
-            if symbol_layer is not None:
-                symbol.changeSymbolLayer(0, symbol_layer)
-            category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
-            categories.append(category)
+        if self.warningSensors:
+            for sensor_id in self.warningSensors:
+                symbol = QgsMarkerSymbol.createSimple({})
+                svgStyle = {
+                    'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Warning.svg",
+                    'size': '10'
+                }
+                symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+                if symbol_layer is not None:
+                    symbol.changeSymbolLayer(0, symbol_layer)
+                category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+                categories.append(category)
+
+        if self.criticalSensors:
+            for sensor_id in self.criticalSensors:
+                symbol = QgsMarkerSymbol.createSimple({})
+                svgStyle = {
+                    'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Critical.svg",
+                    'size': '10'
+                }
+                symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+                if symbol_layer is not None:
+                    symbol.changeSymbolLayer(0, symbol_layer)
+                category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
+                categories.append(category)
 
         renderer = QgsCategorizedSymbolRenderer('id', categories)
 
@@ -170,3 +177,4 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
             selectedLayer.setRenderer(renderer)
 
         selectedLayer.triggerRepaint()
+
