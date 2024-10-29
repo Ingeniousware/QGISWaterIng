@@ -159,7 +159,7 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         if not expression_parts:
             return
 
-        expression = 'CASE\n' + '\n'.join(expression_parts) + '\nEND'
+        expression = 'CASE\n' + '\n'.join(expression_parts) + '\nELSE 4\nEND'
         status_styles = {
             1: {
                 'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Disconnected.svg",
