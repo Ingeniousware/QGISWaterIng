@@ -1,5 +1,5 @@
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsVectorLayer, QgsFeatureRequest, QgsRendererCategory, QgsCategorizedSymbolRenderer, QgsMarkerSymbol, QgsSvgMarkerSymbolLayer
+from qgis.core import QgsProject, QgsVectorLayer, QgsExpression, QgsFeatureRequest, QgsRendererCategory, QgsCategorizedSymbolRenderer, QgsMarkerSymbol, QgsSvgMarkerSymbolLayer
 from PyQt5.QtWidgets import QTableWidgetItem
 from PyQt5 import uic
 import os
@@ -122,59 +122,83 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
             return feature['Name']
         
         print(f"No feature found with sensor name: {sensorId}")
-        return None
+        return ""
 
     def update_sensor_symbols(self):
         if not (self.normalSensors or self.criticalSensors or self.warningSensors or self.disconnectedSensors):
             return
 
-        selectedLayer = QgsProject.instance().mapLayersByName("watering_sensors")[0]
+        selectedLayer = QgsProject.instance().mapLayersByName("watering_sensors")
+        if not selectedLayer:
+            return
+
+        selectedLayer = selectedLayer[0]
+        expression_parts = []
+
+        status_order = ['disconnected', 'warning', 'critical', 'normal']
+        status_values = {
+            'disconnected': 1,
+            'warning': 2,
+            'critical': 3,
+            'normal': 4
+        }
+        sensor_lists = {
+            'disconnected': [str(sid) for sid in self.disconnectedSensors if sid],
+            'warning': [str(sid) for sid in self.warningSensors if sid],
+            'critical': [str(sid) for sid in self.criticalSensors if sid],
+            'normal': [str(sid) for sid in self.normalSensors if sid]
+        }
+
+        for status in status_order:
+            sensor_list = sensor_lists[status]
+            if sensor_list:
+                expression_parts.append(
+                    f'WHEN "ID" IN ({", ".join(map(repr, sensor_list))}) THEN {status_values[status]}'
+                )
+
+        if not expression_parts:
+            return
+
+        expression = 'CASE\n' + '\n'.join(expression_parts) + '\nEND'
+        status_styles = {
+            1: {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Disconnected.svg",
+                'label': 'Disconnected'
+            },
+            2: {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Warning.svg",
+                'label': 'Warning'
+            },
+            3: {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Critical.svg",
+                'label': 'Critical'
+            },
+            4: {
+                'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT.svg",
+                'label': 'Normal'
+            }
+        }
 
         categories = []
+        for value, style in status_styles.items():
+            symbol = QgsMarkerSymbol.createSimple({})
+            svgStyle = {
+                'name': style['name'],
+                'size': '10'
+            }
+            symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
+            if symbol_layer is not None:
+                symbol.changeSymbolLayer(0, symbol_layer)
+            category = QgsRendererCategory(value, symbol, style['label'])
+            categories.append(category)
 
-        if self.disconnectedSensors:
-            for sensor_id in self.disconnectedSensors:
-                symbol = QgsMarkerSymbol.createSimple({})
-                svgStyle = {
-                    'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Disconnected.svg",
-                    'size': '10'
-                }
-                symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
-                if symbol_layer is not None:
-                    symbol.changeSymbolLayer(0, symbol_layer)
-                category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
-                categories.append(category)
-
-        if self.warningSensors:
-            for sensor_id in self.warningSensors:
-                symbol = QgsMarkerSymbol.createSimple({})
-                svgStyle = {
-                    'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Warning.svg",
-                    'size': '10'
-                }
-                symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
-                if symbol_layer is not None:
-                    symbol.changeSymbolLayer(0, symbol_layer)
-                category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
-                categories.append(category)
-
-        if self.criticalSensors:
-            for sensor_id in self.criticalSensors:
-                symbol = QgsMarkerSymbol.createSimple({})
-                svgStyle = {
-                    'name': ":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT_Critical.svg",
-                    'size': '10'
-                }
-                symbol_layer = QgsSvgMarkerSymbolLayer.create(svgStyle)
-                if symbol_layer is not None:
-                    symbol.changeSymbolLayer(0, symbol_layer)
-                category = QgsRendererCategory(sensor_id, symbol, str(sensor_id))
-                categories.append(category)
-
-        renderer = QgsCategorizedSymbolRenderer('id', categories)
+        renderer = QgsCategorizedSymbolRenderer("ID", categories)
+        renderer.setClassAttribute(expression)
 
         if renderer is not None:
             selectedLayer.setRenderer(renderer)
 
         selectedLayer.triggerRepaint()
+
+
 
