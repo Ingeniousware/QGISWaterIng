@@ -71,13 +71,13 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
         rowPosition = self.tv_getLastOnlineMeasurement.rowCount()
         self.tv_getLastOnlineMeasurement.insertRow(rowPosition)
         
-        sensorId = item.get("sensorStationFK")
-        sensorName = self.find_feature_by_sensor_name(sensorId)
+        sensorId = str(item.get("sensorStationFK"))
+        sensorName = str(self.find_feature_by_sensor_name(sensorId))
         channelStateInt = item.get("channelState")
-        channelState = self.convert_channel_state(channelStateInt)
-        dataChannelName = item.get("name")
-        lastValue = item.get("lastValue")
-        lastChanged = item.get("lastChange")
+        channelState = str(self.convert_channel_state(channelStateInt))
+        dataChannelName = str(item.get("name"))
+        lastValue = str(item.get("lastValue"))
+        lastChanged = str(item.get("lastChange"))
 
         if channelStateInt == ChannelState.DISCONNECTED.value:
             self.disconnectedSensors.append(sensorId)
@@ -114,7 +114,7 @@ class WateringOnlineMeasurements(QtWidgets.QDialog, FORM_CLASS):
             return None
 
         request = QgsFeatureRequest()
-        request.setFilterExpression(f'"id" = \'{sensorId}\'') 
+        request.setFilterExpression(f'"ID" = \'{sensorId}\'') 
 
         features = layer.getFeatures(request)
         
