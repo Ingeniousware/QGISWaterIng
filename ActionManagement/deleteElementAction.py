@@ -12,11 +12,12 @@ class deleteElementAction(abstractAction):
 
 
     def execute(self):
-        self.feature = self.elementRepository.AddNewElementFromMapInteraction(self.x, self.y)
+        self.elementRepository.deleteFeatureFromMapInteraction(self.feature)
 
     def reDo(self):
         self.execute()
 
     def unDo(self):
         print("Getting inside the undo of insert node")
-        self.elementRepository.deleteFeatureFromMapInteraction(self.feature)
+        self.feature = self.elementRepository.AddNewElementFromMapInteraction(self.x, self.y)
+        

@@ -1,8 +1,8 @@
 from ..ActionManagement.insertPipeAction import insertPipeAction
 from ..ActionManagement.insertNodeAction import insertNodeAction
 from .insertAbstractTool import InsertAbstractTool
-from qgis.gui import QgsVertexMarker, QgsMapTool, QgsRubberBand, Qgis
-from qgis.core import QgsPoint, QgsGeometry, QgsProject, QgsPointXY, QgsWkbTypes
+from qgis.gui import QgsVertexMarker, QgsMapTool, QgsRubberBand, Qgis, QgsMapCanvasSnappingUtils
+from qgis.core import QgsPoint, QgsGeometry, QgsProject, QgsPointXY, QgsWkbTypes, QgsSnappingConfig, QgsTolerance
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 
@@ -24,23 +24,55 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.allPoints = []
         self.allLines = []
 
+        self.endMarker = QgsVertexMarker(self.canvas)
+        self.endMarker.setColor(QColor(255, 87, 51))
+        self.endMarker.setIconSize(15)
+        self.endMarker.setIconType(QgsVertexMarker.ICON_BOX)  # or ICON_CROSS, ICON_X
+        self.endMarker.setPenWidth(3)
+        self.endMarker.hide()
+
+        self.snapper = None
+
+
+
+
+    def activate(self):
+        print("activating pipe tool ...")
+        QgsMapTool.activate(self)
+
+        # Snapping
+        self.snapper = QgsMapCanvasSnappingUtils(self.canvas)
+        self.snapper.setMapSettings(self.canvas.mapSettings())
+        config = QgsSnappingConfig(QgsProject.instance())
+        config.setType(1)  # Vertex
+        config.setMode(QgsSnappingConfig.SnappingMode.AllLayers)  # All layers
+        config.setTolerance(10)
+        config.setUnits(QgsTolerance.UnitType.Pixels)
+        config.setEnabled(True)
+        self.snapper.setConfig(config)
+
 
     def initialize(self):
         self.clickedQgsPoints = []        
         self.rubberBand1 = None
         self.rubberBand2 = None
         self.lastPoint = None 
+        self.objectSnapped = None
     
 
     def canvasPressEvent(self, e):
         if not (e.button() == Qt.LeftButton): return
 
         pointTemp = self.toMapCoordinates(e.pos())
+
+        if self.objectSnapped is not None:
+            pointTemp = self.objectSnapped.point()
+
         point = QgsPoint(pointTemp.x(), pointTemp.y())
         self.clickedQgsPoints.append(point)
         self.allPoints.append(point)
 
-        if e.modifiers() == Qt.ControlModifier:
+        if e.modifiers() == Qt.ControlModifier and (self.objectSnapped is None):
             if not (self.lastPoint == None): 
                 print('Adding vertex now')
                 self.createFixedPartOfPipe(self.clickedQgsPoints)                
@@ -71,11 +103,38 @@ class InsertWaterPipeTool(InsertAbstractTool):
             
         self.lastPoint = point
 
+
     def canvasMoveEvent(self, e):
         if not (self.lastPoint == None): 
             pointTemp = self.toMapCoordinates(e.pos())
+
+            match = self.snapper.snapToMap(pointTemp)
+            if match.isValid():
+                self.objectSnapped = match
+                self.endMarker.setCenter(QgsPointXY(match.point().x(), match.point().y()))
+                self.endMarker.show()
+                pointTemp = match.point()
+                # self.mousePoints[-1] = match.point()
+            else:
+                self.objectSnapped = None
+                self.endMarker.hide()
+                # self.mousePoints[-1] = pointTemp
+
             point = QgsPoint(pointTemp.x(), pointTemp.y())
             self.createMovingPartOfPipe(self.lastPoint, point)
+        else:
+            match = self.snapper.snapToMap(self.toMapCoordinates(e.pos()))
+            if match.isValid():
+                self.objectSnapped = match
+                self.endMarker.setCenter(QgsPointXY(match.point().x(), match.point().y()))
+                self.endMarker.show()
+            else:
+                self.objectSnapped = None
+                self.endMarker.hide()
+
+
+
+
             
     def keyReleaseEvent(self, e):
         if e.key() == Qt.Key.Key_Escape:
