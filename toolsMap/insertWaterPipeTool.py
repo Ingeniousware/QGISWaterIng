@@ -1,8 +1,8 @@
 from ..ActionManagement.insertPipeAction import insertPipeAction
 from ..ActionManagement.insertNodeAction import insertNodeAction
 from .insertAbstractTool import InsertAbstractTool
-from qgis.gui import QgsVertexMarker, QgsMapTool, QgsRubberBand, Qgis, QgsMapCanvasSnappingUtils
-from qgis.core import QgsPoint, QgsGeometry, QgsProject, QgsPointXY, QgsWkbTypes, QgsSnappingConfig, QgsTolerance
+from qgis.gui import QgsVertexMarker, QgsMapTool, QgsRubberBand, QgsMapCanvasSnappingUtils
+from qgis.core import QgsPoint, Qgis, QgsGeometry, QgsProject, QgsPointXY, QgsWkbTypes, QgsSnappingConfig, QgsTolerance
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import Qt
 
