@@ -82,7 +82,7 @@ class abstractServerRESTRepository():
         headers = {'Authorization': "Bearer {}".format(self.Token)}
         with requests.Session() as session:
             with ThreadPoolExecutor(max_workers=10) as executor:
-                futures = [executor.submit(self.make_delete_request, session, self.UrlPost, headers, data[0]['serverKeyId']) for data in list_of_elementsJSON]
+                futures = [executor.submit(self.make_delete_request, session, self.UrlPost, headers, key) for key in list_of_elementsJSON]
 
         
     def putToServer(self, elementJSON, serverKeyId):

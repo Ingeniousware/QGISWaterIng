@@ -6,7 +6,7 @@ from qgis.utils import iface
 from ..watering_utils import WateringUtils
 from collections import deque
 import json, uuid
-
+        
 class WateringSync():
     def __init__(self, token, project_path, scenarioFK, repositories):
         self.server_change_queue = deque()
@@ -110,6 +110,7 @@ class WateringSync():
         if not self.sync_was_halted:
             WateringUtils.clear_added_from_signalr(self.scenarioFK)
             WateringUtils.update_last_updated(self.scenarioFK)
+            WateringUtils.clear_sync_file()
             return True
         return False
         
