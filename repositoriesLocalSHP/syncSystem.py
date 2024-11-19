@@ -110,6 +110,7 @@ class WateringSync():
         if not self.sync_was_halted:
             WateringUtils.clear_added_from_signalr(self.scenarioFK)
             WateringUtils.update_last_updated(self.scenarioFK)
+            WateringUtils.clear_sync_file()
             return True
         return False
         

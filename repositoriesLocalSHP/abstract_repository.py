@@ -218,8 +218,10 @@ class AbstractRepository():
         layer.addFeature(feature)
         
         commit_success = layer.commitChanges()
-
+     
         if commit_success:
+            WateringUtils.write_sync_operation(layer, feature, WateringUtils.OperationType.ADD)
+        
             print("Changes committed successfully.")
             print("Adding to server...")
             if self.connectorToServer:
@@ -324,16 +326,9 @@ class AbstractRepository():
         return self.offlineChangesList
     
     def v2getOfflineUpdates(self):
-        add_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.ADD)
-        updated_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.UPDATE)
-        delete_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.DELETE)
-        
-        print("add_data: ", add_data)
-        print()
-        print("updated_data: ", updated_data)
-        print()
-        print("delete_data: ", delete_data)
-        print()
+        self.add_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.ADD)
+        self.updated_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.UPDATE)
+        self.delete_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.DELETE)
         
     def getChangesFromOffline(self, lastUpdated):
         for feature in self.Layer.getFeatures():
@@ -360,8 +355,8 @@ class AbstractRepository():
     def initMultiElementsPosting(self):
         change_types = [
             ('syncAddingChanges', self.postMultipleElements),
-            ('syncUpdatingChanges', self.putMultipleElements),
-            ('syncDeletingChanges', self.deleteMultipleElements)
+            ('syncUpdatingChanges', self.putMultipleElements)
+            #,('syncDeletingChanges', self.deleteMultipleElements)
         ]
 
         for change_type, process_method in change_types:
@@ -369,6 +364,8 @@ class AbstractRepository():
             if changes_list:
                 process_method(changes_list)
                 self.connectorToServer.update_layer_features(changes_list)
+        
+        self.deleteElementsOnSync()
         
     def getFeatureJsons(self, elements_list):
         jsonsList = []
@@ -381,6 +378,9 @@ class AbstractRepository():
         
         return jsonsList
 
+    def deleteElementsOnSync(self):
+        self.connectorToServer.serverRepository.deleteMultipleElements(self.delete_data) 
+       
     def postMultipleElements(self, jsonsList):
         self.connectorToServer.serverRepository.postMultipleElements(jsonsList)
     
