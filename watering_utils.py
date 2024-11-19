@@ -4,7 +4,7 @@
 from PyQt5.QtCore import Qt
 from qgis.PyQt import uic
 from qgis.utils import iface
-from qgis.core import Qgis, QgsProject, QgsFeatureRequest, QgsFeature, QgsField, QgsSymbol, QgsRendererCategory, QgsCategorizedSymbolRenderer, QgsSingleSymbolRenderer, edit
+from qgis.core import Qgis, QgsJsonExporter, QgsProject, QgsFeatureRequest, QgsFeature, QgsField, QgsSymbol, QgsRendererCategory, QgsCategorizedSymbolRenderer, QgsSingleSymbolRenderer, edit
 from qgis.PyQt.QtWidgets import QProgressBar
 from PyQt5.QtCore import QVariant, QDateTime, QCoreApplication
 from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
@@ -22,6 +22,8 @@ import string
 import pytz
 import socket
 import json
+from enum import Enum
+from typing import Dict, Any
 
 from .repositoriesLocalSHP.change import Change
 
@@ -273,6 +275,8 @@ class WateringUtils():
         
         change = Change(layer, feature_id, "update_from_offline", full_feature)
         
+        WateringUtils.write_sync_operation(layer, full_feature, WateringUtils.OperationType.UPDATE)
+        
         sync.offline_change_queue.append(change)
         
     def onGeometryChange(feature_id, old_geometry, new_geometry, layer, sync):
@@ -405,6 +409,12 @@ class WateringUtils():
     def get_projects_json_path():
         folder_path = WateringUtils.get_watering_folder()
         return folder_path + 'projects.json'
+    
+    def get_sync_json_path():
+        folder_path = WateringUtils.get_watering_folder()
+        path = folder_path + "/" + WateringUtils.getProjectId() + "/" + WateringUtils.getScenarioId() + 'watering_sync.json'
+        print(path)
+        return path
     
     def update_last_updated(scenario_key):
         file_path = WateringUtils.get_projects_json_path()
@@ -662,7 +672,129 @@ class WateringUtils():
         except Exception as e:
             WateringUtils.error_message(f"Unable to connect to WaterIng. Error: {str(e)}")
             return False
+    
+    class OperationType(Enum):
+        ADD = "add"
+        UPDATE = "update"
+        DELETE = "delete"
+    
+    def getWateringLayers():
+        return [
+            "watering_demand_nodes",
+            "watering_reservoirs",
+            "watering_tanks",
+            "watering_pumps",
+            "watering_valves",
+            "watering_pipes",
+            "watering_waterMeter",
+            "watering_sensors"
+        ]
+    
+    def write_sync_operation(layer, feature, operation_type: OperationType):
+        sync_file_path = WateringUtils.get_sync_json_path()
+        print(f"Sync file path: {sync_file_path}")
+        
+        if not os.path.exists(sync_file_path):
+            print("Sync file does not exist. Creating directory and initial structure.")
+            os.makedirs(os.path.dirname(sync_file_path), exist_ok=True)
+            initial_structure = {layer: {"add": {}, "update": {}, "delete": {}} for layer in WateringUtils.getWateringLayers()}
+            print(f"Initial structure: {initial_structure}")
+            with open(sync_file_path, 'w') as file:
+                json.dump(initial_structure, file)
+                print("Initial structure written to sync file.")
+        
+        with open(sync_file_path, 'r') as file:
+            sync_data = json.load(file)
+            print(f"Loaded sync data: {sync_data}")
+        
+        layer_name = layer.name()
+        feature_id = str(feature["ID"])
+        print(f"Layer name: {layer_name}, Feature ID: {feature_id}")
+        
+        if layer_name not in sync_data:
+            print(f"Layer '{layer_name}' not found in sync data. Adding layer.")
+            sync_data[layer_name] = {"add": {}, "update": {}, "delete": {}}
+        
+        # Add feature data to appropriate operation type under the layer
+        feature_data = json.loads(QgsJsonExporter(layer).exportFeature(feature))
+        print(f"Feature data to be added: {feature_data}")
+        sync_data[layer_name][operation_type.value][feature_id] = {
+            "data": feature_data
+        }
+        print(f"Updated sync data: {sync_data}")
+        
+        # Write updated data back to file
+        with open(sync_file_path, 'w') as file:
+            json.dump(sync_data, file, indent=4)
+            print("Updated sync data written to sync file.")
 
+    def get_sync_operations(layer_name: str = None, operation_type: OperationType = None) -> Dict[str, Any]:
+        sync_file_path = WateringUtils.get_sync_json_path()
+        print(f"Sync file path: {sync_file_path}")
+        
+        if not os.path.exists(sync_file_path):
+            print("Sync file does not exist. Returning empty dictionary.")
+            return {}
+        
+        with open(sync_file_path, 'r') as file:
+            sync_data = json.load(file)
+            print(f"Loaded sync data: {sync_data}")
+        
+        if layer_name and operation_type:
+            result = sync_data.get(layer_name, {}).get(operation_type.value, {})
+            print(f"Returning sync operations for layer '{layer_name}' and operation type '{operation_type}': {result}")
+            return result
+        elif layer_name:
+            result = sync_data.get(layer_name, {})
+            print(f"Returning sync operations for layer '{layer_name}': {result}")
+            return result
+        print("Returning all sync operations.")
+        return sync_data
+
+    def clear_sync_file():
+        sync_file_path = WateringUtils.get_sync_json_path()
+        print(f"Sync file path: {sync_file_path}")
+        initial_structure = {layer: {"add": {}, "update": {}, "delete": {}} for layer in WateringUtils.getWateringLayers()}
+        print(f"Initial structure to clear sync file: {initial_structure}")
+        
+        with open(sync_file_path, 'w') as file:
+            json.dump(initial_structure, file, indent=4)
+            print("Cleared sync file with initial structure.")
+
+    def remove_synced_feature(layer_name: str, feature_id: str, operation_type: OperationType):
+        sync_file_path = WateringUtils.get_sync_json_path()
+        print(f"Sync file path: {sync_file_path}")
+        
+        with open(sync_file_path, 'r') as file:
+            sync_data = json.load(file)
+            print(f"Loaded sync data: {sync_data}")
+        
+        if layer_name in sync_data and feature_id in sync_data[layer_name][operation_type.value]:
+            print(f"Removing feature ID '{feature_id}' from layer '{layer_name}' and operation type '{operation_type}'.")
+            del sync_data[layer_name][operation_type.value][feature_id]
+        else:
+            print(f"Feature ID '{feature_id}' not found in layer '{layer_name}' under operation type '{operation_type}'. No action taken.")
+        
+        with open(sync_file_path, 'w') as file:
+            json.dump(sync_data, file, indent=4)
+            print("Updated sync data written to sync file after removal.")
+
+            
+class WateringSynchWorker(QObject):
+    finished = pyqtSignal()
+    isRunning = True
+    
+    def __init__(self, scenarioUnitOfWork):
+        super().__init__()
+        self.scenarioUnitOfWork = scenarioUnitOfWork
+
+    def requestStop(self):
+        self.isRunning = False
+        
+    def runSynch(self):
+        self.scenarioUnitOfWork.newUpdateAll()
+        self.finished.emit()
+    
 class WateringTimer():
     timer = None 
 
@@ -679,19 +811,3 @@ class WateringTimer():
         print("Token is now unvalid. Redo the login procedures.")
         os.environ["TOKEN_TIMER"] = "False"
         cls.timer.stop()
-            
-class WateringSynchWorker(QObject):
-    finished = pyqtSignal()
-    isRunning = True
-    
-    def __init__(self, scenarioUnitOfWork):
-        super().__init__()
-        self.scenarioUnitOfWork = scenarioUnitOfWork
-
-    def requestStop(self):
-        self.isRunning = False
-        
-    def runSynch(self):
-        self.scenarioUnitOfWork.newUpdateAll()
-        self.finished.emit()
-        

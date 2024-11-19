@@ -6,7 +6,7 @@ from qgis.utils import iface
 from ..watering_utils import WateringUtils
 from collections import deque
 import json, uuid
-
+        
 class WateringSync():
     def __init__(self, token, project_path, scenarioFK, repositories):
         self.server_change_queue = deque()

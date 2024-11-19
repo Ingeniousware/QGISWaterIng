@@ -35,6 +35,7 @@ class DeleteElementTool(QgsMapTool):
         repo.deleteFeatureFromMapInteraction(feature)
         
         WateringUtils.add_feature_to_backup_layer(feature, layer)
+        WateringUtils.write_sync_operation(layer, feature, WateringUtils.OperationType.DELETE)
                         
     def deactivate(self):
         print("Clicked to unselect button of deleting element.")

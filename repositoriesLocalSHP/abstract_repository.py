@@ -155,6 +155,8 @@ class AbstractRepository():
             
             feature.setAttribute('lastUpdate', WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
             self.toAddFeatures.append(feature)
+            
+            WateringUtils.write_sync_operation(self.currentLayer, feature, WateringUtils.OperationType.ADD)
         except ValueError as e:
             print("Error->", e)
 
@@ -312,6 +314,7 @@ class AbstractRepository():
         return any(True for _ in query)
 
     def getOfflineUpdates(self, lastUpdated):
+        self.v2getOfflineUpdates()
         lastUpdated = self.adjustedDatetime(lastUpdated)
         self.Layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
         self.offlineChangesList = []
@@ -320,6 +323,18 @@ class AbstractRepository():
         
         return self.offlineChangesList
     
+    def v2getOfflineUpdates(self):
+        add_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.ADD)
+        updated_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.UPDATE)
+        delete_data = WateringUtils.get_sync_operations(self.LayerName, WateringUtils.OperationType.DELETE)
+        
+        print("add_data: ", add_data)
+        print()
+        print("updated_data: ", updated_data)
+        print()
+        print("delete_data: ", delete_data)
+        print()
+        
     def getChangesFromOffline(self, lastUpdated):
         for feature in self.Layer.getFeatures():
             adjusted_feature_lastUpdated = self.adjustedDatetime(feature['lastUpdate'])
