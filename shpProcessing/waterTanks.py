@@ -1,14 +1,22 @@
-from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsPointXY
+from qgis.core import (
+    QgsProject,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsFeature,
+    QgsGeometry,
+    QgsPointXY,
+)
 from qgis.PyQt.QtCore import Qt
 import uuid
 from ..watering_utils import WateringUtils
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
+
 class ImportTanksShp(AbstractShpImport):
 
     def __init__(self):
-            #Constructor.
-            super(ImportTanksShp, self).__init__()
+        # Constructor.
+        super(ImportTanksShp, self).__init__()
 
     def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]
@@ -33,14 +41,46 @@ class ImportTanksShp(AbstractShpImport):
             server_key_id = str(uuid.uuid4())[:10]
 
             # Extract attribute values based on your combobox mappings
-            name = feature.attribute(self.nameTankscomboBox.currentText()) if self.nameTankscomboBox.currentText() != "No match" else "Tank"
-            description = feature.attribute(self.descriptionTankscomboBox.currentText()) if self.descriptionTankscomboBox.currentText() != "No match" else "Imported from Shp"
-            z = feature.attribute(self.zTankscomboBox.currentText()) if self.zTankscomboBox.currentText() != "No match" else 0
-            initialLevel = feature.attribute(self.initLevelCBox.currentText()) if self.initLevelCBox.currentText() != "No match" else 0
-            minimumLevel = feature.attribute(self.minTankscomboBox.currentText()) if self.minTankscomboBox.currentText() != "No match" else 0
-            maximumLevel = feature.attribute(self.maxTankscomboBox.currentText()) if self.maxTankscomboBox.currentText() != "No match" else 0
-            minimumVolume = feature.attribute(self.minVTankscomboBox.currentText()) if self.minVTankscomboBox.currentText() != "No match" else 0
-            nominalDiameter = feature.attribute(self.diameterTankscomboBox.currentText()) if self.diameterTankscomboBox.currentText() != "No match" else 0
+            name = (
+                feature.attribute(self.nameTankscomboBox.currentText())
+                if self.nameTankscomboBox.currentText() != "No match"
+                else "Tank"
+            )
+            description = (
+                feature.attribute(self.descriptionTankscomboBox.currentText())
+                if self.descriptionTankscomboBox.currentText() != "No match"
+                else "Imported from Shp"
+            )
+            z = (
+                feature.attribute(self.zTankscomboBox.currentText())
+                if self.zTankscomboBox.currentText() != "No match"
+                else 0
+            )
+            initialLevel = (
+                feature.attribute(self.initLevelCBox.currentText())
+                if self.initLevelCBox.currentText() != "No match"
+                else 0
+            )
+            minimumLevel = (
+                feature.attribute(self.minTankscomboBox.currentText())
+                if self.minTankscomboBox.currentText() != "No match"
+                else 0
+            )
+            maximumLevel = (
+                feature.attribute(self.maxTankscomboBox.currentText())
+                if self.maxTankscomboBox.currentText() != "No match"
+                else 0
+            )
+            minimumVolume = (
+                feature.attribute(self.minVTankscomboBox.currentText())
+                if self.minVTankscomboBox.currentText() != "No match"
+                else 0
+            )
+            nominalDiameter = (
+                feature.attribute(self.diameterTankscomboBox.currentText())
+                if self.diameterTankscomboBox.currentText() != "No match"
+                else 0
+            )
 
             # Create a new feature
             new_feature = QgsFeature(fields)

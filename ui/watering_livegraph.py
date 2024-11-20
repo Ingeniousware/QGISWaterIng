@@ -6,8 +6,8 @@ from PyQt5.QtWidgets import QApplication, QGraphicsView, QGraphicsScene, QPushBu
 from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'watering_livegraph.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_livegraph.ui"))
+
 
 class ChartView(QtWidgets.QWidget, FORM_CLASS):
     def __init__(self, title):
@@ -19,7 +19,7 @@ class ChartView(QtWidgets.QWidget, FORM_CLASS):
         self.scene = QGraphicsScene()
         self.graphicsView.setScene(self.scene)
         self.graphicsView.setBackgroundBrush(QBrush(QColor("white")))
-        
+
         # Pen configurations
         self.chart_pen = QPen(QColor("green"))
         self.chart_pen.setWidth(2)
@@ -44,14 +44,13 @@ class ChartView(QtWidgets.QWidget, FORM_CLASS):
         self.BTstopGraph.clicked.connect(self.stop_graph)
         self.upper_bound = -100
         self.lower_bound = -1
-    
 
     def draw_grid_on_background(self):
         grid_spacing = 20
         # Adjusting width and height to ensure they are multiples of grid_spacing
         width = (self.graphicsView.width() // grid_spacing) * grid_spacing
         height = (self.graphicsView.height() // grid_spacing) * grid_spacing
-        
+
         pixmap = QPixmap(width, height)
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
@@ -80,7 +79,7 @@ class ChartView(QtWidgets.QWidget, FORM_CLASS):
         for point in self.points[1:]:
             self.chart_path.lineTo(*point)
         self.x = new_x
-        #self.scene.clear()
+        # self.scene.clear()
         self.scene.addPath(self.chart_path, self.chart_pen)
         start_x = self.points[0][0] if self.points else 0
         end_x = self.points[-1][0] if self.points else new_x
@@ -111,6 +110,5 @@ class ChartView(QtWidgets.QWidget, FORM_CLASS):
         line_path.lineTo(self.x, 0)
         self.scene.addPath(line_path, line_pen)
 
-    
     def stop_graph(self):
         self.timer.stop()

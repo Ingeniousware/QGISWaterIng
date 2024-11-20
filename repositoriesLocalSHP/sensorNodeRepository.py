@@ -2,40 +2,56 @@ import os
 import requests
 from .abstract_repository import AbstractRepository
 
-from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
-from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, QgsAnimatedMarkerSymbolLayer
+from qgis.core import (
+    QgsProject,
+    QgsVectorLayer,
+    QgsFields,
+    QgsField,
+    QgsGeometry,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+)
+from qgis.core import (
+    QgsVectorFileWriter,
+    QgsPointXY,
+    QgsFeature,
+    QgsSimpleMarkerSymbolLayer,
+    QgsSimpleMarkerSymbolLayerBase,
+    QgsAnimatedMarkerSymbolLayer,
+)
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 
+
 class SensorNodeRepository(AbstractRepository):
 
-    def __init__(self,token, project_path, scenarioFK):
+    def __init__(self, token, project_path, scenarioFK):
         """Constructor."""
-        super(SensorNodeRepository, self).__init__(token, scenarioFK)      
+        super(SensorNodeRepository, self).__init__(token, scenarioFK)
         self.UrlGet = "/api/v1/SensorStation"
         self.StorageShapeFile = os.path.join(project_path, "watering_sensors.shp")
         self.LayerName = "watering_sensors"
-        self.FileQml =  project_path + "/" + self.LayerName + ".qml"
-        #Setting shapefile fields 
+        self.FileQml = project_path + "/" + self.LayerName + ".qml"
+        # Setting shapefile fields
         self.field_definitions = [
             ("ID", QVariant.String),
             ("Last Mdf", QVariant.String),
             ("Name", QVariant.String),
             ("Descript", QVariant.String),
             ("Z[m]", QVariant.Double),
-            ("lastUpdate", QVariant.String)
+            ("lastUpdate", QVariant.String),
         ]
-        
-        self.features = ["lng", "lat", "serverKeyId", "lastModified","name", "description", "z"]
-        
+
+        self.features = ["lng", "lat", "serverKeyId", "lastModified", "name", "description", "z"]
+
         self.LayerType = "Point?crs="
         self.Color = QColor.fromRgb(255, 255, 255)
         self.StrokeColor = QColor.fromRgb(23, 61, 108)
         self.currentLayer = None
 
     def initializeRepository(self):
-        super(SensorNodeRepository, self).initializeRepository()   
-        self.openLayers(':/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT.svg', 10)
+        super(SensorNodeRepository, self).initializeRepository()
+        self.openLayers(":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT.svg", 10)
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
@@ -45,8 +61,8 @@ class SensorNodeRepository(AbstractRepository):
 
         feature.setAttribute("Name", name)
         feature.setAttribute("Descript", description)
-        feature.setAttribute("Z[m]", z)        
-    
+        feature.setAttribute("Z[m]", z)
+
     def setElementSymbol(self, layer, path_to_gif, layer_size):
         renderer = layer.renderer()
         symbol = renderer.symbol()

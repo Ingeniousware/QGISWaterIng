@@ -1,6 +1,7 @@
-import queue 
+import queue
 
-class actionManager():
+
+class actionManager:
 
     def __init__(self, token, scenarioFK, setActiveStateUndo, setActiveStateRedo):
         """Constructor."""
@@ -11,10 +12,9 @@ class actionManager():
         self.setActiveStateUndo = setActiveStateUndo
         self.setActiveStateRedo = setActiveStateRedo
 
-
     def execute(self, action):
         action.execute()
-        #print("after executing action in action manager")
+        # print("after executing action in action manager")
         self.doneActions.put(action)
         print("Calling the activation of undo button")
         self.setActiveStateUndo(True)
@@ -22,26 +22,28 @@ class actionManager():
         while not self.undoneActions.empty():
             self.undoneActions.get()
 
-
     def undoAction(self):
-        #take action from the FIFO of doneActions and call action.Undo and copy it to the FIFO of undoneActions
+        # take action from the FIFO of doneActions and call action.Undo and copy it to the FIFO of undoneActions
         print("Entering undo Action at action manager")
         action = self.doneActions.get()
         print("Calling action undo")
         action.unDo()
         self.undoneActions.put(action)
-        if (not self.doneActions.empty()): self.setActiveStateUndo(True)
-        else: self.setActiveStateUndo(False)
+        if not self.doneActions.empty():
+            self.setActiveStateUndo(True)
+        else:
+            self.setActiveStateUndo(False)
         self.setActiveStateRedo(True)
-        
 
     def redoAction(self):
-        #take action from the FIFO of undoneActions and call action.Redo and copy it to the FIFO of doneActions
+        # take action from the FIFO of undoneActions and call action.Redo and copy it to the FIFO of doneActions
         action = self.undoneActions.get()
         action.reDo()
         self.doneActions.put(action)
-        if (not self.undoneActions.empty()): self.setActiveStateRedo(True)
-        else: self.setActiveStateRedo(False)
+        if not self.undoneActions.empty():
+            self.setActiveStateRedo(True)
+        else:
+            self.setActiveStateRedo(False)
         self.setActiveStateUndo(True)
 
     def unset(self):
@@ -50,4 +52,3 @@ class actionManager():
         self.setActiveStateUndo = None
         self.setActiveStateRedo = None
         print("Action manager has been unset.")
-        

@@ -21,7 +21,7 @@ from ..repositoryConnectorsSHPREST.waterMeterNodeConnectorSHPREST import waterMe
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
 
-class syncManagerSHPREST():
+class syncManagerSHPREST:
 
     def __init__(self, token, scenarioFK):
         """Constructor."""
@@ -30,9 +30,9 @@ class syncManagerSHPREST():
         self.scenarioUnitOfWork = None
         self.waterDemandNodeConnector = None
         self.tankNodeConnector = None
-        self.reservoirNodeConnector= None
-        self.valveNodeConnector= None
-        self.pumpNodeConnector= None
+        self.reservoirNodeConnector = None
+        self.valveNodeConnector = None
+        self.pumpNodeConnector = None
         self.waterMeterNodeConnector = None
         self.sensorNodeConnector = None
         self.pipeNodeConnector = None
@@ -44,37 +44,38 @@ class syncManagerSHPREST():
         self.waterMeterNodeServerRESTRepository = None
         self.sensorNodeServerRESTRepository = None
         self.pipeNodeServerRESTRepository = None
-        
+
         server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"
 
-        self.hub_connection = HubConnectionBuilder()\
-            .with_url(server_url, options={"verify_ssl": False, 
-                                        "headers": {'Authorization': "Bearer {}".format(os.environ.get('TOKEN'))}}) \
-            .with_automatic_reconnect({
-                    "type": "interval",
-                    "keep_alive_interval": 10,
-                    "intervals": [1, 3, 5, 6, 7, 87, 3]
-                }).build()
+        self.hub_connection = (
+            HubConnectionBuilder()
+            .with_url(
+                server_url,
+                options={
+                    "verify_ssl": False,
+                    "headers": {"Authorization": "Bearer {}".format(os.environ.get("TOKEN"))},
+                },
+            )
+            .with_automatic_reconnect(
+                {"type": "interval", "keep_alive_interval": 10, "intervals": [1, 3, 5, 6, 7, 87, 3]}
+            )
+            .build()
+        )
 
-        #self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
+        # self.hub_connection.on_open(lambda: print("connection opened and handshake received ready to send messages"))
         self.hub_connection.on_open(self.jointToServerUpdateGroup)
         self.hub_connection.on_close(lambda: print("connection closed"))
         self.hub_connection.on_error(lambda data: print(f"An exception was thrown closed{data.error}"))
-        
-
-
 
     def jointToServerUpdateGroup(self):
-        print("Joining to hub")       
-        invoresult = self.hub_connection.send("joingroup", [self.ScenarioFK]) 
+        print("Joining to hub")
+        invoresult = self.hub_connection.send("joingroup", [self.ScenarioFK])
         print(invoresult.invocation_id)
-
-
 
     def connectScenarioUnitOfWorkToServer(self, scenarioUnitOfWork):
         self.scenarioUnitOfWork = scenarioUnitOfWork
 
-        #creation of connectors
+        # creation of connectors
         self.waterDemandNodeConnector = waterDemandNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
         self.tankNodeConnector = tankNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
         self.reservoirNodeConnector = reservoirNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
@@ -83,8 +84,8 @@ class syncManagerSHPREST():
         self.waterMeterNodeConnector = waterMeterNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
         self.sensorNodeConnector = sensorNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
         self.pipeNodeConnector = pipeNodeConnectorSHPREST(self.ScenarioFK, self.hub_connection)
-        
-        #creation of server repositories
+
+        # creation of server repositories
         self.waterDemandNodeServerRESTRepository = waterDemandNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.tankNodeServerRESTRepository = tankNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.reservoirNodeServerRESTRepository = reservoirNodeServerRESTRepository(self.Token, self.ScenarioFK)
@@ -93,8 +94,8 @@ class syncManagerSHPREST():
         self.waterMeterNodeServerRESTRepository = waterMeterNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.sensorNodeServerRESTRepository = sensorNodeServerRESTRepository(self.Token, self.ScenarioFK)
         self.pipeNodeServerRESTRepository = pipeNodeServerRESTRepository(self.Token, self.ScenarioFK)
-        
-        #linking connectors and server repositories
+
+        # linking connectors and server repositories
         self.waterDemandNodeServerRESTRepository.setConnectorToLocal(self.waterDemandNodeConnector)
         self.tankNodeServerRESTRepository.setConnectorToLocal(self.tankNodeConnector)
         self.reservoirNodeServerRESTRepository.setConnectorToLocal(self.reservoirNodeConnector)
@@ -103,8 +104,8 @@ class syncManagerSHPREST():
         self.waterMeterNodeServerRESTRepository.setConnectorToLocal(self.waterMeterNodeConnector)
         self.sensorNodeServerRESTRepository.setConnectorToLocal(self.sensorNodeConnector)
         self.pipeNodeServerRESTRepository.setConnectorToLocal(self.pipeNodeConnector)
-        
-        #linking connectors and local repositories from unitofwork
+
+        # linking connectors and local repositories from unitofwork
         self.scenarioUnitOfWork.waterDemandNodeRepository.setConnectorToServer(self.waterDemandNodeConnector)
         self.scenarioUnitOfWork.tankNodeRepository.setConnectorToServer(self.tankNodeConnector)
         self.scenarioUnitOfWork.reservoirNodeRepository.setConnectorToServer(self.reservoirNodeConnector)
@@ -113,22 +114,21 @@ class syncManagerSHPREST():
         self.scenarioUnitOfWork.waterMeterNodeRepository.setConnectorToServer(self.waterMeterNodeConnector)
         self.scenarioUnitOfWork.sensorNodeRepository.setConnectorToServer(self.sensorNodeConnector)
         self.scenarioUnitOfWork.pipeNodeRepository.setConnectorToServer(self.pipeNodeConnector)
-        
+
         self.hub_connection.start()
 
-        
     def stop(self):
         print("Entering stopping the sync manager...............................................")
-        if (self.hub_connection): 
+        if self.hub_connection:
             self.hub_connection.stop()
             print("Stopped the hub at sync manager...............................................")
         else:
             print("Hub cannot be reached...............................................")
-            
+
         print("Finishing stopping the sync manager...............................................")
 
     def setStatusOffline(self):
-                #linking connectors and server repositories
+        # linking connectors and server repositories
         self.waterDemandNodeServerRESTRepository.unsetConnectorToLocal()
         self.tankNodeServerRESTRepository.unsetConnectorToLocal()
         self.reservoirNodeServerRESTRepository.unsetConnectorToLocal()
@@ -137,8 +137,8 @@ class syncManagerSHPREST():
         self.waterMeterNodeServerRESTRepository.unsetConnectorToLocal()
         self.sensorNodeServerRESTRepository.unsetConnectorToLocal()
         self.pipeNodeServerRESTRepository.unsetConnectorToLocal()
-        
-        #linking connectors and local repositories from unitofwork
+
+        # linking connectors and local repositories from unitofwork
         self.scenarioUnitOfWork.waterDemandNodeRepository.unsetConnectorToServer()
         self.scenarioUnitOfWork.tankNodeRepository.unsetConnectorToServer()
         self.scenarioUnitOfWork.reservoirNodeRepository.unsetConnectorToServer()
@@ -147,5 +147,3 @@ class syncManagerSHPREST():
         self.scenarioUnitOfWork.waterMeterNodeRepository.unsetConnectorToServer()
         self.scenarioUnitOfWork.sensorNodeRepository.unsetConnectorToServer()
         self.scenarioUnitOfWork.pipeNodeRepository.unsetConnectorToServer()
-
-        

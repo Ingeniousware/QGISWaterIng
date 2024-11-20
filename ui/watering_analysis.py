@@ -16,12 +16,11 @@ from ..watering_utils import WateringUtils
 from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
 from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'watering_analysis_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_analysis_dialog.ui"))
 
 
 class WateringAnalysis(QDockWidget, FORM_CLASS):
-    def __init__(self,iface):
+    def __init__(self, iface):
         """Constructor."""
         super(WateringAnalysis, self).__init__(iface.mainWindow())
         self.setupUi(self)
@@ -62,12 +61,11 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.pipesComboBox.addItem("Velocity")
         self.pipesComboBox.addItem("Flow")
         self.pipesComboBox.addItem("Headloss")
-        
+
         self.BTExecute.clicked.connect(self.requestAnalysisExecution)
         self.startDateTime.setDateTime(QDateTime.currentDateTime())
         print("Project path (at init WateringAnalysis):  ", WateringUtils.getProjectPath())
 
-    
     def initializeRepository(self):
         # Clear combo boxes and lists
         self.analysis_box.clear()
@@ -76,14 +74,16 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.listOfAnalysis = []
         self.listOfSimulators = []
 
-        self.token = os.environ.get('TOKEN')
+        self.token = os.environ.get("TOKEN")
         url_analysis = WateringUtils.getServerUrl() + "/api/v1/WaterAnalysis"
-        self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        params = {'ScenarioFK': "{}".format(self.ScenarioFK)}
-            
+        self.ScenarioFK = QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
+        params = {"ScenarioFK": "{}".format(self.ScenarioFK)}
+
         try:
             # Get water analysis
-            response_analysis = requests.get(url_analysis, params=params, headers={'Authorization': "Bearer {}".format(self.token)})
+            response_analysis = requests.get(
+                url_analysis, params=params, headers={"Authorization": "Bearer {}".format(self.token)}
+            )
             response_analysis.raise_for_status()
 
             analysis_data = response_analysis.json()["data"]
@@ -92,9 +92,11 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
 
             self.listOfAnalysis = [(item["serverKeyId"], item["simulationStartTime"]) for item in analysis_data]
 
-            #For simulator combo box in executions
+            # For simulator combo box in executions
             url_simulators = url_analysis + "/simulators"
-            response_simulators = requests.get(url_simulators, params=params, headers={'Authorization': "Bearer {}".format(self.token)})
+            response_simulators = requests.get(
+                url_simulators, params=params, headers={"Authorization": "Bearer {}".format(self.token)}
+            )
             response_simulators.raise_for_status()
 
             simulator_data = response_simulators.json()["data"]
@@ -104,13 +106,13 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
 
         except requests.exceptions.RequestException as e:
             print(f"Error in initializeRepository: {e}")
-        
+
     def checkUserControlState(self):
         if self.compareCheckBox.isChecked():
             self.analysis_box2.show()
         else:
             self.analysis_box2.hide()
-           
+
     def getAnalysisResults(self, behavior):
         root = QgsProject.instance().layerTreeRoot()
         shapeGroup = root.findGroup("Analysis")
@@ -119,7 +121,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             root.removeChildNode(shapeGroup)
             for layer_id in layer_ids:
                 QgsProject.instance().removeMapLayer(layer_id)
-        
+
         pipeProperty = self.pipesComboBox.currentText()
         nodeProperty = self.nodesComboBox.currentText()
         nodeProperty, pipeProperty = (prop.replace(" ", "").lower() for prop in (nodeProperty, pipeProperty))
@@ -130,26 +132,33 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         analysisExecutionId2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][0]
         datetime2 = self.listOfAnalysis[self.analysis_box2.currentIndex()][1]
         self.set_progress(20)
-            
-        pipeNodeRepository = PipeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, pipeProperty, behavior)
-        self.set_progress(50)  
-        waterDemandNodeRepository = NodeNetworkAnalysisRepository(self.token, analysisExecutionId, datetime, nodeProperty, behavior) 
+
+        pipeNodeRepository = PipeNetworkAnalysisRepository(
+            self.token, analysisExecutionId, datetime, pipeProperty, behavior
+        )
+        self.set_progress(50)
+        waterDemandNodeRepository = NodeNetworkAnalysisRepository(
+            self.token, analysisExecutionId, datetime, nodeProperty, behavior
+        )
 
         if self.compareCheckBox.isChecked():
-            self.set_progress(60)  
-            pipeNodeRepository2 = PipeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, pipeProperty, behavior)
+            self.set_progress(60)
+            pipeNodeRepository2 = PipeNetworkAnalysisRepository(
+                self.token, analysisExecutionId2, datetime2, pipeProperty, behavior
+            )
             self.createNewColumns(pipeNodeRepository2.LayerName, pipeProperty)
             self.fieldCalculator(pipeNodeRepository, pipeNodeRepository2)
-            
+
             self.set_progress(80)
-            waterDemandNodeRepository2 = NodeNetworkAnalysisRepository(self.token, analysisExecutionId2, datetime2, nodeProperty, behavior)
+            waterDemandNodeRepository2 = NodeNetworkAnalysisRepository(
+                self.token, analysisExecutionId2, datetime2, nodeProperty, behavior
+            )
             self.createNewColumns(waterDemandNodeRepository2.LayerName, nodeProperty)
             self.set_progress(90)
             self.fieldCalculator(waterDemandNodeRepository, waterDemandNodeRepository2)
-            
-        self.set_progress(100)  
-        self.timer_hide_progress_bar()
 
+        self.set_progress(100)
+        self.timer_hide_progress_bar()
 
     def switch_icon_play_pause(self):
         if self.is_playing:
@@ -170,24 +179,24 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         if len(self.new_field_name) > 10:
             self.new_field_name = self.new_field_name[:10]
         field_index = layer.fields().indexFromName(self.new_field_name)
-        if field_index != -1:                                   
-            """ layer.dataProvider().deleteAttributes([field_index])
+        if field_index != -1:
+            """layer.dataProvider().deleteAttributes([field_index])
             layer.updateFields()
-            layer.commitChanges() """
-            #Delete the existing field
+            layer.commitChanges()"""
+            # Delete the existing field
             layer.startEditing()
             layer.dataProvider().deleteAttributes([field_index])
             layer.commitChanges()
-           
+
         if layer.fields().indexFromName(self.new_field_name) == -1:
-            """ layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
-            layer.updateFields()                
+            """layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
+            layer.updateFields()
             layer.commitChanges()
 
             layer.startEditing()
             default_value = 0.0  # You can set another default value if needed
             layer.dataProvider().changeAttributeValues({f.id(): {field_index: default_value} for f in layer.getFeatures()})
-            layer.commitChanges() """
+            layer.commitChanges()"""
             # Add a new attribute with the specified name and data type
             layer.startEditing()
             layer.dataProvider().addAttributes([QgsField(self.new_field_name, QVariant.Double)])
@@ -200,7 +209,6 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             features = [(f.id(), {field_index: default_value}) for f in layer.getFeatures()]
             layer.dataProvider().changeAttributeValues({f[0]: f[1] for f in features})
             layer.commitChanges()
-  
 
     def fieldCalculator(self, repository, repository2):
         layerDest = repository.LayerName
@@ -208,13 +216,13 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         column_b = repository2.Field
 
         layer = QgsProject.instance().mapLayersByName(layerDest)[0]
-        #if not layer:
-            #raise Exception(f"Layer '{layerDest}' not found in the project.")
+        # if not layer:
+        # raise Exception(f"Layer '{layerDest}' not found in the project.")
 
         expression = QgsExpression(f'"{column_a}" - "{column_b}"')
         if expression.hasParserError():
             raise Exception(expression.parserErrorString())
-    
+
         layer.startEditing()
         context = QgsExpressionContext()
         field_index = layer.fields().indexFromName(self.new_field_name)
@@ -226,54 +234,59 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             feature.setAttribute(field_index, result)
             layer.updateFeature(feature)
         layer.commitChanges()
-    
+
         repository.changeColor(self.new_field_name)
 
     def requestAnalysisExecution(self):
         # Fetch values from ComboBox and other widgets
         selectedAnalysisTypeIndex = self.BoxSelectType.currentIndex()
 
-        if (selectedAnalysisTypeIndex < 11):
-                selectedSimulator = self.BoxSimulator.currentText()
-                simulatorIndex = self.BoxSimulator.currentIndex()
-                simulatorFK = self.listOfSimulators[simulatorIndex][1]        
-                duration = int(self.durationSpinBox.value())
-                timeStep = int(self.timeStepSpinBox.value())
-                
-                # Format date and time from QDateTimeEdit widget
-                dateTime = self.startDateTime.dateTime()
-                formatted_date = dateTime.toString("yyyy-MM-ddTHH:mm:ss.zzzZ")
-                
-                # Get current date and time in different formats
-                now_utc = datetime.utcnow()
-                formatted_now_utc = now_utc.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
-                dateForName = datetime.now().strftime('%d.%m.%Y, %H:%M:%S')
-                name = f"Execution - {dateForName}"
-                
-                # Generate a new GUID
-                new_guid = str(uuid.uuid4())
-                
-                # Post the collected data to the API
-                self.postToAnalysisAPI(name, formatted_date, duration, formatted_now_utc, new_guid, selectedSimulator, simulatorFK, timeStep)
-        elif (selectedAnalysisTypeIndex == 12):            
-                self.show_message("Water Analysis", "Connectivity and topological analysis are currently being connected to our plugin but not ready to use", QMessageBox.Warning)
-        else:             
-                self.show_message("Water Analysis", "This type of analysis hasnt been implemented", QMessageBox.Warning)
+        if selectedAnalysisTypeIndex < 11:
+            selectedSimulator = self.BoxSimulator.currentText()
+            simulatorIndex = self.BoxSimulator.currentIndex()
+            simulatorFK = self.listOfSimulators[simulatorIndex][1]
+            duration = int(self.durationSpinBox.value())
+            timeStep = int(self.timeStepSpinBox.value())
 
+            # Format date and time from QDateTimeEdit widget
+            dateTime = self.startDateTime.dateTime()
+            formatted_date = dateTime.toString("yyyy-MM-ddTHH:mm:ss.zzzZ")
 
+            # Get current date and time in different formats
+            now_utc = datetime.utcnow()
+            formatted_now_utc = now_utc.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            dateForName = datetime.now().strftime("%d.%m.%Y, %H:%M:%S")
+            name = f"Execution - {dateForName}"
+
+            # Generate a new GUID
+            new_guid = str(uuid.uuid4())
+
+            # Post the collected data to the API
+            self.postToAnalysisAPI(
+                name, formatted_date, duration, formatted_now_utc, new_guid, selectedSimulator, simulatorFK, timeStep
+            )
+        elif selectedAnalysisTypeIndex == 12:
+            self.show_message(
+                "Water Analysis",
+                "Connectivity and topological analysis are currently being connected to our plugin but not ready to use",
+                QMessageBox.Warning,
+            )
+        else:
+            self.show_message("Water Analysis", "This type of analysis hasnt been implemented", QMessageBox.Warning)
 
     def show_message(self, title, text, icon):
-            """Display a QMessageBox with given attributes."""
-            message_box = QMessageBox()
-            message_box.setIcon(icon)
-            message_box.setWindowTitle(title)
-            message_box.setText(text)
-            message_box.setStandardButtons(QMessageBox.Ok)
-            message_box.exec_()
+        """Display a QMessageBox with given attributes."""
+        message_box = QMessageBox()
+        message_box.setIcon(icon)
+        message_box.setWindowTitle(title)
+        message_box.setText(text)
+        message_box.setStandardButtons(QMessageBox.Ok)
+        message_box.exec_()
 
+    def postToAnalysisAPI(
+        self, name, startDate, duration, formatted_now, new_guid, selectedSimulator, simulatorFK, timeStep
+    ):
 
-    def postToAnalysisAPI(self, name, startDate, duration, formatted_now, new_guid, selectedSimulator, simulatorFK, timeStep):
-                 
         data_json = {
             "serverKeyId": new_guid,
             "scenarioKeyId": self.ScenarioFK,
@@ -285,13 +298,13 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             "timeStep": timeStep,
             "simulatorFK": simulatorFK,
             "simulatorName": selectedSimulator,
-            "executionState": 0
+            "executionState": 0,
         }
-        
+
         url = f"{WateringUtils.getServerUrl()}/api/v1/WaterAnalysis"
-        params = {'scenarioFK': self.ScenarioFK}
-        headers = {'Authorization': f"Bearer {self.token}"}
-        
+        params = {"scenarioFK": self.ScenarioFK}
+        headers = {"Authorization": f"Bearer {self.token}"}
+
         try:
             response = requests.post(url, params=params, headers=headers, json=data_json)
             if response.status_code == 200:
@@ -300,12 +313,11 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
                 self.close()
             else:
                 self.show_message("Water Analysis", "Analysis Not Executed", QMessageBox.Warning)
-                
+
         except requests.RequestException as e:  # Catch specific exception related to requests.
             print(f"Error: {e}")
             self.show_message("Water Analysis", "Analysis Not Executed", QMessageBox.Warning)
-        
-        
+
     def set_progress(self, progress_value):
         t = time() - self.start
         hms = strftime("%H:%M:%S", gmtime(t))
@@ -318,7 +330,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.timer.timeout.connect(self.hide_progress_bar)
         self.timer.start(6000)
         self.progressBar.setFormat("Loading completed")
-        
+
     def hide_progress_bar(self):
         self.progressBar.setVisible(False)
 

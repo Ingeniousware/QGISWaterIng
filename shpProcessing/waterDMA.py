@@ -8,75 +8,84 @@ import os
 from ..watering_utils import WateringUtils
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
+
 class ImportDMAShp(AbstractShpImport):
     def __init__(self):
-            #Constructor.
-            super(ImportDMAShp, self).__init__()
-    
+        # Constructor.
+        super(ImportDMAShp, self).__init__()
+
     def post_to_server(json, name):
-        #headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
-        #UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
+        # headers = {'Authorization': f"Bearer {os.environ.get('TOKEN')}"}
+        # UrlPost = WateringUtils.getServerUrl() + "/api/v1/WaterDMA/withcoordinates"
         url = "/api/v1/WaterDMA/withcoordinates"
         response = WateringUtils.requests_post(url, json)
-        #response = requests.post(UrlPost, json=json, headers=headers)
+        # response = requests.post(UrlPost, json=json, headers=headers)
         print(response)
 
     def shpProcessing(self, layer_name):
-            layer = QgsProject.instance().mapLayersByName(layer_name)[0]
-            features = []
-            # Define the source and destination coordinate reference systems
-            crs_source = layer.crs()
-            crs_destination = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS84
-            transform = QgsCoordinateTransform(crs_source, crs_destination, QgsProject.instance())
+        layer = QgsProject.instance().mapLayersByName(layer_name)[0]
+        features = []
+        # Define the source and destination coordinate reference systems
+        crs_source = layer.crs()
+        crs_destination = QgsCoordinateReferenceSystem("EPSG:4326")  # WGS84
+        transform = QgsCoordinateTransform(crs_source, crs_destination, QgsProject.instance())
 
-            for feature in layer.getFeatures():
-                geom = feature.geometry()
-                polygon = geom.asMultiPolygon()
-                vertices = []
-                n = len(polygon[0])
-                for i in range(n):
-                    coordinateList = polygon[0][i]
-                    for point in coordinateList:
-                        transformed_point = transform.transform(point)
-                        vertices.append({
+        for feature in layer.getFeatures():
+            geom = feature.geometry()
+            polygon = geom.asMultiPolygon()
+            vertices = []
+            n = len(polygon[0])
+            for i in range(n):
+                coordinateList = polygon[0][i]
+                for point in coordinateList:
+                    transformed_point = transform.transform(point)
+                    vertices.append(
+                        {
                             "vertexFK": str(uuid.uuid4()),
                             "lng": transformed_point.x(),
                             "lat": transformed_point.y(),
-                            "order": 0
-                        })
+                            "order": 0,
+                        }
+                    )
 
-                server_key_id = str(uuid.uuid4())
-                fk_scenario = WateringUtils.getScenarioId() 
-                ###Optimize later
-                if self.nameDMAcomboBox.currentText() == "No match" or feature.attribute(self.nameDMAcomboBox.currentText()) == None:
-                    name = "Water DMA"
-                else:
-                    name = feature.attribute(self.nameDMAcomboBox.currentText())
-                    
-                if self.descriptionDMAcomboBox.currentText() == "No match" or feature.attribute(self.descriptionDMAcomboBox.currentText()) == None:
-                    description = ""
-                else:
-                    description = feature.attribute(self.descriptionDMAcomboBox.currentText())
-                ##### 
-                sector_index = 0
-                element_count = 0
-                total_demand = 0
+            server_key_id = str(uuid.uuid4())
+            fk_scenario = WateringUtils.getScenarioId()
+            ###Optimize later
+            if (
+                self.nameDMAcomboBox.currentText() == "No match"
+                or feature.attribute(self.nameDMAcomboBox.currentText()) == None
+            ):
+                name = "Water DMA"
+            else:
+                name = feature.attribute(self.nameDMAcomboBox.currentText())
 
-                print("Name:", name)
-                print("Description:", description)
+            if (
+                self.descriptionDMAcomboBox.currentText() == "No match"
+                or feature.attribute(self.descriptionDMAcomboBox.currentText()) == None
+            ):
+                description = ""
+            else:
+                description = feature.attribute(self.descriptionDMAcomboBox.currentText())
+            #####
+            sector_index = 0
+            element_count = 0
+            total_demand = 0
 
-                feature_json = {
-                    "serverKeyId": server_key_id,
-                    "fkScenario": fk_scenario,
-                    "name": name,
-                    "description": description,
-                    "sectorIndex": sector_index,
-                    "elementCount": element_count,
-                    "totalDemand": total_demand,
-                    "visible": True,
-                    "vertices": vertices
-                }
-                ImportDMAShp.post_to_server(feature_json, name)
-                features.append(feature_json)
-            QgsProject.instance().removeMapLayer(layer)
-            return features
+            print("Name:", name)
+            print("Description:", description)
+
+            feature_json = {
+                "serverKeyId": server_key_id,
+                "fkScenario": fk_scenario,
+                "name": name,
+                "description": description,
+                "sectorIndex": sector_index,
+                "elementCount": element_count,
+                "totalDemand": total_demand,
+                "visible": True,
+                "vertices": vertices,
+            }
+            ImportDMAShp.post_to_server(feature_json, name)
+            features.append(feature_json)
+        QgsProject.instance().removeMapLayer(layer)
+        return features

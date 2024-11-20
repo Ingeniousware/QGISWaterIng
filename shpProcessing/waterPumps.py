@@ -1,15 +1,23 @@
-from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsPointXY
+from qgis.core import (
+    QgsProject,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsFeature,
+    QgsGeometry,
+    QgsPointXY,
+)
 from qgis.PyQt.QtCore import Qt
 import uuid
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
+
 class ImportPumpsShp(AbstractShpImport):
 
     def __init__(self):
-            #Constructor.
-            super(ImportPumpsShp, self).__init__()
+        # Constructor.
+        super(ImportPumpsShp, self).__init__()
 
-    def shpProcessing(self, layer_name): 
+    def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]
         destination_layer_name = "watering_pumps"
         destination_layer = QgsProject.instance().mapLayersByName(destination_layer_name)[0]
@@ -32,11 +40,29 @@ class ImportPumpsShp(AbstractShpImport):
             server_key_id = str(uuid.uuid4())[:10]
 
             # Extract attribute values based on your combobox mappings
-            name = feature.attribute(self.namePumpscomboBox.currentText()) if self.namePumpscomboBox.currentText() != "No match" else "Tank"
-            description = feature.attribute(self.descriptionPumpscomboBox.currentText()) if self.descriptionPumpscomboBox.currentText() != "No match" else "Imported from Shp"
-            z = feature.attribute(self.zPumpscomboBox.currentText()) if self.zPumpscomboBox.currentText() != "No match" else 0
-            modelFK = feature.attribute(self.modelCBox.currentText()) if self.modelCBox.currentText() != "No match" else 0
-            relativeSpeed = feature.attribute(self.relativeSpeedcBox.currentText()) if self.relativeSpeedcBox.currentText() != "No match" else 0
+            name = (
+                feature.attribute(self.namePumpscomboBox.currentText())
+                if self.namePumpscomboBox.currentText() != "No match"
+                else "Tank"
+            )
+            description = (
+                feature.attribute(self.descriptionPumpscomboBox.currentText())
+                if self.descriptionPumpscomboBox.currentText() != "No match"
+                else "Imported from Shp"
+            )
+            z = (
+                feature.attribute(self.zPumpscomboBox.currentText())
+                if self.zPumpscomboBox.currentText() != "No match"
+                else 0
+            )
+            modelFK = (
+                feature.attribute(self.modelCBox.currentText()) if self.modelCBox.currentText() != "No match" else 0
+            )
+            relativeSpeed = (
+                feature.attribute(self.relativeSpeedcBox.currentText())
+                if self.relativeSpeedcBox.currentText() != "No match"
+                else 0
+            )
 
             # Create a new feature
             new_feature = QgsFeature(fields)

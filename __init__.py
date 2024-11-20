@@ -8,4 +8,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     """
     #
     from .watering import QGISPlugin_WaterIng
+
     return QGISPlugin_WaterIng(iface)

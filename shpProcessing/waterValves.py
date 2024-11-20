@@ -1,14 +1,22 @@
-from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsPointXY
+from qgis.core import (
+    QgsProject,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsFeature,
+    QgsGeometry,
+    QgsPointXY,
+)
 from qgis.PyQt.QtCore import Qt
 import uuid
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
+
 class ImportValvesShp(AbstractShpImport):
 
     def __init__(self):
-            #Constructor.
-            super(ImportValvesShp, self).__init__()
-    
+        # Constructor.
+        super(ImportValvesShp, self).__init__()
+
     def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]
         destination_layer_name = "watering_valves"
@@ -32,14 +40,42 @@ class ImportValvesShp(AbstractShpImport):
             server_key_id = str(uuid.uuid4())[:10]
 
             # Extract attribute values based on your combobox mappings
-            name = feature.attribute(self.valveNameCBox.currentText()) if self.valveNameCBox.currentText() != "No match" else "Valve"
-            description = feature.attribute(self.valveDescriptCBox.currentText()) if self.valveDescriptCBox.currentText() != "No match" else "Imported from Shp"
+            name = (
+                feature.attribute(self.valveNameCBox.currentText())
+                if self.valveNameCBox.currentText() != "No match"
+                else "Valve"
+            )
+            description = (
+                feature.attribute(self.valveDescriptCBox.currentText())
+                if self.valveDescriptCBox.currentText() != "No match"
+                else "Imported from Shp"
+            )
             z = feature.attribute(self.valveZCBox.currentText()) if self.valveZCBox.currentText() != "No match" else 0
-            diameter = feature.attribute(self.valveDiameterCBox.currentText()) if self.valveDiameterCBox.currentText() != "No match" else 0.2
-            typeValve = feature.attribute(self.typeValveCBox.currentText()) if self.typeValveCBox.currentText() != "No match" else 0
-            setting = feature.attribute(self.valveSettingCBox.currentText()) if self.valveSettingCBox.currentText() != "No match" else 20
-            minorLossCoef = feature.attribute(self.minorValveCBox.currentText()) if self.minorValveCBox.currentText() != "No match" else 0
-            initialStatus = feature.attribute(self.valveStatusCBox.currentText()) if self.valveStatusCBox.currentText() != "No match" else 1
+            diameter = (
+                feature.attribute(self.valveDiameterCBox.currentText())
+                if self.valveDiameterCBox.currentText() != "No match"
+                else 0.2
+            )
+            typeValve = (
+                feature.attribute(self.typeValveCBox.currentText())
+                if self.typeValveCBox.currentText() != "No match"
+                else 0
+            )
+            setting = (
+                feature.attribute(self.valveSettingCBox.currentText())
+                if self.valveSettingCBox.currentText() != "No match"
+                else 20
+            )
+            minorLossCoef = (
+                feature.attribute(self.minorValveCBox.currentText())
+                if self.minorValveCBox.currentText() != "No match"
+                else 0
+            )
+            initialStatus = (
+                feature.attribute(self.valveStatusCBox.currentText())
+                if self.valveStatusCBox.currentText() != "No match"
+                else 1
+            )
 
             # Create a new feature
             new_feature = QgsFeature(fields)
@@ -56,13 +92,12 @@ class ImportValvesShp(AbstractShpImport):
             new_feature.setAttribute("minorLossC", minorLossCoef)
             new_feature.setAttribute("initialSta", initialStatus)
 
-
             # Add the feature to the destination layer
             destination_layer.startEditing()
             destination_layer.addFeature(new_feature)
             destination_layer.commitChanges()
 
             features.append(new_feature)
-        
+
         QgsProject.instance().removeMapLayer(source_layer)
         return features

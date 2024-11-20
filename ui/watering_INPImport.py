@@ -13,19 +13,16 @@ from ..watering_utils import WateringUtils
 import requests
 
 
-
-
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'watering_InpImport_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_InpImport_dialog.ui"))
 
 
 class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
-    
-    def __init__(self,iface,parent=None):
+
+    def __init__(self, iface, parent=None):
         """Constructor."""
         super(WateringINPImport, self).__init__(parent)
         self.setupUi(self)
-        self.token = os.environ.get('TOKEN')
+        self.token = os.environ.get("TOKEN")
         self.ProjectFK = None
         self.SourceFK = None
         self.ScenarioFK = None
@@ -43,10 +40,9 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
         self.file_path = self.newINPDirectory.filePath()
 
         file_dir, file_name = os.path.split(self.file_path)
-        output_file_name = os.path.splitext(file_name)[0] + '_converted' + os.path.splitext(file_name)[1]
+        output_file_name = os.path.splitext(file_name)[0] + "_converted" + os.path.splitext(file_name)[1]
         self.output_file_path = os.path.join(file_dir, output_file_name)
         self.output_file_name = output_file_name
-
 
     def selctorCRS(self, behavior):
         crs = QgsCoordinateReferenceSystem()
@@ -56,22 +52,23 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
             self.mCrs = mySelector.crs()
             self.selectedCRSLabel.setText(self.mCrs.authid())
 
-    
     def onConvertINPFile(self, behavior):
         try:
             fileConv = fileConverter()
             fileConv.fileConvertionINP(self.file_path, self.mCrs, self.output_file_path)
-            #Post file on watering
-            self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-            #url_API = f"https://dev.watering.online/api/v1/ModelFile?scenarioKeyId={self.ScenarioFK}"
+            # Post file on watering
+            self.ScenarioFK = QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
+            # url_API = f"https://dev.watering.online/api/v1/ModelFile?scenarioKeyId={self.ScenarioFK}"
             url_API = WateringUtils.getServerUrl() + self.UrlGet
-            data = {'scenarioKeyId': self.ScenarioFK}
-            headers = {'Authorization': "Bearer {}".format(self.token)}
+            data = {"scenarioKeyId": self.ScenarioFK}
+            headers = {"Authorization": "Bearer {}".format(self.token)}
             print(url_API)
-            with open(self.output_file_path, 'rb') as file:
+            with open(self.output_file_path, "rb") as file:
                 file_data = file.read()
-        
-            response = requests.post(url_API, params=data, files = {'file': (self.output_file_name, file_data)} , headers=headers)
+
+            response = requests.post(
+                url_API, params=data, files={"file": (self.output_file_name, file_data)}, headers=headers
+            )
 
             if response.status_code == 200:
                 print("File uploaded successfully!")
@@ -92,4 +89,3 @@ class WateringINPImport(QtWidgets.QDialog, FORM_CLASS):
             message_box.exec_()
 
         self.close()
-        

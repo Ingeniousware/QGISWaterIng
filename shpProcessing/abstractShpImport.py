@@ -4,18 +4,18 @@ from qgis.PyQt import uic, QtWidgets
 from qgis.core import QgsProject, QgsVectorLayer, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 
-class AbstractShpImport():
+
+class AbstractShpImport:
 
     def __init__(self):
-        #Constructor.
-        self.token = os.environ.get('TOKEN')
+        # Constructor.
+        self.token = os.environ.get("TOKEN")
         scenario_fk = WateringUtils.getScenarioId()
-    
-    def shpProcessing(self, layer_name):
-        ...
-    
+
+    def shpProcessing(self, layer_name): ...
+
     def addSelected_Layer(self, file_path):
-        if file_path.lower().endswith('.shp'):
+        if file_path.lower().endswith(".shp"):
             vlayer = QgsVectorLayer(file_path, "New Layer", "ogr")
             if not vlayer.isValid():
                 message_box = QMessageBox()

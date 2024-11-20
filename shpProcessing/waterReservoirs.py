@@ -1,13 +1,21 @@
-from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsPointXY
+from qgis.core import (
+    QgsProject,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsFeature,
+    QgsGeometry,
+    QgsPointXY,
+)
 from qgis.PyQt.QtCore import Qt
 import uuid
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
+
 class ImportReservoirShp(AbstractShpImport):
 
     def __init__(self):
-            #Constructor.
-            super(ImportReservoirShp, self).__init__()
+        # Constructor.
+        super(ImportReservoirShp, self).__init__()
 
     def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]
@@ -32,10 +40,26 @@ class ImportReservoirShp(AbstractShpImport):
             server_key_id = str(uuid.uuid4())[:10]
 
             # Extract attribute values based on your combobox mappings
-            name = feature.attribute(self.reservoirNameCBox.currentText()) if self.reservoirNameCBox.currentText() != "No match" else "Reservoir"
-            description = feature.attribute(self.reservoirDescriptCBox.currentText()) if self.reservoirDescriptCBox.currentText() != "No match" else "Imported from Shp"
-            z = feature.attribute(self.reservoirZCBox.currentText()) if self.reservoirZCBox.currentText() != "No match" else 0
-            head = feature.attribute(self.reservoirHeadCBox.currentText()) if self.reservoirHeadCBox.currentText() != "No match" else 0
+            name = (
+                feature.attribute(self.reservoirNameCBox.currentText())
+                if self.reservoirNameCBox.currentText() != "No match"
+                else "Reservoir"
+            )
+            description = (
+                feature.attribute(self.reservoirDescriptCBox.currentText())
+                if self.reservoirDescriptCBox.currentText() != "No match"
+                else "Imported from Shp"
+            )
+            z = (
+                feature.attribute(self.reservoirZCBox.currentText())
+                if self.reservoirZCBox.currentText() != "No match"
+                else 0
+            )
+            head = (
+                feature.attribute(self.reservoirHeadCBox.currentText())
+                if self.reservoirHeadCBox.currentText() != "No match"
+                else 0
+            )
 
             # Create a new feature
             new_feature = QgsFeature(fields)
@@ -54,6 +78,6 @@ class ImportReservoirShp(AbstractShpImport):
             destination_layer.commitChanges()
 
             features.append(new_feature)
-        
+
         QgsProject.instance().removeMapLayer(source_layer)
         return features
