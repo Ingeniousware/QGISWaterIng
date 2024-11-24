@@ -60,6 +60,8 @@ from signalrcore.hub_connection_builder import HubConnectionBuilder
 
 import os.path
 
+# Import the code for the process INP file.
+from .INP_Manager.INPManager import INPManager
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -263,11 +265,13 @@ class QGISPlugin_WaterIng:
                 #self.setHubConnection()
                 WateringUtils.setProjectMetadata("connection_status", "online")
             self.addLoad()
-            
+
     def exportAndImportINP(self):
-        print("Check Internet Connection:")
-        
-        
+        inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
+        inpMan = INPManager(inpfile)
+        #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
+        inpMan.writeSections()
+
     def addLoad(self):
         print("calling watering load dialog")
         self.dlg = WateringLoad()
