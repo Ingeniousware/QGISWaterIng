@@ -189,6 +189,15 @@ class QGISPlugin_WaterIng:
             callback=self.addLogin,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+        
+        icon_path = ':/plugins/QGISPlugin_WaterIng/images/refresh.svg'
+        self.add_action(
+            icon_path,
+            text=self.tr(u'Watering Export and Import INP file'),
+            callback=self.exportAndImportINP,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+
 
         icon_path = ':/plugins/QGISPlugin_WaterIng/images/loadElements.svg'
         self.add_action(
@@ -254,6 +263,10 @@ class QGISPlugin_WaterIng:
                 #self.setHubConnection()
                 WateringUtils.setProjectMetadata("connection_status", "online")
             self.addLoad()
+            
+    def exportAndImportINP(self):
+        print("Check Internet Connection:")
+        
         
     def addLoad(self):
         print("calling watering load dialog")
