@@ -267,6 +267,11 @@ class QGISPlugin_WaterIng:
             self.addLoad()
 
     def exportAndImportINP(self):
+        project_path = WateringUtils.getProjectPath()
+        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        scenario_folder_path = project_path + "/" + scenario_id
+        print("cartpeta de trabajo: ", scenario_folder_path)
+        
         inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
         inpMan = INPManager(inpfile)
         #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
