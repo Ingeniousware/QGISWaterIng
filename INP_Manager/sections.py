@@ -17,6 +17,7 @@
 """
 
 from .sectionAbstract import sectionAbstract
+from .dataType import Junction
 
 # Section Title [TITLE] =================================================================
 class sectionTitle(sectionAbstract):
@@ -27,7 +28,7 @@ class sectionTitle(sectionAbstract):
         
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
-        outfile.write(self.title + '\n\n')
+        outfile.write(' ' + self.title + '\n\n')
 
 # Section Junctions [JUNCTIONS] =================================================================
 class sectionJunctions(sectionAbstract):
@@ -38,7 +39,10 @@ class sectionJunctions(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';ID              	Elev        	Demand      	Pattern         ' + '\n')
-        #imprimir el otro contenido de la section
+
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Reservoirs [RESERVOIRS] =================================================================
@@ -50,7 +54,10 @@ class sectionReservoirs(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';ID              	Head        	Pattern         ' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Tanks [TANKS] =================================================================
@@ -62,7 +69,10 @@ class sectionTanks(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Pipes [PIPES] =================================================================
@@ -74,7 +84,10 @@ class sectionPipes(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Pumps [PUMPS] =================================================================
@@ -86,7 +99,10 @@ class sectionPumps(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';ID              	Node1           	Node2           	Parameters' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Valves [VALVES] =================================================================
@@ -98,7 +114,10 @@ class sectionValves(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss   ' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Tags [TAGS] =================================================================
@@ -121,7 +140,10 @@ class sectionDemands(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';Junction        	Demand      	Pattern         	Category ' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Status [STATUS] =================================================================
@@ -157,7 +179,10 @@ class sectionCurves(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';ID              	X-Value     	Y-Value' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Controls [CONTROLS] =================================================================
@@ -190,10 +215,10 @@ class sectionEnergy(sectionAbstract):
         
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
-        outfile.write('Global Efficiency  	75' + '\n')
-        outfile.write('Global Price       	0' + '\n')
-        outfile.write('Demand Charge      	0' + '\n')
-        outfile.write('Pump 	1               	Efficiency	1' + '\n')
+        outfile.write(' Global Efficiency  	75' + '\n')
+        outfile.write(' Global Price       	0' + '\n')
+        outfile.write(' Demand Charge      	0' + '\n')
+        outfile.write(' Pump 	1               	Efficiency	1' + '\n')
         outfile.write('\n')
 
 # Section Emitters [EMITTERS] =================================================================
@@ -252,13 +277,13 @@ class sectionReactions20(sectionAbstract):
         
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
-        outfile.write('Order Bulk            	1' + '\n')
-        outfile.write('Order Tank            	1' + '\n')
-        outfile.write('Order Wall            	1' + '\n')
-        outfile.write('Global Bulk           	0' + '\n')
-        outfile.write('Global Wall           	0' + '\n')
-        outfile.write('Limiting Potential    	0' + '\n')
-        outfile.write('Roughness Correlation 	0' + '\n')
+        outfile.write(' Order Bulk            	1' + '\n')
+        outfile.write(' Order Tank            	1' + '\n')
+        outfile.write(' Order Wall            	1' + '\n')
+        outfile.write(' Global Bulk           	0' + '\n')
+        outfile.write(' Global Wall           	0' + '\n')
+        outfile.write(' Limiting Potential    	0' + '\n')
+        outfile.write(' Roughness Correlation 	0' + '\n')
         outfile.write('\n')
 
 # Section Mixing [MIXING] =================================================================
@@ -273,10 +298,87 @@ class sectionMixing(sectionAbstract):
         #imprimir el otro contenido de la section
         outfile.write('\n')
 
+# Section Times [TIMES] =================================================================
+class sectionTimes(sectionAbstract):
+    def __init__(self):
+        super(sectionTimes, self).__init__(22)
+        self.name = '[TIMES]'
+        
+    def writeSection(self, outfile):
+        outfile.write(self.name + '\n')
+        outfile.write(' Duration           	0' + '\n')
+        outfile.write(' Hydraulic Timestep 	1:00' + '\n')
+        outfile.write(' Quality Timestep   	0:05' + '\n')
+        outfile.write(' Pattern Timestep   	1:00' + '\n')
+        outfile.write(' Pattern Start      	0:00' + '\n')
+        outfile.write(' Report Timestep    	1:00' + '\n')
+        outfile.write(' Report Start       	0:00' + '\n')
+        outfile.write(' Start ClockTime    	12 am' + '\n')
+        outfile.write(' Statistic          	None' + '\n')
+        outfile.write('\n')
 
 
+# Section Report [REPORT] =================================================================
+class sectionReport(sectionAbstract):
+    def __init__(self):
+        super(sectionReport, self).__init__(23)
+        self.name = '[REPORT]'
+        
+    def writeSection(self, outfile):
+        outfile.write(self.name + '\n')
+        outfile.write(' Status             	No' + '\n')
+        outfile.write(' Summary            	No' + '\n')
+        outfile.write(' Page               	0' + '\n')
+        outfile.write('\n')
 
-
+# Section Options [OPTIONS] =================================================================
+class sectionOptions(sectionAbstract):
+    def __init__(self):
+        super(sectionOptions, self).__init__(24)
+        self.name = '[OPTIONS]'
+        self.Units = 'LPS'
+        self.Headloss = 'D-w'
+        self.Specific_Gravity = 1
+        self.Viscosity = 1
+        self.Trials = 40
+        self.Accuracy = 0.001
+        self.CHECKFREQ = 2
+        self.MAXCHECK = 10
+        self.DAMPLIMIT = 0
+        self.Unbalanced = 'Continue 10'
+        self.Pattern = 1
+        self.Demand_Multiplier = 1.0
+        self.Emitter_Exponent = 0.5
+        self.Quality = 'None mg/L'
+        self.Diffusivity = 1
+        self.Tolerance = 0.01
+        
+    def writeSection(self, outfile):
+        outfile.write(self.name + '\n')
+        text = f" Units              	{self.Units}\n Headloss           	{self.Headloss}\n Specific Gravity   	{self.Specific_Gravity}\n"
+        text += f" Viscosity          	{self.Viscosity}\n Trials             	{self.Trials}\n Accuracy           	{self.Accuracy}\n"
+        text += f" CHECKFREQ          	{self.CHECKFREQ}\n MAXCHECK           	{self.MAXCHECK}\n DAMPLIMIT          	{self.DAMPLIMIT}\n"
+        text += f" Unbalanced         	{self.Unbalanced}\n Pattern            	{self.Pattern}\n Demand Multiplier  	{self.Demand_Multiplier}\n"
+        text += f" Emitter Exponent   	{self.Emitter_Exponent}\n Quality            	{self.Quality}\n Diffusivity        	{self.Diffusivity}\n"
+        text += f" Tolerance          	{self.Tolerance}\n"
+        outfile.write(text)
+        #outfile.write(' Units              	LPS' + '\n')
+        #outfile.write(' Headloss           	D-W' + '\n')
+        #outfile.write(' Specific Gravity   	1' + '\n')
+        #outfile.write(' Viscosity          	1' + '\n')
+        #outfile.write(' Trials             	40' + '\n')
+        #outfile.write(' Accuracy           	0.001' + '\n')
+        #outfile.write(' CHECKFREQ          	2' + '\n')
+        #outfile.write(' MAXCHECK           	10' + '\n')
+        #outfile.write(' DAMPLIMIT          	0' + '\n')
+        #outfile.write(' Unbalanced         	Continue 10' + '\n')
+        #outfile.write(' Pattern            	1' + '\n')
+        #outfile.write(' Demand Multiplier  	1.0' + '\n')
+        #outfile.write(' Emitter Exponent   	0.5' + '\n')
+        #outfile.write(' Quality            	None mg/L' + '\n')
+        #outfile.write(' Diffusivity        	1' + '\n')
+        #outfile.write(' Tolerance          	0.01' + '\n')
+        outfile.write('\n')
 
 # Section Coordinates [COORDINATES] =================================================================
 class sectionCoordinates(sectionAbstract):
@@ -287,7 +389,10 @@ class sectionCoordinates(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';Node            	X-Coord         	Y-Coord' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Vertices [VERTICES] =================================================================
@@ -299,7 +404,10 @@ class sectionVertices(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';Link            	X-Coord         	Y-Coord' + '\n')
-        #imprimir el otro contenido de la section
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Labels [LABELS] =================================================================
@@ -310,8 +418,11 @@ class sectionLabels(sectionAbstract):
         
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
-        outfile.write(';X-Coord           Y-Coord          Label & Anchor Node' + '\n')
-        #imprimir el otro contenido de la section
+        outfile.write(';X-Coord            Y-Coord         Label & Anchor Node' + '\n')
+        
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
+        
         outfile.write('\n')
 
 # Section Backdrop [BACKDROP] =================================================================
@@ -322,10 +433,10 @@ class sectionBackdrop(sectionAbstract):
         
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
-        outfile.write('DIMENSIONS     	0.00            	0.00            	10000.00        	10000.00        ' + '\n')
-        outfile.write('UNITS          	Ninguno' + '\n')
-        outfile.write('FILE           	' + '\n')
-        outfile.write('OFFSET         	0.00            	0.00            ' + '\n')
+        outfile.write(' DIMENSIONS     	0.00            	0.00            	10000.00        	10000.00        ' + '\n')
+        outfile.write(' UNITS          	Ninguno' + '\n')
+        outfile.write(' FILE           	' + '\n')
+        outfile.write(' OFFSET         	0.00            	0.00            ' + '\n')
         outfile.write('\n')
 
 # Section End [END] =================================================================
