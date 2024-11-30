@@ -62,6 +62,8 @@ import os.path
 
 # Import the code for the process INP file.
 from .INP_Manager.INPManager import INPManager
+from .shpProcessing.waterTanks import ImportTanksShp
+
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -270,9 +272,25 @@ class QGISPlugin_WaterIng:
         project_path = WateringUtils.getProjectPath()
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         scenario_folder_path = project_path + "/" + scenario_id
-        print("cartpeta de trabajo: ", scenario_folder_path)
+        #print("=========cartpeta de trabajo: ==>", scenario_folder_path)
         
-        inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
+        #inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
+        inpfile = open(scenario_folder_path.replace('/','\\') + "\\scenario.inp", "w")
+        #Nombre del layer de tanques watering_tanks
+        source_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
+        #fields = QgsProject.instance().mapLayersByName("watering_tanks")[0].fields()
+        #print(list(fields))
+        for feature in source_layer.getFeatures():
+            #print(feature.id())
+            print(feature.geometry().asWkt())
+            idx = feature.fieldNameIndex('Name')
+            print(idx)
+            print(feature.attributes("Name"))
+            #print(f"========={feature: 10}==========")
+        #tanks = ImportTanksShp().shpProcessing("watering_tanks")
+        
+        
+        #print(inpfile)
         inpMan = INPManager(inpfile)
         #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
         inpMan.writeSections()

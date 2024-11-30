@@ -16,6 +16,8 @@
 ***************************************************************************
 """
 
+from qgis.core import QgsProject
+
 from .sections import sectionTitle, sectionJunctions, sectionReservoirs, sectionTanks, sectionPipes, sectionPumps, sectionValves, sectionTags, sectionDemands, sectionStatus, sectionPatterns, sectionCurves, sectionControls, sectionRules, sectionEnergy, sectionEmitters, sectionQuality, sectionSources, sectionReactions, sectionReactions20, sectionMixing, sectionTimes, sectionReport, sectionOptions, sectionCoordinates, sectionVertices, sectionLabels, sectionBackdrop, sectionEnd
 from .dataType import Junction, Reservoir, Tank, Pipe, Pump, Valve, Demand, Curve, Coordinate, Vertice, Label
 
@@ -106,3 +108,6 @@ class INPManager():
         for t, s in self.sections.items():
             print(t,s.name)
             s.writeSection(self.outfile)
+
+    def readLayers(self):
+        source_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
