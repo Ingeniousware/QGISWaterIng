@@ -285,7 +285,7 @@ class QGISPlugin_WaterIng:
             print(feature.geometry().asWkt())
             idx = feature.fieldNameIndex('Name')
             print(idx)
-            print(feature.attributes("Name"))
+            print(feature.attributes()[idx])
             #print(f"========={feature: 10}==========")
         #tanks = ImportTanksShp().shpProcessing("watering_tanks")
         
