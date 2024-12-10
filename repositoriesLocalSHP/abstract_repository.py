@@ -287,12 +287,6 @@ class AbstractRepository:
         self.setElementSymbol(element_layer, layer_symbol, layer_size)
         element_layer.saveNamedStyle(self.FileQml)
 
-        if not element_layer.isValid():
-            print("Error opening:", element_layer.dataProvider().error().message())
-        else:
-            QgsProject.instance().addMapLayer(element_layer, False)
-            print("opened successfully:", element_layer.name())
-
     def setElementSymbol(self, layer, layer_symbol, layer_size):
         renderer = layer.renderer()
         symbol = renderer.symbol()
