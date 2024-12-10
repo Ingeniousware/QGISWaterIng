@@ -165,8 +165,6 @@ class AbstractRepository:
     # When layer does not exists
     def addElementFromJSON(self, elementJSON):
         try:
-            print("Adding element from JSON -----------------------------------------------")
-            print(elementJSON)
             element = [elementJSON[field] for field in self.features]
 
             feature = QgsFeature(self.currentLayer.fields())
