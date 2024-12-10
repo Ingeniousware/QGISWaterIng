@@ -165,6 +165,8 @@ class AbstractRepository:
     # When layer does not exists
     def addElementFromJSON(self, elementJSON):
         try:
+            print("Adding element from JSON -----------------------------------------------")
+            print(elementJSON)
             element = [elementJSON[field] for field in self.features]
 
             feature = QgsFeature(self.currentLayer.fields())
@@ -181,6 +183,7 @@ class AbstractRepository:
             WateringUtils.write_sync_operation(self.currentLayer, feature, WateringUtils.OperationType.ADD)
         except ValueError as e:
             print("Error->", e)
+
 
     # When layer already exists
     def addElementFromSignalR(self, elementJSON):

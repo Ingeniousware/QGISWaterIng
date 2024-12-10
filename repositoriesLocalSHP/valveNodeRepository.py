@@ -46,6 +46,10 @@ class ValveNodeRepository(AbstractRepository):
             ("initialSta", QVariant.Double),
             ("typeValvul", QVariant.Double),
             ("setting", QVariant.Double),
+            ("Up-NodeKey", QVariant.String),
+            ("Down-NodeKey", QVariant.String),
+            ("Up-Node", QVariant.String),
+            ("Down-Node", QVariant.String),
             ("lastUpdate", QVariant.String),
         ]
 
@@ -62,6 +66,10 @@ class ValveNodeRepository(AbstractRepository):
             "initialStatus",
             "typeValvule",
             "setting",
+            "upstreamNodeKeyId",
+            "downstreamNodeKeyId",
+            "upstreamNode",
+            "downstreamNode",
         ]
 
         self.LayerType = "Point?crs="

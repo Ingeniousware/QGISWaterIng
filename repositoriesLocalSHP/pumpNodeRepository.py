@@ -40,6 +40,10 @@ class PumpNodeRepository(AbstractRepository):
             ("Z[m]", QVariant.Double),
             ("Model FK", QVariant.String),
             ("Rel. Speed", QVariant.Double),
+            ("Up-NodeKey", QVariant.String),
+            ("Down-NodeKey", QVariant.String),
+            ("Up-Node", QVariant.String),
+            ("Down-Node", QVariant.String),
             ("lastUpdate", QVariant.String),
         ]
 
@@ -53,6 +57,10 @@ class PumpNodeRepository(AbstractRepository):
             "z",
             "pumpModelFK",
             "relativeSpeed",
+            "upstreamNodeKeyId",
+            "downstreamNodeKeyId",
+            "upstreamNode",
+            "downstreamNode",
         ]
 
         self.LayerType = "Point?crs="
