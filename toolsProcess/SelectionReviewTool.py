@@ -8,6 +8,7 @@ from ..watering_utils import WateringUtils
 from ..ui.watering_selection_review import WateringSelectionReview
 import itertools
 
+
 class SelectionReviewTool:
 
     def __init__(self, iface):
@@ -17,17 +18,16 @@ class SelectionReviewTool:
     def ExecuteAction(self):
         if WateringUtils.isScenarioNotOpened():
             self.iface.messageBar().pushMessage(
-                self.iface.tr(u"Error"), 
-                self.iface.tr(u"Load a project scenario first in Download Elements!"), 
-                level=1, duration=5
+                self.iface.tr("Error"),
+                self.iface.tr("Load a project scenario first in Download Elements!"),
+                level=1,
+                duration=5,
             )
             return
 
-        if os.environ.get('TOKEN') is None:
+        if os.environ.get("TOKEN") is None:
             self.iface.messageBar().pushMessage(
-                self.iface.tr("Error"), 
-                self.iface.tr("You must login to WaterIng first!"), 
-                level=1, duration=5
+                self.iface.tr("Error"), self.iface.tr("You must login to WaterIng first!"), level=1, duration=5
             )
             return
 
@@ -38,7 +38,8 @@ class SelectionReviewTool:
         mc = self.iface.mapCanvas()
         self.mapTool = RectangleSelectionTool(mc)
         mc.setMapTool(self.mapTool)
-        
+
+
 class RectangleSelectionTool(QgsMapTool):
     def __init__(self, canvas):
         super().__init__(canvas)
@@ -68,7 +69,7 @@ class RectangleSelectionTool(QgsMapTool):
                 QgsPointXY(rect.xMaximum(), rect.yMinimum()),
                 QgsPointXY(rect.xMaximum(), rect.yMaximum()),
                 QgsPointXY(rect.xMinimum(), rect.yMaximum()),
-                QgsPointXY(rect.xMinimum(), rect.yMinimum())
+                QgsPointXY(rect.xMinimum(), rect.yMinimum()),
             ]
             self.rubberBand.setToGeometry(QgsGeometry.fromPolygonXY([points]), None)
 
@@ -91,7 +92,7 @@ class RectangleSelectionTool(QgsMapTool):
             QgsPointXY(rect.xMaximum(), rect.yMinimum()),
             QgsPointXY(rect.xMaximum(), rect.yMaximum()),
             QgsPointXY(rect.xMinimum(), rect.yMaximum()),
-            QgsPointXY(rect.xMinimum(), rect.yMinimum())
+            QgsPointXY(rect.xMinimum(), rect.yMinimum()),
         ]
         self.rubberBand.setToGeometry(QgsGeometry.fromPolygonXY([points]), None)
 
@@ -102,7 +103,7 @@ class RectangleSelectionTool(QgsMapTool):
 
         features = []
         for layer in self.canvas.layers():
-            if layer.type() == QgsMapLayer.VectorLayer and layer.name() == 'watering_demand_nodes':
+            if layer.type() == QgsMapLayer.VectorLayer and layer.name() == "watering_demand_nodes":
                 tree_layer = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
                 if tree_layer.isVisible():
                     request = QgsFeatureRequest().setFilterRect(rect)
@@ -118,7 +119,9 @@ class RectangleSelectionTool(QgsMapTool):
             geom1 = feature1.geometry()
             geom2 = feature2.geometry()
             distance = geom1.distance(geom2)
-            distances.append([feature1.attribute('Name'), feature2.attribute('Name'), distance, feature1.id(), feature2.id()])
+            distances.append(
+                [feature1.attribute("Name"), feature2.attribute("Name"), distance, feature1.id(), feature2.id()]
+            )
             print(f"Distance between {feature1.attribute('Name')} and {feature2.attribute('Name')}: {distance}")
 
         distance_array = []
@@ -127,7 +130,7 @@ class RectangleSelectionTool(QgsMapTool):
 
         print(distance_array)
         return distance_array
-    
+
     def getNodesVsPipesDistanceArray(self):
         rect = QgsRectangle(self.startPoint, self.endPoint)
         if rect.isNull():
@@ -137,16 +140,16 @@ class RectangleSelectionTool(QgsMapTool):
         pipes = []
 
         for layer in self.canvas.layers():
-            if layer.type() == QgsMapLayer.VectorLayer and layer.name() == 'watering_demand_nodes':
+            if layer.type() == QgsMapLayer.VectorLayer and layer.name() == "watering_demand_nodes":
                 tree_layer = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
                 if tree_layer.isVisible():
                     request = QgsFeatureRequest().setFilterRect(rect)
                     for feature in layer.getFeatures(request):
                         print(f"Node found: {feature.id()}")
                         nodes.append(feature)
-                        
+
         for layer in self.canvas.layers():
-            if layer.type() == QgsMapLayer.VectorLayer and layer.name() == 'watering_pipes':
+            if layer.type() == QgsMapLayer.VectorLayer and layer.name() == "watering_pipes":
                 tree_layer = QgsProject.instance().layerTreeRoot().findLayer(layer.id())
                 if tree_layer.isVisible():
                     request = QgsFeatureRequest().setFilterRect(rect)
@@ -163,7 +166,7 @@ class RectangleSelectionTool(QgsMapTool):
                 geom1 = node.geometry()
                 geom2 = pipe.geometry()
                 distance = geom1.distance(geom2)
-                distances.append([node.attribute('Name'), pipe.attribute('Name'), distance, node.id(), pipe.id()])
+                distances.append([node.attribute("Name"), pipe.attribute("Name"), distance, node.id(), pipe.id()])
                 print(f"Distance between {node.attribute('Name')} and {pipe.attribute('Name')}: {distance}")
 
         distance_array = []
@@ -180,9 +183,9 @@ class RectangleSelectionTool(QgsMapTool):
 
         node_node_list = self.getNodesVsNodesDistanceArray()
         node_pipe_list = self.getNodesVsPipesDistanceArray()
-                        
+
         self.runSelectionReviewDialog(node_node_list, node_pipe_list)
-        
+
     def runSelectionReviewDialog(self, node_node_list, node_pipe_list):
         dlg = WateringSelectionReview(node_node_list, node_pipe_list)
         dlg.show()

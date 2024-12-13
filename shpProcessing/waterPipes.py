@@ -1,15 +1,23 @@
-from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsPointXY
+from qgis.core import (
+    QgsProject,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsFeature,
+    QgsGeometry,
+    QgsPointXY,
+)
 import json
 import uuid
 from datetime import datetime
 from ..watering_utils import WateringUtils
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
+
 class ImportPipesShp(AbstractShpImport):
 
     def __init__(self):
-            #Constructor.
-            super(ImportPipesShp, self).__init__()
+        # Constructor.
+        super(ImportPipesShp, self).__init__()
 
     def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]
@@ -26,7 +34,7 @@ class ImportPipesShp(AbstractShpImport):
         node_fields = nodes_layer.fields()
 
         scenario_fk = WateringUtils.getScenarioId()
-        current_datetime = datetime.utcnow().isoformat() + 'Z'
+        current_datetime = datetime.utcnow().isoformat() + "Z"
 
         pipe_features = []
         node_features = []
@@ -39,11 +47,31 @@ class ImportPipesShp(AbstractShpImport):
             transformed_linestring = [transform.transform(QgsPointXY(pt)) for pt in linestring]
 
             # Extract attribute values based on combobox mappings
-            name = feature.attribute(self.pipeNameCBox.currentText()) if self.pipeNameCBox.currentText() != "No match" else "Pipe"
-            description = feature.attribute(self.pipeDescriptCBox.currentText()) if self.pipeDescriptCBox.currentText() != "No match" else "Imported from Shp"
-            diameter = feature.attribute(self.pipeDiameterCBox.currentText()) if self.pipeDiameterCBox.currentText() != "No match" else 0.2
-            rough = feature.attribute(self.pipeRoughCBox.currentText()) if self.pipeRoughCBox.currentText() != "No match" else 0.045
-            length = feature.attribute(self.pipeLengthCBox.currentText()) if self.pipeLengthCBox.currentText() != "No match" else 0
+            name = (
+                feature.attribute(self.pipeNameCBox.currentText())
+                if self.pipeNameCBox.currentText() != "No match"
+                else "Pipe"
+            )
+            description = (
+                feature.attribute(self.pipeDescriptCBox.currentText())
+                if self.pipeDescriptCBox.currentText() != "No match"
+                else "Imported from Shp"
+            )
+            diameter = (
+                feature.attribute(self.pipeDiameterCBox.currentText())
+                if self.pipeDiameterCBox.currentText() != "No match"
+                else 0.2
+            )
+            rough = (
+                feature.attribute(self.pipeRoughCBox.currentText())
+                if self.pipeRoughCBox.currentText() != "No match"
+                else 0.045
+            )
+            length = (
+                feature.attribute(self.pipeLengthCBox.currentText())
+                if self.pipeLengthCBox.currentText() != "No match"
+                else 0
+            )
 
             vertices = []
             node_up_fk = None
@@ -66,7 +94,7 @@ class ImportPipesShp(AbstractShpImport):
                             "z": 0,
                             "baseDemand": 0,
                             "emitterCoeff": 0,
-                            "removed": False
+                            "removed": False,
                         }
                         special_vertices_dict[coord_key] = special_vertex
                         count += 1
@@ -77,12 +105,7 @@ class ImportPipesShp(AbstractShpImport):
                         node_down_fk = special_vertex["serverKeyId"]
                 else:
                     vertex_fk = str(uuid.uuid4())[:10]
-                    vertex = {
-                        "vertexFK": vertex_fk,
-                        "lng": pt.x(),
-                        "lat": pt.y(),
-                        "order": index
-                    }
+                    vertex = {"vertexFK": vertex_fk, "lng": pt.x(), "lat": pt.y(), "order": index}
                     vertices.append(vertex)
 
             # Create pipe feature

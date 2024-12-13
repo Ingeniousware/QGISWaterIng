@@ -4,34 +4,48 @@ import requests
 from .abstractRepositoryConnectorSHPREST import abstractRepositoryConnectorSHPREST
 from ..watering_utils import WateringUtils
 
-from qgis.core import QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, QgsCoordinateTransform
-from qgis.core import QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase
+from qgis.core import (
+    QgsProject,
+    QgsVectorLayer,
+    QgsFields,
+    QgsField,
+    QgsGeometry,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+)
+from qgis.core import (
+    QgsVectorFileWriter,
+    QgsPointXY,
+    QgsFeature,
+    QgsSimpleMarkerSymbolLayer,
+    QgsSimpleMarkerSymbolLayerBase,
+)
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 import queue
 import uuid
 
+
 class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
 
     def __init__(self, scenarioFK, connectionHub):
         """Constructor."""
-        super(pumpNodeConnectorSHPREST, self).__init__(scenarioFK)    
-        self.serverRepository = None  
+        super(pumpNodeConnectorSHPREST, self).__init__(scenarioFK)
+        self.serverRepository = None
         self.localRepository = None
         connectionHub.on("POST_PUMP", self.processPOSTElementToLocal)
         connectionHub.on("DELETE_PUMP", self.processDELETEElementToLocal)
         self.lastAddedElements = {}
         self.lifoAddedElements = queue.LifoQueue()
 
-
     def processPOSTElementToLocal(self, paraminput):
         print("Entering processPOSTElementToLocal")
-           
+
         jsonInput = paraminput[0]
         serverKeyId = jsonInput["serverKeyId"]
         print("last added elements: ", self.lastAddedElements)
         print("serverkeyid: ", serverKeyId)
-        
+
         if not (serverKeyId in self.lastAddedElements):
             print("Just before creating valve from server push")
             print(paraminput[0])
@@ -41,46 +55,50 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         else:
             print("Key found -> ", serverKeyId)
 
-
     def processDELETEElementToLocal(self, paraminput):
         self.localRepository.deleteElement(paraminput[0])
         print("Water Pump Node removed after push from server")
 
-    def getElementJson(self, feature):          
+    def getElementJson(self, feature):
         x = feature.geometry().asPoint().x()
         y = feature.geometry().asPoint().y()
-        #transforming coordinates for the CRS of the server
+        # transforming coordinates for the CRS of the server
         transGeometry = QgsGeometry.fromPointXY(QgsPointXY(x, y))
-        transGeometry.transform(QgsCoordinateTransform(self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance()))
+        transGeometry.transform(
+            QgsCoordinateTransform(
+                self.localRepository.currentCRS, self.serverRepository.currentCRS, QgsProject.instance()
+            )
+        )
         x = transGeometry.asPoint().x()
         y = transGeometry.asPoint().y()
-        
+
         isNew = False
         if len(feature["ID"]) == 10:
             isNew = True
             serverKeyId = str(uuid.uuid4())
         else:
             serverKeyId = feature["ID"]
-            
+
         name = feature["Name"]
         description = feature["Descript"]
         z = feature["Z[m]"]
         model = feature["Model FK"]
         speed = feature["Rel. Speed"]
-            
-        elementJSON = {'serverKeyId': "{}".format(serverKeyId), 
-                       'scenarioFK': "{}".format(self.ScenarioFK), 
-                       'name': "{}".format(name), 
-                       'description': "{}".format(description), 
-                       'lng': "{}".format(x), 
-                       'lat': "{}".format(y), 
-                       'z': "{}".format(z),
-                       'pumpModelFK': "{}".format(model),
-                       'relativeSpeed': "{}".format(speed)
-                        }
-        
+
+        elementJSON = {
+            "serverKeyId": "{}".format(serverKeyId),
+            "scenarioFK": "{}".format(self.ScenarioFK),
+            "name": "{}".format(name),
+            "description": "{}".format(description),
+            "lng": "{}".format(x),
+            "lat": "{}".format(y),
+            "z": "{}".format(z),
+            "pumpModelFK": "{}".format(model),
+            "relativeSpeed": "{}".format(speed),
+        }
+
         return elementJSON, isNew, serverKeyId, feature["ID"]
-    
+
     def addElementToServer(self, feature):
         elementJSON, isNew, serverKeyId, _ = self.getElementJson(feature)
 
@@ -90,23 +108,23 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
             keyIdToEliminate = self.lifoAddedElements.get()
             self.lastAddedElements.pop(keyIdToEliminate)
 
-        if (isNew): 
+        if isNew:
             print("Pump is new, posting")
             serverResponse = self.serverRepository.postToServer(elementJSON)
-        else: 
+        else:
             print("Pump is not new, putting")
             serverResponse = self.serverRepository.putToServer(elementJSON, serverKeyId)
-            
+
         serverResponse = self.serverRepository.postToServer(elementJSON)
         if serverResponse and serverResponse.status_code == 200:
             print("Water Pump Node was sent succesfully to the server")
-            #writing the server key id to the element that has been created
-            
+            # writing the server key id to the element that has been created
+
             if isNew:
                 layer = QgsProject.instance().mapLayersByName("watering_pumps")[0]
-                
+
                 id_element = feature["ID"]
-                
+
                 layer.startEditing()
 
                 attr_updates = {}
@@ -115,8 +133,8 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     if feat["ID"] == id_element:
                         feat_id = feat.id()
 
-                        id_idx = layer.fields().indexOf('ID')
-                        last_update_idx = layer.fields().indexOf('lastUpdate')
+                        id_idx = layer.fields().indexOf("ID")
+                        last_update_idx = layer.fields().indexOf("lastUpdate")
 
                         new_id_value = str(serverKeyId)
                         new_last_update_value = WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss")
@@ -132,25 +150,24 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
                     layer.commitChanges()
                 else:
                     print("No feature found")
-                
-            if not serverKeyId in self.lastAddedElements:     
+
+            if not serverKeyId in self.lastAddedElements:
                 self.lastAddedElements[serverKeyId] = 1
                 self.lifoAddedElements.put(serverKeyId)
                 while self.lifoAddedElements.full():
                     keyIdToEliminate = self.lifoAddedElements.get()
-                    self.lastAddedElements.pop(keyIdToEliminate) 
+                    self.lastAddedElements.pop(keyIdToEliminate)
             return True
-        
-        else: 
+
+        else:
             print("Failed on sendig Pump Tank Node to the server")
             return False
 
     def removeElementFromServer(self, serverKeyId):
-        elementJSON = {'scenarioFK': "{}".format(self.ScenarioFK), 
-                       'serverKeyId': "{}".format(serverKeyId)}
-        
-        return (self.serverRepository.deleteFromServer(elementJSON) == 200)
-        
+        elementJSON = {"scenarioFK": "{}".format(self.ScenarioFK), "serverKeyId": "{}".format(serverKeyId)}
+
+        return self.serverRepository.deleteFromServer(elementJSON) == 200
+
     def update_layer_features(self, elementsJSONlist):
         layer = QgsProject.instance().mapLayersByName("watering_pumps")[0]
 
@@ -161,12 +178,12 @@ class pumpNodeConnectorSHPREST(abstractRepositoryConnectorSHPREST):
         layer.startEditing()
 
         for element in elementsJSONlist:
-            serverKeyId = element[0]['serverKeyId']
+            serverKeyId = element[0]["serverKeyId"]
             current_feature_id = element[1]
 
             for feature in layer.getFeatures():
-                if feature['ID'] == current_feature_id:
-                    layer.changeAttributeValue(feature.id(), feature.fieldNameIndex('ID'), serverKeyId)
+                if feature["ID"] == current_feature_id:
+                    layer.changeAttributeValue(feature.id(), feature.fieldNameIndex("ID"), serverKeyId)
                     break
 
         layer.commitChanges()

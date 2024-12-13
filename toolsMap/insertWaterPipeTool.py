@@ -10,15 +10,15 @@ from PyQt5.QtCore import Qt
 class InsertWaterPipeTool(InsertAbstractTool):
 
     def __init__(self, canvas, elementRepository, elementNodesRepository, actionManager, toolbarManager):
-        super(InsertWaterPipeTool, self).__init__(canvas, elementRepository, actionManager) 
-        self.toolbarManager =  toolbarManager         
+        super(InsertWaterPipeTool, self).__init__(canvas, elementRepository, actionManager)
+        self.toolbarManager = toolbarManager
         self.canvas = canvas
         self.point = None
         self.elementNodesRepository = elementNodesRepository
         self.rubberBand1 = None
         self.rubberBand2 = None
-        self.clickedQgsPoints = [] 
-        self.lastPoint = None 
+        self.clickedQgsPoints = []
+        self.lastPoint = None
         self.upnode = None
         self.downnode = None
         self.allPoints = []
@@ -32,9 +32,6 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.endMarker.hide()
 
         self.snapper = None
-
-
-
 
     def activate(self):
         print("activating pipe tool ...")
@@ -51,17 +48,16 @@ class InsertWaterPipeTool(InsertAbstractTool):
         config.setEnabled(True)
         self.snapper.setConfig(config)
 
-
     def initialize(self):
-        self.clickedQgsPoints = []        
+        self.clickedQgsPoints = []
         self.rubberBand1 = None
         self.rubberBand2 = None
-        self.lastPoint = None 
+        self.lastPoint = None
         self.objectSnapped = None
-    
 
     def canvasPressEvent(self, e):
-        if not (e.button() == Qt.LeftButton): return
+        if not (e.button() == Qt.LeftButton):
+            return
 
         pointTemp = self.toMapCoordinates(e.pos())
 
@@ -73,24 +69,24 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.allPoints.append(point)
 
         if e.modifiers() == Qt.ControlModifier and (self.objectSnapped is None):
-            if not (self.lastPoint == None): 
-                print('Adding vertex now')
-                self.createFixedPartOfPipe(self.clickedQgsPoints)                
+            if not (self.lastPoint == None):
+                print("Adding vertex now")
+                self.createFixedPartOfPipe(self.clickedQgsPoints)
         else:
-            #insert a demand node at the point where the user clicked
-            action = insertNodeAction(self.elementNodesRepository, pointTemp.x(), pointTemp.y())         
+            # insert a demand node at the point where the user clicked
+            action = insertNodeAction(self.elementNodesRepository, pointTemp.x(), pointTemp.y())
             self.actionManager.execute(action)
             self.downnode = action.feature
-            
+
             if len(self.clickedQgsPoints) > 1:
-            #create a new pipe here
-                print('Creating pipe now')
+                # create a new pipe here
+                print("Creating pipe now")
                 if self.rubberBand1 is not None:
                     self.canvas.scene().removeItem(self.rubberBand1)
                 if self.rubberBand2 is not None:
                     self.canvas.scene().removeItem(self.rubberBand2)
 
-                actionPipe = insertPipeAction(self.elementRepository, self.clickedQgsPoints, self.upnode, self.downnode)         
+                actionPipe = insertPipeAction(self.elementRepository, self.clickedQgsPoints, self.upnode, self.downnode)
                 self.actionManager.execute(actionPipe)
 
                 self.upnode = point
@@ -98,14 +94,13 @@ class InsertWaterPipeTool(InsertAbstractTool):
                 self.clickedQgsPoints.append(point)
                 if not point in self.allPoints:
                     self.allPoints.append(point)
-            else: 
+            else:
                 self.upnode = action.feature
-            
+
         self.lastPoint = point
 
-
     def canvasMoveEvent(self, e):
-        if not (self.lastPoint == None): 
+        if not (self.lastPoint == None):
             pointTemp = self.toMapCoordinates(e.pos())
 
             match = self.snapper.snapToMap(pointTemp)
@@ -132,10 +127,6 @@ class InsertWaterPipeTool(InsertAbstractTool):
                 self.objectSnapped = None
                 self.endMarker.hide()
 
-
-
-
-            
     def keyReleaseEvent(self, e):
         if e.key() == Qt.Key.Key_Escape:
             print("Esc pressed....insert pipe should be deactivated")
@@ -144,16 +135,13 @@ class InsertWaterPipeTool(InsertAbstractTool):
                 self.deactivate()
             else:
                 print("Restart pipes insertion")
-                #self.clearDemandNodes()             
-                #self.clearWaterPipes()
+                # self.clearDemandNodes()
+                # self.clearWaterPipes()
                 self.clearVariables()
 
-   
-        
-    
     def clearDemandNodes(self):
         layer = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
-        
+
         clicked_points_set = set((point.x(), point.y()) for point in self.allPoints)
 
         layer.startEditing()
@@ -164,12 +152,12 @@ class InsertWaterPipeTool(InsertAbstractTool):
             if feature_point in clicked_points_set:
                 layer.deleteFeature(feature.id())
                 self.elementRepository.deleteFeatureFromMapInteraction(feature)
-                
+
         layer.commitChanges()
-        
+
     def clearWaterPipes(self):
-        layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]    
-        
+        layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
+
         # Start an edit session
         layer.startEditing()
 
@@ -177,13 +165,13 @@ class InsertWaterPipeTool(InsertAbstractTool):
         for feature in layer.getFeatures():
             points_in_pipe = []
             lines = feature.geometry().asPolyline()
-            flat_list = [(point.x(), point.y())  for sublist in lines for point in sublist]
-            
+            flat_list = [(point.x(), point.y()) for sublist in lines for point in sublist]
+
             for line in feature.geometry().asPolyline():
 
                 for point in line:
                     points_in_pipe.append((point.x(), point.y()))
-                    
+
                 if points_in_pipe == flat_list:
                     # Delete the feature
                     layer.deleteFeature(feature.id())
@@ -197,31 +185,30 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.clickedQgsPoints.clear()
         self.allPoints.clear()
         self.lastPoint = None
-        
-        if self.rubberBand1:  
+
+        if self.rubberBand1:
             self.canvas.scene().removeItem(self.rubberBand1)
             self.rubberBand1 = None
 
         if self.rubberBand2:
-            self.canvas.scene().removeItem(self.rubberBand2)     
+            self.canvas.scene().removeItem(self.rubberBand2)
             self.rubberBand2 = None
-        
+
     def deactivate(self):
         print("deactivate insert pipe tool")
         self.toolbarManager.insertWaterPipeAction.setChecked(False)
         self.canvas.unsetMapTool(self.canvas.mapTool())
-        self.clickedQgsPoints = []  
-        
-        if self.rubberBand1:  
+        self.clickedQgsPoints = []
+
+        if self.rubberBand1:
             self.canvas.scene().removeItem(self.rubberBand1)
             self.rubberBand1 = None
 
         if self.rubberBand2:
-            self.canvas.scene().removeItem(self.rubberBand2)     
+            self.canvas.scene().removeItem(self.rubberBand2)
             self.rubberBand2 = None
-            
-        self.lastPoint = None 
 
+        self.lastPoint = None
 
     def createFixedPartOfPipe(self, pointsFixedLine):
         if self.rubberBand1 is not None:
@@ -231,7 +218,7 @@ class InsertWaterPipeTool(InsertAbstractTool):
         self.rubberBand1.setColor(QColor(240, 40, 40))
         self.rubberBand1.setWidth(1)
         self.rubberBand1.setLineStyle(Qt.SolidLine)
-    
+
     def createMovingPartOfPipe(self, lastPoint, movingPoint):
         pointsMovingLine = []
         pointsMovingLine.append(lastPoint)

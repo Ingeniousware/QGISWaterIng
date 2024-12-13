@@ -6,27 +6,27 @@ import os
 from ..watering_utils import WateringUtils
 import requests
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'watering_waterBalance_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_waterBalance_dialog.ui"))
+
 
 class WateringWaterBalance(QtWidgets.QDialog, FORM_CLASS):
-    
+
     def __init__(self, parent=None):
         """Constructor."""
         super(WateringWaterBalance, self).__init__(parent)
         self.setupUi(self)
         self.ScenarioFK = WateringUtils.getScenarioId()
         self.ProjectFK = WateringUtils.getProjectId()
-        self.token = os.environ.get('TOKEN')
+        self.token = os.environ.get("TOKEN")
         self.fetch_data()
-    
+
     def fetch_data(self):
         url = f"/api/v1/WaterBalanceCalculationRequest?&projectFK={self.ProjectFK}"
         self.currentData = []
 
         response = WateringUtils.requests_get(url, None)
         if not response:
-            print('Error in request. See logs for details.')
+            print("Error in request. See logs for details.")
             return
 
         if response.status_code != 200:
@@ -45,8 +45,16 @@ class WateringWaterBalance(QtWidgets.QDialog, FORM_CLASS):
         if case == 0:
             headers = ["Requested Date Time", "Initial Date Time", "End Date Time", "Description", "Open", "Delete"]
         elif case == 1:
-            headers = ["Name", "Water Meter Key", "Read Before Period", "Read Start Period", "Read End Period", "Read After Period", "Consumption Estimated"]
-        
+            headers = [
+                "Name",
+                "Water Meter Key",
+                "Read Before Period",
+                "Read Start Period",
+                "Read End Period",
+                "Read After Period",
+                "Consumption Estimated",
+            ]
+
         self.tableWidget.setColumnCount(len(headers))
         self.tableWidget.setHorizontalHeaderLabels(headers)
 
@@ -56,7 +64,6 @@ class WateringWaterBalance(QtWidgets.QDialog, FORM_CLASS):
 
         self.tableWidget.resizeColumnsToContents()
 
-    
     def create_button_rows(self, name):
         # Create a QPushButton and set its properties
         openButton = QPushButton(name)
@@ -84,32 +91,33 @@ class WateringWaterBalance(QtWidgets.QDialog, FORM_CLASS):
         self.tableWidget.setItem(rowPosition, 1, QTableWidgetItem(initialDateTime))
         self.tableWidget.setItem(rowPosition, 2, QTableWidgetItem(endDateTime))
         self.tableWidget.setItem(rowPosition, 3, QTableWidgetItem(description))
-        
+
         buttonWidgetOpen, open = self.create_button_rows("Open")
         buttonWidgetDelete, delete = self.create_button_rows("Delete")
         # Add the QWidget to the table at column 4
         self.tableWidget.setCellWidget(rowPosition, 4, buttonWidgetOpen)
         self.tableWidget.setCellWidget(rowPosition, 5, buttonWidgetDelete)
 
-        self.currentData.append({
-            "serverKeyId": keyId,
-            "requestedDateTime": requestedDateTime,
-            "periodInitialDateTime": initialDateTime,
-            "periodEndDateTime": endDateTime,
-            "description": description
-        })
+        self.currentData.append(
+            {
+                "serverKeyId": keyId,
+                "requestedDateTime": requestedDateTime,
+                "periodInitialDateTime": initialDateTime,
+                "periodEndDateTime": endDateTime,
+                "description": description,
+            }
+        )
 
         # Connect the button click event to a method
         open.clicked.connect(lambda: self.open_item(keyId))
         delete.clicked.connect(lambda: self.delete_item(keyId))
 
     def open_item(self, keyId):
-        url = f'/api/v1/WaterConsumption/getfromrequest?&projectKeyId={self.ProjectFK}&calculationRequestFK={keyId}'
+        url = f"/api/v1/WaterConsumption/getfromrequest?&projectKeyId={self.ProjectFK}&calculationRequestFK={keyId}"
         response = WateringUtils.requests_get(url, params=None)
         data = response.json().get("data", [])
         self.update_table_widget(data, 1)
         print(f"Open button clicked for item with serverKeyId: {keyId}")
-
 
     def delete_item(self, keyId):
         url = f"/api/v1/WaterBalanceCalculationRequest/{keyId}"
@@ -128,7 +136,7 @@ class WateringWaterBalance(QtWidgets.QDialog, FORM_CLASS):
         readEndPeriodDateTime = item.get("readEndPeriodDateTime")
         readAfterPeriodDateTime = item.get("readAfterPeriodDateTime")
         consumptionEstimated = item.get("consumptionEstimated")
-    
+
         if isinstance(waterMeterKey, int):
             waterMeterKey = str(waterMeterKey)
         if isinstance(consumptionEstimated, float):

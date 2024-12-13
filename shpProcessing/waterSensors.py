@@ -1,14 +1,22 @@
-from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsPointXY
+from qgis.core import (
+    QgsProject,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsFeature,
+    QgsGeometry,
+    QgsPointXY,
+)
 from qgis.PyQt.QtCore import Qt
 import uuid
 from ..watering_utils import WateringUtils
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
+
 class ImportSensorsShp(AbstractShpImport):
 
     def __init__(self):
-            #Constructor.
-            super(ImportSensorsShp, self).__init__()
+        # Constructor.
+        super(ImportSensorsShp, self).__init__()
 
     def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]
@@ -33,8 +41,16 @@ class ImportSensorsShp(AbstractShpImport):
             server_key_id = str(uuid.uuid4())[:10]
 
             # Extract attribute values based on your combobox mappings
-            name = feature.attribute(self.sensorNameCBox.currentText()) if self.sensorNameCBox.currentText() != "No match" else "Sensor"
-            description = feature.attribute(self.sensorDescriptCBox.currentText()) if self.sensorDescriptCBox.currentText() != "No match" else "Imported from Shp"
+            name = (
+                feature.attribute(self.sensorNameCBox.currentText())
+                if self.sensorNameCBox.currentText() != "No match"
+                else "Sensor"
+            )
+            description = (
+                feature.attribute(self.sensorDescriptCBox.currentText())
+                if self.sensorDescriptCBox.currentText() != "No match"
+                else "Imported from Shp"
+            )
             z = feature.attribute(self.sensorZCBox.currentText()) if self.sensorZCBox.currentText() != "No match" else 0
 
             # Create a new feature
@@ -53,6 +69,6 @@ class ImportSensorsShp(AbstractShpImport):
             destination_layer.commitChanges()
 
             features.append(new_feature)
-        
+
         QgsProject.instance().removeMapLayer(source_layer)
         return features

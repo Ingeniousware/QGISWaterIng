@@ -1,14 +1,22 @@
-from qgis.core import QgsProject, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsFeature, QgsGeometry, QgsPointXY
+from qgis.core import (
+    QgsProject,
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsFeature,
+    QgsGeometry,
+    QgsPointXY,
+)
 from qgis.PyQt.QtCore import Qt
 import uuid
 from ..watering_utils import WateringUtils
 from ..shpProcessing.abstractShpImport import AbstractShpImport
 
+
 class ImportDemandNodesShp(AbstractShpImport):
-    
+
     def __init__(self):
-            #Constructor.
-            super(ImportDemandNodesShp, self).__init__()
+        # Constructor.
+        super(ImportDemandNodesShp, self).__init__()
 
     def shpProcessing(self, layer_name):
         source_layer = QgsProject.instance().mapLayersByName(layer_name)[0]
@@ -33,11 +41,27 @@ class ImportDemandNodesShp(AbstractShpImport):
             server_key_id = str(uuid.uuid4())[:10]
 
             # Extract attribute values based on your combobox mappings
-            name = feature.attribute(self.nameComboBox.currentText()) if self.nameComboBox.currentText() != "No match" else "Demand Node"
-            description = feature.attribute(self.descriptionComboBox.currentText()) if self.descriptionComboBox.currentText() != "No match" else "Imported from Shp"
+            name = (
+                feature.attribute(self.nameComboBox.currentText())
+                if self.nameComboBox.currentText() != "No match"
+                else "Demand Node"
+            )
+            description = (
+                feature.attribute(self.descriptionComboBox.currentText())
+                if self.descriptionComboBox.currentText() != "No match"
+                else "Imported from Shp"
+            )
             z = feature.attribute(self.zComboBox.currentText()) if self.zComboBox.currentText() != "No match" else 0
-            baseDemand = feature.attribute(self.demandComboBox.currentText()) if self.demandComboBox.currentText() != "No match" else 0
-            emitterCoefficient = feature.attribute(self.emitterComboBox.currentText()) if self.emitterComboBox.currentText() != "No match" else 0
+            baseDemand = (
+                feature.attribute(self.demandComboBox.currentText())
+                if self.demandComboBox.currentText() != "No match"
+                else 0
+            )
+            emitterCoefficient = (
+                feature.attribute(self.emitterComboBox.currentText())
+                if self.emitterComboBox.currentText() != "No match"
+                else 0
+            )
 
             # Create a new feature
             new_feature = QgsFeature(fields)

@@ -20,15 +20,15 @@ import requests
 from ..watering_utils import WateringUtils
 from ..toolsMap.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacement
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'watering_optimization_dialog.ui'))
+FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_optimization_dialog.ui"))
+
 
 class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self,parent=None):
+    def __init__(self, parent=None):
         """Constructor."""
         super(WaterOptimization, self).__init__(parent)
         self.setupUi(self)
-        self.token = os.environ.get('TOKEN')
+        self.token = os.environ.get("TOKEN")
         self.ScenarioFK = None
         self.Solutions = []
         self.Sensors = {}
@@ -54,27 +54,28 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
 
     def initializeRepository(self):
         url_optimization = WateringUtils.getServerUrl() + "/api/v1/Optimization"
-        self.ScenarioFK = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        params = {'scenarioKeyId': "{}".format(self.ScenarioFK), 'showRemoved': False}
-        response = requests.get(url_optimization, params=params,
-                                headers={'Authorization': "Bearer {}".format(self.token)})
-        
+        self.ScenarioFK = QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
+        params = {"scenarioKeyId": "{}".format(self.ScenarioFK), "showRemoved": False}
+        response = requests.get(
+            url_optimization, params=params, headers={"Authorization": "Bearer {}".format(self.token)}
+        )
+
         for i in range(0, response.json()["total"]):
             self.problem_box.addItem(response.json()["data"][i]["name"])
             self.Solutions.append(response.json()["data"][i]["serverKeyId"])
             self.Objectives.append([obj["name"] for obj in response.json()["data"][i]["objectives"]])
-        
+
         if self.Solutions:
             self.loadSolutions()
             self.problem_box.currentIndexChanged.connect(self.loadSolutions)
-            
+
             if not self.getExistingSensors():
                 self.statusText.setText("-")
-            else: 
+            else:
                 self.statusText.setText("Creating")
                 self.statusText.setStyleSheet("color: yellow")
                 self.BtUploadSolution.setEnabled(True)
-                
+
             self.removeInsertAction()
             self.sensorsUploadTable()
         else:
@@ -86,43 +87,46 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.Sensors = {}
         plt.close("all")
         problemFK = self.Solutions[index]
-        params = {'problemKeyId': "{}".format(problemFK)}
-        response = requests.get(self.Url, params=params,
-                   headers={'Authorization': "Bearer {}".format(self.token)})
-        
+        params = {"problemKeyId": "{}".format(problemFK)}
+        response = requests.get(self.Url, params=params, headers={"Authorization": "Bearer {}".format(self.token)})
+
         data = response.json()["data"]
         total = response.json()["total"]
 
         if total > 0:
             matrix_table = []
             for i in range(0, total):
-                
+
                 listOfObjectives = []
                 if not data[i]["objectiveResults"]:
                     listOfObjectives.extend([[np.nan] * numObjectives])
-                    
+
                 else:
                     listOfObjectives.append([item["valueResult"] for item in data[i]["objectiveResults"]])
 
-                matrix_table.append([data[i]["name"], 
-                                     self.translateStatus(data[i]["status"]), 
-                                     data[i]["solutionSource"],
-                                     data[i]["serverKeyId"]] 
-                                    + [item for item in listOfObjectives[0][:numObjectives]])
+                matrix_table.append(
+                    [
+                        data[i]["name"],
+                        self.translateStatus(data[i]["status"]),
+                        data[i]["solutionSource"],
+                        data[i]["serverKeyId"],
+                    ]
+                    + [item for item in listOfObjectives[0][:numObjectives]]
+                )
                 self.Sensors.update(self.getSolutionSensors(data[i]))
-            
-            headers = ["Name", "Status", "Source", "Id"] + self.Objectives[self.problem_box.currentIndex()]            
+
+            headers = ["Name", "Status", "Source", "Id"] + self.Objectives[self.problem_box.currentIndex()]
             model = TableModel(matrix_table, headers)
             proxyModel = QSortFilterProxyModel()
             proxyModel.setSourceModel(model)
-            
+
             self.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
             self.tableView.setModel(proxyModel)
             self.tableView.setSortingEnabled(True)
-    
+
         self.tableView.hideColumn(3)
         self.addParetoChart(response)
-        
+
         self.tableView.clicked.connect(self.on_row_clicked)
 
     def createSolution(self):
@@ -133,26 +137,24 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         self.toolInsertNode = InsertSensorNodeToolPlacement(self.canvas)
         self.canvas.setMapTool(self.toolInsertNode)
         self.close()
-        
+
     def sensorsUploadTable(self):
         existingSensors = self.getExistingSensors()
         if existingSensors:
             matrix_table = []
             for node in self.Layer.getFeatures():
                 if node.geometry().asPoint() in existingSensors:
-                    matrix_table.append([node["Name"],
-                                        node["ID"],
-                                        node["Descript"]])
-                        
+                    matrix_table.append([node["Name"], node["ID"], node["Descript"]])
+
             model = TableModel(matrix_table, ["Name", "ID", "Description"])
             proxyModel = QSortFilterProxyModel()
             proxyModel.setSourceModel(model)
-            
+
             self.sensors_table.setModel(proxyModel)
             self.sensors_table.setSortingEnabled(True)
-                    
+
     def loadSolutionSensors(self):
-        if (self.RowIndex ==  None or self.SolutionId == None):
+        if self.RowIndex == None or self.SolutionId == None:
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a solution!"), level=1, duration=5)
         elif len(self.Sensors) == 0:
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("No solutions to load!"), level=1, duration=5)
@@ -161,12 +163,12 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             if self.SolutionId in self.Sensors:
                 sensorDict = self.Sensors[self.SolutionId]
                 for feature in self.Layer.getFeatures():
-                    if feature['ID'] in sensorDict:
+                    if feature["ID"] in sensorDict:
                         self.insertSensor(feature.geometry().asPoint())
             self.canvas.refresh()
-    
+
     def deleteSolution(self):
-        if (self.RowIndex ==  None):
+        if self.RowIndex == None:
             iface.messageBar().pushMessage(self.tr("Error"), self.tr("Select a solution!"), level=1, duration=5)
         else:
             model = self.tableView.model()
@@ -174,95 +176,99 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
             sourcemodel.removeRow(self.RowIndex)
             self.tableView.reset()
             url = self.Url + "/" + str(self.SolutionId)
-            response = requests.delete(url, headers={'Authorization': "Bearer {}".format(self.token)})
+            response = requests.delete(url, headers={"Authorization": "Bearer {}".format(self.token)})
             try:
                 response == 200
-                iface.messageBar().pushMessage(self.tr("Solution deleted successfully!"), level=Qgis.Success, duration=5)
+                iface.messageBar().pushMessage(
+                    self.tr("Solution deleted successfully!"), level=Qgis.Success, duration=5
+                )
                 self.RowIndex = None
                 self.loadSolutions()
             except:
-                iface.messageBar().pushMessage(self.tr("Error"), self.tr("Unable to delete this solution!"), level=1, duration=5)
-                
+                iface.messageBar().pushMessage(
+                    self.tr("Error"), self.tr("Unable to delete this solution!"), level=1, duration=5
+                )
+
     def uploadSolution(self):
         nodesWithSensors = []
         existingSensors = self.getExistingSensors()
         for feature in self.Layer.getFeatures():
             if feature.geometry().asPoint() in existingSensors:
                 nodesWithSensors.append(feature["ID"])
-                
-        if not nodesWithSensors: iface.messageBar().pushMessage(self.tr("Error"), 
-                                 self.tr("No sensors to send!"), level=1, duration=5); return 
-        
+
+        if not nodesWithSensors:
+            iface.messageBar().pushMessage(self.tr("Error"), self.tr("No sensors to send!"), level=1, duration=5)
+            return
+
         name = self.newSolutionInputName.text() or "Solution Test"
         scenario_id = WateringUtils.getScenarioId()
         problemFk = self.Solutions[self.problem_box.currentIndex()]
-        
+
         variableResults = []
         for node in nodesWithSensors:
             variableResults.append(
-            {
-                "serverKeyId": "00000000-0000-0000-0000-000000000000",
-                "fkProblemDefinition": "{}".format(problemFk),
-                "fkProblemSolution": "00000000-0000-0000-0000-000000000000",
-                "fkDecisionVariable": "00000000-0000-0000-0000-000000000000",
-                "optimizerValue": 0,
-                "comment": "string",
-                "optimizerNodeKey": "{}".format(node)
-            })
+                {
+                    "serverKeyId": "00000000-0000-0000-0000-000000000000",
+                    "fkProblemDefinition": "{}".format(problemFk),
+                    "fkProblemSolution": "00000000-0000-0000-0000-000000000000",
+                    "fkDecisionVariable": "00000000-0000-0000-0000-000000000000",
+                    "optimizerValue": 0,
+                    "comment": "string",
+                    "optimizerNodeKey": "{}".format(node),
+                }
+            )
 
         post_message = {
-        "serverKeyId": "",
-        "name": "{}".format(name),
-        "fkScenario": "{}".format(scenario_id),
-        "fkProblemDefinition": "{}".format(problemFk),
-        "variableResults": variableResults,
-        "objectiveResults": [],
-        "solutionSource": "string",
-        "status": "0"}
-    
-        requests.post(self.Url, json=post_message,headers={'Authorization': "Bearer {}".format(self.token)})
-        
+            "serverKeyId": "",
+            "name": "{}".format(name),
+            "fkScenario": "{}".format(scenario_id),
+            "fkProblemDefinition": "{}".format(problemFk),
+            "variableResults": variableResults,
+            "objectiveResults": [],
+            "solutionSource": "string",
+            "status": "0",
+        }
+
+        requests.post(self.Url, json=post_message, headers={"Authorization": "Bearer {}".format(self.token)})
+
         self.cleanMarkers()
         self.removeInsertAction()
         self.statusText.setText("Submitted")
         self.statusText.setStyleSheet("color: lightgreen")
-        
+
     def insertSensor(self, coord):
         m = QgsVertexMarker(self.canvas)
         m.setCenter(coord)
-        m.setColor(QColor(0,255,0))
+        m.setColor(QColor(0, 255, 0))
         m.setIconSize(20)
         m.setIconType(QgsVertexMarker.ICON_CIRCLE)
         m.setPenWidth(4)
         self.canvas.scene().addItem(m)
-                
+
     def translateStatus(self, status):
-        conditions = {0:"Created", 
-                      1:"Evaluating",
-                      2:"Evaluated",
-                      3:"ErrorsOnEvaluation"}
-        
+        conditions = {0: "Created", 1: "Evaluating", 2: "Evaluated", 3: "ErrorsOnEvaluation"}
+
         return conditions.get(status)
 
     def getSolutionSensors(self, data):
         sensorDict = {}
         solution_id = data["serverKeyId"]
         obj_results = []
-        
+
         if "objectiveResults" in data:
             for value in data["objectiveResults"]:
                 obj_results.append(value["valueResult"])
-                
+
         if "variableResults" in data:
             for sensor in data["variableResults"]:
-                    if sensor["optimizerNodeKey"]:
-                        if solution_id not in sensorDict:
-                            sensorDict[solution_id] = {}
-                        sensorDict[solution_id][sensor["optimizerNodeKey"]] = 1
-                        sensorDict[solution_id]["objectives"] = [obj for obj in obj_results]
-                        
+                if sensor["optimizerNodeKey"]:
+                    if solution_id not in sensorDict:
+                        sensorDict[solution_id] = {}
+                    sensorDict[solution_id][sensor["optimizerNodeKey"]] = 1
+                    sensorDict[solution_id]["objectives"] = [obj for obj in obj_results]
+
         return sensorDict
-        
+
     def on_row_clicked(self, index):
         if index.isValid():
             row = index.row()
@@ -277,41 +283,45 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         for vertex in vertex_items:
             existingSensors[vertex.center()] = 1
         return existingSensors
-            
+
     def cleanMarkers(self):
         vertex_items = [i for i in self.canvas.scene().items() if isinstance(i, QgsVertexMarker)]
         for vertex in vertex_items:
             self.canvas.scene().removeItem(vertex)
-        self.canvas.refresh()  
-    
+        self.canvas.refresh()
+
     def removeInsertAction(self):
         self.canvas.unsetMapTool(self.toolInsertNode)
         self.toolInsertNode = None
         self.canvas.refresh()
-    
+
     def addParetoChart(self, response):
         self.x_box.clear()
         self.y_box.clear()
-        
+
         for obj in self.Objectives[self.problem_box.currentIndex()]:
             self.x_box.addItem(obj)
             self.y_box.addItem(obj)
-        
-        plt.close("all") #close all existing charts
+
+        plt.close("all")  # close all existing charts
         self.BtLoadPareto.clicked.connect(lambda: self.loadParetoChart(response))
-        
+
     def loadParetoChart(self, response):
-        data = response.json()["data"]   
+        data = response.json()["data"]
         points = []
         labels = []
-        
+
         for i in range(0, response.json()["total"]):
             if data[i]["objectiveResults"]:
-                points.append((data[i]["objectiveResults"][self.x_box.currentIndex()]["valueResult"],
-                            (data[i]["objectiveResults"][self.y_box.currentIndex()]["valueResult"])))
+                points.append(
+                    (
+                        data[i]["objectiveResults"][self.x_box.currentIndex()]["valueResult"],
+                        (data[i]["objectiveResults"][self.y_box.currentIndex()]["valueResult"]),
+                    )
+                )
                 labels.append(data[i]["name"])
 
-        #axes
+        # axes
         fig, ax = plt.subplots()
 
         # Extract x and y values from points
@@ -325,25 +335,30 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
         if self.label_checkBox.isChecked():
             for i, name in enumerate(labels):
                 offset = 10
-                ax.annotate(name, (x_values[i], y_values[i]), ha="left", va="top",
-                            xytext=(x_values[i] + offset, y_values[i] + offset))
+                ax.annotate(
+                    name,
+                    (x_values[i], y_values[i]),
+                    ha="left",
+                    va="top",
+                    xytext=(x_values[i] + offset, y_values[i] + offset),
+                )
 
         ax.grid(True, color="lightgrey")
         fig.tight_layout()
         plt.show()
-        
+
         self.tableView.clicked.connect(self.tableClickedChart)
-    
+
     def upLoadSensorFile(self):
         self.file_path = self.newSensorDirectory.filePath()
 
         new_Layer = QgsVectorLayer("Point?crs=EPSG:3857", "New Sensor Layer", "memory")
         QgsProject.instance().addMapLayer(new_Layer)
-        #WateringUtils.createNewColumn(self,"New Sensor Layer","Name")
+        # WateringUtils.createNewColumn(self,"New Sensor Layer","Name")
 
         sensorCalc = sensorPlacementFromFile()
         try:
-            sensors_names, data_names, d_values  = sensorCalc.read_csv(self.file_path)
+            sensors_names, data_names, d_values = sensorCalc.read_csv(self.file_path)
         except Exception as e:
             print(f"Error reading CSV: {e}")
             return
@@ -358,23 +373,22 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
 
         order_data = sensorCalc.update_data_values(nodes_to_print)
         sensor_data = sensorCalc.calculate_distances(order_data)
-    
+
         sensorName = 1
         for data in sensor_data:
-            #self.insertSensor(data)
-            finalName = f'Sensor {sensorName}'
+            # self.insertSensor(data)
+            finalName = f"Sensor {sensorName}"
             self.copyCoordinates(new_Layer, data, finalName)
             sensorName += 1
 
         self.close()
-    
+
     def copyCoordinates(self, layer, new_point, name):
         layer.startEditing()
         feature = QgsFeature()
         feature.setGeometry(QgsGeometry.fromPointXY(new_point))
         layer.addFeature(feature)
         layer.commitChanges()
-
 
     def tableClickedChart(self, index):
         if index.isValid():
@@ -387,36 +401,37 @@ class WaterOptimization(QtWidgets.QDialog, FORM_CLASS):
                 if len(obj) > 1:
                     for fig_num in plt.get_fignums():
                         current_figure = plt.figure(fig_num)
-                        
+
                         x_index = current_figure.metadata["x"]
                         y_index = current_figure.metadata["y"]
-                        
+
                         x_ = self.Sensors[id]["objectives"][x_index]
                         y_ = self.Sensors[id]["objectives"][y_index]
 
                         scatter = current_figure.axes[0].collections[0]
-                
+
                         xdata, ydata = scatter.get_offsets().T
-                        colors = ['blue'] * len(xdata)  # Set all points to blue
-                        
+                        colors = ["blue"] * len(xdata)  # Set all points to blue
+
                         selected_index = np.where((xdata == x_) & (ydata == y_))[0]
                         if selected_index.size > 0:
-                            colors[selected_index[0]] = 'red'  # Set the selected point to red
-                    
+                            colors[selected_index[0]] = "red"  # Set the selected point to red
+
                         scatter.set_facecolor(colors)
                         plt.draw()
-    
+
     def openLoadfile(self):
         self.newSensorDirectory.show()
         self.BtLoadFile.show()
         self.BtOpenLoadFile.setEnabled(False)
+
 
 class TableModel(QtCore.QAbstractTableModel):
     def __init__(self, data, headers):
         super(TableModel, self).__init__()
         self._data = data
         self.headers = headers
-        
+
     def data(self, index, role):
         if role == Qt.DisplayRole:
             # See below for the nested-list data structure.
@@ -437,7 +452,7 @@ class TableModel(QtCore.QAbstractTableModel):
         else:
             # Return 0 if self._data is empty, indicating no columns
             return 0
-    
+
     def headerData(self, section, orientation, role):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return self.headers[section]
