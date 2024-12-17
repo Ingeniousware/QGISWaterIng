@@ -190,6 +190,14 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
 
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
+        self.add_action(
+            icon_path,
+            text=self.tr("Watering export INP"),
+            callback=self.exporteINP,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(
             icon_path,
@@ -257,6 +265,9 @@ class QGISPlugin_WaterIng:
                 # self.setHubConnection()
                 WateringUtils.setProjectMetadata("connection_status", "online")
             self.addLoad()
+            
+    def exporteINP(self):
+        print("Exporte INP")
         
     def addLoad(self):
         print("calling watering load dialog")
