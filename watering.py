@@ -189,7 +189,8 @@ class QGISPlugin_WaterIng:
             callback=self.addLogin,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
-
+        
+        # Esto es nuevo es los de exportar a INP
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
         self.add_action(
             icon_path,
@@ -266,8 +267,34 @@ class QGISPlugin_WaterIng:
                 WateringUtils.setProjectMetadata("connection_status", "online")
             self.addLoad()
             
-    def exporteINP(self):
+    def exportAndImportINP(self):
         print("Exporte INP")
+        project_path = WateringUtils.getProjectPath()
+        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        scenario_folder_path = project_path + "/" + scenario_id + "/scenario.inp"
+        #print("=========cartpeta de trabajo: ==>", scenario_folder_path)
+        #os.path.join("skjks", "kdkf.txx")
+        #inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
+        #inpfile = open(scenario_folder_path.replace('/','\\') + "\\scenario.inp", "w")
+        inpfile = open(os.path.join(scenario_folder_path))
+        #Nombre del layer de tanques watering_tanks
+        #source_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
+        #fields = QgsProject.instance().mapLayersByName("watering_tanks")[0].fields()
+        #print(list(fields))
+        # for feature in source_layer.getFeatures():
+        #     #print(feature.id())
+        #     print(feature.geometry().asWkt())
+        #     idx = feature.fieldNameIndex('Name')
+        #     print(idx)
+        #     print(feature.attributes()[idx])
+            #print(f"========={feature: 10}==========")
+        #tanks = ImportTanksShp().shpProcessing("watering_tanks")
+        
+        
+        #print(inpfile)
+        inpMan = INPManager(inpfile)
+        #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
+        inpMan.writeSections()
         
     def addLoad(self):
         print("calling watering load dialog")
