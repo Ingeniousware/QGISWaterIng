@@ -17,14 +17,13 @@
 """
 
 from .sectionAbstract import sectionAbstract
-from .dataType import Junction
 
 # Section Title [TITLE] =================================================================
 class sectionTitle(sectionAbstract):
     def __init__(self, title=""):
         super(sectionTitle, self).__init__(1)
         self.name = '[TITLE]'
-        self.title = title
+        self.title = title if title is not None else ""
         
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')

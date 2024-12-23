@@ -276,7 +276,7 @@ class QGISPlugin_WaterIng:
         #os.path.join("skjks", "kdkf.txx")
         #inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
         #inpfile = open(scenario_folder_path.replace('/','\\') + "\\scenario.inp", "w")
-        inpfile = open(os.path.join(scenario_folder_path))
+        inpfile = open(os.path.join(scenario_folder_path), "w")
         #Nombre del layer de tanques watering_tanks
         #source_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
         #fields = QgsProject.instance().mapLayersByName("watering_tanks")[0].fields()
