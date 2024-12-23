@@ -195,7 +195,7 @@ class QGISPlugin_WaterIng:
         self.add_action(
             icon_path,
             text=self.tr("Watering export INP"),
-            callback=self.exporteINP,
+            callback=self.exportAndImportINP,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
 
