@@ -217,7 +217,7 @@ class sectionEnergy(sectionAbstract):
         outfile.write(' Global Efficiency  	75' + '\n')
         outfile.write(' Global Price       	0' + '\n')
         outfile.write(' Demand Charge      	0' + '\n')
-        outfile.write(' Pump 	1               	Efficiency	1' + '\n')
+        #outfile.write(' Pump 	1               	Efficiency	1' + '\n')
         outfile.write('\n')
 
 # Section Emitters [EMITTERS] =================================================================
@@ -432,10 +432,10 @@ class sectionBackdrop(sectionAbstract):
         
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
-        outfile.write(' DIMENSIONS     	0.00            	0.00            	10000.00        	10000.00        ' + '\n')
-        outfile.write(' UNITS          	Ninguno' + '\n')
-        outfile.write(' FILE           	' + '\n')
-        outfile.write(' OFFSET         	0.00            	0.00            ' + '\n')
+        # outfile.write(' DIMENSIONS     	0.00            	0.00            	10000.00        	10000.00        ' + '\n')
+        # outfile.write(' UNITS          	Ninguno' + '\n')
+        # outfile.write(' FILE           	' + '\n')
+        # outfile.write(' OFFSET         	0.00            	0.00            ' + '\n')
         outfile.write('\n')
 
 # Section End [END] =================================================================

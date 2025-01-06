@@ -4,8 +4,8 @@ The wntr.epanet.util module contains unit conversion utilities based on EPANET u
 import enum
 import logging
 
-import numpy as np # type: ignore
-import pandas as pd # type: ignore
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,8 @@ class SizeLimits(enum.Enum):
     """
         Limits on the size of character arrays used to store ID names
         and text messages.
+        
+        este es el directorio de la clase EpanetException epanet/util.py
     """
     # // ! < Max.  # characters in ID name
     EN_MAX_ID = 31
@@ -152,8 +154,9 @@ class FlowUnits(enum.Enum):
     def __init__(self, EN_id, flow_factor=1.0):
         mmap = getattr(self, "_member_map_")
         v2mmap = getattr(self, "_value2member_map_")
-        v2mmap[EN_id] = self
+        
         mmap[str(self.name).lower()] = self
+        v2mmap[EN_id] = self
 
     def __int__(self):
         """Convert to an EPANET Toolkit enum number."""

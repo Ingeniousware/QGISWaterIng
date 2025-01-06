@@ -8,16 +8,19 @@ import os
 import os.path
 import platform
 import sys
+import json
+
 from ctypes import byref
 
-from pkg_resources import resource_filename # type: ignore
+from pkg_resources import resource_filename
 
 from .exceptions import EN_ERROR_CODES, EpanetException
+# se puede escribir de esta forma tambienimport epanet.exceptions as exc
 from .util import SizeLimits
 
 logger = logging.getLogger(__name__)
 
-epanet_toolkit = "wntr.epanet.toolkit"
+epanet_toolkit = __name__
 
 if os.name in ["nt", "dos"]:
     libepanet = resource_filename(__name__, "Windows/epanet2.dll")
@@ -25,7 +28,6 @@ elif sys.platform in ["darwin"]:
     libepanet = resource_filename(__name__, "Darwin/libepanet.dylib")
 else:
     libepanet = resource_filename(__name__, "Linux/libepanet2.so")
-
 
 def ENgetwarning(code, sec=-1):
     if sec >= 0:
@@ -42,32 +44,6 @@ def ENgetwarning(code, sec=-1):
         raise EpanetException(code)
 
     return msg % header
-
-
-def runepanet(inpfile, rptfile=None, binfile=None):
-    """Run an EPANET command-line simulation
-
-    Parameters
-    ----------
-    inpfile : str
-        The input file name
-    """
-    file_prefix, file_ext = os.path.splitext(inpfile)
-    if rptfile is None:
-        rptfile = file_prefix + ".rpt"
-    if binfile is None:
-        binfile = file_prefix + ".bin"
-
-    enData = ENepanet()
-    enData.ENopen(inpfile, rptfile, binfile)
-    enData.ENsolveH()
-    enData.ENsolveQ()
-    try:
-        enData.ENreport()
-    except:
-        pass
-    enData.ENclose()
-
 
 class ENepanet:
     """Wrapper class to load the EPANET DLL object, then perform operations on
@@ -100,6 +76,8 @@ class ENepanet:
         self.inpfile = inpfile
         self.rptfile = rptfile
         self.binfile = binfile
+        
+        #directory = os.path.dirname(os.path.realpath(__file__))
 
         if float(version) == 2.0:
             libnames = ["epanet2_x86", "epanet2", "epanet"]
@@ -112,6 +90,11 @@ class ENepanet:
         for lib in libnames:
             try:
                 if os.name in ["nt", "dos"]:
+                    #libepanet0 = self.concat(directory,"\\Windows\\%s.dll" % lib)
+                    #print(libepanet0)
+                    print("==================================================================")
+                    print(epanet_toolkit)
+                    print("==================================================================")
                     libepanet = resource_filename(epanet_toolkit, "Windows/%s.dll" % lib)
                     self.ENlib = ctypes.windll.LoadLibrary(libepanet)
                 elif sys.platform in ["darwin"]:
@@ -133,7 +116,9 @@ class ENepanet:
                 else:
                     self._project = None
         return
-
+    # def concat(self, text1, text2):
+    #     return text1 + text2
+    
     def isOpen(self):
         """Checks to see if the file is open"""
         return self.fileLoaded
@@ -884,3 +869,9 @@ class ENepanet:
         self._error()
 
         return
+
+def PrintToolkit():
+    print("==========================: " + libepanet + " ========================")
+    print("EPANET Toolkit DLLs: " + libepanet + " loaded")
+    print(ENgetwarning(10, 10))
+    

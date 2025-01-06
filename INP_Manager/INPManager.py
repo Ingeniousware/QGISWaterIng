@@ -16,10 +16,106 @@
 ***************************************************************************
 """
 
+"""
+Ejemplo de como crear un grupo en QGIS.
+
+    from qgis.core import QgsProject, QgsLayerTreeGroup
+
+    # Obtener el proyecto actual
+    project = QgsProject.instance()
+
+    # Crear un nuevo grupo
+    nuevo_grupo = QgsLayerTreeGroup("Nombre del Grupo")
+
+    # Añadir el grupo al árbol de capas del proyecto
+    project.layerTreeRoot().addChildNode(nuevo_grupo)
+
+    print("Grupo añadido exitosamente.")
+    
+    Este script realiza las siguientes acciones:
+
+        1-Crea una nueva capa vectorial a partir de un archivo shapefile.
+        2-Verifica si la capa se ha cargado correctamente.
+        3-Obtiene el proyecto actual de QGIS.
+        4-Crea un nuevo grupo en el árbol de capas.
+        5-Añade la capa al grupo recién creado.
+        
+    from qgis.core import QgsProject, QgsVectorLayer
+
+    # Crear una nueva capa vectorial
+    capa = QgsVectorLayer("path/to/your/shapefile.shp", "Nombre de la Capa", "ogr")
+
+    # Verificar si la capa se ha cargado correctamente
+    if not capa.isValid():
+        print("La capa no se pudo cargar.")
+    else:
+        # Obtener el proyecto actual
+        proyecto = QgsProject.instance()
+
+        # Crear un nuevo grupo
+        grupo = proyecto.layerTreeRoot().addGroup("Nombre del Grupo")
+
+        # Añadir la capa al grupo
+        grupo.addLayer(capa)
+
+        print("Capa añadida al grupo exitosamente.")
+    
+    Este script hace lo siguiente:
+
+        1-Crea una nueva capa vectorial en memoria con un sistema de referencia EPSG:4326 y dos campos: id (entero) y name (cadena de 20 caracteres).
+        2-Verifica si la capa se ha creado correctamente.
+        3-Añade la capa al proyecto QGIS sin mostrarla inmediatamente en el panel de capas.
+        4-Busca un grupo llamado "Mi Grupo" en el árbol de capas. Si no existe, lo crea.
+        5-Añade la nueva capa al grupo especificado.
+    
+    from qgis.core import QgsProject, QgsVectorLayer, QgsLayerTreeGroup
+
+    # Crear una nueva capa vectorial (por ejemplo, una capa de puntos)
+    uri = "Point?crs=EPSG:4326&field=id:integer&field=name:string(20)&index=yes"
+    new_layer = QgsVectorLayer(uri, "Nueva Capa de Puntos", "memory")
+
+    # Verificar si la capa se ha creado correctamente
+    if not new_layer.isValid():
+        print("La capa no se ha creado correctamente")
+    else:
+        # Añadir la capa al proyecto
+        QgsProject.instance().addMapLayer(new_layer, False)
+
+        # Obtener el grupo al que queremos añadir la capa
+        root = QgsProject.instance().layerTreeRoot()
+        group_name = "Mi Grupo"
+        group = root.findGroup(group_name)
+
+        # Si el grupo no existe, crearlo
+        if group is None:
+            group = root.addGroup(group_name)
+
+        # Añadir la capa al grupo
+        group.addLayer(new_layer)
+
+        print(f"La capa '{new_layer.name()}' se ha añadido al grupo '{group_name}' correctamente.")
+"""
+
+import os
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject
 
-from .sections import sectionTitle, sectionJunctions, sectionReservoirs, sectionTanks, sectionPipes, sectionPumps, sectionValves, sectionTags, sectionDemands, sectionStatus, sectionPatterns, sectionCurves, sectionControls, sectionRules, sectionEnergy, sectionEmitters, sectionQuality, sectionSources, sectionReactions, sectionReactions20, sectionMixing, sectionTimes, sectionReport, sectionOptions, sectionCoordinates, sectionVertices, sectionLabels, sectionBackdrop, sectionEnd
-from .dataType import Junction, Reservoir, Tank, Pipe, Pump, Valve, Tag, Demand, Curve, Coordinate, Vertice, Label, Backdrop
+from .sections import (sectionTitle, sectionJunctions, sectionReservoirs, sectionTanks, sectionPipes, sectionPumps,
+                       sectionValves, sectionTags, sectionDemands, sectionStatus, sectionPatterns, sectionCurves,
+                       sectionControls, sectionRules, sectionEnergy, sectionEmitters, sectionQuality, sectionSources,
+                       sectionReactions, sectionReactions20, sectionMixing, sectionTimes, sectionReport, sectionOptions,
+                       sectionCoordinates, sectionVertices, sectionLabels, sectionBackdrop, sectionEnd)
+from .dataType import (Junction, Reservoir, Tank, Pipe, Pump, Valve, Tag, Demand, Curve, Coordinate, Vertice, Label,
+                       Backdrop)
+
+import json
+import os
+#import wntr.resultTypes as rt
+#from ..wntr.resultTypes import
+from ..wntr.epanet.toolkit import ENepanet
+from ..wntr.epanet.util import EN
+from ..wntr.resultTypes import ResultNode, ResultLink
+
+
 
 class INPManager():
     def __init__(self, outfile=None):
@@ -101,7 +197,7 @@ class INPManager():
     
     def __readReservoirs(self, layerName = "watering_reservoirs"):
         
-        source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
+        source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         features = source_layer.getFeatures() #self.__readFeatures(layerName)
         
         coordinate = self.sections['COORDINATES']
@@ -144,7 +240,7 @@ class INPManager():
 
     def __readTanks(self, layerName = "watering_tanks"):
         
-        source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
+        source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
         features = source_layer.getFeatures() #self.__readFeatures(layerName)
         
         coordinate = self.sections['COORDINATES']
@@ -193,17 +289,17 @@ class INPManager():
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
             
-            geom = feature.geometry()
-            vert = 0
-            for part in geom.parts():
-                for vertex in part.vertices():
-                    if part.startPoint() == geom.vertexAt(vert):
-                        coordinate.values.append(Coordinate(node1, part.startPoint().x(), part.startPoint().y()))
-                    elif part.endPoint() == geom.vertexAt(vert):
-                        coordinate.values.append(Coordinate(node2, part.endPoint().x(), part.endPoint().y()))
-                    else:
-                        vertice.values.append(Vertice(id, vertex.x(), vertex.y()))
-                    vert += 1
+            # geom = feature.geometry()
+            # vert = 0
+            # for part in geom.parts():
+            #     for vertex in part.vertices():
+            #         if part.startPoint() == geom.vertexAt(vert):
+            #             coordinate.values.append(Coordinate(node1, part.startPoint().x(), part.startPoint().y()))
+            #         elif part.endPoint() == geom.vertexAt(vert):
+            #             coordinate.values.append(Coordinate(node2, part.endPoint().x(), part.endPoint().y()))
+            #         else:
+            #             vertice.values.append(Vertice(id, vertex.x(), vertex.y()))
+            #         vert += 1
             
             pipe.values.append(Pipe(id, node1, node2, length, diameter, roughness, minorLoss, status, description))
             
@@ -265,4 +361,81 @@ class INPManager():
         for t, s in self.sections.items():
             print(t,s.name)
             s.writeSection(self.outfile)
+        
+        # Cierra el fichero manualmente
+        self.outfile.close()
+    def testEpanet(self, inpfile = "C:\\Temp\\Net1.inp", rptfile=None, binfile=None):
+        """
+        Run an EPANET command-line simulation
+        
+        Parameters
+        ----------
+        inpfile : str
+            The input file name
+        """
+        file_prefix, file_ext = os.path.splitext(inpfile)
+        if rptfile is None:
+            rptfile = file_prefix + ".rpt"
+        if binfile is None:
+            binfile = file_prefix + ".bin"
+        
+        try:
+            enData = ENepanet()
+            enData.ENopen(inpfile, rptfile, binfile)
+            enData.ENsolveH()
+            enData.ENsolveQ()
+            try:
+                enData.ENreport()
+            except:
+                pass
             
+            nNodes = enData.ENgetcount(EN.NODECOUNT)
+            print("Cantidad de nodos: ", nNodes)
+            
+            valoresNodes = []
+            for i in range(1, nNodes):
+                a = enData.ENgetnodevalue(i, EN.BASEDEMAND)
+                b = enData.ENgetnodevalue(i, EN.DEMAND)
+                c = enData.ENgetnodevalue(i, EN.PRESSURE)
+                d = enData.ENgetnodevalue(i, EN.HEAD)
+                valoresNodes.append(ResultNode(a, b, c, d))
+            
+            # Paso 3: Escribe la lista en un archivo JSON
+            jsonFile = file_prefix + "Node" + ".json"
+            with open(jsonFile, 'w') as archivo_json:
+                json.dump([item.to_dict() for item in valoresNodes], archivo_json, ensure_ascii = False, indent = 4)
+            
+            nLinks = enData.ENgetcount(EN.LINKCOUNT)
+            print("Cantidad de tuberias: ", nLinks)
+            
+            linkResult = []
+            
+            for i in range(1, nLinks):
+                a = enData.ENgetlinkvalue(i, EN.LPS)
+                b = enData.ENgetlinkvalue(i, EN.HEADLOSS)
+                c = enData.ENgetlinkvalue(i, EN.STATUS)
+                d = enData.ENgetlinkvalue(i, EN.DIAMETER)
+                g = enData.ENgetlinkvalue(i, EN.MINORLOSS)
+                linkResult.append(ResultLink(a, b, c, d, g))
+                
+            # Paso 3: Escribe la lista en un archivo JSON
+            jsonFile = file_prefix + "Link" + ".json"
+            with open(jsonFile, 'w') as archivo_json:
+                json.dump([item.to_json() for item in linkResult], archivo_json, ensure_ascii=False, indent=4)
+            
+            flows = enData.ENgetflowunits()
+            if flows == 0: UndCaudal = "CFS"
+            if flows == 1: UndCaudal = "GPM"
+            if flows == 2: UndCaudal = "MGD"
+            if flows == 3: UndCaudal = "IMGD"
+            if flows == 4: UndCaudal = "AFD"
+            if flows == 5: UndCaudal = "LPS"
+            if flows == 6: UndCaudal = "LPM"
+            if flows == 7: UndCaudal = "MLD"
+            if flows == 8: UndCaudal = "CMH"
+            if flows == 9: UndCaudal = "CMD"
+            print("Unidad de caudal: ", UndCaudal)
+            enData.ENclose()
+        
+        except Exception as e:
+            raise e

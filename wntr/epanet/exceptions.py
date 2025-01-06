@@ -4,6 +4,7 @@
 from typing import List
 
 EN_ERROR_CODES = {
+    
     # Runtime errors
     1: "At %s, system hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials",
     2: "At %s, system may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed",
@@ -84,10 +85,17 @@ EN_ERROR_CODES = {
 """A dictionary of the error codes and their meanings from the EPANET toolkit.
 
 :meta hide-value:
+
+este es el directorio de la clase EpanetException epanet/exceptions.py
+
 """
 
 
 class EpanetException(Exception):
+    """
+    este es el directorio de la clase EpanetException epanet/exceptions.py
+
+    """
 
     def __init__(self, code: int, *args: List[object], line_num=None, line=None) -> None:
         """An Exception class for EPANET Toolkit and IO exceptions.

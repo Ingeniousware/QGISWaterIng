@@ -67,7 +67,6 @@ import os.path
 from .INP_Manager.INPManager import INPManager
 from .shpProcessing.waterTanks import ImportTanksShp
 
-
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
 
@@ -276,7 +275,9 @@ class QGISPlugin_WaterIng:
         #os.path.join("skjks", "kdkf.txx")
         #inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
         #inpfile = open(scenario_folder_path.replace('/','\\') + "\\scenario.inp", "w")
-        inpfile = open(os.path.join(scenario_folder_path), "w")
+        
+        #inpfile = open(os.path.join(scenario_folder_path), "w")
+        
         #Nombre del layer de tanques watering_tanks
         #source_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
         #fields = QgsProject.instance().mapLayersByName("watering_tanks")[0].fields()
@@ -290,11 +291,15 @@ class QGISPlugin_WaterIng:
             #print(f"========={feature: 10}==========")
         #tanks = ImportTanksShp().shpProcessing("watering_tanks")
         
+        with open(os.path.join(scenario_folder_path), "w") as inpfile:
+            #print(inpfile)
+            inpMan = INPManager(inpfile)
+            #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
+            inpMan.writeSections()
         
-        #print(inpfile)
-        inpMan = INPManager(inpfile)
-        #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
-        inpMan.writeSections()
+        inp_file = scenario_folder_path.replace('/','\\')
+        print(inp_file)
+        inpMan.testEpanet(inp_file)
         
     def addLoad(self):
         print("calling watering load dialog")

@@ -41,7 +41,7 @@ class Reservoir():
 
 class Tank():
     #ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
-    def __init__(self, id = "", elevation = 0.0, initLevel = 0.0, minLevel = 0.0, maxLevel = 0.0, diameter = 0.0, minVol = 0.0, volCurve = 0.0, description = ""):
+    def __init__(self, id = "", elevation = 0.0, initLevel = 0.0, minLevel = 0.0, maxLevel = 0.0, diameter = 0.0, minVol = 0.0, volCurve = None, description = ""):
         self.ID = id if id else ""
         self.Elevation = elevation if elevation else 0.0
         self.InitLevel = initLevel if initLevel else 0.0
@@ -49,7 +49,7 @@ class Tank():
         self.MaxLevel = maxLevel if maxLevel else 0.0
         self.Diameter = diameter if diameter else 0.0
         self.MinVol = minVol if minVol else 0.0
-        self.VolCurve = volCurve if volCurve else 0.0
+        self.VolCurve = volCurve if volCurve is not None else ""
         self.Description = description if description else ""
         
     def __str__(self):
