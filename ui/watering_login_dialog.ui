@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>379</width>
-    <height>257</height>
+    <width>377</width>
+    <height>219</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -77,15 +77,6 @@
        </item>
        <item>
         <widget class="QgsPasswordLineEdit" name="passwordInput">
-         <property name="font">
-          <font>
-           <pointsize>14</pointsize>
-           <kerning>false</kerning>
-          </font>
-         </property>
-         <property name="mouseTracking">
-          <bool>true</bool>
-         </property>
          <property name="showLockIcon">
           <bool>true</bool>
          </property>
