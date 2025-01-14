@@ -64,8 +64,8 @@ class WaterMeterNodeRepository(AbstractRepository):
         self.StrokeColor = None
         self.currentLayer = None
 
-    def initializeRepository(self):
-        super(WaterMeterNodeRepository, self).initializeRepository()
+    def initializeRepository(self, offline):
+        super(WaterMeterNodeRepository, self).initializeRepository(offline)
         self.openLayers(":/plugins/QGISPlugin_WaterIng/images/Icon_waterMeter_GT.svg", 12)
         self.createBackupLayer()
 

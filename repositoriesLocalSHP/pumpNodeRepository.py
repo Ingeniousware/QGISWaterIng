@@ -68,8 +68,8 @@ class PumpNodeRepository(AbstractRepository):
         self.StrokeColor = None
         self.currentLayer = None
 
-    def initializeRepository(self):
-        super(PumpNodeRepository, self).initializeRepository()
+    def initializeRepository(self, offline):
+        super(PumpNodeRepository, self).initializeRepository(offline)
         self.openLayers(":/plugins/QGISPlugin_WaterIng/images/pumpLayer.svg", 12)
         self.createBackupLayer()
 

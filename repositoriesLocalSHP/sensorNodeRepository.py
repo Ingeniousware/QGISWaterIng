@@ -49,8 +49,8 @@ class SensorNodeRepository(AbstractRepository):
         self.StrokeColor = QColor.fromRgb(23, 61, 108)
         self.currentLayer = None
 
-    def initializeRepository(self):
-        super(SensorNodeRepository, self).initializeRepository()
+    def initializeRepository(self, offline):
+        super(SensorNodeRepository, self).initializeRepository(offline)
         self.openLayers(":/plugins/QGISPlugin_WaterIng/images/Icon_pressureSensor_GT.svg", 10)
         self.createBackupLayer()
 

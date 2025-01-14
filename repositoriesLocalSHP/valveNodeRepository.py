@@ -78,8 +78,8 @@ class ValveNodeRepository(AbstractRepository):
         self.StrokeColor = None
         self.currentLayer = None
 
-    def initializeRepository(self):
-        super(ValveNodeRepository, self).initializeRepository()
+    def initializeRepository(self, offline):
+        super(ValveNodeRepository, self).initializeRepository(offline)
         self.openLayers(":/plugins/QGISPlugin_WaterIng/images/valveLayer.svg", 12)
         self.createBackupLayer()
 

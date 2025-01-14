@@ -70,8 +70,8 @@ class PipeNodeRepository(AbstractRepository):
         self.Color = QColor.fromRgb(23, 61, 108)
         self.StrokeColor = None
 
-    def initializeRepository(self):
-        super(PipeNodeRepository, self).initializeRepositoryStreamingData()
+    def initializeRepository(self, offline):
+        super(PipeNodeRepository, self).initializeRepositoryStreamingData(offline)
         self.openLayers(None, 0.7)
         self.createBackupLayer()
 
@@ -90,26 +90,28 @@ class PipeNodeRepository(AbstractRepository):
         self.currentLayer.dataProvider().addAttributes(fields)
         self.currentLayer.updateFields()
 
-        for chunk in response.iter_content(chunk_size=None):
-            if chunk:
-                chunk_data = chunk.decode("utf-8")
+        response_json = response.json()
+        if "data" in response_json:
+            for chunk in response.iter_content(chunk_size=None):
+                if chunk:
+                    chunk_data = chunk.decode("utf-8")
 
-                self.buffer += chunk_data
+                    self.buffer += chunk_data
 
-                json_objects = self.buffer.split("\n")
+                    json_objects = self.buffer.split("\n")
 
-                self.buffer = json_objects.pop()
+                    self.buffer = json_objects.pop()
 
-                for obj in json_objects:
-                    if obj.strip():
-                        data = json.loads(obj)
-                        for feature in data["data"]:
-                            self.addElementFromJSON(feature)
+                    for obj in json_objects:
+                        if obj.strip():
+                            data = json.loads(obj)
+                            for feature in data["data"]:
+                                self.addElementFromJSON(feature)
 
-        if self.buffer.strip():
-            data = json.loads(self.buffer)
-            for feature in data["data"]:
-                self.addElementFromJSON(feature)
+            if self.buffer.strip():
+                data = json.loads(self.buffer)
+                for feature in data["data"]:
+                    self.addElementFromJSON(feature)
 
     def addElementFromJSON(self, elementJSON):
         try:

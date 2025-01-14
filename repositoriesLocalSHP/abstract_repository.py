@@ -56,17 +56,17 @@ class AbstractRepository:
         self.syncUpdatingChanges = []
         self.syncDeletingChanges = []
 
-    def initializeRepository(self):
+    def initializeRepository(self, offline):
         # loading element from the API
-        serverResponse = self.loadElements(False)
+        serverResponse = self.loadElements(False, offline)
         # Adding elements to shapefile
         self.createElementLayerFromServerResponse(serverResponse)
         # Write shapefile
         self.writeShp()
 
-    def initializeRepositoryStreamingData(self):
+    def initializeRepositoryStreamingData(self, offline):
         # loading element from the API
-        serverResponse = self.loadElements(True)
+        serverResponse = self.loadElements(True, offline)
         # Adding elements to shapefile
         self.createElementLayerFromServerStreamingResponse(serverResponse)
         # Write shapefile
@@ -79,12 +79,24 @@ class AbstractRepository:
     def unsetConnectorToServer(self):
         self.connectorToServer = None
 
-    def loadElements(self, stream):
+    def loadElements(self, stream, offline):
         params_element = {"ScenarioFK": "{}".format(self.ScenarioFK)}
         url = WateringUtils.getServerUrl() + self.UrlGet
         headers = {"Authorization": "Bearer {}".format(os.environ.get("TOKEN"))}
 
-        response = requests.get(url, params=params_element, headers=headers, stream=stream, verify=False)
+        if not offline:
+            response = requests.get(url, params=params_element, headers=headers, stream=stream, verify=False)
+        else:
+            print()
+            response = self.createEmptyResponse()
+
+        return response
+
+    def createEmptyResponse(self):
+        response = requests.Response()
+        response._content = json.dumps({"data": {}}).encode('utf-8')
+        response.status_code = 200
+        response.headers['Content-Type'] = 'application/json'
         return response
 
     def loadChanges(self, lastUpdate):
@@ -135,23 +147,25 @@ class AbstractRepository:
 
         self.toAddFeatures = []
 
-        for chunk in response.iter_content(chunk_size=None):
-            if chunk:
-                chunk_data = chunk.decode("utf-8")
+        response_json = response.json()
+        if "data" in response_json:
+            for chunk in response.iter_content(chunk_size=None):
+                if chunk:
+                    chunk_data = chunk.decode("utf-8")
 
-                self.buffer += chunk_data
+                    self.buffer += chunk_data
 
-                json_objects = self.buffer.split("\n")
+                    json_objects = self.buffer.split("\n")
 
-                self.buffer = json_objects.pop()
+                    self.buffer = json_objects.pop()
 
-                for obj in json_objects:
-                    if obj.strip():
-                        data = json.loads(obj)
-                        print("data:", data)
-                        print("data type 2: ", type(data))
-                        for feature in data["data"]:
-                            self.addElementFromJSON(feature)
+                    for obj in json_objects:
+                        if obj.strip():
+                            data = json.loads(obj)
+                            print("data:", data)
+                            print("data type 2: ", type(data))
+                            for feature in data["data"]:
+                                self.addElementFromJSON(feature)
 
         if self.buffer.strip():
             data = json.loads(self.buffer)

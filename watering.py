@@ -260,7 +260,8 @@ class QGISPlugin_WaterIng:
         self.dlg = WateringLoad()
         self.dlg.show()
         if self.dlg.exec_() == 1:
-            self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork
+            if hasattr(self.dlg, 'myScenarioUnitOfWork'):
+                self.scenarioUnitOFWork = self.dlg.myScenarioUnitOfWork
             self.actionManager = actionManager(
                 os.environ.get("TOKEN"), self.dlg.current_scenario_fk, self.setActiveStateUndo, self.setActiveStateRedo
             )
@@ -303,9 +304,9 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.toolImportShapeFile.setCurrentTool(toolImportShapeFile)
         self.toolbarToolManager.toolImportShapeFile.setEnabled(True)
 
-        toolReviewNetwork = NetworkReviewTool(self.iface)
-        self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
-        self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
+        # toolReviewNetwork = NetworkReviewTool(self.iface)
+        # self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
+        # self.toolbarToolManager.toolReviewNetwork.setEnabled(True)
 
         toolSelectionReview = SelectionReviewTool(self.iface)
         self.toolbarToolManager.toolSelectionReview.setCurrentTool(toolSelectionReview)
