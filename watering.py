@@ -308,7 +308,6 @@ class QGISPlugin_WaterIng:
         
         except Exception as e:
             show_custom_dialog("Información", "Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering")
-            
         
         
     def addLoad(self):
