@@ -63,6 +63,10 @@ from signalrcore.hub_connection_builder import HubConnectionBuilder
 
 import os.path
 
+# Import the code for the process INP file.
+from .INP_Manager.INPManager import INPManager
+from .shpProcessing.waterTanks import ImportTanksShp
+from .INP_Manager.customdialog import show_custom_dialog, show_input_dialog
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -183,9 +187,17 @@ class QGISPlugin_WaterIng:
             icon_path,
             text=self.tr("Watering Login"),
             callback=self.addLogin,
-            toolbar=self.toolbar,
-            parent=self.iface.mainWindow(),
-        )
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
+        # Esto es nuevo es los de exportar a INP
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
+        self.add_action(
+            icon_path,
+            text=self.tr("Watering export INP"),
+            callback=self.exportAndImportINP,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
 
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(
@@ -254,7 +266,51 @@ class QGISPlugin_WaterIng:
                 # self.setHubConnection()
                 WateringUtils.setProjectMetadata("connection_status", "online")
             self.addLoad()
+            
+    def exportAndImportINP(self):
+        print("Exporte INP")
+        project_path = WateringUtils.getProjectPath()
+        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        scenario_folder_path = project_path + "/" + scenario_id + "/scenario.inp"
+        #print("=========cartpeta de trabajo: ==>", scenario_folder_path)
+        #os.path.join("skjks", "kdkf.txx")
+        #inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
+        #inpfile = open(scenario_folder_path.replace('/','\\') + "\\scenario.inp", "w")
+        
+        #inpfile = open(os.path.join(scenario_folder_path), "w")
+        
+        #Nombre del layer de tanques watering_tanks
+        #source_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
+        #fields = QgsProject.instance().mapLayersByName("watering_tanks")[0].fields()
+        #print(list(fields))
+        # for feature in source_layer.getFeatures():
+        #     #print(feature.id())
+        #     print(feature.geometry().asWkt())
+        #     idx = feature.fieldNameIndex('Name')
+        #     print(idx)
+        #     print(feature.attributes()[idx])
+            #print(f"========={feature: 10}==========")
+        #tanks = ImportTanksShp().shpProcessing("watering_tanks")
+        
+        
+        try:
+            with open(os.path.join(scenario_folder_path), "w") as inpfile:
+                #print(inpfile)
+                inpMan = INPManager(inpfile)
+                #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
+                inpMan.writeSections()
 
+            inpMan.updateLayer()
+            print("001")
+            inp_file = scenario_folder_path.replace('/','\\')
+            print(inp_file)
+            inpMan.testEpanet(inp_file)
+        
+        except Exception as e:
+            show_custom_dialog("Información", "Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering")
+            
+        
+        
     def addLoad(self):
         print("calling watering load dialog")
         self.dlg = WateringLoad()
