@@ -66,6 +66,7 @@ import os.path
 # Import the code for the process INP file.
 from .INP_Manager.INPManager import INPManager
 from .shpProcessing.waterTanks import ImportTanksShp
+from .INP_Manager.customdialog import show_custom_dialog, show_input_dialog
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -291,15 +292,24 @@ class QGISPlugin_WaterIng:
             #print(f"========={feature: 10}==========")
         #tanks = ImportTanksShp().shpProcessing("watering_tanks")
         
-        with open(os.path.join(scenario_folder_path), "w") as inpfile:
-            #print(inpfile)
-            inpMan = INPManager(inpfile)
-            #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
-            inpMan.writeSections()
         
-        inp_file = scenario_folder_path.replace('/','\\')
-        print(inp_file)
-        inpMan.testEpanet(inp_file)
+        try:
+            with open(os.path.join(scenario_folder_path), "w") as inpfile:
+                #print(inpfile)
+                inpMan = INPManager(inpfile)
+                #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
+                inpMan.writeSections()
+
+            inpMan.updateLayer()
+            print("001")
+            inp_file = scenario_folder_path.replace('/','\\')
+            print(inp_file)
+            inpMan.testEpanet(inp_file)
+        
+        except Exception as e:
+            show_custom_dialog("Información", "Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering")
+            
+        
         
     def addLoad(self):
         print("calling watering load dialog")

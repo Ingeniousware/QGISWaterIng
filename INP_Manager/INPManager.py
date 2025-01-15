@@ -98,6 +98,8 @@ Ejemplo de como crear un grupo en QGIS.
 
 import os
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject
+from qgis.core import QgsProject, QgsField
+from PyQt5.QtCore import QVariant
 
 from .sections import (sectionTitle, sectionJunctions, sectionReservoirs, sectionTanks, sectionPipes, sectionPumps,
                        sectionValves, sectionTags, sectionDemands, sectionStatus, sectionPatterns, sectionCurves,
@@ -364,6 +366,41 @@ class INPManager():
         
         # Cierra el fichero manualmente
         self.outfile.close()
+    
+    def updateLayer(self):
+        layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+        
+        # Verificar si la capa es válida
+        if not layer_1:
+            print("No hay una capa activa.")
+        else:
+            # Definir el nombre de la nueva propiedad (campo)
+            new_field_name = "Pressure"
+
+            # Verificar si la propiedad ya existe
+            existing_fields = [field.name() for field in layer_1.fields()]
+            if new_field_name in existing_fields:
+                print(f"La propiedad '{new_field_name}' ya existe en la capa.")
+            else:
+                # Añadir la nueva propiedad
+                # Iniciar edición
+                print("actulaizando el layer")
+                layer_1.startEditing()
+                new_field = QgsField(new_field_name, QVariant.String)
+                layer_1.dataProvider().addAttributes([new_field])
+                layer_1.updateFields()
+                print(f"La propiedad '{new_field_name}' ha sido añadida a la capa.")
+
+    def __getidNode(self, espanet: ENepanet, nodeName: str, count: int):
+        result = 0
+        
+        for i in range(1, count + 1):
+            a = espanet.ENgetnodeid(i)
+            if a == nodeName:
+                result = i
+                break
+        return result
+    
     def testEpanet(self, inpfile = "C:\\Temp\\Net1.inp", rptfile=None, binfile=None):
         """
         Run an EPANET command-line simulation
@@ -392,13 +429,29 @@ class INPManager():
             nNodes = enData.ENgetcount(EN.NODECOUNT)
             print("Cantidad de nodos: ", nNodes)
             
+            layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+            # Iniciar edición de la capa
+            layer_1.startEditing()
+            
             valoresNodes = []
-            for i in range(1, nNodes):
-                a = enData.ENgetnodevalue(i, EN.BASEDEMAND)
+            for i in range(1, nNodes + 1):
+                a = enData.ENgetnodeid(i)#.ENgetnodevalue(i, EN.BASEDEMAND)
                 b = enData.ENgetnodevalue(i, EN.DEMAND)
                 c = enData.ENgetnodevalue(i, EN.PRESSURE)
                 d = enData.ENgetnodevalue(i, EN.HEAD)
                 valoresNodes.append(ResultNode(a, b, c, d))
+            
+            features = layer_1.getFeatures()
+            for feature in features:
+                nodeName = feature.attribute("Name")
+                item = self.__getidNode(enData, nodeName, nNodes)
+                pressure = enData.ENgetnodevalue(item, EN.PRESSURE)
+                feature.setAttribute("Pressure", pressure)
+                # Actualizar la característica en la capa
+                layer_1.updateFeature(feature)
+            # Guardar cambios
+            layer_1.commitChanges()
+                
             
             # Paso 3: Escribe la lista en un archivo JSON
             jsonFile = file_prefix + "Node" + ".json"
@@ -410,7 +463,7 @@ class INPManager():
             
             linkResult = []
             
-            for i in range(1, nLinks):
+            for i in range(1, nLinks + 1):
                 a = enData.ENgetlinkvalue(i, EN.LPS)
                 b = enData.ENgetlinkvalue(i, EN.HEADLOSS)
                 c = enData.ENgetlinkvalue(i, EN.STATUS)
