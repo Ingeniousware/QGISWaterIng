@@ -4,14 +4,24 @@ from ..watering_utils import WateringUtils
 
 import os, json, requests, glob, uuid, shutil, processing
 
-import os
 import geopandas as gpd
 import pandas as pd
 import time
 
 from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsRasterLayer, QgsLayerTreeLayer, Qgis, QgsRectangle, QgsVectorLayer
-from qgis.core import QgsWkbTypes, QgsLayerTreeGroup, QgsFeature, QgsField, edit
+from qgis.core import (
+    QgsProject,
+    QgsRasterLayer,
+    QgsLayerTreeLayer,
+    Qgis,
+    QgsRectangle,
+    QgsVectorLayer,
+    QgsWkbTypes,
+    QgsLayerTreeGroup,
+    QgsFeature,
+    QgsField,
+    edit,
+)
 from qgis.utils import iface
 from PyQt5.QtWidgets import QMessageBox, QLabel, QDockWidget
 from PyQt5.QtCore import Qt, QVariant
@@ -41,10 +51,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.current_scenario_fk = None
         self.current_scenario_name = None
         self.response = None
-        self.offline_mode = False
+        self.offline_mode = False  # This controls offline vs online logic
         self.main_watering_folder = WateringUtils.get_watering_folder()
         self.projects_json_file = WateringUtils.get_projects_json_path()
         self.projects_json_data = None
+        self.myScenarioUnitOfWork = None
 
         self.shp_element_files = [
             "watering_demand_nodes.shp",
@@ -61,6 +72,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.hide_ui_elements()
         self.set_buttons_and_checkboxes()
 
+    ###########################################################################
+    #             INITIALIZATION / UI / LOAD METHODS
+    ###########################################################################
     def initialize_repository(self):
         self.response = WateringUtils.requests_get("/api/v1/ProjectWaterNetworks", {})
         if not self.response:
@@ -101,9 +115,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 for i in range(0, len(self.offline_projects_list)):
                     combo_box.addItem(self.offline_projects_list[i][1])
 
-                print("scenarios_box", scenarios_box)
-                if scenarios_box is not None or scenarios_list is not None:
-                    print("True")
+                if scenarios_box is not None and scenarios_list is not None:
                     self.set_offline_scenarios(combo_box, scenarios_box, scenarios_list)
                     combo_box.currentIndexChanged.connect(
                         lambda: self.set_offline_scenarios(combo_box, scenarios_box, scenarios_list)
@@ -118,6 +130,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.offline_scenarios_list_load = []
         self.set_offline_projects_list(
             self.load_projects_box, self.load_scenarios_box, self.offline_scenarios_list_load
+        )
+        self.set_offline_projects_list(
+            self.new_projects_box, None, self.offline_scenarios_list_load
         )
 
     def hide_ui_elements(self):
@@ -176,7 +191,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
             for i in range(0, response.json()["total"]):
                 scenarios_box.addItem(response.json()["data"][i]["name"])
-                scenarios_list.append((response.json()["data"][i]["name"], response.json()["data"][i]["serverKeyId"]))
+                scenarios_list.append(
+                    (response.json()["data"][i]["name"], response.json()["data"][i]["serverKeyId"])
+                )
 
     def handle_load_scenarios_box(self):
         if not self.offline_mode:
@@ -191,7 +208,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.current_project_name = self.offline_projects_list[current_index][1]
         scenarios_list.extend(self.get_offline_scenarios(self.current_project_fk))
 
-        print("offline_scenarios_list", scenarios_list)
         for i in range(0, len(scenarios_list)):
             scenarios_box.addItem(scenarios_list[i][0])
 
@@ -204,36 +220,151 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             return [(scenario["name"], scenario_key) for scenario_key, scenario in scenario_data.items()]
         return []
 
+    ###########################################################################
+    #             NEW OFFLINE CREATION METHODS
+    ###########################################################################
+    def create_new_project_offline(self, projectKeyId, projectName):
+        """
+        Creates a new WaterIng project entirely offline by:
+          1. Writing to projects.json
+          2. Setting 'localOnly': True
+          3. Creating the necessary folder structure
+        """
+        if not os.path.exists(self.projects_json_file):
+            # If projects.json doesn't exist, create an empty one
+            with open(self.projects_json_file, "w") as json_file:
+                json.dump({}, json_file)
+
+        with open(self.projects_json_file, "r") as json_file:
+            data = json.load(json_file)
+
+        if projectKeyId not in data:
+            data[projectKeyId] = {
+                "name": projectName,
+                "scenarios": {},
+                "localOnly": True  # Mark project as created offline
+            }
+
+        with open(self.projects_json_file, "w") as json_file:
+            json.dump(data, json_file, indent=4)
+
+        # Create folder structure
+        project_folder = os.path.join(self.main_watering_folder, projectKeyId)
+        os.makedirs(project_folder, exist_ok=True)
+
+        return True, {"serverKeyId": None, "message": "Offline project created"}
+
+    def create_new_scenario_offline(self, scenarioKeyId, projectKeyId, scenarioName):
+        """
+        Creates a new scenario offline by:
+          1. Updating projects.json under the existing projectKeyId
+          2. Creating the scenario folder
+          3. Setting 'localOnly': True for the scenario
+        """
+        if not os.path.exists(self.projects_json_file):
+            with open(self.projects_json_file, "w") as json_file:
+                json.dump({}, json_file)
+
+        with open(self.projects_json_file, "r") as json_file:
+            data = json.load(json_file)
+
+        if projectKeyId not in data:
+            WateringUtils.error_message("Cannot create scenario offline; project not found in projects.json.")
+            return False
+
+        if "scenarios" not in data[projectKeyId]:
+            data[projectKeyId]["scenarios"] = {}
+
+        data[projectKeyId]["scenarios"][scenarioKeyId] = {
+            "name": scenarioName,
+            "localOnly": True
+        }
+
+        with open(self.projects_json_file, "w") as json_file:
+            json.dump(data, json_file, indent=4)
+
+        scenario_folder = os.path.join(self.main_watering_folder, projectKeyId, scenarioKeyId)
+        os.makedirs(scenario_folder, exist_ok=True)
+
+        return True
+
+    ###########################################################################
+    #             PROJECT & SCENARIO CREATION (ONLINE + OFFLINE)
+    ###########################################################################
     def create_new_scenario_procedures(self):
         newProjectKeyId = str(uuid.uuid4())
         newScenarioKeyId = str(uuid.uuid4())
         newScenarioName = self.new_scenario_name.text() or "My Project Scenario"
         successfullyCreated = False
-        currentProjectsList = self.offline_projects_list if self.offline_mode else self.online_projects_list
+        offline = True
+        # For convenience, let's store the new project name:
+        projectName = self.new_project_name.text() or "My Watering Project"
 
         if self.new_project_checkBox.isChecked():
-            print("project checked ")
-            successfullyCreated = self.create_new_project_and_scenario(newProjectKeyId, newScenarioKeyId, projectName)
-            projectName = self.new_project_name.text() or "My Watering Project"
+            # The user wants a brand-new project AND scenario
+            if self.offline_mode:
+                # ---------- OFFLINE creation ----------
+                project_created, _ = self.create_new_project_offline(newProjectKeyId, projectName)
+                if project_created:
+                    scenario_created = self.create_new_scenario_offline(newScenarioKeyId, newProjectKeyId, newScenarioName)
+                    if scenario_created:
+                        WateringUtils.success_message("Offline project and scenario created successfully!")
+                        successfullyCreated = True
+                    else:
+                        WateringUtils.error_message("Offline scenario creation failed.")
+                else:
+                    WateringUtils.error_message("Offline project creation failed.")
+            else:
+                # ---------- ONLINE creation ----------
+                print("project checked (online) ")
+                offline = False
+                successfullyCreated = self.create_new_project_and_scenario(
+                    newProjectKeyId, newScenarioKeyId, projectName
+                )
+                if successfullyCreated:
+                    WateringUtils.success_message("Online project and scenario created successfully!")
+
             if successfullyCreated:
                 self.current_project_fk = newProjectKeyId
                 self.current_scenario_fk = newScenarioKeyId
                 self.current_project_name = projectName
                 self.current_scenario_name = newScenarioName
+
         else:
-            print("project unchecked ")
-            successfullyCreated = self.create_new_scenario(newScenarioKeyId, None, newScenarioName)
-            if successfullyCreated:
-                self.current_project_fk = currentProjectsList[self.new_projects_box.currentIndex()][1]
-                self.current_scenario_fk = newScenarioKeyId
-                self.current_project_name = currentProjectsList[self.new_projects_box.currentIndex()][0]
-                self.current_scenario_name = newScenarioName
+            # The user wants to create a new scenario in an existing project
+            currentProjectsList = self.offline_projects_list if self.offline_mode else self.online_projects_list
+            if self.offline_mode:
+                # ---------- OFFLINE scenario in an existing offline project ----------
+                selected_index = self.new_projects_box.currentIndex()
+                # offline_projects_list: [ (projectKey, projectName), ... ]
+                existingProjectFK = currentProjectsList[selected_index][0]
+                existingProjectName = currentProjectsList[selected_index][1]
+
+                scenario_created = self.create_new_scenario_offline(newScenarioKeyId, existingProjectFK, newScenarioName)
+                if scenario_created:
+                    WateringUtils.success_message("Offline scenario created successfully!")
+                    self.current_project_fk = existingProjectFK
+                    self.current_scenario_fk = newScenarioKeyId
+                    self.current_project_name = existingProjectName
+                    self.current_scenario_name = newScenarioName
+                    successfullyCreated = True
+                else:
+                    WateringUtils.error_message("Offline scenario creation failed.")
+            else:
+                # ---------- ONLINE scenario in an existing online project ----------
+                print("project unchecked (online) ")
+                offline = False
+                successfullyCreated = self.create_new_scenario(newScenarioKeyId, None, newScenarioName)
+                if successfullyCreated:
+                    self.current_project_fk = currentProjectsList[self.new_projects_box.currentIndex()][1]
+                    self.current_scenario_fk = newScenarioKeyId
+                    self.current_project_name = currentProjectsList[self.new_projects_box.currentIndex()][0]
+                    self.current_scenario_name = newScenarioName
 
         if successfullyCreated:
             self.create_scenario_folder()
             # load layers
-            self.CreateLayers()
-
+            self.CreateLayers(offline)
             self.open_watering_project(True)
 
     def create_new_project_and_scenario(self, projectKeyId, scenarioKeyId, projectName):
@@ -250,12 +381,17 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             WateringUtils.error_message("Scenario creation failed. Please try again.")
             return False
 
-        WateringUtils.success_message("Project and scenario created successfully!")
         return True
 
     def create_new_project(self, keyId, projectName):
-        description = "Project created in QGIS WaterIng Plugin"
+        """
+        Original logic for creating a new project online. If self.offline_mode is True,
+        we skip the online call and do the offline approach instead.
+        """
+        if self.offline_mode:
+            return self.create_new_project_offline(keyId, projectName)
 
+        description = "Project created in QGIS WaterIng Plugin"
         newProjectJson = {
             "keyId": "{}".format(keyId),
             "name": "{}".format(projectName),
@@ -273,19 +409,22 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             return True, response
 
         WateringUtils.error_message("Project creation failed. Please try again.")
-        return False
+        return False, None
 
     def create_new_scenario(self, keyId, projectKeyId, scenarioName):
+        """
+        Original logic for creating a new scenario online.
+        If self.offline_mode = True, then skip and do offline approach (already handled).
+        """
         if not self.online_projects_list:
             WateringUtils.error_message(
                 self.tr("Functionality not available offline. Connect to Watering and try again.")
             )
             return
+
         if not projectKeyId:
             current_index = self.new_projects_box.currentIndex()
             projectId = self.online_projects_list[current_index][1]
-            print("current index: ", current_index)
-            print("projectID: ", projectId)
         else:
             projectId = projectKeyId
 
@@ -302,7 +441,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         url = WateringUtils.getServerUrl() + "/api/v1/ScenarioWaterNetwork"
         headers = {"Authorization": "Bearer {}".format(self.token)}
         response = requests.post(url, headers=headers, json=newScenarioJson)
-        print("response.text: ", response.text)
+
         if response.status_code == 200:
             WateringUtils.success_message("Scenario created successfully!")
             return True
@@ -310,23 +449,47 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         WateringUtils.error_message("Scenario creation failed. Please try again.")
         return False
 
+    ###########################################################################
+    #             LOAD / CHECK PROJECT
+    ###########################################################################
     def checkExistingProject(self):
+        print("DEBUG: checkExistingProject called")
+        
+        # Get the current QGIS project instance
         project = QgsProject.instance()
-        should_start_project = not WateringUtils.isScenarioNotOpened() or WateringUtils.isProjectOpened()
-
+        print("DEBUG: Retrieved QgsProject instance")
+        
+        # Evaluate conditions for starting the project
+        scenario_not_opened = WateringUtils.isScenarioNotOpened()
+        project_opened = WateringUtils.isProjectOpened()
+        should_start_project = not scenario_not_opened or project_opened
+        print(f"DEBUG: scenario_not_opened={scenario_not_opened}, project_opened={project_opened}, should_start_project={should_start_project}")
+        
         if should_start_project:
+            # Get the current project ID from WateringUtils
             current_project_id = WateringUtils.getProjectId()
+            print(f"DEBUG: current_project_id={current_project_id}, self.current_project_fk={self.current_project_fk}")
+            
             if self.current_project_fk != current_project_id:
+                print("DEBUG: Project IDs differ. Saving current project.")
                 self.save_current_project()
             else:
+                print("DEBUG: Project IDs match. Clearing project and starting new one.")
                 project.clear()
                 self.start_project()
         else:
+            print("DEBUG: should_start_project is False. Starting project.")
             self.start_project()
-
+        
+        # Close all dock widgets in the right dock area
+        print("DEBUG: Closing right dock widgets if any.")
         for dock_widget in iface.mainWindow().findChildren(QDockWidget):
-            if iface.mainWindow().dockWidgetArea(dock_widget) == Qt.RightDockWidgetArea:
+            dock_area = iface.mainWindow().dockWidgetArea(dock_widget)
+            print(f"DEBUG: Found dock widget '{dock_widget.objectName()}' in area {dock_area}")
+            if dock_area == Qt.RightDockWidgetArea:
+                print(f"DEBUG: Closing dock widget '{dock_widget.objectName()}' in RightDockWidgetArea")
                 dock_widget.close()
+
 
     def save_current_project(self):
         project = QgsProject.instance()
@@ -354,29 +517,65 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.start_project()
 
     def start_project(self):
+        print("DEBUG: start_project called")
+        
+        # Show and initialize the progress bar
         self.progressBar.show()
         self.progressBar.setRange(0, 100)
         self.progressBar.setValue(0)
-
+        print("DEBUG: Progress bar shown and initialized to 0%")
+        
+        # Determine the current scenario index
         current_index = self.load_scenarios_box.currentIndex()
-        scenarios = self.offline_scenarios_list if self.offline_mode else self.load_scenarios_list
-        print("scenarios: ", scenarios)
-
+        print(f"DEBUG: Current index from load_scenarios_box: {current_index}")
+        
+        # Select scenarios based on offline mode
+        scenarios = self.offline_scenarios_list_load if self.offline_mode else self.load_scenarios_list
+        mode = "offline" if self.offline_mode else "online"
+        print(f"DEBUG: Operating in {mode} mode")
+        print(f"DEBUG: Scenarios list: {scenarios}")
+        
+        # Check if scenarios list is valid and index is within range
         if scenarios and 0 <= current_index < len(scenarios):
             self.current_scenario_name, self.current_scenario_fk = (
                 scenarios[current_index][0],
                 scenarios[current_index][1],
             )
-            self.open_scenario()
-            self.progressBar.setValue(10)
+            print(f"DEBUG: Selected scenario - Name: {self.current_scenario_name}, FK: {self.current_scenario_fk}")
+            
+            # Attempt to open the selected scenario
+            try:
+                self.open_scenario()
+                print("DEBUG: open_scenario() executed successfully")
+                self.progressBar.setValue(10)
+                print("DEBUG: Progress bar updated to 10%")
+            except Exception as e:
+                print(f"ERROR: Exception occurred while opening scenario: {e}")
+                self.handle_failed_project_load()
         else:
+            print("DEBUG: Invalid scenarios list or current_index out of range")
             self.handle_failed_project_load()
-
-        self.done(True)
+        
+        # Finalize the operation
+        try:
+            self.done(True)
+            print("DEBUG: Operation marked as done")
+        except Exception as e:
+            print(f"ERROR: Exception occurred in done(): {e}")
+        
+        # Hide the progress bar and close the window/dialog
         self.progressBar.hide()
-        self.close()
+        print("DEBUG: Progress bar hidden")
+        
+        try:
+            self.close()
+            print("DEBUG: Window/dialog closed")
+        except Exception as e:
+            print(f"ERROR: Exception occurred while closing window/dialog: {e}")
+
 
     def open_scenario(self):
+        print("HERE")
         justCreated = False
         WateringUtils.setProjectMetadata("project_path", self.main_watering_folder + self.current_project_fk)
 
@@ -420,9 +619,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         # project name
         project = QgsProject.instance()
         name = self.new_project_name.text()
-        project_name = "test project "  # self.new_project_name.placeholderText() if not name else name
+        project_name = "test project "
 
-        # self.setWateringFolderAppData(self.newShpDirectory.filePath())
         project.setFileName(project_name)
         self.projectPathQgsProject = self.get_project_folder() + "/" + project_name + ".qgz"
         project.write(self.projectPathQgsProject)
@@ -434,7 +632,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.progressBar.setValue(30)
 
         # load layers
-        self.CreateLayers()
+        self.CreateLayers(False)
 
         WateringUtils.update_last_updated(self.current_scenario_fk)
         return True
@@ -461,20 +659,25 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not self.offline_mode:
             self.updateProject(justCreated)
         else:
+            print("REACHED HERE")
             self.myScenarioUnitOfWork = scenarioUnitOfWork(
-                self.token, self.scenario_folder, self.offline_scenarios_list[self.load_scenarios_box.currentIndex()][1]
+                self.token, self.scenario_folder, 
+                self.current_scenario_fk
             )
         self.zoomToProject()
         self.progressBar.setValue(70)
         WateringUtils.writeWateringMetadata(
-            self.current_project_name, self.current_project_fk, self.current_scenario_name, self.current_scenario_fk
+            self.current_project_name,
+            self.current_project_fk,
+            self.current_scenario_name,
+            self.current_scenario_fk
         )
         self.progressBar.setValue(90)
         self.done(True)
 
-    def CreateLayers(self):
+    def CreateLayers(self, offline):
         self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.current_scenario_fk)
-        self.myScenarioUnitOfWork.loadAll(self.progressBar)
+        self.myScenarioUnitOfWork.loadAll(self.progressBar, offline)
 
         self.write_scenario_in_projects_file()
         self.progressBar.setValue(100)
@@ -493,24 +696,34 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not self.current_project_fk in data:
             data[self.current_project_fk] = {"name": self.current_project_name, "scenarios": {}}
 
-        data[self.current_project_fk]["scenarios"][self.current_scenario_fk] = {"name": self.current_scenario_name}
+        # If this scenario was created offline, it might already exist with localOnly
+        scenario_data = data[self.current_project_fk]["scenarios"].get(self.current_scenario_fk, {})
+        scenario_data["name"] = self.current_scenario_name
+
+        # If we want to ensure localOnly is not overwritten, do:
+        if "localOnly" not in scenario_data:
+            scenario_data["localOnly"] = False  # By default it's from server if we are online
+
+        data[self.current_project_fk]["scenarios"][self.current_scenario_fk] = scenario_data
 
         with open(self.projects_json_file, "w") as json_file:
             json.dump(data, json_file, indent=4)
 
     def openProjectFromFolder(self):
         # Load the project
-        project_path = self.main_watering_folder + self.current_project_fk + "/" + self.current_project_name + ".qgz"
-        scenario_path = self.main_watering_folder + self.current_project_fk + "/" + self.current_scenario_fk + "/"
+        project_path = (
+            self.main_watering_folder + self.current_project_fk + "/" + self.current_project_name + ".qgz"
+        )
+        scenario_path = (
+            self.main_watering_folder + self.current_project_fk + "/" + self.current_scenario_fk + "/"
+        )
 
         self.loadOfflineScenario(project_path, scenario_path)
         iface.mapCanvas().refresh()
 
     def loadOfflineScenario(self, project_path, scenario_path):
         project = QgsProject.instance()
-
         success = project.read(project_path)
-
         if success:
             print(f"Project {project_path} successfully loaded.")
         else:
@@ -549,16 +762,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 break
             if layer.name() == map_layer:
                 layer.renderer().setOpacity(0.5)
-                print("Open street layer found XXX")
                 break
 
         if all_layers_valid:
             self.loadOpenStreetMapLayer()
-        else:
-            print("Some layers were invalid, delaying the loading of the Open Street Maps layer.")
 
     def openGroup(self, group_list, group, scenario_path):
-        print("OPENING LAYERS OPENING LAYERS")
         for element_layer in group_list:
             layer_path = os.path.join(scenario_path, element_layer)
             layer_name = os.path.splitext(element_layer)[0]
@@ -586,7 +795,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not any(layer.name() == map_layer for layer in QgsProject.instance().mapLayers().values()):
             tms = "type=xyz&url=https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             layer = QgsRasterLayer(tms, "Open Street Maps", "wms")
-            print("Map setting opacity XXX")
             layer.renderer().setOpacity(0.5)
             QgsProject.instance().addMapLayer(layer, False)
             root = QgsProject.instance().layerTreeRoot()
@@ -616,14 +824,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
     def checkCreateInitializeGroup(self, project, groupName):
         root = project.layerTreeRoot()
 
-        # Find the root group by name
         group = root.findGroup(groupName)
-
-        # If the group doesn't exist, create it
         if not group:
             group = root.addGroup(groupName)
 
-        # Remove all layers from the group
+        # Clear existing layers in group
         for child in group.children():
             if isinstance(child, QgsLayerTreeGroup):
                 group.removeChildNode(child)
@@ -633,7 +838,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return group
 
     def updateProject(self, justCreated):
-        self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.current_scenario_fk)
+        self.myScenarioUnitOfWork = scenarioUnitOfWork(
+            self.token, self.scenario_folder, self.current_scenario_fk
+        )
 
     def handle_failed_project_load(self):
         WateringUtils.error_message(
@@ -644,7 +851,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             if self.projects_json_data[self.current_project_fk]["scenarios"] != {}:
                 if self.current_scenario_fk in self.projects_json_data[self.current_project_fk]["scenarios"]:
                     del self.projects_json_data[self.current_project_fk]["scenarios"][self.current_scenario_fk]
-            # If there is no scenario in projects.json[ProjectFK], delete this project
             else:
                 del self.projects_json_data[self.current_project_fk]
 
@@ -653,34 +859,26 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         self.run_offline_procedures()
 
+    ###########################################################################
+    #             CLONE SCENARIO
+    ###########################################################################
     def clone_scenario(self):
-        print("Cloning: Entering clone_scenario method")
         folder_path = WateringUtils.get_watering_folder()
-        print(f"Cloning: folder_path: {folder_path}")
-
         fromProjectKeyID = self.offline_projects_list[self.clone_projects_box.currentIndex()][0]
-        print(f"Cloning: fromProjectKeyID: {fromProjectKeyID}")
-
         fromProjectName = self.offline_projects_list[self.clone_projects_box.currentIndex()][1]
-        print(f"Cloning: fromProjectName: {fromProjectName}")
-
         fromProjectKeyScenario = self.offline_scenarios_list_clone[self.clone_scenarios_box.currentIndex()][1]
-        print(f"Cloning: fromProjectKeyScenario: {fromProjectKeyScenario}")
-
         clonedScenarioName = self.offline_scenarios_list_clone[self.clone_scenarios_box.currentIndex()][0]
-        print(f"Cloning: clonedScenarioName: {clonedScenarioName}")
-
         toProjectKeyID = self.offline_projects_list[self.clone_box.currentIndex()][0]
-        print(f"Cloning: toProjectKeyID: {toProjectKeyID}")
-
         toProjectKeyScenario = str(uuid.uuid4())
-        print(f"Cloning: toProjectKeyScenario: {toProjectKeyScenario}")
+        scenarioName = self.cloned_scenario_name.text() or (clonedScenarioName + " Cloned Version")
 
-        scenarioName = self.cloned_scenario_name.text() or clonedScenarioName + " Cloned Version"
-        print(f"Cloning: scenarioName: {scenarioName}")
-
-        scenario_created = self.create_new_scenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
-        print(f"Cloning: scenario_created: {scenario_created}")
+        # If offline, skip the server call and only do local scenario creation
+        # We try to create a new scenario offline in 'toProjectKeyID'
+        scenario_created = (
+            self.create_new_scenario_offline(toProjectKeyScenario, toProjectKeyID, scenarioName)
+            if self.offline_mode
+            else self.create_new_scenario(toProjectKeyScenario, toProjectKeyID, scenarioName)
+        )
 
         if scenario_created:
             self.clone_scenario_procedures(
@@ -705,55 +903,44 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         toProjectKeyScenario,
         clonedScenarioName,
     ):
-        print("Cloning: Entering clone_scenario_procedures method")
-
         source_path = os.path.join(folder_path, fromProjectKeyID, fromProjectKeyScenario)
-        print(f"Cloning: source_path: {source_path}")
-
         target_path = os.path.join(folder_path, toProjectKeyID, toProjectKeyScenario)
-        print(f"Cloning: target_path: {target_path}")
-
         os.makedirs(target_path, exist_ok=True)
-        print(f"Cloning: Created target path: {target_path}")
 
         for item in os.listdir(source_path):
             s = os.path.join(source_path, item)
             d = os.path.join(target_path, item)
-            print(f"Cloning: Copying item: {item} from {s} to {d}")
             if os.path.isdir(s):
                 shutil.copytree(s, d, dirs_exist_ok=True)
             else:
                 shutil.copy2(s, d)
 
         creation_time = "1800-11-29T10:28:46.2756439Z"
-        print(f"Cloning: creation_time: {creation_time}")
-
         projects_json_path = os.path.join(folder_path, "projects.json")
-        print(f"Cloning: projects_json_path: {projects_json_path}")
 
         with open(projects_json_path, "r+") as f:
-            print(f"Cloning: Opening projects.json file")
             projects = json.load(f)
-            print(f"Cloning: Loaded projects: {projects}")
 
             if toProjectKeyID not in projects:
-                projects[toProjectKeyID] = {"name": "{}".format(fromProjectName), "scenarios": {}}
-                print(f"Cloning: Added new project ID: {toProjectKeyID} with name: {fromProjectName}")
+                projects[toProjectKeyID] = {
+                    "name": "{}".format(fromProjectName),
+                    "scenarios": {}
+                }
 
             projects[toProjectKeyID]["scenarios"][toProjectKeyScenario] = {
                 "name": "{}".format(clonedScenarioName),
                 "lastUpdated": "{}".format(creation_time),
             }
-            print(f"Cloning: Added new scenario: {toProjectKeyScenario} with name: {clonedScenarioName}")
 
             f.seek(0)
             json.dump(projects, f, indent=4)
             f.truncate()
-            print("Cloning: Updated projects.json file")
 
-        print("Cloning: Reached cloning end")
         return target_path
 
+    ###########################################################################
+    #             MERGE SCENARIOS
+    ###########################################################################
     def set_merge_projects_combo_box(self):
         self.offline_scenarios_list_sourceA = []
         self.offline_scenarios_list_sourceB = []
@@ -767,17 +954,19 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.set_offline_projects_list(self.merge_box, None, None)
 
     def initialize_merge(self):
-        print("self.projects: ", self.offline_projects_list)
-        print(" ----- ")
-
-        self.current_project_sourceA_fk = self.offline_projects_list[self.merge_projects_box_sourceA.currentIndex()][0]
+        self.current_project_sourceA_fk = self.offline_projects_list[
+            self.merge_projects_box_sourceA.currentIndex()
+        ][0]
         self.current_scenario_sourceA_fk = self.offline_scenarios_list_sourceA[
             self.merge_scenarios_box_sourceA.currentIndex()
         ][1]
-        self.current_project_sourceB_fk = self.offline_projects_list[self.merge_scenarios_box_sourceB.currentIndex()][0]
+        self.current_project_sourceB_fk = self.offline_projects_list[
+            self.merge_scenarios_box_sourceB.currentIndex()
+        ][0]
         self.current_scenario_sourceB_fk = self.offline_scenarios_list_sourceB[
             self.merge_scenarios_box_sourceB.currentIndex()
         ][1]
+
         shps_list = [
             "watering_demand_nodes.shp",
             "watering_reservoirs.shp",
@@ -787,7 +976,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             "watering_pipes.shp",
         ]
 
-        print("RESULT : ")
         print(
             self.merge_and_replace_shapefiles(
                 self.current_project_sourceA_fk,
@@ -797,8 +985,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 shps_list,
             )
         )
-
-    # NEW MERGE SHPS METHODS #
 
     def get_shapefile_path(self, project_fk, scenario_fk, shp_name):
         return os.path.join(self.main_watering_folder, project_fk, scenario_fk, shp_name)
@@ -819,7 +1005,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             shapefile_A = self.load_shapefile(shapefile_A_path)
             shapefile_B = self.load_shapefile(shapefile_B_path)
             if not shapefile_A.empty and not shapefile_B.empty:
-                # merged_shapefile = shapefile_A.append(shapefile_B, ignore_index=True)
                 merged_shapefile = gpd.GeoDataFrame(
                     pd.concat([shapefile_A, shapefile_B], ignore_index=True)
                 ).drop_duplicates(subset="geometry")

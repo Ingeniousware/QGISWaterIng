@@ -54,10 +54,10 @@ class scenarioUnitOfWork:
         # working code
         self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK, self.list_of_elements)
 
-    def loadAll(self, progressBar):
+    def loadAll(self, progressBar, offline):
         i = 40
         for element in self.list_of_elements:
-            element.initializeRepository()
+            element.initializeRepository(offline)
             progressBar.setValue(i)
             i += 10
 

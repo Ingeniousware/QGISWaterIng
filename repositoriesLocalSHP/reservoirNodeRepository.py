@@ -50,8 +50,8 @@ class ReservoirNodeRepository(AbstractRepository):
         self.StrokeColor = None
         self.currentLayer = None
 
-    def initializeRepository(self):
-        super(ReservoirNodeRepository, self).initializeRepository()
+    def initializeRepository(self, offline):
+        super(ReservoirNodeRepository, self).initializeRepository(offline)
 
         self.openLayers(":/plugins/QGISPlugin_WaterIng/images/reservoirLayer.svg", 12)
         self.createBackupLayer()

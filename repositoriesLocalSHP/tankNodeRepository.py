@@ -80,8 +80,8 @@ class TankNodeRepository(AbstractRepository):
         self.StrokeColor = None
         self.currentLayer = None
 
-    def initializeRepository(self):
-        super(TankNodeRepository, self).initializeRepository()
+    def initializeRepository(self, offline):
+        super(TankNodeRepository, self).initializeRepository(offline)
         self.openLayers(":/plugins/QGISPlugin_WaterIng/images/tankLayer.svg", 12)
         self.createBackupLayer()
 

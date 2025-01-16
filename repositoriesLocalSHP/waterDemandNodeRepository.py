@@ -63,8 +63,8 @@ class WateringDemandNodeRepository(AbstractRepository):
         self.StrokeColor = QColor.fromRgb(23, 61, 108)
         self.currentLayer = None
 
-    def initializeRepository(self):
-        super(WateringDemandNodeRepository, self).initializeRepositoryStreamingData()
+    def initializeRepository(self, offline):
+        super(WateringDemandNodeRepository, self).initializeRepositoryStreamingData(offline)
         self.openLayers(QgsSimpleMarkerSymbolLayerBase.Circle, 2)
         self.createBackupLayer()
 
