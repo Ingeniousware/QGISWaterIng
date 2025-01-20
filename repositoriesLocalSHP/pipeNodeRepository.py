@@ -177,6 +177,10 @@ class PipeNodeRepository(AbstractRepository):
         feature.setAttribute("lastUpdate", WateringUtils.getDateTimeNow())
         feature.setAttribute("Last Mdf", WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
 
+        feature.setAttribute("Up-Node", upnode["ID"])
+        feature.setAttribute("Down-Node", downnode["ID"])
+              
+
         id = str(uuid.uuid4())
         temp_id = id[:10]
 
