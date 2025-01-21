@@ -97,6 +97,7 @@ Ejemplo de como crear un grupo en QGIS.
 """
 
 import os
+import stat
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject
 from qgis.core import QgsProject, QgsField
 from PyQt5.QtCore import QVariant
@@ -124,6 +125,7 @@ from ..wntr.resultTypes import ResultNode, ResultLink
 class INPManager():
     def __init__(self):
         self._outfile: str = ""
+        # self._outfile = self.__getScenarioFolderPath()
         
         #list1.First(ii => ii.id == "")
         #next((item for item in list1 if item.id == ""), None)
@@ -172,25 +174,34 @@ class INPManager():
     @OutFile.setter
     def OutFile(self, value: str):
         self._outfile = value
+        
+    @property
+    def OutFileINP(self):
+        return self.OutFile.replace('/','\\')
 
 
     def __getScenarioFolderPath(self):
+        # project_path = WateringUtils.getProjectPath()
+        # scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        # scenario_folder_path = project_path + "/" + scenario_id + "/epanet2_2/scenario.inp"
+        
         project_path = WateringUtils.getProjectPath()
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        scenario_folder_path = project_path + "\\" + scenario_id + "\\epanet2_2\\scenario.inp"
-        scenario_folder_path = scenario_folder_path.replace('/','\\')
-        """
-        #Espcificar el camino del directorio que deseas crear.
-        directorio = 'rura/al/nuevo/directorio'
-        #Crear el directorio si no existe
-        if not os.path.exists(directorio):
-            os.makedirs(directorio)
-            print(f"El directorio '{directorio}' ha cido creado.")
-        else:
-            print(f"El directorio '{directorio}' ya existe.")
+        scenario_folder_path = project_path + "/" + scenario_id + "/epanet2_2"
+        # scenario_folder_path = scenario_folder_path.replace('/','\\')
         
-        """
+        if not os.path.exists(scenario_folder_path):
+            os.makedirs(scenario_folder_path)
+            os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+        else:
+           os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+        
+        scenario_folder_path = scenario_folder_path + "/scenario.inp"
         return scenario_folder_path
+
+
+    def __getScenarioFolderPathToINP(self):
+        return self.OutFile.replace('/','\\')
 
 
     def __readFeatures(self, layerName):
@@ -395,13 +406,11 @@ class INPManager():
 
     def writeSections(self):
         self.__readLayers()
-        try:
-            with open(os.path.join(self.OutFile), "w") as inpfile:
-                for t, s in self.sections.items():
-                    print(t, s.name)
-                    s.writeSection(inpfile)
-        except Exception as exception:
-            print("Existe un error a la hora de escribir los valores en el fichero: ")
+        print("0001", self._outfile)
+        with open(os.path.join(self.OutFile), "w") as inpfile:
+            for t, s in self.sections.items():
+                print(t, s.name)
+                s.writeSection(inpfile)
 
         # Cierra el fichero manualmente
         # self.outfile.close()
@@ -530,6 +539,7 @@ class INPManager():
             if flows == 8: UndCaudal = "CMH"
             if flows == 9: UndCaudal = "CMD"
             print("Unidad de caudal: ", UndCaudal)
+            
             enData.ENclose()
         
         except Exception as e:

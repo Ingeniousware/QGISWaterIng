@@ -298,15 +298,16 @@ class QGISPlugin_WaterIng:
                 #print(inpfile)
                 #inpMan = INPManager(inpfile)
             inpMan = INPManager()
-            print(inpMan.OutFile)
+            print("001", inpMan.OutFile)
                 #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
             inpMan.writeSections()
 
             #inpMan.updateLayer()
-            print("001")
+            # print("001")
             #inp_file = scenario_folder_path.replace('/','\\')
-            print(inpMan.OutFile)
-            inpMan.testEpanet(inpMan.OutFile)
+            print("002", inpMan.OutFile)
+            inpMan.testEpanet(inpMan.OutFileINP)
+            print("003", inpMan.OutFile)
         
         except Exception as e:
             show_custom_dialog("Información", "Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering")
