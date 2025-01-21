@@ -1,23 +1,95 @@
-/.DS_Store
-.vscode
-/repositories/__pycache__/
-/repositoriesServerREST/__pycache__/
-/repositoryConnectorsSHPREST/__pycache__/
-/syncInfrastructureSHPREST/__pycache__/
-/repositoriesLocalSHP/__pycache__/
-/NetworkAnalysis/__pycache__/
-/NetworkAnalysis/.DS_Store
-/ui/__pycache__/
-/maptools/__pycache__/
-/__pycache__
-/ui/.DS_Store
-/inpProcessing/__pycache__/
-/repositories/.DS_Store
-/updateTools/__pycache__/
-/unitofwork/__pycache__
-/ActionManagement/__pycache__
-/toolbarManager/__pycache__/
-/toolsMap/__pycache__/
-/toolsProcess/__pycache__/
-/toolbarManager/.DS_Store/
-/shpProcessing/__pycache__/
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.bak
+
+# Python cache files and compiled files
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
+venv/
+ENV/
+env/
+.env
+
+# macOS system files
+**/.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows system files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Log files
+*.log
+logs/
+log/
+
+# Database files
+*.sqlite
+*.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*~
+
+# Coverage reports
+.coverage
+coverage.xml
+htmlcov/
+
+# Test cache
+.pytest_cache/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+
+# Documentation
+docs/_build/
+doc/_build/
+
+# Distribution/packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
