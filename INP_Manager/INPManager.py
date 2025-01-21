@@ -101,6 +101,7 @@ from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsF
 from qgis.core import QgsProject, QgsField
 from PyQt5.QtCore import QVariant
 
+
 from .sections import (sectionTitle, sectionJunctions, sectionReservoirs, sectionTanks, sectionPipes, sectionPumps,
                        sectionValves, sectionTags, sectionDemands, sectionStatus, sectionPatterns, sectionCurves,
                        sectionControls, sectionRules, sectionEnergy, sectionEmitters, sectionQuality, sectionSources,
@@ -113,6 +114,7 @@ import json
 import os
 #import wntr.resultTypes as rt
 #from ..wntr.resultTypes import
+from ..watering_utils import WateringUtils
 from ..wntr.epanet.toolkit import ENepanet
 from ..wntr.epanet.util import EN
 from ..wntr.resultTypes import ResultNode, ResultLink
@@ -120,8 +122,8 @@ from ..wntr.resultTypes import ResultNode, ResultLink
 
 
 class INPManager():
-    def __init__(self, outfile=None):
-        self.outfile = outfile
+    def __init__(self):
+        self._outfile: str = ""
         
         #list1.First(ii => ii.id == "")
         #next((item for item in list1 if item.id == ""), None)
@@ -160,12 +162,43 @@ class INPManager():
                          'LABELS': sectionLabels(),
                          'BACKDROP': sectionBackdrop(),
                          'END': sectionEnd()}
+
+
+    @property
+    def OutFile(self):
+        if self._outfile == "":
+            self._outfile = self.__getScenarioFolderPath()
+        return self._outfile
+    @OutFile.setter
+    def OutFile(self, value: str):
+        self._outfile = value
+
+
+    def __getScenarioFolderPath(self):
+        project_path = WateringUtils.getProjectPath()
+        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        scenario_folder_path = project_path + "\\" + scenario_id + "\\epanet2_2\\scenario.inp"
+        scenario_folder_path = scenario_folder_path.replace('/','\\')
+        """
+        #Espcificar el camino del directorio que deseas crear.
+        directorio = 'rura/al/nuevo/directorio'
+        #Crear el directorio si no existe
+        if not os.path.exists(directorio):
+            os.makedirs(directorio)
+            print(f"El directorio '{directorio}' ha cido creado.")
+        else:
+            print(f"El directorio '{directorio}' ya existe.")
         
+        """
+        return scenario_folder_path
+
+
     def __readFeatures(self, layerName):
         source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
         print(source_layer)
         return source_layer.getFeatures()
-    
+
+
     def __readDemandNode(self, layerName = "watering_demand_nodes"):
         source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         features = source_layer.getFeatures() #self.__readFeatures(layerName)
@@ -196,7 +229,8 @@ class INPManager():
             
             if label != "":
                 tag.values.append(Tag("NODE", id, label))
-    
+
+
     def __readReservoirs(self, layerName = "watering_reservoirs"):
         
         source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
@@ -240,6 +274,7 @@ class INPManager():
             if label != "":
                 tag.values.append(Tag("NODE", id, label))
 
+
     def __readTanks(self, layerName = "watering_tanks"):
         
         source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
@@ -268,7 +303,8 @@ class INPManager():
             
             if label != "":
                 tag.values.append(Tag("NODE", id, label))
-    
+
+
     def __readPipes(self, layerName = "watering_pipes"):
         
         source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
@@ -311,7 +347,8 @@ class INPManager():
             
             if label != "":
                 tag.values.append(Tag("LINK", id, label))
-    
+
+
     def __Pumps(self, layerName = "watering_pumps"):
         features = self.__readFeatures(layerName)
         for feature in features:
@@ -345,7 +382,8 @@ class INPManager():
         
         backdrop = self.sections['BACKDROP']
         backdrop.values.append(Backdrop(self.xmin, self.ymin, self.xmax, self.ymax))
-    
+
+
     def __readLayers(self):
         self.__readDemandNode()
         self.__readReservoirs()
@@ -354,42 +392,45 @@ class INPManager():
         
         self.__readBackdrop()
 
-    def writeSections(self, outfile=None):
-        if outfile is not None:
-            self.outfile = outfile
 
+    def writeSections(self):
         self.__readLayers()
-        
-        for t, s in self.sections.items():
-            print(t,s.name)
-            s.writeSection(self.outfile)
-        
-        # Cierra el fichero manualmente
-        self.outfile.close()
-    
-    def updateLayer(self):
-        layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
-        
-        # Verificar si la capa es válida
-        if not layer_1:
-            print("No hay una capa activa.")
-        else:
-            # Definir el nombre de la nueva propiedad (campo)
-            new_field_name = "Pressure"
+        try:
+            with open(os.path.join(self.OutFile), "w") as inpfile:
+                for t, s in self.sections.items():
+                    print(t, s.name)
+                    s.writeSection(inpfile)
+        except Exception as exception:
+            print("Existe un error a la hora de escribir los valores en el fichero: ")
 
-            # Verificar si la propiedad ya existe
-            existing_fields = [field.name() for field in layer_1.fields()]
-            if new_field_name in existing_fields:
-                print(f"La propiedad '{new_field_name}' ya existe en la capa.")
-            else:
-                # Añadir la nueva propiedad
-                # Iniciar edición
-                print("actulaizando el layer")
-                layer_1.startEditing()
-                new_field = QgsField(new_field_name, QVariant.String)
-                layer_1.dataProvider().addAttributes([new_field])
-                layer_1.updateFields()
-                print(f"La propiedad '{new_field_name}' ha sido añadida a la capa.")
+        # Cierra el fichero manualmente
+        # self.outfile.close()
+
+
+    # def updateLayer(self):
+    #     layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+
+    #     # Verificar si la capa es válida
+    #     if not layer_1:
+    #         print("No hay una capa activa.")
+    #     else:
+    #         # Definir el nombre de la nueva propiedad (campo)
+    #         new_field_name = "Pressure"
+
+    #         # Verificar si la propiedad ya existe
+    #         existing_fields = [field.name() for field in layer_1.fields()]
+    #         if new_field_name in existing_fields:
+    #             print(f"La propiedad '{new_field_name}' ya existe en la capa.")
+    #         else:
+    #             # Añadir la nueva propiedad
+    #             # Iniciar edición
+    #             print("actulaizando el layer")
+    #             layer_1.startEditing()
+    #             new_field = QgsField(new_field_name, QVariant.String)
+    #             layer_1.dataProvider().addAttributes([new_field])
+    #             layer_1.updateFields()
+    #             print(f"La propiedad '{new_field_name}' ha sido añadida a la capa.")
+
 
     def __getidNode(self, espanet: ENepanet, nodeName: str, count: int):
         result = 0
@@ -400,7 +441,8 @@ class INPManager():
                 result = i
                 break
         return result
-    
+
+
     def testEpanet(self, inpfile = "C:\\Temp\\Net1.inp", rptfile=None, binfile=None):
         """
         Run an EPANET command-line simulation
@@ -420,7 +462,7 @@ class INPManager():
             enData = ENepanet()
             enData.ENopen(inpfile, rptfile, binfile)
             enData.ENsolveH()
-            enData.ENsolveQ()
+            #enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
             try:
                 enData.ENreport()
             except:

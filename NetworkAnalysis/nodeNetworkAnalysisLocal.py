@@ -17,14 +17,21 @@
 """
 
 
+from ..wntr.epanet.toolkit import ENepanet
 from .abstractAnalysis import AbstractAnalysis
 
+class AbstractAnalysisLocal(AbstractAnalysis):
+    """"Constructor"""
+    def __init__(self, enData: ENepanet, analysisExecutionId, datetime):
+        super().__init__(analysisExecutionId, datetime)
+        self.__enData = enData
 
-class NodeNetworkAnalysisLocal(AbstractAnalysis):
+class NodeNetworkAnalysisLocal(AbstractAnalysisLocal):
     """
     Clase que representa los resultdos de los nodes.
     """
-    def __init__(self, analysisExecutionId, datetime, nodeProperty):
+    def __init__(self, enData: ENepanet, analysisExecutionId, datetime):
         """Constructor of NodeNetworkAnalysisLocal"""
-        super().__init__(analysisExecutionId, datetime)
+        super().__init__(enData, analysisExecutionId, datetime)
+        
         

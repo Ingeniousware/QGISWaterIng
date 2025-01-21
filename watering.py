@@ -269,9 +269,9 @@ class QGISPlugin_WaterIng:
             
     def exportAndImportINP(self):
         print("Exporte INP")
-        project_path = WateringUtils.getProjectPath()
-        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        scenario_folder_path = project_path + "/" + scenario_id + "/scenario.inp"
+        # project_path = WateringUtils.getProjectPath()
+        # scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
+        # scenario_folder_path = project_path + "/" + scenario_id + "/scenario.inp"
         #print("=========cartpeta de trabajo: ==>", scenario_folder_path)
         #os.path.join("skjks", "kdkf.txx")
         #inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
@@ -294,17 +294,19 @@ class QGISPlugin_WaterIng:
         
         
         try:
-            with open(os.path.join(scenario_folder_path), "w") as inpfile:
+            #with open(os.path.join(scenario_folder_path), "w") as inpfile:
                 #print(inpfile)
-                inpMan = INPManager(inpfile)
+                #inpMan = INPManager(inpfile)
+            inpMan = INPManager()
+            print(inpMan.OutFile)
                 #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
-                inpMan.writeSections()
+            inpMan.writeSections()
 
-            inpMan.updateLayer()
+            #inpMan.updateLayer()
             print("001")
-            inp_file = scenario_folder_path.replace('/','\\')
-            print(inp_file)
-            inpMan.testEpanet(inp_file)
+            #inp_file = scenario_folder_path.replace('/','\\')
+            print(inpMan.OutFile)
+            inpMan.testEpanet(inpMan.OutFile)
         
         except Exception as e:
             show_custom_dialog("Información", "Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering")
