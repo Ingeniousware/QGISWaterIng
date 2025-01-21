@@ -220,16 +220,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             return [(scenario["name"], scenario_key) for scenario_key, scenario in scenario_data.items()]
         return []
 
-    ###########################################################################
-    #             NEW OFFLINE CREATION METHODS
-    ###########################################################################
     def create_new_project_offline(self, projectKeyId, projectName):
-        """
-        Creates a new WaterIng project entirely offline by:
-          1. Writing to projects.json
-          2. Setting 'localOnly': True
-          3. Creating the necessary folder structure
-        """
         if not os.path.exists(self.projects_json_file):
             # If projects.json doesn't exist, create an empty one
             with open(self.projects_json_file, "w") as json_file:
@@ -242,25 +233,18 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             data[projectKeyId] = {
                 "name": projectName,
                 "scenarios": {},
-                "localOnly": True  # Mark project as created offline
+                "localOnly": True
             }
 
         with open(self.projects_json_file, "w") as json_file:
             json.dump(data, json_file, indent=4)
 
-        # Create folder structure
         project_folder = os.path.join(self.main_watering_folder, projectKeyId)
         os.makedirs(project_folder, exist_ok=True)
 
         return True, {"serverKeyId": None, "message": "Offline project created"}
 
     def create_new_scenario_offline(self, scenarioKeyId, projectKeyId, scenarioName):
-        """
-        Creates a new scenario offline by:
-          1. Updating projects.json under the existing projectKeyId
-          2. Creating the scenario folder
-          3. Setting 'localOnly': True for the scenario
-        """
         if not os.path.exists(self.projects_json_file):
             with open(self.projects_json_file, "w") as json_file:
                 json.dump({}, json_file)
@@ -288,16 +272,12 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         return True
 
-    ###########################################################################
-    #             PROJECT & SCENARIO CREATION (ONLINE + OFFLINE)
-    ###########################################################################
     def create_new_scenario_procedures(self):
         newProjectKeyId = str(uuid.uuid4())
         newScenarioKeyId = str(uuid.uuid4())
         newScenarioName = self.new_scenario_name.text() or "My Project Scenario"
         successfullyCreated = False
         offline = True
-        # For convenience, let's store the new project name:
         projectName = self.new_project_name.text() or "My Watering Project"
 
         if self.new_project_checkBox.isChecked():
@@ -331,12 +311,9 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
                 self.current_scenario_name = newScenarioName
 
         else:
-            # The user wants to create a new scenario in an existing project
             currentProjectsList = self.offline_projects_list if self.offline_mode else self.online_projects_list
             if self.offline_mode:
-                # ---------- OFFLINE scenario in an existing offline project ----------
                 selected_index = self.new_projects_box.currentIndex()
-                # offline_projects_list: [ (projectKey, projectName), ... ]
                 existingProjectFK = currentProjectsList[selected_index][0]
                 existingProjectName = currentProjectsList[selected_index][1]
 
@@ -363,7 +340,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         if successfullyCreated:
             self.create_scenario_folder()
-            # load layers
             self.CreateLayers(offline)
             self.open_watering_project(True)
 
@@ -384,10 +360,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return True
 
     def create_new_project(self, keyId, projectName):
-        """
-        Original logic for creating a new project online. If self.offline_mode is True,
-        we skip the online call and do the offline approach instead.
-        """
         if self.offline_mode:
             return self.create_new_project_offline(keyId, projectName)
 
@@ -412,10 +384,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return False, None
 
     def create_new_scenario(self, keyId, projectKeyId, scenarioName):
-        """
-        Original logic for creating a new scenario online.
-        If self.offline_mode = True, then skip and do offline approach (already handled).
-        """
         if not self.online_projects_list:
             WateringUtils.error_message(
                 self.tr("Functionality not available offline. Connect to Watering and try again.")
@@ -449,45 +417,27 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         WateringUtils.error_message("Scenario creation failed. Please try again.")
         return False
 
-    ###########################################################################
-    #             LOAD / CHECK PROJECT
-    ###########################################################################
     def checkExistingProject(self):
-        print("DEBUG: checkExistingProject called")
-        
-        # Get the current QGIS project instance
         project = QgsProject.instance()
-        print("DEBUG: Retrieved QgsProject instance")
         
-        # Evaluate conditions for starting the project
         scenario_not_opened = WateringUtils.isScenarioNotOpened()
         project_opened = WateringUtils.isProjectOpened()
         should_start_project = not scenario_not_opened or project_opened
-        print(f"DEBUG: scenario_not_opened={scenario_not_opened}, project_opened={project_opened}, should_start_project={should_start_project}")
-        
+
         if should_start_project:
-            # Get the current project ID from WateringUtils
             current_project_id = WateringUtils.getProjectId()
-            print(f"DEBUG: current_project_id={current_project_id}, self.current_project_fk={self.current_project_fk}")
-            
+
             if self.current_project_fk != current_project_id:
-                print("DEBUG: Project IDs differ. Saving current project.")
                 self.save_current_project()
             else:
-                print("DEBUG: Project IDs match. Clearing project and starting new one.")
                 project.clear()
                 self.start_project()
         else:
-            print("DEBUG: should_start_project is False. Starting project.")
             self.start_project()
-        
-        # Close all dock widgets in the right dock area
-        print("DEBUG: Closing right dock widgets if any.")
+
         for dock_widget in iface.mainWindow().findChildren(QDockWidget):
             dock_area = iface.mainWindow().dockWidgetArea(dock_widget)
-            print(f"DEBUG: Found dock widget '{dock_widget.objectName()}' in area {dock_area}")
             if dock_area == Qt.RightDockWidgetArea:
-                print(f"DEBUG: Closing dock widget '{dock_widget.objectName()}' in RightDockWidgetArea")
                 dock_widget.close()
 
 
@@ -517,65 +467,43 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.start_project()
 
     def start_project(self):
-        print("DEBUG: start_project called")
-        
-        # Show and initialize the progress bar
         self.progressBar.show()
         self.progressBar.setRange(0, 100)
         self.progressBar.setValue(0)
-        print("DEBUG: Progress bar shown and initialized to 0%")
         
-        # Determine the current scenario index
         current_index = self.load_scenarios_box.currentIndex()
-        print(f"DEBUG: Current index from load_scenarios_box: {current_index}")
-        
-        # Select scenarios based on offline mode
+
         scenarios = self.offline_scenarios_list_load if self.offline_mode else self.load_scenarios_list
         mode = "offline" if self.offline_mode else "online"
-        print(f"DEBUG: Operating in {mode} mode")
-        print(f"DEBUG: Scenarios list: {scenarios}")
         
-        # Check if scenarios list is valid and index is within range
         if scenarios and 0 <= current_index < len(scenarios):
             self.current_scenario_name, self.current_scenario_fk = (
                 scenarios[current_index][0],
                 scenarios[current_index][1],
             )
-            print(f"DEBUG: Selected scenario - Name: {self.current_scenario_name}, FK: {self.current_scenario_fk}")
-            
-            # Attempt to open the selected scenario
+
             try:
                 self.open_scenario()
-                print("DEBUG: open_scenario() executed successfully")
                 self.progressBar.setValue(10)
-                print("DEBUG: Progress bar updated to 10%")
             except Exception as e:
-                print(f"ERROR: Exception occurred while opening scenario: {e}")
                 self.handle_failed_project_load()
         else:
-            print("DEBUG: Invalid scenarios list or current_index out of range")
             self.handle_failed_project_load()
         
-        # Finalize the operation
         try:
             self.done(True)
-            print("DEBUG: Operation marked as done")
         except Exception as e:
             print(f"ERROR: Exception occurred in done(): {e}")
         
-        # Hide the progress bar and close the window/dialog
         self.progressBar.hide()
-        print("DEBUG: Progress bar hidden")
         
         try:
             self.close()
-            print("DEBUG: Window/dialog closed")
         except Exception as e:
             print(f"ERROR: Exception occurred while closing window/dialog: {e}")
 
 
     def open_scenario(self):
-        print("HERE")
         justCreated = False
         WateringUtils.setProjectMetadata("project_path", self.main_watering_folder + self.current_project_fk)
 
@@ -696,13 +624,11 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not self.current_project_fk in data:
             data[self.current_project_fk] = {"name": self.current_project_name, "scenarios": {}}
 
-        # If this scenario was created offline, it might already exist with localOnly
         scenario_data = data[self.current_project_fk]["scenarios"].get(self.current_scenario_fk, {})
         scenario_data["name"] = self.current_scenario_name
 
-        # If we want to ensure localOnly is not overwritten, do:
         if "localOnly" not in scenario_data:
-            scenario_data["localOnly"] = False  # By default it's from server if we are online
+            scenario_data["localOnly"] = False
 
         data[self.current_project_fk]["scenarios"][self.current_scenario_fk] = scenario_data
 
@@ -710,7 +636,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             json.dump(data, json_file, indent=4)
 
     def openProjectFromFolder(self):
-        # Load the project
         project_path = (
             self.main_watering_folder + self.current_project_fk + "/" + self.current_project_name + ".qgz"
         )
@@ -828,7 +753,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         if not group:
             group = root.addGroup(groupName)
 
-        # Clear existing layers in group
         for child in group.children():
             if isinstance(child, QgsLayerTreeGroup):
                 group.removeChildNode(child)
@@ -859,9 +783,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         self.run_offline_procedures()
 
-    ###########################################################################
-    #             CLONE SCENARIO
-    ###########################################################################
     def clone_scenario(self):
         folder_path = WateringUtils.get_watering_folder()
         fromProjectKeyID = self.offline_projects_list[self.clone_projects_box.currentIndex()][0]
@@ -872,8 +793,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         toProjectKeyScenario = str(uuid.uuid4())
         scenarioName = self.cloned_scenario_name.text() or (clonedScenarioName + " Cloned Version")
 
-        # If offline, skip the server call and only do local scenario creation
-        # We try to create a new scenario offline in 'toProjectKeyID'
         scenario_created = (
             self.create_new_scenario_offline(toProjectKeyScenario, toProjectKeyID, scenarioName)
             if self.offline_mode
@@ -938,9 +857,6 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
 
         return target_path
 
-    ###########################################################################
-    #             MERGE SCENARIOS
-    ###########################################################################
     def set_merge_projects_combo_box(self):
         self.offline_scenarios_list_sourceA = []
         self.offline_scenarios_list_sourceB = []
