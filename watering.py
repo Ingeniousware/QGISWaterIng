@@ -57,7 +57,7 @@ from .ui.watering_INPImport import WateringINPImport
 from .ActionManagement.actionManager import actionManager
 from .ActionManagement.identifyElementAction import WateringIdentifyTool
 from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
-from .unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
+from .unitofwork.scenarioUnitOfWork import ScenarioUnitOfWork
 
 from signalrcore.hub_connection_builder import HubConnectionBuilder
 
@@ -571,7 +571,7 @@ class QGISPlugin_WaterIng:
 
     def onSynchButtonClicked(self):
         if self.hub_connection and self.scenarioUnitOFWork:
-            self.scenarioUnitOFWork.newUpdateAll()
+            self.scenarioUnitOFWork.update_all()
             return
 
         WateringUtils.error_message(
@@ -677,15 +677,15 @@ class QGISPlugin_WaterIng:
             if not self.scenarioUnitOFWork:
                 scenario_folder = WateringUtils.getProjectMetadata("scenario_folder")
                 scenario_fk = WateringUtils.getProjectMetadata("scenario_fk")
-                self.scenarioUnitOFWork = scenarioUnitOfWork(token, scenario_folder, scenario_fk)
+                self.scenarioUnitOFWork = ScenarioUnitOfWork(token, scenario_folder, scenario_fk)
 
             if not self.actionManager:
                 self.actionManager = actionManager(
-                    token, self.scenarioUnitOFWork.scenarioFK, self.setActiveStateUndo, self.setActiveStateRedo
+                    token, self.scenarioUnitOFWork.scenario_fk, self.setActiveStateUndo, self.setActiveStateRedo
                 )
 
             if not self.syncManager:
-                self.syncManager = syncManagerSHPREST(token, self.scenarioUnitOFWork.scenarioFK)
+                self.syncManager = syncManagerSHPREST(token, self.scenarioUnitOFWork.scenario_fk)
                 self.syncManager.connectScenarioUnitOfWorkToServer(self.scenarioUnitOFWork)
 
             server_url = WateringUtils.getServerUrl() + "/hubs/waternetworkhub"

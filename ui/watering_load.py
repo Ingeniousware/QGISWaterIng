@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from ..unitofwork.scenarioUnitOfWork import scenarioUnitOfWork
+from ..unitofwork.scenarioUnitOfWork import ScenarioUnitOfWork
 from ..watering_utils import WateringUtils
 
 import os, json, requests, glob, uuid, shutil, processing
@@ -588,7 +588,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
             self.updateProject(justCreated)
         else:
             print("REACHED HERE")
-            self.myScenarioUnitOfWork = scenarioUnitOfWork(
+            self.myScenarioUnitOfWork = ScenarioUnitOfWork(
                 self.token, self.scenario_folder, 
                 self.current_scenario_fk
             )
@@ -604,8 +604,8 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         self.done(True)
 
     def CreateLayers(self, offline):
-        self.myScenarioUnitOfWork = scenarioUnitOfWork(self.token, self.scenario_folder, self.current_scenario_fk)
-        self.myScenarioUnitOfWork.loadAll(self.progressBar, offline)
+        self.myScenarioUnitOfWork = ScenarioUnitOfWork(self.token, self.scenario_folder, self.current_scenario_fk)
+        self.myScenarioUnitOfWork.load_all(self.progressBar, offline)
 
         self.write_scenario_in_projects_file()
         self.progressBar.setValue(100)
@@ -762,7 +762,7 @@ class WateringLoad(QtWidgets.QDialog, FORM_CLASS):
         return group
 
     def updateProject(self, justCreated):
-        self.myScenarioUnitOfWork = scenarioUnitOfWork(
+        self.myScenarioUnitOfWork = ScenarioUnitOfWork(
             self.token, self.scenario_folder, self.current_scenario_fk
         )
 
