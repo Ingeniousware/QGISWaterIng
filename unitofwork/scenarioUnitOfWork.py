@@ -1,3 +1,5 @@
+from typing import Optional, Dict, List
+
 from ..repositoriesLocalSHP.pipeNodeRepository import PipeNodeRepository
 from ..repositoriesLocalSHP.sensorNodeRepository import SensorNodeRepository
 from ..repositoriesLocalSHP.pumpNodeRepository import PumpNodeRepository
@@ -6,33 +8,52 @@ from ..repositoriesLocalSHP.tankNodeRepository import TankNodeRepository
 from ..repositoriesLocalSHP.valveNodeRepository import ValveNodeRepository
 from ..repositoriesLocalSHP.waterDemandNodeRepository import WateringDemandNodeRepository
 from ..repositoriesLocalSHP.waterMeterNodeRepository import WaterMeterNodeRepository
-from ..repositoriesLocalSHP.syncSystem import WateringSync
-
+from ..syncInfrastructureSHPREST.syncSystem import WateringSync
 from ..watering_utils import WateringUtils
 
+from qgis.core import QgsVectorLayer
 
-class scenarioUnitOfWork:
+class ScenarioUnitOfWork:
+    PROGRESS_START = 40
+    PROGRESS_INCREMENT = 10
 
-    def __init__(self, token, project_path, scenarioFK):
-        """Constructor."""
+    def __init__(self, token: str, project_path: str, scenario_fk: str) -> None:
         self.token = token
-        self.scenarioFK = scenarioFK
+        self.scenario_fk = scenario_fk
         self.project_path = project_path
-        self.initializeRepositories()
-        self.generateListOfElements()
-        self.initializeSyncSystem()
+        self.syncSystem = None
 
-    def initializeRepositories(self):
-        self.waterDemandNodeRepository = WateringDemandNodeRepository(self.token, self.project_path, self.scenarioFK)
-        self.tankNodeRepository = TankNodeRepository(self.token, self.project_path, self.scenarioFK)
-        self.reservoirNodeRepository = ReservoirNodeRepository(self.token, self.project_path, self.scenarioFK)
-        self.pipeNodeRepository = PipeNodeRepository(self.token, self.project_path, self.scenarioFK)
-        self.waterMeterNodeRepository = WaterMeterNodeRepository(self.token, self.project_path, self.scenarioFK)
-        self.valveNodeRepository = ValveNodeRepository(self.token, self.project_path, self.scenarioFK)
-        self.pumpNodeRepository = PumpNodeRepository(self.token, self.project_path, self.scenarioFK)
-        self.sensorNodeRepository = SensorNodeRepository(self.token, self.project_path, self.scenarioFK)
+        self._initialize_repositories()
+        self._generate_element_list()
+        self._initialize_sync_system()
 
-    def generateListOfElements(self):
+    def _initialize_repositories(self) -> None:
+        self.waterDemandNodeRepository = WateringDemandNodeRepository(
+            self.token, self.project_path, self.scenario_fk
+        )
+        self.tankNodeRepository = TankNodeRepository(
+            self.token, self.project_path, self.scenario_fk
+        )
+        self.reservoirNodeRepository = ReservoirNodeRepository(
+            self.token, self.project_path, self.scenario_fk
+        )
+        self.pipeNodeRepository = PipeNodeRepository(
+            self.token, self.project_path, self.scenario_fk
+        )
+        self.waterMeterNodeRepository = WaterMeterNodeRepository(
+            self.token, self.project_path, self.scenario_fk
+        )
+        self.valveNodeRepository = ValveNodeRepository(
+            self.token, self.project_path, self.scenario_fk
+        )
+        self.pumpNodeRepository = PumpNodeRepository(
+            self.token, self.project_path, self.scenario_fk
+        )
+        self.sensorNodeRepository = SensorNodeRepository(
+            self.token, self.project_path, self.scenario_fk
+        )
+
+    def _generate_element_list(self) -> None:
         self.list_of_elements = [
             self.waterDemandNodeRepository,
             self.tankNodeRepository,
@@ -44,38 +65,31 @@ class scenarioUnitOfWork:
             self.sensorNodeRepository,
         ]
 
-        self.layer_names = {repo.LayerName: repo for repo in self.list_of_elements}
+        self.layer_names = {
+            repo.LayerName: repo for repo in self.list_of_elements
+        }
 
-    def initializeSyncSystem(self):
-        # TESTS
-        # list_of_elements_nodes_only = [self.waterDemandNodeRepository]
-        # self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK, list_of_elements_nodes_only)
+    def _initialize_sync_system(self) -> None:
+        self.syncSystem = WateringSync(
+            self.token,
+            self.project_path,
+            self.scenario_fk,
+            self.list_of_elements
+        )
 
-        # working code
-        self.syncSystem = WateringSync(self.token, self.project_path, self.scenarioFK, self.list_of_elements)
-
-    def loadAll(self, progressBar, offline):
-        i = 40
+    def load_all(self, progress_bar: any, offline: bool) -> None:
+        progress = self.PROGRESS_START
+        
         for element in self.list_of_elements:
             element.initializeRepository(offline)
-            progressBar.setValue(i)
-            i += 10
+            progress_bar.setValue(progress)
+            progress += self.PROGRESS_INCREMENT
 
-    def updateAll(self):
-        lastUpdate = WateringUtils.getLastUpdate()
-        keyUpdate = WateringUtils.scenarioKeyLastUpdate(self.scenarioFK)
-
-        _lastUpdated_ = WateringUtils.get_last_updated(self.scenarioFK)
-
-        print("THE LAST _lastUpdated_: ", _lastUpdated_)
-
-        for element in self.list_of_elements:
-            element.generalUpdate(_lastUpdated_)
-
-        WateringUtils.setProjectMetadata(keyUpdate, WateringUtils.getDateTimeNow().toString("yyyy-MM-dd hh:mm:ss"))
-
-    def newUpdateAll(self):
+    def update_all(self) -> None:
         self.syncSystem.synchronize()
 
-    def getRepoByLayer(self, layer):
-        return self.layer_names.get(layer.name(), None)
+    def synchronize(self) -> None:
+        self.syncSystem.synchronize()
+
+    def get_repository_by_layer(self, layer: QgsVectorLayer) -> Optional[any]:
+        return self.layer_names.get(layer.name())
