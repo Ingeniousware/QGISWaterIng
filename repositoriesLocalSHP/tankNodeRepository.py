@@ -1,5 +1,7 @@
 import os
 import requests
+
+from ..watering_utils import WateringUtils
 from .abstract_repository import AbstractRepository
 
 from qgis.core import (
@@ -86,7 +88,7 @@ class TankNodeRepository(AbstractRepository):
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
-        name = "tankName"
+        name = f"T-[{WateringUtils.generar_name_aleatorio()}]"
         description = "tank from QGIS"
         z = 0
         initialLevel = 3

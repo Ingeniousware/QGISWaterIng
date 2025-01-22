@@ -214,7 +214,7 @@ class INPManager():
 
 
     def __readFeatures(self, layerName):
-        source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
+        source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         print(source_layer)
         return source_layer.getFeatures()
 
@@ -297,7 +297,7 @@ class INPManager():
 
     def __readTanks(self, layerName = "watering_tanks"):
         
-        source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
+        source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         features = source_layer.getFeatures() #self.__readFeatures(layerName)
         
         coordinate = self.sections['COORDINATES']
@@ -327,7 +327,7 @@ class INPManager():
 
     def __readPipes(self, layerName = "watering_pipes"):
         
-        source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
+        source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         features = source_layer.getFeatures() #self.__readFeatures(layerName)
         
         coordinate = self.sections['COORDINATES']

@@ -1,5 +1,7 @@
 import os
 import requests
+
+from ..watering_utils import WateringUtils
 from .abstract_repository import AbstractRepository
 
 from qgis.core import (
@@ -57,7 +59,7 @@ class ReservoirNodeRepository(AbstractRepository):
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
-        name = "reservorName"
+        name = f"R-[{WateringUtils.generar_name_aleatorio()}]"
         description = "reservoir from QGIS"
         z = 0
         head = 0

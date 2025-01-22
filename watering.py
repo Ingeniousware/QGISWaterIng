@@ -303,7 +303,7 @@ class QGISPlugin_WaterIng:
             inpMan.writeSections()
 
             #inpMan.updateLayer()
-            # print("001")
+            print("001")
             #inp_file = scenario_folder_path.replace('/','\\')
             #print("002 ", "Iniciando simulación")
             inpMan.testEpanet(inpMan.OutFile)

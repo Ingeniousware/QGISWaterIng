@@ -1,5 +1,7 @@
 import os
 import requests
+
+from ..watering_utils import WateringUtils
 from .abstract_repository import AbstractRepository
 
 from qgis.core import (
@@ -74,7 +76,7 @@ class PumpNodeRepository(AbstractRepository):
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
-        name = "pumpName"
+        name = f"P-[{WateringUtils.generar_name_aleatorio()}]"
         description = "pump from QGIS"
         z = 0
         model = "3fa85f64-5717-4562-b3fc-2c963f66afa6"
