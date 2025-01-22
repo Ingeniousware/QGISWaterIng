@@ -125,6 +125,7 @@ from ..wntr.resultTypes import ResultNode, ResultLink
 class INPManager():
     def __init__(self):
         self._outfile: str = ""
+        self._nodes = {}
         # self._outfile = self.__getScenarioFolderPath()
         
         #list1.First(ii => ii.id == "")
@@ -213,6 +214,17 @@ class INPManager():
         return self.OutFile.replace('/','\\')
 
 
+    def __updateDictionaryNode(self, id, name):
+        self._nodes[id] = name
+
+
+    def __getValueNodes(self, key):
+        for itemKey in self._nodes.keys():
+            if itemKey == key:
+                return self._nodes[itemKey]
+        return None
+
+
     def __readFeatures(self, layerName):
         source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         print(source_layer)
@@ -236,19 +248,21 @@ class INPManager():
             #transformed_point = transform.transform(pointXY)
             #print(f"Imprimiento puntos {transformed_point}")
         
-            id = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
+            name = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
             elev = feature.attribute("Z[m]") #if feature.attribute("Z[m]") is not None else 0.0
             demand = feature.attribute("B. Demand") #if feature.attribute("B. Demand") is not None else ""
             pattern = feature.attribute("EmitterCoe") #if feature.attribute("EmitterCoe") is not None else ""
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
             
-            coordinate.values.append(Coordinate(id, pointXY.x(), pointXY.y()))
+            coordinate.values.append(Coordinate(name, pointXY.x(), pointXY.y()))
             
-            junctions.values.append(Junction(id, elev, demand, pattern, description))
+            junctions.values.append(Junction(name, elev, demand, pattern, description))
             
             if label != "":
-                tag.values.append(Tag("NODE", id, label))
+                tag.values.append(Tag("NODE", name, label))
+            
+            self.__updateDictionaryNode(feature.attribute("ID"), name)
 
 
     def __readReservoirs(self, layerName = "watering_reservoirs"):
@@ -262,7 +276,7 @@ class INPManager():
         
         for feature in features:
             pointXY = feature.geometry().asPoint()
-            id = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
+            name = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
             #elev = feature.attribute("Z[m]") if feature.attribute("Z[m]") is not None else ""
             head = feature.attribute("Head[m]") #if feature.attribute("Head[m]") is not None else 0.0
             pattern = ""
@@ -287,12 +301,14 @@ class INPManager():
             # visibleFeatures.append("Carlos")
             # print(visibleFeatures)
             
-            coordinate.values.append(Coordinate(id, pointXY.x(), pointXY.y()))
+            coordinate.values.append(Coordinate(name, pointXY.x(), pointXY.y()))
             
-            reservoirs.values.append(Reservoir(id, head, pattern, description))
+            reservoirs.values.append(Reservoir(name, head, pattern, description))
             
             if label != "":
-                tag.values.append(Tag("NODE", id, label))
+                tag.values.append(Tag("NODE", name, label))
+            
+            self.__updateDictionaryNode(feature.attribute("ID"), name)
 
 
     def __readTanks(self, layerName = "watering_tanks"):
@@ -306,7 +322,7 @@ class INPManager():
         
         for feature in features:
             pointXY = feature.geometry().asPoint()
-            id = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
+            name = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
             elevation = feature.attribute("Z[m]") #if feature.attribute("Z[m]") is not None else 0.0
             initLevel = feature.attribute("Init. Lvl") #if feature.attribute("Init. Lvl") is not None else 0.0
             minLevel = feature.attribute("Min. Lvl") #if feature.attribute("Min. Lvl") is not None else 0.0
@@ -317,12 +333,14 @@ class INPManager():
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
             
-            coordinate.values.append(Coordinate(id, pointXY.x(), pointXY.y()))
+            coordinate.values.append(Coordinate(name, pointXY.x(), pointXY.y()))
             
-            tank.values.append(Tank(id, elevation, initLevel, minLevel, maxLevel, diameter, minVol, volCurve, description))
+            tank.values.append(Tank(name, elevation, initLevel, minLevel, maxLevel, diameter, minVol, volCurve, description))
             
             if label != "":
-                tag.values.append(Tag("NODE", id, label))
+                tag.values.append(Tag("NODE", name, label))
+                
+            self.__updateDictionaryNode(feature.attribute("ID"), name)
 
 
     def __readPipes(self, layerName = "watering_pipes"):
@@ -346,6 +364,8 @@ class INPManager():
             status = "Open"
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
+            node1Name = self.__getValueNodes(node1)
+            node2Name = self.__getValueNodes(node2)
             
             # geom = feature.geometry()
             # vert = 0
@@ -359,7 +379,7 @@ class INPManager():
             #             vertice.values.append(Vertice(id, vertex.x(), vertex.y()))
             #         vert += 1
             
-            pipe.values.append(Pipe(id, node1, node2, length, diameter, roughness, minorLoss, status, description))
+            pipe.values.append(Pipe(id, node1Name, node2Name, length, diameter, roughness, minorLoss, status, description))
             
             """
             pipe_feature.setAttribute("C(H.W.)", 0)
@@ -409,7 +429,7 @@ class INPManager():
         self.__readReservoirs()
         self.__readTanks()
         self.__readPipes()
-        
+        print("Lectura del diccionario: ", self._nodes)
         self.__readBackdrop()
 
 
@@ -480,11 +500,11 @@ class INPManager():
             enData = ENepanet()
             enData.ENopen(inpfile, rptfile, binfile)
             enData.ENsolveH()
-            enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
-            try:
-                enData.ENreport()
-            except:
-                pass
+            #enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
+            # try:
+            #     enData.ENreport()
+            # except:
+            #     pass
             
             nNodes = enData.ENgetcount(EN.NODECOUNT)
             print("Cantidad de nodos: ", nNodes)
