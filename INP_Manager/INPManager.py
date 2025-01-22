@@ -185,10 +185,17 @@ class INPManager():
         # scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
         # scenario_folder_path = project_path + "/" + scenario_id + "/epanet2_2/scenario.inp"
         
+        # Obtener el directorio de trabajo del proyecto project = QgsProject.instance() work_directory = project.readPath("./") print("Directorio de trabajo del proyecto:", work_directory)
+        # Obtener el directorio de trabajo del proyecto
+        directorio_trabajo = QgsProject.instance().homePath()
+
+        print("Mi directorio de trabajo: ", directorio_trabajo)
+        
         project_path = WateringUtils.getProjectPath()
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        scenario_folder_path = project_path + "/" + scenario_id + "/epanet2_2"
+        scenario_folder_path = directorio_trabajo + "/" + scenario_id + "/epanet2_2"
         # scenario_folder_path = scenario_folder_path.replace('/','\\')
+        print("Mi directorio de trabajo dentro del esenario: ", scenario_folder_path)
         
         if not os.path.exists(scenario_folder_path):
             os.makedirs(scenario_folder_path)
@@ -197,6 +204,8 @@ class INPManager():
            os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
         
         scenario_folder_path = scenario_folder_path + "/scenario.inp"
+        scenario_folder_path = scenario_folder_path.replace('/','\\')
+        
         return scenario_folder_path
 
 
@@ -406,7 +415,7 @@ class INPManager():
 
     def writeSections(self):
         self.__readLayers()
-        print("0001", self._outfile)
+        
         with open(os.path.join(self.OutFile), "w") as inpfile:
             for t, s in self.sections.items():
                 print(t, s.name)
@@ -471,7 +480,7 @@ class INPManager():
             enData = ENepanet()
             enData.ENopen(inpfile, rptfile, binfile)
             enData.ENsolveH()
-            #enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
+            enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
             try:
                 enData.ENreport()
             except:
@@ -480,9 +489,9 @@ class INPManager():
             nNodes = enData.ENgetcount(EN.NODECOUNT)
             print("Cantidad de nodos: ", nNodes)
             
-            layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
-            # Iniciar edición de la capa
-            layer_1.startEditing()
+            # layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+            # # Iniciar edición de la capa
+            # layer_1.startEditing()
             
             valoresNodes = []
             for i in range(1, nNodes + 1):
@@ -492,16 +501,16 @@ class INPManager():
                 d = enData.ENgetnodevalue(i, EN.HEAD)
                 valoresNodes.append(ResultNode(a, b, c, d))
             
-            features = layer_1.getFeatures()
-            for feature in features:
-                nodeName = feature.attribute("Name")
-                item = self.__getidNode(enData, nodeName, nNodes)
-                pressure = enData.ENgetnodevalue(item, EN.PRESSURE)
-                feature.setAttribute("Pressure", pressure)
-                # Actualizar la característica en la capa
-                layer_1.updateFeature(feature)
-            # Guardar cambios
-            layer_1.commitChanges()
+            # features = layer_1.getFeatures()
+            # for feature in features:
+            #     nodeName = feature.attribute("Name")
+            #     item = self.__getidNode(enData, nodeName, nNodes)
+            #     pressure = enData.ENgetnodevalue(item, EN.PRESSURE)
+            #     feature.setAttribute("Pressure", pressure)
+            #     # Actualizar la característica en la capa
+            #     layer_1.updateFeature(feature)
+            # # Guardar cambios
+            # layer_1.commitChanges()
                 
             
             # Paso 3: Escribe la lista en un archivo JSON
