@@ -38,11 +38,21 @@ class InsertWaterPipeTool(InsertAbstractTool):
         QgsMapTool.activate(self)
 
         # Snapping
+        layerDemandNode = QgsProject.instance().mapLayersByName('watering_demand_nodes')[0]
+        layerTank = QgsProject.instance().mapLayersByName('watering_tanks')[0]
+        layerReservoir = QgsProject.instance().mapLayersByName('watering_reservoirs')[0]
         self.snapper = QgsMapCanvasSnappingUtils(self.canvas)
         self.snapper.setMapSettings(self.canvas.mapSettings())
         config = QgsSnappingConfig(QgsProject.instance())
         config.setType(1)  # Vertex
-        config.setMode(QgsSnappingConfig.SnappingMode.AllLayers)  # All layers
+        #config.setType(QgsSnappingConfig.VertexAndSegment)
+        #config.setIntersectionSnapping(True)
+        # config.setMode(QgsSnappingConfig.SnappingMode.AllLayers)  # All layers
+        config.setMode(QgsSnappingConfig.SnappingMode.AdvancedConfiguration)
+        lyr_settings = QgsSnappingConfig.IndividualLayerSettings(True, QgsSnappingConfig.SnappingType.Vertex, 10, QgsTolerance.Pixels)
+        config.setIndividualLayerSettings(layerDemandNode, lyr_settings)
+        config.setIndividualLayerSettings(layerTank, lyr_settings)
+        config.setIndividualLayerSettings(layerReservoir, lyr_settings)
         config.setTolerance(10)
         config.setUnits(QgsTolerance.UnitType.Pixels)
         config.setEnabled(True)
@@ -60,9 +70,12 @@ class InsertWaterPipeTool(InsertAbstractTool):
             return
 
         pointTemp = self.toMapCoordinates(e.pos())
+        nodeFeature = None
 
         if self.objectSnapped is not None:
             pointTemp = self.objectSnapped.point()
+            nodeFeature = self.objectSnapped.layer().getFeature(self.objectSnapped.featureId())
+            #print(self.objectSnapped.type())
 
         point = QgsPoint(pointTemp.x(), pointTemp.y())
         self.clickedQgsPoints.append(point)
@@ -74,10 +87,14 @@ class InsertWaterPipeTool(InsertAbstractTool):
                 self.createFixedPartOfPipe(self.clickedQgsPoints)
         else:
             # insert a demand node at the point where the user clicked
-            action = insertNodeAction(self.elementNodesRepository, pointTemp.x(), pointTemp.y())
-            self.actionManager.execute(action)
-            self.downnode = action.feature
-
+            if (nodeFeature is None):
+              action = insertNodeAction(self.elementNodesRepository, pointTemp.x(), pointTemp.y())
+              self.actionManager.execute(action)
+              self.downnode = action.feature
+              nodeFeature = action.feature
+            else:
+              self.downnode = nodeFeature
+                
             if len(self.clickedQgsPoints) > 1:
                 # create a new pipe here
                 print("Creating pipe now")
@@ -89,13 +106,13 @@ class InsertWaterPipeTool(InsertAbstractTool):
                 actionPipe = insertPipeAction(self.elementRepository, self.clickedQgsPoints, self.upnode, self.downnode)
                 self.actionManager.execute(actionPipe)
 
-                self.upnode = point
+                self.upnode = self.downnode
                 self.clickedQgsPoints.clear()
                 self.clickedQgsPoints.append(point)
                 if not point in self.allPoints:
                     self.allPoints.append(point)
             else:
-                self.upnode = action.feature
+                self.upnode = self.downnode
 
         self.lastPoint = point
 

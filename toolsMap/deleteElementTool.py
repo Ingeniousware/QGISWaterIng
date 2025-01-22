@@ -29,7 +29,7 @@ class DeleteElementTool(QgsMapTool):
 
         feature = found_features[0].mFeature
         layer = found_features[0].mLayer
-        repo = self.scenarioUnitOfWork.getRepoByLayer(layer)
+        repo = self.scenarioUnitOfWork.get_repository_by_layer(layer)
         print("repo: ", repo)
         layer.removeSelection()
 
