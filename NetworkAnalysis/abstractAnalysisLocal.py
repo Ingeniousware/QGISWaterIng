@@ -59,7 +59,7 @@ class AbstractAnalysisLocal(AbstractAnalysis):
         #     subelement.append(item.name)
         # elements.append(subelement)
         # elements = [[item.name for item in self.fields_to_add]]
-        elements = ["nodeKey, pressure", "waterDemand", "waterAge"]
+        elements = [["nodeKey", "pressure", "waterDemand", "waterAge"]]
         if self.__analysisElemntType == AnalysisEmentType.NODE:
             print("Ingresando elementos de tipo nodo...")
             nNodes = self.__enData.ENgetcount(EN.NODECOUNT)
@@ -97,5 +97,5 @@ class AbstractAnalysisLocal(AbstractAnalysis):
         date = self.datetime.replace(":", "")
         project_path = INP_Utils.default_working_directory()
         date_folder_path = os.path.join(project_path, "Analysis", date)
-        print("000001: ", date_folder_path)
+
         self.loadCSVLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
