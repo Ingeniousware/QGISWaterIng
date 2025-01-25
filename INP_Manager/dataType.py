@@ -2,7 +2,7 @@
 
 """
 ***************************************************************************
-    sections.py
+    dataType.py
     ---------------------
     Date                 : Nomviembre 2024
     Copyright            : (C) 2024 by Ingeniowarest

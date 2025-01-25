@@ -308,6 +308,9 @@ class QGISPlugin_WaterIng:
             #print("002 ", "Iniciando simulación")
             inpMan.testEpanet(inpMan.OutFile)
             #print("003 ", "Final de la simulation")
+            print("004: Principio del análisis...")
+            inpMan.getAnalysisResults()
+            print("005: Fin del análisis...")
         
         except Exception as e:
             text = f"Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering\n'{e}'"

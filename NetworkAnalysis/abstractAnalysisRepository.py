@@ -80,7 +80,20 @@ class AbstractAnalysisRepository(AbstractAnalysis):
         
         print(self.LayerName, "analysis results done, behavior: ", self.behavior)
         self.changeColor() """
+    def addCSVNonSpatialLayerToPanel(self, fileName, layerName):
+        root = QgsProject.instance().layerTreeRoot()
+        shapeGroup = root.findGroup("Analysis")
+        if not shapeGroup:
+            shapeGroup = root.addGroup("Analysis")
 
+        date = self.datetime.replace(":", "")
+        project_path, scenario_id = QgsProject.instance().readEntry("watering", "project_path", "default text")[0], QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
+        print("Project path (addCSVNonSpatialLayerToPanel): ", project_path)
+        print("Scenario ID: ", scenario_id)
+        date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date)
+
+        self.loadCSVLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
+        
     # def addCSVNonSpatialLayerToPanel(self, fileName, layerName):
     #     root = QgsProject.instance().layerTreeRoot()
     #     shapeGroup = root.findGroup("Analysis")

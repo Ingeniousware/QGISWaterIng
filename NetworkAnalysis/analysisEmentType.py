@@ -2,10 +2,10 @@
 
 """
 ***************************************************************************
-    sectionAbstract.py
+    analysisEmentType.py
     ---------------------
-    Date                 : Noviembre 2024
-    Copyright            : (C) 2024 by Ingeniowarest
+    Date                 : Enero 2025
+    Copyright            : (C) 2025 by Ingeniowarest
     Email                : 
 ***************************************************************************
 *                                                                         *
@@ -17,32 +17,12 @@
 """
 
 
-class sectionAbstract():
-    def __init__(self, id=0):
-        self.__id = id
-        self.__name = None
-        self.__values = []
+import enum
 
 
-    @property
-    def id(self):
-        return self.__id
-
-    @property
-    def name(self):
-        return self.__name
-    @name.setter
-    def name(self, value):
-        self.__name = value
-
-    @property
-    def values(self):
-        return self.__values
-
-    @values.setter
-    def values(self, value):
-        self.__values = value
-
-
-    def writeSection(self, outfile):
-        print("Metodo no implementado...")
+class AnalysisEmentType(enum.IntEnum):
+    """Clase que representa los tipos de elementos a analizar."""
+    NODE = 1
+    """Análisis de los nodos"""
+    PIPE = 2
+    """Análisis de las tuberias."""

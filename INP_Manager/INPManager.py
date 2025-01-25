@@ -98,6 +98,7 @@ Ejemplo de como crear un grupo en QGIS.
 
 import os
 import stat
+
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject
 from qgis.core import QgsProject, QgsField
 from PyQt5.QtCore import QVariant
@@ -119,7 +120,8 @@ from ..watering_utils import WateringUtils
 from ..wntr.epanet.toolkit import ENepanet
 from ..wntr.epanet.util import EN
 from ..wntr.resultTypes import ResultNode, ResultLink
-
+from .inp_utils import INP_Utils
+from ..NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
 
 
 class INPManager():
@@ -170,48 +172,23 @@ class INPManager():
     @property
     def OutFile(self):
         if self._outfile == "":
-            self._outfile = self.__getScenarioFolderPath()
+            self._outfile = self.__getWorkingDirectory()
         return self._outfile
     @OutFile.setter
     def OutFile(self, value: str):
         self._outfile = value
-        
+
     @property
-    def OutFileINP(self):
-        return self.OutFile.replace('/','\\')
+    def Out_Folder_Path_INP(self):
+        return os.path.splitext(self.OutFile)
 
 
-    def __getScenarioFolderPath(self):
-        # project_path = WateringUtils.getProjectPath()
-        # scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        # scenario_folder_path = project_path + "/" + scenario_id + "/epanet2_2/scenario.inp"
+    def __getWorkingDirectory(self):
+        workingDirectory = INP_Utils.default_working_directory()
         
-        # Obtener el directorio de trabajo del proyecto project = QgsProject.instance() work_directory = project.readPath("./") print("Directorio de trabajo del proyecto:", work_directory)
-        # Obtener el directorio de trabajo del proyecto
-        directorio_trabajo = QgsProject.instance().homePath()
-
-        print("Mi directorio de trabajo: ", directorio_trabajo)
+        workingDirectory = workingDirectory + "\\localScenario.inp"
         
-        project_path = WateringUtils.getProjectPath()
-        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        scenario_folder_path = directorio_trabajo + "/" + scenario_id + "/epanet2_2"
-        # scenario_folder_path = scenario_folder_path.replace('/','\\')
-        print("Mi directorio de trabajo dentro del esenario: ", scenario_folder_path)
-        
-        if not os.path.exists(scenario_folder_path):
-            os.makedirs(scenario_folder_path)
-            os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-        else:
-           os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-        
-        scenario_folder_path = scenario_folder_path + "/scenario.inp"
-        scenario_folder_path = scenario_folder_path.replace('/','\\')
-        
-        return scenario_folder_path
-
-
-    def __getScenarioFolderPathToINP(self):
-        return self.OutFile.replace('/','\\')
+        return workingDirectory
 
 
     def __updateDictionaryNode(self, id, name):
@@ -429,7 +406,7 @@ class INPManager():
         self.__readReservoirs()
         self.__readTanks()
         self.__readPipes()
-        print("Lectura del diccionario: ", self._nodes)
+        
         self.__readBackdrop()
 
 
@@ -479,6 +456,40 @@ class INPManager():
                 result = i
                 break
         return result
+
+
+    def getAnalysisResults(self):
+        """Se obtienen los resultados de la simulación local"""
+        # Seeliminan los layes que se crearon para motrar los resultados
+        root = QgsProject.instance().layerTreeRoot()
+        shapeGroup = root.findGroup("Analysis")
+        if shapeGroup:
+            layer_ids = [layer.layerId() for layer in shapeGroup.findLayers()]
+            root.removeChildNode(shapeGroup)
+            for layer_id in layer_ids:
+                QgsProject.instance().removeMapLayer(layer_id)
+        
+        rptfile=None
+        binfile=None
+        inpfile = self.OutFile
+        file_prefix, file_ext = os.path.splitext(inpfile)
+        if rptfile is None:
+            rptfile = file_prefix + ".rpt"
+        if binfile is None:
+            binfile = file_prefix + ".bin"
+        
+        try:
+            enData = ENepanet()
+            enData.ENopen(inpfile, rptfile, binfile)
+            #enData.ENsolveH()
+           
+            analysis = NodeNetworkAnalysisLocal(enData, "1000-2221-45", "23:12")
+            #analysis.runAnalysis()
+            
+            enData.ENclose()
+            
+        except Exception as e:
+            raise e
 
 
     def testEpanet(self, inpfile = "C:\\Temp\\Net1.inp", rptfile=None, binfile=None):
@@ -568,7 +579,8 @@ class INPManager():
             if flows == 8: UndCaudal = "CMH"
             if flows == 9: UndCaudal = "CMD"
             print("Unidad de caudal: ", UndCaudal)
-            
+           
+            print("Termine el análisis...")
             enData.ENclose()
         
         except Exception as e:
