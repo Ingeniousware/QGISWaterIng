@@ -20,7 +20,7 @@
 import csv
 import os
 
-from qgis.core import QgsProject
+from qgis.core import QgsProject # type: ignore
 
 from ..wntr.epanet.util import EN
 from ..INP_Manager.inp_utils import INP_Utils

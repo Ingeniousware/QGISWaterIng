@@ -99,9 +99,9 @@ Ejemplo de como crear un grupo en QGIS.
 import os
 import stat
 
-from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject
-from qgis.core import QgsProject, QgsField
-from PyQt5.QtCore import QVariant
+from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject # type: ignore
+from qgis.core import QgsProject, QgsField # type: ignore
+from PyQt5.QtCore import QVariant # type: ignore
 
 
 from .sections import (sectionTitle, sectionJunctions, sectionReservoirs, sectionTanks, sectionPipes, sectionPumps,

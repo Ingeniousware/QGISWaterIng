@@ -1,24 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-from qgis.core import (
-    QgsProject,
-    QgsGraduatedSymbolRenderer,
-    QgsRendererRangeLabelFormat,
-    QgsSymbol,
-    QgsSimpleLineSymbolLayer,
-    QgsSymbolLayer,
-)
-from qgis.core import (
-    QgsStyle,
-    QgsClassificationQuantile,
-    QgsGradientColorRamp,
-    QgsVectorLayer,
-    QgsLayerTreeLayer,
-    QgsVectorLayerJoinInfo,
-)
-from PyQt5.QtCore import QVariant
-import requests
+from qgis.core import (QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat, QgsSymbol, # type: ignore
+    QgsSimpleLineSymbolLayer, QgsSymbolLayer)
+from qgis.core import (QgsStyle, QgsClassificationQuantile, QgsGradientColorRamp, QgsVectorLayer, # type: ignore
+    QgsLayerTreeLayer, QgsVectorLayerJoinInfo)
+from PyQt5.QtCore import QVariant # type: ignore
+import requests # type: ignore
 import os
 
 from ..watering_utils import WateringUtils

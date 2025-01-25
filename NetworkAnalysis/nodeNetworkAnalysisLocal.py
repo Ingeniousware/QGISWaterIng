@@ -22,8 +22,8 @@ import enum
 import os
 import stat
 
-from qgis.PyQt.QtGui import QColor
-from qgis.core import QgsProject
+from qgis.PyQt.QtGui import QColor # type: ignore
+from qgis.core import QgsProject # type: ignore
 
 from ..watering_utils import WateringUtils
 from ..wntr.epanet.util import EN

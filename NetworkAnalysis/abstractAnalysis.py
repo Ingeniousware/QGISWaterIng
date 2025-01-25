@@ -20,7 +20,7 @@ from abc import ABC, abstractmethod
 import csv
 import os
 
-from qgis.core import (QgsProject, QgsVectorLayer, QgsLayerTreeLayer, QgsVectorLayerJoinInfo, QgsClassificationQuantile,
+from qgis.core import (QgsProject, QgsVectorLayer, QgsLayerTreeLayer, QgsVectorLayerJoinInfo, QgsClassificationQuantile, # type: ignore
                        QgsRendererRangeLabelFormat, QgsStyle, QgsGradientColorRamp, QgsGraduatedSymbolRenderer)
 
 from ..INP_Manager.inp_utils import INP_Utils
