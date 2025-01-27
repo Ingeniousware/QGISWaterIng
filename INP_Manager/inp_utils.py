@@ -22,7 +22,31 @@ import stat
 from qgis.core import QgsProject
 
 
-class INP_Utils():
+class INP_Utils:
+
+    # static (class) variable that is a dictionary.
+    static_elements = {}
+
+    @classmethod
+    def add_element(cls, key, value):
+        cls.static_elements[key] = value
+
+    @classmethod
+    def get_element(cls, key):
+        return cls.static_elements.get(key, None)
+
+    @classmethod
+    def get_all(cls):
+        return cls.static_elements
+
+    @classmethod
+    def find_element(cls, key):
+        if key in cls.static_elements:
+            return cls.static_elements[key]
+        else:
+            return None
+
+
     def default_working_directory():
         home_Path = QgsProject.instance().homePath()
         #working_directory
@@ -51,3 +75,4 @@ class INP_Utils():
         newDirectory = directoryName.replace('/','\\')
         
         return newDirectory
+    

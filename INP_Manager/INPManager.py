@@ -127,7 +127,6 @@ from ..NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
 class INPManager():
     def __init__(self):
         self._outfile: str = ""
-        self._nodes = {}
         # self._outfile = self.__getScenarioFolderPath()
         
         #list1.First(ii => ii.id == "")
@@ -191,17 +190,6 @@ class INPManager():
         return workingDirectory
 
 
-    def __updateDictionaryNode(self, id, name):
-        self._nodes[id] = name
-
-
-    def __getValueNodes(self, key):
-        for itemKey in self._nodes.keys():
-            if itemKey == key:
-                return self._nodes[itemKey]
-        return None
-
-
     def __readFeatures(self, layerName):
         source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         print(source_layer)
@@ -239,7 +227,7 @@ class INPManager():
             if label != "":
                 tag.values.append(Tag("NODE", name, label))
             
-            self.__updateDictionaryNode(feature.attribute("ID"), name)
+            INP_Utils.add_element(feature.attribute("ID"), name)
 
 
     def __readReservoirs(self, layerName = "watering_reservoirs"):
@@ -285,7 +273,7 @@ class INPManager():
             if label != "":
                 tag.values.append(Tag("NODE", name, label))
             
-            self.__updateDictionaryNode(feature.attribute("ID"), name)
+            INP_Utils.add_element(feature.attribute("ID"), name)
 
 
     def __readTanks(self, layerName = "watering_tanks"):
@@ -317,7 +305,7 @@ class INPManager():
             if label != "":
                 tag.values.append(Tag("NODE", name, label))
                 
-            self.__updateDictionaryNode(feature.attribute("ID"), name)
+            INP_Utils.add_element(feature.attribute("ID"), name)
 
 
     def __readPipes(self, layerName = "watering_pipes"):
@@ -331,7 +319,7 @@ class INPManager():
         tag = self.sections['TAGS']
         
         for feature in features:
-            id = feature.attribute("Name") #if feature.attribute("Name") is not None else 0.0
+            name = feature.attribute("Name") #if feature.attribute("Name") is not None else 0.0
             node1 = feature.attribute("Up-Node") #if feature.attribute("Up-Node") is not None else 0.0
             node2 = feature.attribute("Down-Node") #if feature.attribute("Down-Node") is not None else 0.0
             length = feature.attribute("Length") #if feature.attribute("Length") is not None else 0.0
@@ -341,8 +329,8 @@ class INPManager():
             status = "Open"
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
-            node1Name = self.__getValueNodes(node1)
-            node2Name = self.__getValueNodes(node2)
+            node1Name = INP_Utils.get_element(node1)
+            node2Name = INP_Utils.get_element(node2)
             
             # geom = feature.geometry()
             # vert = 0
@@ -356,7 +344,7 @@ class INPManager():
             #             vertice.values.append(Vertice(id, vertex.x(), vertex.y()))
             #         vert += 1
             
-            pipe.values.append(Pipe(id, node1Name, node2Name, length, diameter, roughness, minorLoss, status, description))
+            pipe.values.append(Pipe(name, node1Name, node2Name, length, diameter, roughness, minorLoss, status, description))
             
             """
             pipe_feature.setAttribute("C(H.W.)", 0)
@@ -364,6 +352,8 @@ class INPManager():
             
             if label != "":
                 tag.values.append(Tag("LINK", id, label))
+            
+            INP_Utils.add_element(feature.attribute("ID"), name)
 
 
     def __Pumps(self, layerName = "watering_pumps"):
@@ -420,31 +410,6 @@ class INPManager():
 
         # Cierra el fichero manualmente
         # self.outfile.close()
-
-
-    # def updateLayer(self):
-    #     layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
-
-    #     # Verificar si la capa es válida
-    #     if not layer_1:
-    #         print("No hay una capa activa.")
-    #     else:
-    #         # Definir el nombre de la nueva propiedad (campo)
-    #         new_field_name = "Pressure"
-
-    #         # Verificar si la propiedad ya existe
-    #         existing_fields = [field.name() for field in layer_1.fields()]
-    #         if new_field_name in existing_fields:
-    #             print(f"La propiedad '{new_field_name}' ya existe en la capa.")
-    #         else:
-    #             # Añadir la nueva propiedad
-    #             # Iniciar edición
-    #             print("actulaizando el layer")
-    #             layer_1.startEditing()
-    #             new_field = QgsField(new_field_name, QVariant.String)
-    #             layer_1.dataProvider().addAttributes([new_field])
-    #             layer_1.updateFields()
-    #             print(f"La propiedad '{new_field_name}' ha sido añadida a la capa.")
 
 
     def __getidNode(self, espanet: ENepanet, nodeName: str, count: int):

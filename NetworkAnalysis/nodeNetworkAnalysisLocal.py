@@ -100,7 +100,7 @@ class NodeNetworkAnalysisLocal(AbstractAnalysisLocal):
         super().__init__(enData, analysisElemntType, analysisExecutionId, datetime)
         
         self.UrlGet = ""
-        self.KeysApi = ["nodeKey", "pressure", "waterDemand", "waterDemandCovered", "waterAge"]
+        self.KeysApi = ["Name", "pressure", "waterDemand", "waterDemandCovered", "waterAge"]
         self.Attributes = ["Pressure", "Demand", "Demand C", "Age"]
         self.LayerName = "watering_demand_nodes"
         
@@ -108,33 +108,13 @@ class NodeNetworkAnalysisLocal(AbstractAnalysisLocal):
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 3
-        self.join_field = "nodeKey"
+        self.join_field = "Name"
         self.fields_to_add = ["pressure", "waterDemand", "waterAge"]
         self.elementAnalysisResults()
         # print("001: before entering addCSVNonSpatialLayerToPanel in NodeNetworkAnalysisRepository")
         # self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Nodes.csv", f"Nodes_{datetime}")
         # self.joinLayersAttributes(f"Nodes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)
         
-        self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Nodes.csv", f"Nodes_{datetime}")
-        
-        #self.runAnalysis()
-    
-    def runAnalysis(self):
-        directorio_trabajo = QgsProject.instance().homePath()
+        self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Nodes.csv", f"Nodes_{datetime.replace(':', '_')}")
+        self.joinLayersAttributes(f"Nodes_{datetime.replace(':', '_')}", self.LayerName, self.join_field, self.fields_to_add)
 
-        # print("Mi directorio de trabajo: ", directorio_trabajo)
-        
-        project_path = WateringUtils.getProjectPath()
-        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        scenario_folder_path = directorio_trabajo + "/" + scenario_id + "/epanet2_2"
-        # scenario_folder_path = scenario_folder_path.replace('/','\\')
-        print("Mi directorio de trabajo dentro del esenario: ", scenario_folder_path)
-        
-        if not os.path.exists(scenario_folder_path):
-            os.makedirs(scenario_folder_path)
-            os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-        else:
-           os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-        
-        scenario_folder_path = scenario_folder_path.replace('/','\\')
-        self.analysis_to_csv(scenario_folder_path, "node_23012025.csv", AnalysisEmentType.NODE)

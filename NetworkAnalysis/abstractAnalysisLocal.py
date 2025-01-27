@@ -59,7 +59,7 @@ class AbstractAnalysisLocal(AbstractAnalysis):
         #     subelement.append(item.name)
         # elements.append(subelement)
         # elements = [[item.name for item in self.fields_to_add]]
-        elements = [["nodeKey", "pressure", "waterDemand", "waterAge"]]
+        elements = [["Name", "pressure", "waterDemand", "waterAge"]]
         if self.__analysisElemntType == AnalysisEmentType.NODE:
             print("Ingresando elementos de tipo nodo...")
             nNodes = self.__enData.ENgetcount(EN.NODECOUNT)

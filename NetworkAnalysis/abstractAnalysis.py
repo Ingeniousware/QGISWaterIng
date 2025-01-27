@@ -135,7 +135,7 @@ class AbstractAnalysis(ABC):
 
         joinObject = QgsVectorLayerJoinInfo()
         joinObject.setJoinFieldName(join_field)
-        joinObject.setTargetFieldName("ID")
+        joinObject.setTargetFieldName("Name")
         joinObject.setJoinLayerId(source_layer.id())
         joinObject.setUsingMemoryCache(True)
         joinObject.setJoinLayer(source_layer)
