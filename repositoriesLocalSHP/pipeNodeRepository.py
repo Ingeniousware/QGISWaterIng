@@ -5,25 +5,11 @@ import uuid
 from .abstract_repository import AbstractRepository
 from ..watering_utils import WateringUtils
 
-from qgis.core import (
-    QgsProject,
-    QgsVectorLayer,
-    QgsFields,
-    QgsField,
-    QgsGeometry,
-    QgsCoordinateReferenceSystem,
-    QgsCoordinateTransform,
-    QgsLayerTreeLayer,
-)
-from qgis.core import (
-    QgsVectorFileWriter,
-    QgsPointXY,
-    QgsFeature,
-    QgsSimpleMarkerSymbolLayer,
-    QgsSimpleMarkerSymbolLayerBase,
-    QgsSymbol,
-    edit,
-)
+from qgis.core import (QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform, QgsLayerTreeLayer, QgsDistanceArea)
+from qgis.core import (QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase,
+    QgsSymbol, edit)
+
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
 from qgis.utils import iface
@@ -186,6 +172,17 @@ class PipeNodeRepository(AbstractRepository):
 
         feature.setAttribute("ID", temp_id)
 
+        d = QgsDistanceArea()
+        geom = feature.geometry()
+        length = 0
+        if geom.isMultipart():
+            for part in geom.asMultiPolyline():
+                length += d.measureLength(geom)
+        else:
+            length += d.measureLength(geom)
+
+        feature.setAttribute("Length", length)
+        
         layer.addFeature(feature)
         layer.commitChanges()
 
@@ -216,3 +213,4 @@ class PipeNodeRepository(AbstractRepository):
         feature.setAttribute("Diameter", diameter)
         feature.setAttribute("Rough.A", roughnessAbsolute)
         feature.setAttribute("C(H.W.)", roughnessCoefficient)
+        print("===0001: feature=====")

@@ -446,7 +446,7 @@ class INPManager():
         try:
             enData = ENepanet()
             enData.ENopen(inpfile, rptfile, binfile)
-            #enData.ENsolveH()
+            enData.ENsolveH()
            
             analysis = NodeNetworkAnalysisLocal(enData, "1000-2221-45", "23:12")
             #analysis.runAnalysis()
