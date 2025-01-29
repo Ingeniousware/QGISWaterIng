@@ -213,4 +213,3 @@ class PipeNodeRepository(AbstractRepository):
         feature.setAttribute("Diameter", diameter)
         feature.setAttribute("Rough.A", roughnessAbsolute)
         feature.setAttribute("C(H.W.)", roughnessCoefficient)
-        print("===0001: feature=====")
