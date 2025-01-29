@@ -15,6 +15,65 @@
 *                                                                         *
 ***************************************************************************
 """
+"""
+# Importar las bibliotecas necesarias
+from qgis.core import (
+    QgsProject,
+    QgsVectorLayer,
+    QgsDataSourceUri,
+    QgsField,
+    QgsFeature,
+)
+from qgis.PyQt.QtCore import QVariant
+
+# Ruta al archivo CSV
+csv_file = 'ruta/a/tu/archivo.csv'
+
+# Cargar el archivo CSV como una capa
+csv_layer = QgsVectorLayer(csv_file + "?delimiter=,", "CSV Layer", "delimitedtext")
+if not csv_layer.isValid():
+    print("Error al cargar el archivo CSV.")
+else:
+    QgsProject.instance().addMapLayer(csv_layer)
+
+# Cargar la capa geoespacial (por ejemplo, un shapefile)
+shapefile = 'ruta/a/tu/capa.shp'
+gdf_layer = QgsVectorLayer(shapefile, "Geospatial Layer", "ogr")
+if not gdf_layer.isValid():
+    print("Error al cargar el shapefile.")
+else:
+    QgsProject.instance().addMapLayer(gdf_layer)
+
+# Unir las capas
+join_field_csv = 'id'  # Campo en el CSV
+join_field_gdf = 'id'  # Campo en el shapefile
+
+# Crear la unión
+join_info = QgsVectorLayerJoinInfo()
+join_info.setJoinLayer(csv_layer)
+join_info.setJoinFieldName(join_field_csv)
+join_info.setTargetFieldName(join_field_gdf)
+join_info.setUsingMemoryCache(True)  # Usar caché en memoria para mejorar el rendimiento
+
+# Añadir la unión a la capa geoespacial
+gdf_layer.addJoin(join_info)
+
+# Mostrar el resultado en la tabla de atributos
+print("La unión se ha realizado correctamente.")
+
+
+▎Explicación del código:
+
+1. Importar bibliotecas: Importamos las clases necesarias desde qgis.core.
+
+2. Cargar el archivo CSV: Usamos QgsVectorLayer para cargar el CSV como una capa. Asegúrate de especificar el delimitador correcto (en este caso, una coma).
+
+3. Cargar la capa geoespacial: Cargamos el shapefile de manera similar.
+
+4. Unir las capas: Creamos un objeto QgsVectorLayerJoinInfo para especificar cómo se debe realizar la unión entre las capas.
+
+5. Añadir la unión: Usamos el método addJoin() para agregar la unión a la capa geoespacial.
+"""
 
 from abc import ABC, abstractmethod
 import csv
