@@ -122,6 +122,7 @@ from ..wntr.epanet.util import EN
 from ..wntr.resultTypes import ResultNode, ResultLink
 from .inp_utils import INP_Utils
 from ..NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
+from ..NetworkAnalysis.pipeNetworkAnalysisLocal import PipeNetworkAnalysisLocal
 
 
 class INPManager():
@@ -448,7 +449,8 @@ class INPManager():
             enData.ENopen(inpfile, rptfile, binfile)
             enData.ENsolveH()
            
-            analysis = NodeNetworkAnalysisLocal(enData, "1000-2221-45", "23:12")
+            nodeAnalysis = NodeNetworkAnalysisLocal(enData, "1000-2221-45", "23:12")
+            pipeAnalysis = PipeNetworkAnalysisLocal(enData, "1000-2221-45", "0158")
             #analysis.runAnalysis()
             
             enData.ENclose()
@@ -523,7 +525,7 @@ class INPManager():
                 a = enData.ENgetlinkvalue(i, EN.LPS)
                 b = enData.ENgetlinkvalue(i, EN.HEADLOSS)
                 c = enData.ENgetlinkvalue(i, EN.STATUS)
-                d = enData.ENgetlinkvalue(i, EN.DIAMETER)
+                d = enData.ENgetlinkid(i)
                 g = enData.ENgetlinkvalue(i, EN.MINORLOSS)
                 linkResult.append(ResultLink(a, b, c, d, g))
                 

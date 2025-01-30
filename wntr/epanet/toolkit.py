@@ -554,6 +554,27 @@ class ENepanet:
         self._error()
         return fValue.value
 
+    def ENgetlinkid(self, iIndex):
+        """Gets the ID name of a link given its index.
+
+        Parameters
+        ----------
+        iIndex : int
+            a node's index (starting from 1).
+
+        Returns
+        -------
+        str
+            the node name
+        """
+        fValue = ctypes.create_string_buffer(SizeLimits.EN_MAX_ID.value)
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getlinkid(self._project, iIndex, byref(fValue))
+        else:
+            self.errcode = self.ENlib.ENgetlinkid(iIndex, byref(fValue))
+        self._error()
+        return str(fValue.value, "UTF-8")
+
     def ENgetlinktype(self, iIndex):
         """Retrieves a link's type given its index.
 

@@ -59,9 +59,14 @@ class AbstractAnalysisLocal(AbstractAnalysis):
         #     subelement.append(item.name)
         # elements.append(subelement)
         # elements = [[item.name for item in self.fields_to_add]]
-        elements = [["Name", "pressure", "waterDemand", "waterAge"]]
+        elements = []
+        date = self.datetime.replace(":", "")
+        working_directory = INP_Utils.default_working_directory()
+        date_folder_path = os.path.join(working_directory, "Analysis", date)
+        date_folder_path = INP_Utils.generate_directory(date_folder_path)
+
         if self.__analysisElemntType == AnalysisEmentType.NODE:
-            print("Ingresando elementos de tipo nodo...")
+            elements.append(["Name", "pressure", "waterDemand", "waterAge"])
             nNodes = self.__enData.ENgetcount(EN.NODECOUNT)
             for i in range(1, nNodes + 1):
                 subdatos = [self.__enData.ENgetnodeid(i),
@@ -69,21 +74,30 @@ class AbstractAnalysisLocal(AbstractAnalysis):
                             self.__enData.ENgetnodevalue(i, EN.BASEDEMAND),
                             self.__enData.ENgetnodevalue(i, EN.HEAD)]
                 elements.append(subdatos)
-            
-            print("Escribiendo los datos en fichero .csv")
-            date = self.datetime.replace(":", "")
-            working_directory = INP_Utils.default_working_directory()
-            date_folder_path = os.path.join(working_directory, "Analysis", date)
-            date_folder_path = INP_Utils.generate_directory(date_folder_path)
+
             nodes_filepath = os.path.join(date_folder_path, f"{filename}_Nodes.csv")
-            
+
             with open(nodes_filepath, 'w', newline='') as csvfile:
                  writer_csv = csv.writer(csvfile)
                  [writer_csv.writerow(fila) for fila in elements]
-            print("Fin de la escritura de información de los nodes")
-            
+
         elif self.__analysisElemntType == AnalysisEmentType.PIPE:
             print("Ingresando elementos de tipo tubería...")
+            elements.append(["Name", "velocity", "flow", "headLoss"])
+            nLinks = self.__enData.ENgetcount(EN.LINKCOUNT)
+            for i in range(1, nLinks + 1):
+                subdatos = [self.__enData.ENgetlinkid(i),
+                            self.__enData.ENgetlinkvalue(i, EN.VELOCITY),
+                            self.__enData.ENgetlinkvalue(i, EN.FLOW),
+                            self.__enData.ENgetlinkvalue(i, EN.HEADLOSS)]
+                elements.append(subdatos)
+
+            nodes_filepath = os.path.join(date_folder_path, f"{filename}_Pipes.csv")
+
+            with open(nodes_filepath, 'w', newline='') as csvfile:
+                 writer_csv = csv.writer(csvfile)
+                 [writer_csv.writerow(fila) for fila in elements]
+
         else:
             print("Problema con el tipo de datos.")
 
