@@ -17,6 +17,7 @@
 """
 
 
+import enum
 import os
 import stat
 from qgis.core import QgsProject
@@ -75,4 +76,26 @@ class INP_Utils:
         newDirectory = directoryName.replace('/','\\')
         
         return newDirectory
-    
+
+
+
+class NodeLinkResultType(enum.IntEnum):
+    """
+    - Node parameters: :attr:`demand`, :attr:`head`, :attr:`pressure`, :attr:`quality`
+    - Link parameters: :attr:`flowrate`, :attr:`velocity`, :attr:`headloss`, :attr:`status`, :attr:`setting`, :attr:`friction_factor`, :attr:`reaction_rate`
+    """
+    # Node parameters
+    demand = 1
+    head = 2
+    pressure = 3
+    quality = 4
+    """Este parámetros es el mismo para los nodos y las tuberías (node, link)."""
+
+    # Link parameters
+    flowrate = 5
+    velocity = 6
+    headloss = 7
+    status = 8
+    setting = 10
+    friction_factor = 10
+    reaction_rate = 11

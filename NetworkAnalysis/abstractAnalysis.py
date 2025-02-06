@@ -122,7 +122,7 @@ class AbstractAnalysis(ABC):
     def addCSVNonSpatialLayerToPanel(self, fileName, layerName):
         """
         Agrega un layer no espacial a la ventana de resultados a partir de un fichero CSV.
-        
+
         Parameters
         ----------
         fileName: str
@@ -131,12 +131,12 @@ class AbstractAnalysis(ABC):
             Nombre del layer no espacial.
         """
         print("Método base no implementado...")
-    
-    
+
+
     def changeColor(self, fieldName):
         """
         Especifica la escala de color de layer que se va a representar.
-        
+
         Parameters
         ----------
         fileName: str
@@ -172,7 +172,7 @@ class AbstractAnalysis(ABC):
     def joinLayersAttributes(self, layerName, layerDest, join_field, fields_to_add):
         """
         Método a junata el layes con los attributes especificados.
-        
+
         Parameters
         ----------
         layerName: str

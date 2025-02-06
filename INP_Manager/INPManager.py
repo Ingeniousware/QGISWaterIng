@@ -99,9 +99,14 @@ Ejemplo de como crear un grupo en QGIS.
 import os
 import stat
 
+import numpy as np
+
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject # type: ignore
 from qgis.core import QgsProject, QgsField # type: ignore
-from PyQt5.QtCore import QVariant # type: ignore
+from PyQt5.QtCore import QVariant
+from PyQt5.QtCore import Qt
+from qgis.utils import iface
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 from .sections import (sectionTitle, sectionJunctions, sectionReservoirs, sectionTanks, sectionPipes, sectionPumps,
@@ -114,16 +119,17 @@ from .dataType import (Junction, Reservoir, Tank, Pipe, Pump, Valve, Tag, Demand
 
 import json
 import os
+import wntr
 #import wntr.resultTypes as rt
 #from ..wntr.resultTypes import
 from ..watering_utils import WateringUtils
-from ..wntr.epanet.toolkit import ENepanet
-from ..wntr.epanet.util import EN
-from ..wntr.resultTypes import ResultNode, ResultLink
-from .inp_utils import INP_Utils
+# from ..wntr.epanet.toolkit import ENepanet
+# from ..wntr.epanet.util import EN
+# from ..wntr.resultTypes import ResultNode, ResultLink
+from .inp_utils import INP_Utils, NodeLinkResultType
 from ..NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
 from ..NetworkAnalysis.pipeNetworkAnalysisLocal import PipeNetworkAnalysisLocal
-
+from ..ui.watering_inp_options import WateringINPOptions
 
 class INPManager():
     def __init__(self):
@@ -413,18 +419,7 @@ class INPManager():
         # self.outfile.close()
 
 
-    def __getidNode(self, espanet: ENepanet, nodeName: str, count: int):
-        result = 0
-        
-        for i in range(1, count + 1):
-            a = espanet.ENgetnodeid(i)
-            if a == nodeName:
-                result = i
-                break
-        return result
-
-
-    def getAnalysisResults(self):
+    def getAnalysisResults_1(self):
         """Se obtienen los resultados de la simulación local"""
         # Seeliminan los layes que se crearon para motrar los resultados
         root = QgsProject.instance().layerTreeRoot()
@@ -434,121 +429,155 @@ class INPManager():
             root.removeChildNode(shapeGroup)
             for layer_id in layer_ids:
                 QgsProject.instance().removeMapLayer(layer_id)
-        
-        rptfile=None
-        binfile=None
-        inpfile = self.OutFile
-        file_prefix, file_ext = os.path.splitext(inpfile)
-        if rptfile is None:
-            rptfile = file_prefix + ".rpt"
-        if binfile is None:
-            binfile = file_prefix + ".bin"
-        
-        try:
-            enData = ENepanet()
-            enData.ENopen(inpfile, rptfile, binfile)
-            enData.ENsolveH()
-           
-            nodeAnalysis = NodeNetworkAnalysisLocal(enData, "1000-2221-45", "23:12")
-            pipeAnalysis = PipeNetworkAnalysisLocal(enData, "1000-2221-45", "0158")
-            #analysis.runAnalysis()
-            
-            enData.ENclose()
-            
-        except Exception as e:
-            raise e
+
+        wn = wntr.network.WaterNetworkModel(self.OutFile)
+
+        inpFileTemp = os.path.dirname(self.OutFile) +"\\temp"
+
+        # Simulate hydraulics
+        sim = wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim(inpFileTemp)
+
+        NodeNetworkAnalysisLocal(results, "1000-2221-45", "23:12")
+        PipeNetworkAnalysisLocal(results, "1000-2221-45", "23:12")
 
 
-    def testEpanet(self, inpfile = "C:\\Temp\\Net1.inp", rptfile=None, binfile=None):
-        """
-        Run an EPANET command-line simulation
+    def getMetrics(self):
+        """Se obtienen los resultados de la Resilience metrics (Hydraulic metrics)"""
+        print("----------------Hydraulic metrics------------------------")
+
+        wn = wntr.network.WaterNetworkModel(self.OutFile)
         
-        Parameters
-        ----------
-        inpfile : str
-            The input file name
-        """
-        file_prefix, file_ext = os.path.splitext(inpfile)
-        if rptfile is None:
-            rptfile = file_prefix + ".rpt"
-        if binfile is None:
-            binfile = file_prefix + ".bin"
+        wn.options.hydraulic.demand_model = 'PDD'
         
-        try:
-            enData = ENepanet()
-            enData.ENopen(inpfile, rptfile, binfile)
-            enData.ENsolveH()
-            #enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
-            # try:
-            #     enData.ENreport()
-            # except:
-            #     pass
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+        
+        pressure = results.node[NodeLinkResultType.pressure.name]
+        threshold = 2.4
+        pressure_above_threshold = wntr.metrics.query(pressure, np.greater, threshold)
+        print("Metric pressure above threshold:\n", pressure_above_threshold)
+        
+        expected_demand = wntr.metrics.expected_demand(wn)
+        demand = results.node[NodeLinkResultType.demand.name]
+        wsa = wntr.metrics.water_service_availability(expected_demand, demand)
+        print("Metric Water service availability:\n", wsa)
+
+        head = results.node[NodeLinkResultType.head.name]
+        pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
+        todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, threshold)
+        print("Todini index:\n", todini)
+
+        flowrate = results.link[NodeLinkResultType.flowrate.name]#.loc[12*3600,:]
+        G = wn.to_graph(link_weight=flowrate)
+        entropy, system_entropy = wntr.metrics.entropy(G)
+        print("Entropy:\n", entropy)
+        print("System entropy:", system_entropy)
+
+    # def testEpanet(self, inpfile = "C:\\Temp\\Net1.inp", rptfile=None, binfile=None):
+    #     """
+    #     Run an EPANET command-line simulation
+        
+    #     Parameters
+    #     ----------
+    #     inpfile : str
+    #         The input file name
+    #     """
+    #     file_prefix, file_ext = os.path.splitext(inpfile)
+    #     if rptfile is None:
+    #         rptfile = file_prefix + ".rpt"
+    #     if binfile is None:
+    #         binfile = file_prefix + ".bin"
+        
+    #     try:
+    #         enData = ENepanet()
+    #         enData.ENopen(inpfile, rptfile, binfile)
+    #         enData.ENsolveH()
+    #         #enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
+    #         # try:
+    #         #     enData.ENreport()
+    #         # except:
+    #         #     pass
             
-            nNodes = enData.ENgetcount(EN.NODECOUNT)
-            print("Cantidad de nodos: ", nNodes)
+    #         nNodes = enData.ENgetcount(EN.NODECOUNT)
+    #         print("Cantidad de nodos: ", nNodes)
             
-            # layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
-            # # Iniciar edición de la capa
-            # layer_1.startEditing()
+    #         # layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+    #         # # Iniciar edición de la capa
+    #         # layer_1.startEditing()
             
-            valoresNodes = []
-            for i in range(1, nNodes + 1):
-                a = enData.ENgetnodeid(i)#.ENgetnodevalue(i, EN.BASEDEMAND)
-                b = enData.ENgetnodevalue(i, EN.DEMAND)
-                c = enData.ENgetnodevalue(i, EN.PRESSURE)
-                d = enData.ENgetnodevalue(i, EN.HEAD)
-                valoresNodes.append(ResultNode(a, b, c, d))
+    #         valoresNodes = []
+    #         for i in range(1, nNodes + 1):
+    #             a = enData.ENgetnodeid(i)#.ENgetnodevalue(i, EN.BASEDEMAND)
+    #             b = enData.ENgetnodevalue(i, EN.DEMAND)
+    #             c = enData.ENgetnodevalue(i, EN.PRESSURE)
+    #             d = enData.ENgetnodevalue(i, EN.HEAD)
+    #             #valoresNodes.append(ResultNode(a, b, c, d))
             
-            # features = layer_1.getFeatures()
-            # for feature in features:
-            #     nodeName = feature.attribute("Name")
-            #     item = self.__getidNode(enData, nodeName, nNodes)
-            #     pressure = enData.ENgetnodevalue(item, EN.PRESSURE)
-            #     feature.setAttribute("Pressure", pressure)
-            #     # Actualizar la característica en la capa
-            #     layer_1.updateFeature(feature)
-            # # Guardar cambios
-            # layer_1.commitChanges()
+    #         # features = layer_1.getFeatures()
+    #         # for feature in features:
+    #         #     nodeName = feature.attribute("Name")
+    #         #     item = self.__getidNode(enData, nodeName, nNodes)
+    #         #     pressure = enData.ENgetnodevalue(item, EN.PRESSURE)
+    #         #     feature.setAttribute("Pressure", pressure)
+    #         #     # Actualizar la característica en la capa
+    #         #     layer_1.updateFeature(feature)
+    #         # # Guardar cambios
+    #         # layer_1.commitChanges()
                 
             
-            # Paso 3: Escribe la lista en un archivo JSON
-            jsonFile = file_prefix + "Node" + ".json"
-            with open(jsonFile, 'w') as archivo_json:
-                json.dump([item.to_dict() for item in valoresNodes], archivo_json, ensure_ascii = False, indent = 4)
+    #         # Paso 3: Escribe la lista en un archivo JSON
+    #         jsonFile = file_prefix + "Node" + ".json"
+    #         with open(jsonFile, 'w') as archivo_json:
+    #             json.dump([item.to_dict() for item in valoresNodes], archivo_json, ensure_ascii = False, indent = 4)
             
-            nLinks = enData.ENgetcount(EN.LINKCOUNT)
-            print("Cantidad de tuberias: ", nLinks)
+    #         nLinks = enData.ENgetcount(EN.LINKCOUNT)
+    #         print("Cantidad de tuberias: ", nLinks)
             
-            linkResult = []
+    #         linkResult = []
             
-            for i in range(1, nLinks + 1):
-                a = enData.ENgetlinkvalue(i, EN.LPS)
-                b = enData.ENgetlinkvalue(i, EN.HEADLOSS)
-                c = enData.ENgetlinkvalue(i, EN.STATUS)
-                d = enData.ENgetlinkid(i)
-                g = enData.ENgetlinkvalue(i, EN.MINORLOSS)
-                linkResult.append(ResultLink(a, b, c, d, g))
+    #         for i in range(1, nLinks + 1):
+    #             a = enData.ENgetlinkvalue(i, EN.LPS)
+    #             b = enData.ENgetlinkvalue(i, EN.HEADLOSS)
+    #             c = enData.ENgetlinkvalue(i, EN.STATUS)
+    #             d = enData.ENgetlinkid(i)
+    #             g = enData.ENgetlinkvalue(i, EN.MINORLOSS)
+    #             #linkResult.append(ResultLink(a, b, c, d, g))
                 
-            # Paso 3: Escribe la lista en un archivo JSON
-            jsonFile = file_prefix + "Link" + ".json"
-            with open(jsonFile, 'w') as archivo_json:
-                json.dump([item.to_json() for item in linkResult], archivo_json, ensure_ascii=False, indent=4)
+    #         # Paso 3: Escribe la lista en un archivo JSON
+    #         jsonFile = file_prefix + "Link" + ".json"
+    #         with open(jsonFile, 'w') as archivo_json:
+    #             json.dump([item.to_json() for item in linkResult], archivo_json, ensure_ascii=False, indent=4)
             
-            flows = enData.ENgetflowunits()
-            if flows == 0: UndCaudal = "CFS"
-            if flows == 1: UndCaudal = "GPM"
-            if flows == 2: UndCaudal = "MGD"
-            if flows == 3: UndCaudal = "IMGD"
-            if flows == 4: UndCaudal = "AFD"
-            if flows == 5: UndCaudal = "LPS"
-            if flows == 6: UndCaudal = "LPM"
-            if flows == 7: UndCaudal = "MLD"
-            if flows == 8: UndCaudal = "CMH"
-            if flows == 9: UndCaudal = "CMD"
-            print("Unidad de caudal: ", UndCaudal)
+    #         flows = enData.ENgetflowunits()
+    #         if flows == 0: UndCaudal = "CFS"
+    #         if flows == 1: UndCaudal = "GPM"
+    #         if flows == 2: UndCaudal = "MGD"
+    #         if flows == 3: UndCaudal = "IMGD"
+    #         if flows == 4: UndCaudal = "AFD"
+    #         if flows == 5: UndCaudal = "LPS"
+    #         if flows == 6: UndCaudal = "LPM"
+    #         if flows == 7: UndCaudal = "MLD"
+    #         if flows == 8: UndCaudal = "CMH"
+    #         if flows == 9: UndCaudal = "CMD"
+    #         print("Unidad de caudal: ", UndCaudal)
            
-            print("Termine el análisis...")
-            enData.ENclose()
+    #         print("Termine el análisis...")
+    #         enData.ENclose()
         
-        except Exception as e:
-            raise e
+    #     except Exception as e:
+    #         raise e
+
+
+    def showDialog(self):
+        
+        ui = WateringINPOptions()
+        
+        ui.show()
+        if ui.exec_() == 1:
+            print("0001: Dialogo abierto...")
+        else:
+            print("0002: Dialogo cerrado...")
+        # self.dlg = WateringLogin()
+        # self.dlg.show()
+        # if self.dlg.exec_() == 1:

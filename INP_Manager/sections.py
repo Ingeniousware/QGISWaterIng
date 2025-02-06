@@ -335,8 +335,8 @@ class sectionOptions(sectionAbstract):
     def __init__(self):
         super(sectionOptions, self).__init__(24)
         self.name = '[OPTIONS]'
-        self.Units = 'LPS'
-        self.Headloss = 'D-w'
+        self.Units = 'GPM'
+        self.Headloss = 'H-W'
         self.Specific_Gravity = 1
         self.Viscosity = 1
         self.Trials = 40

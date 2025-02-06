@@ -306,12 +306,17 @@ class QGISPlugin_WaterIng:
             print("001")
             #inp_file = scenario_folder_path.replace('/','\\')
             #print("002 ", "Iniciando simulación")
-            inpMan.testEpanet(inpMan.OutFile)
+            #inpMan.testEpanet(inpMan.OutFile)
             #print("003 ", "Final de la simulation")
             print("004: Principio del análisis...")
-            inpMan.getAnalysisResults()
+            inpMan.getAnalysisResults_1()
             print("005: Fin del análisis...")
-        
+            print("006: Inicio de la Resilience metrics (Hydraulic metrics)...")
+            inpMan.getMetrics()
+            print("007: Fin de la Resilience metrics (Hydraulic metrics)...")
+            #show_input_dialog()
+            # inpMan.showDialog()
+            
         except Exception as e:
             text = f"Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering\n'{e}'"
             show_custom_dialog("Información", text)
