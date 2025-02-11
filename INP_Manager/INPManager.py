@@ -419,7 +419,7 @@ class INPManager():
         # self.outfile.close()
 
 
-    def getAnalysisResults_1(self):
+    def getAnalysisResults(self):
         """Se obtienen los resultados de la simulación local"""
         # Seeliminan los layes que se crearon para motrar los resultados
         root = QgsProject.instance().layerTreeRoot()

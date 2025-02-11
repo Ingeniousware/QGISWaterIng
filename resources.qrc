@@ -40,5 +40,8 @@
         <file>images/Icon_pressureSensor_GT_Critical.svg</file>
         <file>images/Icon_pressureSensor_GT_Warning.svg</file>
         <file>images/Icon_pressureSensor_GT_Disconnected.svg</file>
+        <file>images/analysisWNTR.svg</file>
+        <file>images/analysisWNTR1.svg</file>
+        <file>images/01_01.png</file>
     </qresource>
 </RCC>
