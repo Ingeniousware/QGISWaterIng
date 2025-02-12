@@ -191,12 +191,6 @@ class QGISPlugin_WaterIng:
     def simulator_patterns(self):
         print("002: Patterns de patrones no implementado...")
         self.simulatorQGIS.MessageInformation("002: Patterns no implementada...")
-        path = INP_Utils.default_directory_optins()
-        data = INP_Utils.read_options(path)["Hydraulics"]
-        d = HydraulicOptions()
-        d.__dict__.update(data)
-        print(data)
-        print(d)
 
 
     def simulator_curves(self):
