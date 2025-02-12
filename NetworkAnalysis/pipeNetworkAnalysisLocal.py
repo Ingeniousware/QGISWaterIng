@@ -16,21 +16,22 @@
 ***************************************************************************
 """
 
+
+
 from qgis.PyQt.QtGui import QColor # type: ignore
 
-# from ..wntr.epanet.toolkit import ENepanet
-from .analysisEmentType import AnalysisEmentType
-from .abstractAnalysisLocal import AbstractAnalysisLocal
-from ..INP_Manager.inp_utils import NodeLinkResultType
+
+from .abstractAnalysisLocalPipe import AbstractAnalysisLocalPipe
+from ..INP_Manager.node_link_ResultType import LinkResultType
 from wntr.sim.results import SimulationResults
 
-class PipeNetworkAnalysisLocal(AbstractAnalysisLocal):
+class PipeNetworkAnalysisLocal(AbstractAnalysisLocalPipe):
     """
     Clase que representa los resultados de las tuberías.
     """
-    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, analysisElemntType = AnalysisEmentType.PIPE, resultType = NodeLinkResultType.flowrate):
+    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, resultType = LinkResultType.flowrate):
         """Constructor of PipeNetworkAnalysisLocal."""
-        super().__init__(results, analysisElemntType, resultType, analysisExecutionId, datetime)
+        super().__init__(results, resultType, analysisExecutionId, datetime)
         self.UrlGet = ""
         self.KeysApi = ""
         self.Attributes = ""

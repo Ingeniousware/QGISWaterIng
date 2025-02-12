@@ -2,7 +2,7 @@
 
 """
 ***************************************************************************
-    INPManager.py
+    simulatorQGIS.py
     ---------------------
     Date                 : Febrero 2025
     Copyright            : (C) 2025 by Ingeniowarest
@@ -21,6 +21,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 from ..ui.watering_inp_options import WateringINPOptions
 from .INPManager import INPManager
+from .inp_utils import INP_Utils
 
 
 
@@ -37,13 +38,13 @@ class SimulatorQGIS:
     def INPMan(self):
         return self._inpMan
     
-    def run_1(self, a: str = ""):
-        #inpMan1 = INPManager()
+    def run(self):
+        """"""
         self.INPMan.writeSections()
         self.INPMan.getAnalysisResults()
 
 
-    def MessageInformation(message):
+    def MessageInformation(self, message: str):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
         msg.setText(message)
@@ -55,6 +56,9 @@ class SimulatorQGIS:
     def viewOptions(self):
         self.options.show()
         if self.options.exec_() == 1:
-            print("0001: Dialogo abierto...")
-        else:
-            print("0002: Dialogo cerrado...")
+            print("001: Dialogo abierto...\n", self.options.classes["Hydraulics"])
+            # path = INP_Utils.default_working_directory() + "\\optins.json"
+            # print("002: ", path)
+            # self.options.save(path)
+        # else:
+        #     print("0002: Dialogo cerrado...")

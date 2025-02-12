@@ -10,66 +10,16 @@
 import os
 import sys
 import json
+
 from qgis.PyQt import uic
-from PyQt5.QtWidgets import QMessageBox, QHeaderView
+from PyQt5.QtWidgets import QMessageBox, QHeaderView, QTableWidgetItem, QComboBox
+from PyQt5.QtCore import Qt
 from qgis.PyQt import QtWidgets
 
+from ..INP_Manager.dataType import AbstractOption, EnergyOptions, HydraulicOptions, QualityOptions, ReactionOptions, TimeOptions
+from ..INP_Manager.inp_utils import INP_Utils
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_inp_options_dialog.ui"))
-
-class Energy:
-    def __init__(self):
-        self.Global_Efficiency = 75
-        self.Global_Price = 0.0
-        self.Demand_Charge = 0.0
-
-class Reactions:
-    def __init__(self):
-        self.Order_Bulk = 1
-        self.Order_Tank = 1
-        self.Order_Wall = 'First'
-        self.Global_Bulk = 0.0
-        self.Global_Wall = 0.0
-        self.Limiting_Potential = 0.0
-        self.Roughness_Correlation = 0.0
-
-class Times:
-    def __init__(self):
-        self.Duration = '24:00'
-        self.Hydraulic_Timestep = '1:00'
-        self.Quality_Timestep = '0:05'
-        self.Pattern_Timestep = '1:00'
-        self.Pattern_Start = '0:00'
-        self.Report_Timestep = '1:00'
-        self.Report_Start = '0:00'
-        self.Start_ClockTime = '12 am'
-        self.Statistic = 'None'
-
-class Hydraulics:
-    def __init__(self):
-        self.Units = 'CFS'
-        self.Headloss = 'H-W'
-        self.Specific_Gravity = 1.0
-        self.Viscosity = 1.0
-        self.Trials = 40
-        self.Accuracy = 0.001
-        self.CHECKFREQ = 2
-        self.MAXCHECK = 10
-        self.DAMPLIMIT = 0
-        self.Unbalanced = 'Continue 10'
-        self.Pattern = 1
-        self.Demand_Multiplier = 1.0
-        self.Emitter_Exponent = 0.5
-        self.Quality = 'Chlorine mg/L'
-        self.Diffusivity = 1.0
-        self.Tolerance = 0.01
-
-    def set_units(self, units):
-        valid_units = ["CFS", "GPM", "MGD", "IMGD", "AFD", "LPS", "LPM", "MLD", "CMH", "CMD"]
-        if units in valid_units:
-            self.Units = units
-        else:
-            print("Unidad no válida. Las unidades válidas son: CFS, GPM, MGD, IMGD, AFD, LPS, LPM, MLD, CMH, CMD")
 
 
 class WateringINPOptions(QtWidgets.QDialog, FORM_CLASS):
@@ -77,31 +27,90 @@ class WateringINPOptions(QtWidgets.QDialog, FORM_CLASS):
         """Constructor."""
         super(WateringINPOptions, self).__init__(parent)
         self.setupUi(self)
-        
-        self.comboBox.addItems(['Energy', 'Reactions', 'Times', 'Hydraulics'])
-        
-        self.tableWidget.setColumnCount(2)
-        self.tableWidget.setHorizontalHeaderLabels(["Property", "Value"])
-        #self.tableWidget.resizeColumnsToContents()
-        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        
+
+        self.obj: AbstractOption = None
+
+        # Diccionario de clases
+        self.classes = {
+            'Hydraulics': HydraulicOptions(),
+            'Quality': QualityOptions(),
+            'Reactions': ReactionOptions(),
+            'Times': TimeOptions(),
+            'Energy': EnergyOptions()}
+
+        self.comboBox.addItems(self.classes.keys())
+
+        self.table.setColumnCount(2)
+        self.table.setHorizontalHeaderLabels(["Property", "Value"])
+        self.table.verticalHeader().setVisible(False) # Para ocultar la cabecra de cada fila.
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.update_table()
+
+        # Conectar el cambio en el ComboBox a la actualización de la tabla
+        self.comboBox.currentIndexChanged.connect(self.update_table)
+        self.table.cellChanged.connect(self.update_object)
+
         self.buttonBox.accepted.connect(self.accept_function)
         self.buttonBox.rejected.connect(self.cancel_function)
+
+
+    def update_table(self):
+        selected_class_name = self.comboBox.currentText()
         
-         # Diccionario de clases
-        self.classes = {
-            'Energy': Energy(),
-            'Reactions': Reactions(),
-            'Times': Times(),
-            'Hydraulics': Hydraulics()
-        }
+        # Obtener las propiedades de la clase seleccionada
+        self.obj = self.classes[selected_class_name]
+        
+        # Filtrar propiedades que no comienzan con "_"
+        self.public_properties = {k: v for k, v in vars(self.obj).items() if not k.startswith('_')}
+        
+        self.clear_widgets()
+        
+        self.table.setRowCount(len(self.public_properties))
+        
+        for row, (prop, value) in enumerate(self.public_properties.items()):
+            item = QTableWidgetItem(prop)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Hacer el nombre de la propiedad no editable
+            self.table.setItem(row, 0, item)
+            
+            if (prop in self.obj._properties.keys()):
+                combo_box = QComboBox()
+                combo_box.addItems([str(v) for v in self.obj._properties[prop]])
+                combo_box.setCurrentText(str(value))
+                combo_box.currentTextChanged.connect(lambda text, row = row: self.update_properties(row, text))
+                self.table.setCellWidget(row, 1, combo_box)
+            else:
+                result = value if value is not None else ""
+                self.table.setItem(row, 1, QTableWidgetItem(str(result)))
+
+
+    def update_properties(self, row, value):
+        prop = self.table.item(row, 0).text()
+        #value = self.table.item(row, 1).text()
+        setattr(self.obj, prop, value)
+
+
+    def update_object(self, row, column):
+        if column == 1:  # Solo actualizar si se cambia la columna de valores
+            prop = self.table.item(row, 0).text()
+            if (prop not in self.obj._properties.keys()):  # No actualizar las propiedades con posibles valores aquí, se maneja en update_properties
+                value = self.table.item(row, 1).text()
+                setattr(self.obj, prop, value)
+
+
+    def clear_widgets(self):
+        for row in range(self.table.rowCount()):
+            for col in range(self.table.columnCount()):
+                widget = self.table.cellWidget(row, col)
+                if widget:
+                    widget.setParent(None) # Desvincula el widget de la tabla
+                    widget.deleteLater() # Elimina el widget de la memoria
+        self.table.clearContents() # Limpia el contenido visual restante
 
 
     def accept_function(self):
         # Código para manejar la acción de aceptar
-        print("Se ha pulsado el botón Aceptar")
-        # self.save_changes()
-        # Aquí puedes guardar los datos, cerrar la ventana, etc.
+        path = INP_Utils.default_directory_optins()
+        self.save(path)
 
 
     def cancel_function(self):
@@ -110,10 +119,43 @@ class WateringINPOptions(QtWidgets.QDialog, FORM_CLASS):
         # Aquí puedes limpiar los datos, cerrar la ventana, etc.
 
 
-    def save_changes(self):
-        # Guardar las propiedades en un archivo JSON
-        with open('c:\\Temp\\data.json', 'w') as json_file:
-            json.dump({name: vars(instance) for name, instance in self.classes.items()}, json_file)
-        
-        QMessageBox.information(self, "Éxito", "Los cambios han sido guardados exitosamente.")
+    def serialize_public_properties(self, obj):
+        """Serializa un objeto a un diccionario, excluyendo las propiedades privadas."""
+        return {k: v for k, v in obj.__dict__.items() if not k.startswith('_')}
 
+
+    def save(self, path: str, show_QMessageBox = True):
+        """
+        Save the properties of the classes to a JSON file.
+        Args:
+            path (str): The file path where the JSON file will be saved.
+        Raises:
+            IOError: If the file cannot be opened or written to.
+        Side Effects:
+            Displays a message box informing the user of the success of the operation.
+        """
+        # Crear un diccionario para JSON
+        data = {}
+        for key, value in self.classes.items():
+            data[key] = self.serialize_public_properties(value)
+            
+        # data = {key: self.serialize_public_properties(value) for key, value in self.classes.items()}
+        
+        # data = {
+        #     "Energy": self.serialize_public_properties(self.classes['Energy']),
+        #     "Reactions": self.serialize_public_properties(self.classes['Reactions']),
+        #     "Times": self.serialize_public_properties(self.classes['Times']),
+        #     "Hydraulics": self.serialize_public_properties(self.classes['Hydraulics'])
+        # }
+        
+        # Guardar las propiedades en un archivo JSON
+        try:
+            with open(path, 'w') as file:
+                json.dump(data, file, indent = 4)
+
+            if show_QMessageBox:
+                QMessageBox.information(self, "Éxito", "Los cambios han sido guardados exitosamente.")
+        except IOError as e:
+            if show_QMessageBox:
+                QMessageBox.information(self, "Error", f"Error al guardar los cambios {e}.")
+                raise

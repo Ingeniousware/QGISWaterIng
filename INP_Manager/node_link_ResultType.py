@@ -2,9 +2,9 @@
 
 """
 ***************************************************************************
-    analysisEmentType.py
+    node_link_ResultType.py
     ---------------------
-    Date                 : Enero 2025
+    Date                 : Febrero 2024
     Copyright            : (C) 2025 by Ingeniowarest
     Email                : 
 ***************************************************************************
@@ -20,9 +20,27 @@
 import enum
 
 
-class AnalysisEmentType(enum.IntEnum):
-    """Clase que representa los tipos de elementos a analizar."""
-    NODE = 1
-    """Análisis de los nodos"""
-    PIPE = 2
-    """Análisis de las tuberias."""
+class NodeResultType(enum.IntEnum):
+    """
+    - Node parameters: :attr:`demand`, :attr:`head`, :attr:`pressure`, :attr:`quality`
+    """
+    # Node parameters
+    demand = 1
+    head = 2
+    pressure = 3
+    quality = 4
+
+
+class LinkResultType(enum.IntEnum):
+    """
+    - Link parameters: :attr:`flowrate`, :attr:`velocity`, :attr:`headloss`, :attr:`status`, :attr:`setting`, :attr:`friction_factor`, :attr:`reaction_rate`
+    """
+
+    # Link parameters
+    flowrate = 1
+    velocity = 2
+    headloss = 3
+    status = 4
+    setting = 5
+    friction_factor = 6
+    reaction_rate = 7

@@ -16,7 +16,13 @@
 ***************************************************************************
 """
 
+import os
+
+
+from ..ui.watering_inp_options import WateringINPOptions
+from .inp_utils import INP_Utils
 from .sectionAbstract import sectionAbstract
+from .dataType import HydraulicOptions
 
 # Section Title [TITLE] =================================================================
 class sectionTitle(sectionAbstract):
@@ -335,32 +341,39 @@ class sectionOptions(sectionAbstract):
     def __init__(self):
         super(sectionOptions, self).__init__(24)
         self.name = '[OPTIONS]'
-        self.Units = 'GPM'
-        self.Headloss = 'H-W'
-        self.Specific_Gravity = 1
-        self.Viscosity = 1
-        self.Trials = 40
-        self.Accuracy = 0.001
-        self.CHECKFREQ = 2
-        self.MAXCHECK = 10
-        self.DAMPLIMIT = 0
-        self.Unbalanced = 'Continue 10'
-        self.Pattern = 1
-        self.Demand_Multiplier = 1.0
-        self.Emitter_Exponent = 0.5
-        self.Quality = 'None mg/L'
-        self.Diffusivity = 1
-        self.Tolerance = 0.01
+        # self.Units = 'GPM'
+        # self.Headloss = 'H-W'
+        # self.Specific_Gravity = 1
+        # self.Viscosity = 1
+        # self.Trials = 40
+        # self.Accuracy = 0.001
+        # self.CHECKFREQ = 2
+        # self.MAXCHECK = 10
+        # self.DAMPLIMIT = 0
+        # self.Unbalanced = 'Continue 10'
+        # self.Pattern = 1
+        # self.Demand_Multiplier = 1.0
+        # self.Emitter_Exponent = 0.5
+        # self.Quality = 'None mg/L'
+        # self.Diffusivity = 1
+        # self.Tolerance = 0.01
         
     def writeSection(self, outfile):
-        outfile.write(self.name + '\n')
-        text = f" Units              	{self.Units}\n Headloss           	{self.Headloss}\n Specific Gravity   	{self.Specific_Gravity}\n"
-        text += f" Viscosity          	{self.Viscosity}\n Trials             	{self.Trials}\n Accuracy           	{self.Accuracy}\n"
-        text += f" CHECKFREQ          	{self.CHECKFREQ}\n MAXCHECK           	{self.MAXCHECK}\n DAMPLIMIT          	{self.DAMPLIMIT}\n"
-        text += f" Unbalanced         	{self.Unbalanced}\n Pattern            	{self.Pattern}\n Demand Multiplier  	{self.Demand_Multiplier}\n"
-        text += f" Emitter Exponent   	{self.Emitter_Exponent}\n Quality            	{self.Quality}\n Diffusivity        	{self.Diffusivity}\n"
-        text += f" Tolerance          	{self.Tolerance}\n"
-        outfile.write(text)
+        # outfile.write(self.name + '\n')
+        # text = f" Units              	{self.Units}\n Headloss           	{self.Headloss}\n Specific Gravity   	{self.Specific_Gravity}\n"
+        # text += f" Viscosity          	{self.Viscosity}\n Trials             	{self.Trials}\n Accuracy           	{self.Accuracy}\n"
+        # text += f" CHECKFREQ          	{self.CHECKFREQ}\n MAXCHECK           	{self.MAXCHECK}\n DAMPLIMIT          	{self.DAMPLIMIT}\n"
+        # text += f" Unbalanced         	{self.Unbalanced}\n Pattern            	{self.Pattern}\n Demand Multiplier  	{self.Demand_Multiplier}\n"
+        # text += f" Emitter Exponent   	{self.Emitter_Exponent}\n Quality            	{self.Quality}\n Diffusivity        	{self.Diffusivity}\n"
+        # text += f" Tolerance          	{self.Tolerance}\n"
+        path = INP_Utils.default_directory_optins()
+        if not os.path.exists(path):
+            options = WateringINPOptions()
+            options.save(path, False)
+        data = INP_Utils.read_options(path)["Hydraulics"]
+        _d = HydraulicOptions()
+        _d.__dict__.update(data)
+        outfile.write(_d.__str__())
         #outfile.write(' Units              	LPS' + '\n')
         #outfile.write(' Headloss           	D-W' + '\n')
         #outfile.write(' Specific Gravity   	1' + '\n')

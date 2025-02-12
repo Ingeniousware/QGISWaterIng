@@ -65,9 +65,11 @@ import os.path
 
 # Import the code for the process INP file.
 from .INP_Manager.simulatorQGIS import SimulatorQGIS
-from .INP_Manager.INPManager import INPManager
-from .shpProcessing.waterTanks import ImportTanksShp
+# from .INP_Manager.INPManager import INPManager
+# from .shpProcessing.waterTanks import ImportTanksShp
 from .INP_Manager.customdialog import show_custom_dialog, show_input_dialog
+from .INP_Manager.inp_utils import INP_Utils
+from .INP_Manager.dataType import HydraulicOptions
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -97,7 +99,7 @@ class QGISPlugin_WaterIng:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr("&Watering API Connection")
-        """self.insertSensorAction = None        
+        """self.insertSensorAction = None
         self.insertReservoirNodeAction = None
         self.insertValveNodeAction = None
         self.insertPumpNodeAction = None
@@ -126,7 +128,7 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager = None
         self.project_info = None
         
-        self.simulatorQGIS = SimulatorQGIS
+        self.simulatorQGIS = SimulatorQGIS()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message, context="QGISPlugin_WaterIng"):
@@ -181,14 +183,20 @@ class QGISPlugin_WaterIng:
 
 #-------------- Acciones que se reslizan para la simulación -------------------
     def simulator_run(self):
-        print("001: Simulation no implementada...")
-        #self.simulatorQGIS.MessageInformation("001: Simulation no implementada...")
-        self.simulatorQGIS.run_1()
+        # print("001: Simulation no implementada...")
+        # self.simulatorQGIS.MessageInformation("001: Simulation no implementada...")
+        self.simulatorQGIS.run()
 
 
     def simulator_patterns(self):
         print("002: Patterns de patrones no implementado...")
         self.simulatorQGIS.MessageInformation("002: Patterns no implementada...")
+        path = INP_Utils.default_directory_optins()
+        data = INP_Utils.read_options(path)["Hydraulics"]
+        d = HydraulicOptions()
+        d.__dict__.update(data)
+        print(data)
+        print(d)
 
 
     def simulator_curves(self):
@@ -202,18 +210,14 @@ class QGISPlugin_WaterIng:
 
 
     def simulator_options(self):
-        print("005: Options no implementada...")
-        self.simulatorQGIS.MessageInformation("005: Options no implementada...")
+        # print("005: Options no implementada...")
+        # self.simulatorQGIS.MessageInformation("005: Options no implementada...")
+        self.simulatorQGIS.viewOptions()
 
     def simulator_resilience(self):
         print("006: Resilience no implementada...")
         self.simulatorQGIS.MessageInformation("006: Resilience no implementada...")
 
-
-    def action_triggered(self):
-        inpMan = INPManager()
-        inpMan.showDialog()
-        print("Acción seleccionada")
 
 #-------------- Acciones que se reslizan para la simulación -------------------
 
@@ -374,23 +378,23 @@ class QGISPlugin_WaterIng:
             #with open(os.path.join(scenario_folder_path), "w") as inpfile:
                 #print(inpfile)
                 #inpMan = INPManager(inpfile)
-            inpMan = INPManager()
-            #print("001", inpMan.OutFile)
-                #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
-            inpMan.writeSections()
+            # inpMan = INPManager()
+            # #print("001", inpMan.OutFile)
+            #     #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
+            # inpMan.writeSections()
 
-            #inpMan.updateLayer()
-            print("001")
-            #inp_file = scenario_folder_path.replace('/','\\')
-            #print("002 ", "Iniciando simulación")
-            #inpMan.testEpanet(inpMan.OutFile)
-            #print("003 ", "Final de la simulation")
-            print("004: Principio del análisis...")
-            inpMan.getAnalysisResults_1()
-            print("005: Fin del análisis...")
-            print("006: Inicio de la Resilience metrics (Hydraulic metrics)...")
-            inpMan.getMetrics()
-            print("007: Fin de la Resilience metrics (Hydraulic metrics)...")
+            # #inpMan.updateLayer()
+            # print("001")
+            # #inp_file = scenario_folder_path.replace('/','\\')
+            # #print("002 ", "Iniciando simulación")
+            # #inpMan.testEpanet(inpMan.OutFile)
+            # #print("003 ", "Final de la simulation")
+            # print("004: Principio del análisis...")
+            # inpMan.getAnalysisResults_1()
+            # print("005: Fin del análisis...")
+            # print("006: Inicio de la Resilience metrics (Hydraulic metrics)...")
+            # inpMan.getMetrics()
+            # print("007: Fin de la Resilience metrics (Hydraulic metrics)...")
             show_input_dialog()
             # inpMan.showDialog()
             

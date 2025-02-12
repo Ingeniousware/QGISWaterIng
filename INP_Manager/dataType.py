@@ -16,15 +16,46 @@
 ***************************************************************************
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 import warnings
 
 class AbstractOption(ABC):
     def __init__(self):
-        self._properties: dict =  {}
+        super(AbstractOption, self).__init__()
+        self._properties =  {}
 
-    # def setValueProperties(self, nameProperty: str, valueProperty = []):
-    #     self._properties[nameProperty] = valueProperty
+    def add_from_dict(self, dict: dict):
+        for key, value in dict.items():
+            self.add(key, value)
+
+    def get(self, key):
+        return self._properties.get(key, None)
+
+    def keys(self):
+        self._properties.keys()
+
+    def values(self):
+        self._properties.values()
+
+    def update(self, key, valor):
+        self._properties[key] = valor
+
+    def len(self):
+        return len(self._properties)
+
+    # def exists(self, clave):
+    #     return clave in self._properties
+
+
+    @abstractmethod
+    def read_properties(self, fileName: str):
+        pass
+
+
+    @abstractmethod
+    def write_properties(self, fileName: str):
+        pass
+
 
     def __str__(self):
         return self._properties.__str__()
@@ -165,7 +196,7 @@ class Curve():
         return f" {self.ID: <15}\t{self.X_value: <12}\t{self.Y_value: <15};"
     
 ######################### Proximas class #####################################################
-class Time(AbstractOption):
+class TimeOptions(AbstractOption):
     """
     Options related to simulation and model timing.
     These options are named according to the EPANET 2.2 "Times" settings.
@@ -238,6 +269,7 @@ class Time(AbstractOption):
                 start_clocktime: int=0,
                 statistic: str='NONE',
                 pattern_interpolation: bool = False):
+        super(TimeOptions, self).__init__()
         self.duration = duration
         self.hydraulic_timestep = hydraulic_timestep
         self.quality_timestep = quality_timestep
@@ -249,93 +281,19 @@ class Time(AbstractOption):
         self.start_clocktime = start_clocktime
         self.statistic = statistic
         self.pattern_interpolation = pattern_interpolation
-        self._properties = {"statistic": ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']}
-
-    def __setattr__(self, name, value):
-        if name == 'statistic':
-            value = str.upper(value)
-            if value not in ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']:
-                raise ValueError('Statistic must be one of AVERAGED, MINIMUM, MAXIMUM, RANGE or NONE')
-        elif name in {'hydraulic_timestep', 'quality_timestep', 'rule_timestep', 
-                        'pattern_timestep'}:
-            try:
-                value = max(1, int(value))
-            except ValueError:
-                raise ValueError('%s must be an integer >= 1'%name)
-        elif name not in {'duration', 'pattern_start', 'report_start', 'report_timestep',
-                            'start_clocktime', 'pattern_interpolation'}:
-            raise AttributeError('%s is not a valid attribute in TimeOptions'%name)
-        elif name not in {'report_timestep', 'pattern_interpolation'}:
-            try:
-                value = float(value)
-            except ValueError:
-                raise ValueError('%s must be a number'%name)
-        self.__dict__[name] = value
+        self._properties = {"statistic": ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE'],
+                            "pattern_interpolation": [False, True]}
 
 
-class GraphicsOptions():
-    """
-    Options related to graphics. 
-    
-    May be used to contain custom, user defined values. 
-    These options are taken from the EPANET "[BACKDROP]" section. 
-    Additionally, the "MAP" option (`map_filename`), which identifies a file containing 
-    node coordinates in the EPANET "[OPTIONS]" section, is also included here.
-    
-    Parameters
-    ----------
-    dimensions : 4-tuple or list
-        Dimensions for backdrop image in the order (LLx, LLy, URx, URy). By default, 
-        EPANET will make the image match the full extent of node coordinates (set to `None`).
-
-    units : str
-        Units for backdrop image dimensions. Must be one of FEET, METERS, DEGREES or NONE, by default "NONE".
-
-    offset : 2-tuple or list
-        Offset for the network in order (X, Y), by default ``None`` (no offset).
-
-    image_filename : string
-        Filename where image is located, by default ``None``.
-
-    map_filename : string
-        Filename used to store node coordinates in (node, x, y) format. This option is
-        from the EPANET "[OPTIONS]" section. See note below.
-    
-    
-    .. note::
-
-        Because the format of the MAP file is uncertain, file will need to be processed
-        by the user to assign coordinates to nodes, if desired. Remember that node 
-        coordinates have impact *only* on graphics and *do not* impact simulation results.
-        If the `map_filename` is not ``None``, then no [COORDINATES] will be written out
-        to INP files (to save space, since the simulator does not use that section).
-        This can be overwritten in the `write_inpfile` commands.
-    
-
-    """
-    def __init__(self,
-                 dimensions: list = None,
-                 units: str = None,
-                 offset: list = None,
-                 image_filename: str = None,
-                 map_filename: str = None):
-        self.dimensions = dimensions
-        self.units = units
-        self.offset = offset
-        self.image_filename = image_filename
-        self.map_filename = map_filename
-
-    def __setattr__(self, name, value):
-        if name == 'units':
-            value = str(value).upper()
-            if value not in ['FEET','METERS','DEGREES','NONE']:
-                raise ValueError('Backdrop units must be one of FEET, METERS, DEGREES, or NONE')
-        elif name not in ['dimensions', 'units', 'offset', 'image_filename', 'map_filename']:
-            raise AttributeError('%s is not a valid attribute of GraphicsOptions'%name)
-        self.__dict__[name] = value
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
 
 
-class HydraulicOptions():
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+class HydraulicOptions(AbstractOption):
     """
     Options related to hydraulic model.
     These options are named according to the settings in the EPANET "[OPTIONS]"
@@ -435,14 +393,14 @@ class HydraulicOptions():
                  specific_gravity: float = 1.0,
                  pattern: str = '1',
                  demand_multiplier: float = 1.0,
-                 demand_model: str = 'DD',
+                 demand_model: str = 'DDA',
                  minimum_pressure: float = 0.0,
                  required_pressure: float = 0.07,  # EPANET 2.2 default
                  pressure_exponent: float = 0.5,
                  emitter_exponent: float = 0.5,
                  trials: int = 200,  # EPANET 2.2 increased the default from 40 to 200
                  accuracy: float = 0.001,
-                 unbalanced: str = 'STOP',
+                 unbalanced: str = 'Continue 10',
                  unbalanced_value: int = None,
                  checkfreq: int = 2,
                  maxcheck: int = 10,
@@ -451,6 +409,7 @@ class HydraulicOptions():
                  flowchange: float = 0,
                  inpfile_units: str = 'GPM',
                  inpfile_pressure_units: str = None):
+        super(HydraulicOptions, self).__init__()
         self.headloss = headloss
         self.hydraulics = hydraulics
         self.hydraulics_filename = hydraulics_filename
@@ -474,72 +433,34 @@ class HydraulicOptions():
         self.flowchange = flowchange
         self.inpfile_units = inpfile_units
         self.inpfile_pressure_units = inpfile_pressure_units
-
-    def __setattr__(self, name, value):
-        if name == 'headloss':
-            value = str.upper(value)
-            if value not in ['H-W', 'D-W', 'C-M']:
-                raise ValueError('headloss must be one of "H-W", "D-W", or "C-M"')
-            # If headloss is changed from ['H-W', 'C-M'] to/from 'D-W', print
-            # a warning, the units of the roughness coefficient cannot be 
-            # converted from unitless to length (0.001 ft or mm)
-            try:
-                orig_value = self.__dict__[name]
-            except:
-                orig_value = None
-            if orig_value is not None:
-                if (orig_value in ['H-W', 'C-M'] and value == 'D-W') or \
-                   (value in ['H-W', 'C-M'] and orig_value == 'D-W'):
-                   warnings.warn('Changing the headloss formula from ' +
-                                 orig_value + ' to ' + value +
-                                 ' will not change the units of the roughness coefficient.')
-        elif name == 'hydraulics':
-            if value is not None:
-                value = str.upper(value)
-                if value not in ['USE', 'SAVE']:
-                    raise ValueError('hydraulics must be None (off) or one of "USE" or "SAVE"')
-        elif name == 'demand_model':
-            if value is not None:
-                value = str.upper(value)
-                if value not in ['DDA', 'DD', 'PDD', 'PDA']:
-                    raise ValueError('demand_model must be None (off) or one of "DD", "DDA", "PDD", or "PDA"')
-                if value == 'DD': value = 'DDA'
-                if value == 'PDD': value = 'PDA'
-        elif name == 'unbalanced':
-            value = str.upper(value)
-            if value not in ['STOP', 'CONTINUE']:
-                raise ValueError('headloss must be either "STOP" or "CONTINUE"')
-        elif name == 'inpfile_units' and isinstance(value, str):
-            value = str.upper(value)
-            if value not in ['CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD']:
-                raise ValueError('inpfile_units = "%s" is not a valid EPANET unit code', value)
-        elif name == 'inpfile_pressure_units' and isinstance(value, str):
-            value = str.upper(value)
-        elif name == 'unbalanced_value':
-            try:
-                value = ""
-            except ValueError:
-                raise ValueError('%s must be an int or None', name)
-        elif name in ['trials', 'checkfreq', 'maxcheck']:
-            try:
-                value = int(value)
-            except ValueError:
-                raise ValueError('%s must be an integer', name)
-        elif name not in ['pattern', 'hydraulics_filename', 'inpfile_units', 'inpfile_pressure_units']:
-            try:
-                value = float(value)
-            except ValueError:
-                raise ValueError('%s must be a number', name)
-        if name not in ['headloss', 'hydraulics', 'hydraulics_filename', 'viscosity', 'specific_gravity',
-                        'pattern', 'demand_multiplier', 'demand_model', 'minimum_pressure', 'required_pressure',
-                        'pressure_exponent', 'emitter_exponent', 'trials', 'accuracy', 'unbalanced', 
-                        'unbalanced_value', 'checkfreq', 'maxcheck', 'damplimit', 'headerror',
-                        'flowchange', 'inpfile_units', 'inpfile_pressure_units']:
-            raise AttributeError('%s is not a valid attribute of HydraulicOptions'%name)
-        self.__dict__[name] = value
+        self._properties = {"inpfile_units": ['CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD'],
+                            "headloss": ['H-W', 'D-W', 'C-M'],
+                            "demand_model": ['DDA', 'PDA'],
+                            "hydraulics": ['None', 'USE', 'SAVE'],
+                            "unbalanced": ['STOP', 'CONTINUE']}
 
 
-class ReactionOptions():
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
+
+
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+    def __str__(self):
+        text = "[OPTIONS]\n"
+        text += f" Units              	{self.inpfile_units}\n Headloss           	{self.headloss}\n Specific Gravity   	{self.specific_gravity}\n"
+        text += f" Viscosity          	{self.viscosity}\n Trials             	{self.trials}\n Accuracy           	{self.accuracy}\n"
+        text += f" CHECKFREQ          	{self.checkfreq}\n MAXCHECK           	{self.maxcheck}\n DAMPLIMIT          	{self.damplimit}\n"
+        text += f" Unbalanced         	{self.unbalanced}\n Pattern            	{self.pattern}\n Demand Multiplier  	{self.demand_multiplier}\n"
+        text += f" Demand Model       	{self.demand_model}\n Minimum Pressure   	{self.minimum_pressure}\n Required Pressure  	{self.required_pressure}\n"
+        text += f" Pressure Exponent  	{self.pressure_exponent}\n Emitter Exponent   	{self.emitter_exponent}\n Quality            	None mg/L\n"
+        text += f" Diffusivity        	1\n Tolerance          	0.01\n"
+        return text
+
+
+class ReactionOptions(AbstractOption):
     """
     Options related to water quality reactions.
     From the EPANET "[REACTIONS]" options.
@@ -587,6 +508,7 @@ class ReactionOptions():
                  wall_coeff: float = 0.0,
                  limiting_potential: float = None,
                  roughness_correl: float = None):
+        super(ReactionOptions, self).__init__()
         self.bulk_order = bulk_order
         self.wall_order = wall_order
         self.tank_order = tank_order
@@ -595,24 +517,16 @@ class ReactionOptions():
         self.limiting_potential = limiting_potential
         self.roughness_correl = roughness_correl
 
-    def __setattr__(self, name, value):
-        if name not in ['limiting_potential', 'roughness_correl']:
-            try:
-                value = float(value)
-            except ValueError:
-                raise ValueError('%s must be a number', name)
-        else:
-            try:
-                value = ""
-            except ValueError:
-                raise ValueError('%s must be a number or None', name)
-        if name not in ['bulk_order', 'wall_order', 'tank_order', 'bulk_coeff',
-                        'wall_coeff', 'limiting_potential', 'roughness_correl']:
-            raise AttributeError('%s is not a valid attribute of ReactionOptions'%name)
-        self.__dict__[name] = value
+
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
 
 
-class QualityOptions():
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+class QualityOptions(AbstractOption):
     """
     Options related to water quality modeling. These options come from
     the "[OPTIONS]" section of an EPANET INP file.
@@ -650,26 +564,26 @@ class QualityOptions():
                  diffusivity: float = 1.0,
                  tolerance: float = 0.01,
                  inpfile_units: str = 'mg/L'):
+        super(QualityOptions, self).__init__()
         self.parameter = parameter
         self.trace_node = trace_node
         self.chemical_name = chemical_name
         self.diffusivity = diffusivity
         self.tolerance = tolerance
         self.inpfile_units = inpfile_units
-
-    def __setattr__(self, name, value):
-        if name in ['diffusivity', 'tolerance']:
-            try:
-                value = float(value)
-            except ValueError:
-                raise ValueError('%s must be a number or None', name)
-        if name not in ['parameter', 'trace_node', 'chemical_name', 'diffusivity',
-                        'tolerance', 'inpfile_units']:
-            raise AttributeError('%s is not a valid attribute of QualityOptions'%name)
-        self.__dict__[name] = value
+        self._properties = {"parameter":['NONE', 'CHEMICAL', 'AGE', 'TRACE'],
+                            "inpfile_units": ['mg/L', 'ug/L']}
 
 
-class EnergyOptions():
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
+
+
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+class EnergyOptions(AbstractOption):
     """
     Options related to energy calculations.
     From the EPANET "[ENERGY]" settings.
@@ -692,19 +606,23 @@ class EnergyOptions():
         by default ``None``.
     """
     def __init__(self,
-                global_price: float=0,
-                global_pattern: str=None,
-                global_efficiency: float=None,
-                demand_charge: float=None):
+                global_price: float = 0,
+                global_pattern: str = None,
+                global_efficiency: float = 75,
+                demand_charge: float = None):
+        super(EnergyOptions, self).__init__()
         self.global_price = global_price
         self.global_pattern = global_pattern
         self.global_efficiency = global_efficiency
         self.demand_charge = demand_charge
 
-    def __setattr__(self, name, value):
-        if name not in ['global_price', 'global_pattern', 'global_efficiency', 'demand_charge']:
-            raise AttributeError('%s is not a valid attribute of EnergyOptions'%name)
-        self.__dict__[name] = value
+
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
+
+
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
 
 ######################### Proximas class #####################################################
 class Coordinate():

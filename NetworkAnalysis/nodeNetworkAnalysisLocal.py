@@ -4,7 +4,7 @@
 ***************************************************************************
     nodeNetworkAnalysisLocal.py
     ---------------------
-    Date                 : Enero 2025
+    Date                 : Febrero 2025
     Copyright            : (C) 2025 by Ingeniowarest
     Email                : 
 ***************************************************************************
@@ -17,30 +17,26 @@
 """
 
 
-import csv
-import enum
-import os
-import stat
 from wntr.sim.results import SimulationResults
 
 
+
+
+from ..INP_Manager.node_link_ResultType import NodeResultType
 from qgis.PyQt.QtGui import QColor # type: ignore
 
-# from ..wntr.epanet.toolkit import ENepanet
-from .abstractAnalysisLocal import AbstractAnalysisLocal
-from .analysisEmentType import AnalysisEmentType
-from ..INP_Manager.inp_utils import NodeLinkResultType
+from .abstractAnalysisLocalNode import AbstractAnalysisLocalNode
 
-class NodeNetworkAnalysisLocal(AbstractAnalysisLocal):
+class NodeNetworkAnalysisLocal(AbstractAnalysisLocalNode):
     """
     Clase que representa los resultados de los nodes.
     """
-    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, analysisElemntType = AnalysisEmentType.NODE, resultType = NodeLinkResultType.pressure):
+    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, resultType = NodeResultType.pressure):
         """Constructor of NodeNetworkAnalysisLocal."""
-        super().__init__(results, analysisElemntType, resultType, analysisExecutionId, datetime)
+        super().__init__(results, resultType, analysisExecutionId, datetime)
         self.UrlGet = ""
-        self.KeysApi = ""#["Name", "pressure", "waterDemand", "waterDemandCovered", "waterAge"]
-        self.Attributes = ""#["Pressure", "Demand", "Demand C", "Age"]
+        self.KeysApi = ""
+        self.Attributes = ""
         self.LayerName = "watering_demand_nodes"
 
         self.Field = f"Nodes_{datetime.replace(':', '_')}_{resultType.name}"

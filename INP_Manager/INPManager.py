@@ -126,7 +126,7 @@ from ..watering_utils import WateringUtils
 # from ..wntr.epanet.toolkit import ENepanet
 # from ..wntr.epanet.util import EN
 # from ..wntr.resultTypes import ResultNode, ResultLink
-from .inp_utils import INP_Utils, NodeLinkResultType
+from .inp_utils import INP_Utils
 from ..NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
 from ..NetworkAnalysis.pipeNetworkAnalysisLocal import PipeNetworkAnalysisLocal
 from ..ui.watering_inp_options import WateringINPOptions
