@@ -180,9 +180,9 @@ class INPManager():
         if self._outfile == "":
             self._outfile = self.__getWorkingDirectory()
         return self._outfile
-    @OutFile.setter
-    def OutFile(self, value: str):
-        self._outfile = value
+    # @OutFile.setter
+    # def OutFile(self, value: str):
+    #     self._outfile = value
 
     @property
     def Out_Folder_Path_INP(self):
@@ -407,12 +407,16 @@ class INPManager():
         self.__readBackdrop()
 
 
-    def writeSections(self):
+    def writeSections(self, options: WateringINPOptions, path: str = None):
         self.__readLayers()
-        
-        with open(os.path.join(self.OutFile), "w") as inpfile:
+        fileName = path if path is not None else self.OutFile
+        print(fileName)
+        with open(os.path.join(fileName), "w") as inpfile:
             for t, s in self.sections.items():
                 print(t, s.name)
+                if (t == 'OPTIONS'):
+                    s.setOptions(options)
+                
                 s.writeSection(inpfile)
 
         # Cierra el fichero manualmente

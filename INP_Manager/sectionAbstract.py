@@ -17,6 +17,11 @@
 """
 
 
+import os
+from .inp_utils import INP_Utils
+from ..ui.watering_inp_options import WateringINPOptions
+
+
 class sectionAbstract():
     def __init__(self, id=0):
         self.__id = id
@@ -46,3 +51,11 @@ class sectionAbstract():
 
     def writeSection(self, outfile):
         print("Metodo no implementado...")
+    
+    
+    def getPath(self) -> str:
+        path = INP_Utils.default_directory_optins()
+        if not os.path.exists(path):
+            options = WateringINPOptions()
+            options.save(path, False)
+        return path

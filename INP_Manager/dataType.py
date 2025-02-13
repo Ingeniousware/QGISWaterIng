@@ -19,6 +19,8 @@
 from abc import ABC, abstractmethod
 import warnings
 
+from .inp_options import INP_Options
+
 class AbstractOption(ABC):
     def __init__(self):
         super(AbstractOption, self).__init__()
@@ -258,29 +260,25 @@ class TimeOptions(AbstractOption):
     """
     
     def __init__(self,
-                duration: int = 0,
-                hydraulic_timestep: int=3600,
-                quality_timestep: int=360,
-                rule_timestep: int=360,
-                pattern_timestep: int=3600,
-                pattern_start: int=0,
-                report_timestep: int=3600,
-                report_start: int=0,
-                start_clocktime: int=0,
-                statistic: str='NONE',
-                pattern_interpolation: bool = False):
+                duration: str = "00:00",
+                hydraulic_timestep: str = "01:00",
+                quality_timestep: str = "00:05",
+                pattern_timestep: str = "01:00",
+                pattern_start: str = "00:00",
+                report_timestep: str = "01:00",
+                report_start: str = "00:00",
+                start_clocktime: str = "12 am",
+                statistic: str='NONE'):
         super(TimeOptions, self).__init__()
         self.duration = duration
         self.hydraulic_timestep = hydraulic_timestep
         self.quality_timestep = quality_timestep
-        self.rule_timestep = rule_timestep
         self.pattern_timestep = pattern_timestep
         self.pattern_start = pattern_start
         self.report_timestep = report_timestep
         self.report_start = report_start
         self.start_clocktime = start_clocktime
         self.statistic = statistic
-        self.pattern_interpolation = pattern_interpolation
         self._properties = {"statistic": ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE'],
                             "pattern_interpolation": [False, True]}
 
@@ -291,6 +289,14 @@ class TimeOptions(AbstractOption):
 
     def write_properties(self, fileName):
         return super().write_properties(fileName)
+
+
+    def __str__(self):
+        text = "[TIMES]\n"
+        text += f" Duration           	{self.duration}\n Hydraulic Timestep 	{self.hydraulic_timestep}\n Quality Timestep   	{self.quality_timestep}\n"
+        text += f" Pattern Timestep   	{self.pattern_timestep}\n Pattern Start      	{self.pattern_start}\n Report Timestep    	{self.report_timestep}\n"
+        text += f" Report Start       	{self.report_start}\n Start ClockTime    	{self.start_clocktime}\n Statistic          	{self.statistic}\n"
+        return text
 
 
 class HydraulicOptions(AbstractOption):
@@ -438,6 +444,11 @@ class HydraulicOptions(AbstractOption):
                             "demand_model": ['DDA', 'PDA'],
                             "hydraulics": ['None', 'USE', 'SAVE'],
                             "unbalanced": ['STOP', 'CONTINUE']}
+        self._options = None
+
+
+    def setOptions(self, options):
+        self._options = options
 
 
     def read_properties(self, fileName):
@@ -449,14 +460,16 @@ class HydraulicOptions(AbstractOption):
 
 
     def __str__(self):
+        quality: QualityOptions = self._options.classes[INP_Options.Quality.name]
+        txt = quality.parameter + ' ' + quality.inpfile_units
         text = "[OPTIONS]\n"
         text += f" Units              	{self.inpfile_units}\n Headloss           	{self.headloss}\n Specific Gravity   	{self.specific_gravity}\n"
         text += f" Viscosity          	{self.viscosity}\n Trials             	{self.trials}\n Accuracy           	{self.accuracy}\n"
         text += f" CHECKFREQ          	{self.checkfreq}\n MAXCHECK           	{self.maxcheck}\n DAMPLIMIT          	{self.damplimit}\n"
         text += f" Unbalanced         	{self.unbalanced}\n Pattern            	{self.pattern}\n Demand Multiplier  	{self.demand_multiplier}\n"
         text += f" Demand Model       	{self.demand_model}\n Minimum Pressure   	{self.minimum_pressure}\n Required Pressure  	{self.required_pressure}\n"
-        text += f" Pressure Exponent  	{self.pressure_exponent}\n Emitter Exponent   	{self.emitter_exponent}\n Quality            	None mg/L\n"
-        text += f" Diffusivity        	1\n Tolerance          	0.01\n"
+        text += f" Pressure Exponent  	{self.pressure_exponent}\n Emitter Exponent   	{self.emitter_exponent}\n Quality            	{txt}\n"
+        text += f" Diffusivity        	{quality.diffusivity}\n Tolerance          	{quality.tolerance}\n"
         return text
 
 
@@ -506,8 +519,8 @@ class ReactionOptions(AbstractOption):
                  tank_order: float = 1.0,
                  bulk_coeff: float = 0.0,
                  wall_coeff: float = 0.0,
-                 limiting_potential: float = None,
-                 roughness_correl: float = None):
+                 limiting_potential: float = 0.0,
+                 roughness_correl: float = 0.0):
         super(ReactionOptions, self).__init__()
         self.bulk_order = bulk_order
         self.wall_order = wall_order
@@ -524,6 +537,14 @@ class ReactionOptions(AbstractOption):
 
     def write_properties(self, fileName):
         return super().write_properties(fileName)
+
+
+    def __str__(self):
+        text = "[REACTIONS]\n"
+        text += f" Order Bulk            	{self.bulk_order}\n Order Tank            	{self.tank_order}\n Order Wall            	{self.wall_order}"
+        text += f" Global Bulk           	{self.bulk_coeff}\n Global Wall           	{self.wall_coeff}\n Limiting Potential    	{self.limiting_potential}"
+        text += f" Roughness Correlation 	{self.roughness_correl}\n"
+        return text
 
 
 class QualityOptions(AbstractOption):
@@ -609,7 +630,7 @@ class EnergyOptions(AbstractOption):
                 global_price: float = 0,
                 global_pattern: str = None,
                 global_efficiency: float = 75,
-                demand_charge: float = None):
+                demand_charge: float = 0):
         super(EnergyOptions, self).__init__()
         self.global_price = global_price
         self.global_pattern = global_pattern
@@ -623,6 +644,13 @@ class EnergyOptions(AbstractOption):
 
     def write_properties(self, fileName):
         return super().write_properties(fileName)
+
+
+    def __str__(self):
+        text = "[ENERGY]\n"
+        text += f" Global Efficiency  	{self.global_efficiency}\n Global Price       	{self.global_price}\n"
+        text += f" Demand Charge      	{self.demand_charge}\n"
+        return text
 
 ######################### Proximas class #####################################################
 class Coordinate():

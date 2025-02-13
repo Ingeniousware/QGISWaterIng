@@ -18,6 +18,7 @@ from qgis.PyQt import QtWidgets
 
 from ..INP_Manager.dataType import AbstractOption, EnergyOptions, HydraulicOptions, QualityOptions, ReactionOptions, TimeOptions
 from ..INP_Manager.inp_utils import INP_Utils
+from ..INP_Manager.inp_options import INP_Options
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_inp_options_dialog.ui"))
 
@@ -32,11 +33,11 @@ class WateringINPOptions(QtWidgets.QDialog, FORM_CLASS):
 
         # Diccionario de clases
         self.classes = {
-            'Hydraulics': HydraulicOptions(),
-            'Quality': QualityOptions(),
-            'Reactions': ReactionOptions(),
-            'Times': TimeOptions(),
-            'Energy': EnergyOptions()}
+            INP_Options.Hydraulics.name: HydraulicOptions(),
+            INP_Options.Quality.name: QualityOptions(),
+            INP_Options.Reactions.name: ReactionOptions(),
+            INP_Options.Times.name: TimeOptions(),
+            INP_Options.Energy.name: EnergyOptions()}
 
         self.comboBox.addItems(self.classes.keys())
 
@@ -68,7 +69,7 @@ class WateringINPOptions(QtWidgets.QDialog, FORM_CLASS):
         self.table.setRowCount(len(self.public_properties))
         
         for row, (prop, value) in enumerate(self.public_properties.items()):
-            item = QTableWidgetItem(prop)
+            item = QTableWidgetItem(prop.replace("_", " "))
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)  # Hacer el nombre de la propiedad no editable
             self.table.setItem(row, 0, item)
             
@@ -91,7 +92,8 @@ class WateringINPOptions(QtWidgets.QDialog, FORM_CLASS):
 
     def update_object(self, row, column):
         if column == 1:  # Solo actualizar si se cambia la columna de valores
-            prop = self.table.item(row, 0).text()
+            prop = self.table.item(row, 0).text().replace(" ", "_")
+            # prop = list(self.obj._properties.keys())[row - 1]
             if (prop not in self.obj._properties.keys()):  # No actualizar las propiedades con posibles valores aquí, se maneja en update_properties
                 value = self.table.item(row, 1).text()
                 setattr(self.obj, prop, value)

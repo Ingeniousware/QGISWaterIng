@@ -16,13 +16,11 @@
 ***************************************************************************
 """
 
-import os
-
 
 from ..ui.watering_inp_options import WateringINPOptions
 from .inp_utils import INP_Utils
 from .sectionAbstract import sectionAbstract
-from .dataType import HydraulicOptions
+from .inp_options import INP_Options
 
 # Section Title [TITLE] =================================================================
 class sectionTitle(sectionAbstract):
@@ -219,11 +217,8 @@ class sectionEnergy(sectionAbstract):
         self.name = '[ENERGY]'
         
     def writeSection(self, outfile):
-        outfile.write(self.name + '\n')
-        outfile.write(' Global Efficiency  	75' + '\n')
-        outfile.write(' Global Price       	0' + '\n')
-        outfile.write(' Demand Charge      	0' + '\n')
-        #outfile.write(' Pump 	1               	Efficiency	1' + '\n')
+        result = INP_Utils.getoption_from_JSON(self.getPath(), INP_Options.Energy)
+        outfile.write(result.__str__())
         outfile.write('\n')
 
 # Section Emitters [EMITTERS] =================================================================
@@ -281,14 +276,16 @@ class sectionReactions20(sectionAbstract):
         self.name = '[REACTIONS]'
         
     def writeSection(self, outfile):
-        outfile.write(self.name + '\n')
-        outfile.write(' Order Bulk            	1' + '\n')
-        outfile.write(' Order Tank            	1' + '\n')
-        outfile.write(' Order Wall            	1' + '\n')
-        outfile.write(' Global Bulk           	0' + '\n')
-        outfile.write(' Global Wall           	0' + '\n')
-        outfile.write(' Limiting Potential    	0' + '\n')
-        outfile.write(' Roughness Correlation 	0' + '\n')
+        # outfile.write(self.name + '\n')
+        # outfile.write(' Order Bulk            	1' + '\n')
+        # outfile.write(' Order Tank            	1' + '\n')
+        # outfile.write(' Order Wall            	1' + '\n')
+        # outfile.write(' Global Bulk           	0' + '\n')
+        # outfile.write(' Global Wall           	0' + '\n')
+        # outfile.write(' Limiting Potential    	0' + '\n')
+        # outfile.write(' Roughness Correlation 	0' + '\n')
+        result = INP_Utils.getoption_from_JSON(self.getPath(), INP_Options.Reactions)
+        outfile.write(result.__str__())
         outfile.write('\n')
 
 # Section Mixing [MIXING] =================================================================
@@ -310,16 +307,8 @@ class sectionTimes(sectionAbstract):
         self.name = '[TIMES]'
         
     def writeSection(self, outfile):
-        outfile.write(self.name + '\n')
-        outfile.write(' Duration           	0' + '\n')
-        outfile.write(' Hydraulic Timestep 	1:00' + '\n')
-        outfile.write(' Quality Timestep   	0:05' + '\n')
-        outfile.write(' Pattern Timestep   	1:00' + '\n')
-        outfile.write(' Pattern Start      	0:00' + '\n')
-        outfile.write(' Report Timestep    	1:00' + '\n')
-        outfile.write(' Report Start       	0:00' + '\n')
-        outfile.write(' Start ClockTime    	12 am' + '\n')
-        outfile.write(' Statistic          	None' + '\n')
+        result = INP_Utils.getoption_from_JSON(self.getPath(), INP_Options.Times)
+        outfile.write(result.__str__())
         outfile.write('\n')
 
 
@@ -341,55 +330,15 @@ class sectionOptions(sectionAbstract):
     def __init__(self):
         super(sectionOptions, self).__init__(24)
         self.name = '[OPTIONS]'
-        # self.Units = 'GPM'
-        # self.Headloss = 'H-W'
-        # self.Specific_Gravity = 1
-        # self.Viscosity = 1
-        # self.Trials = 40
-        # self.Accuracy = 0.001
-        # self.CHECKFREQ = 2
-        # self.MAXCHECK = 10
-        # self.DAMPLIMIT = 0
-        # self.Unbalanced = 'Continue 10'
-        # self.Pattern = 1
-        # self.Demand_Multiplier = 1.0
-        # self.Emitter_Exponent = 0.5
-        # self.Quality = 'None mg/L'
-        # self.Diffusivity = 1
-        # self.Tolerance = 0.01
+        self._options = None
+        
+    def setOptions(self, options: WateringINPOptions):
+        self._options = options
         
     def writeSection(self, outfile):
-        # outfile.write(self.name + '\n')
-        # text = f" Units              	{self.Units}\n Headloss           	{self.Headloss}\n Specific Gravity   	{self.Specific_Gravity}\n"
-        # text += f" Viscosity          	{self.Viscosity}\n Trials             	{self.Trials}\n Accuracy           	{self.Accuracy}\n"
-        # text += f" CHECKFREQ          	{self.CHECKFREQ}\n MAXCHECK           	{self.MAXCHECK}\n DAMPLIMIT          	{self.DAMPLIMIT}\n"
-        # text += f" Unbalanced         	{self.Unbalanced}\n Pattern            	{self.Pattern}\n Demand Multiplier  	{self.Demand_Multiplier}\n"
-        # text += f" Emitter Exponent   	{self.Emitter_Exponent}\n Quality            	{self.Quality}\n Diffusivity        	{self.Diffusivity}\n"
-        # text += f" Tolerance          	{self.Tolerance}\n"
-        path = INP_Utils.default_directory_optins()
-        if not os.path.exists(path):
-            options = WateringINPOptions()
-            options.save(path, False)
-        data = INP_Utils.read_options(path)["Hydraulics"]
-        _d = HydraulicOptions()
-        _d.__dict__.update(data)
-        outfile.write(_d.__str__())
-        #outfile.write(' Units              	LPS' + '\n')
-        #outfile.write(' Headloss           	D-W' + '\n')
-        #outfile.write(' Specific Gravity   	1' + '\n')
-        #outfile.write(' Viscosity          	1' + '\n')
-        #outfile.write(' Trials             	40' + '\n')
-        #outfile.write(' Accuracy           	0.001' + '\n')
-        #outfile.write(' CHECKFREQ          	2' + '\n')
-        #outfile.write(' MAXCHECK           	10' + '\n')
-        #outfile.write(' DAMPLIMIT          	0' + '\n')
-        #outfile.write(' Unbalanced         	Continue 10' + '\n')
-        #outfile.write(' Pattern            	1' + '\n')
-        #outfile.write(' Demand Multiplier  	1.0' + '\n')
-        #outfile.write(' Emitter Exponent   	0.5' + '\n')
-        #outfile.write(' Quality            	None mg/L' + '\n')
-        #outfile.write(' Diffusivity        	1' + '\n')
-        #outfile.write(' Tolerance          	0.01' + '\n')
+        result = INP_Utils.getoption_from_JSON(self.getPath(), INP_Options.Hydraulics)
+        result.setOptions(self._options)
+        outfile.write(result.__str__())
         outfile.write('\n')
 
 # Section Coordinates [COORDINATES] =================================================================

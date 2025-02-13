@@ -21,7 +21,10 @@ import enum
 import json
 import os
 import stat
+
 from qgis.core import QgsProject
+from .inp_options import INP_Options
+from .dataType import AbstractOption, EnergyOptions, HydraulicOptions, QualityOptions, ReactionOptions, TimeOptions
 
 
 class INP_Utils:
@@ -141,3 +144,22 @@ class INP_Utils:
         except IOError as e:
             print(f"Error al leer el archivo OPTIONS: {e}")
             return None
+        
+        
+    def getoption_from_JSON(path: str, inpOption: INP_Options) -> AbstractOption:
+        data = INP_Utils.read_options(path)[inpOption.name]
+        result = None
+
+        if inpOption == INP_Options.Hydraulics:
+            result = HydraulicOptions()
+        elif inpOption == INP_Options.Quality:
+            result = QualityOptions()
+        elif inpOption == INP_Options.Reactions:
+            result = ReactionOptions()
+        elif inpOption == INP_Options.Times:
+            result = TimeOptions()
+        else:
+            result = EnergyOptions()
+
+        result.__dict__.update(data)
+        return result
