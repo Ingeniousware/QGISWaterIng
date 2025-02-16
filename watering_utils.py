@@ -834,9 +834,7 @@ class WateringUtils:
 
         caracteres = string.ascii_letters + string.digits
 
-        codigo = ''.join(random.choice(caracteres) for _ in range(longitud))
-        
-        return codigo
+        return ''.join(random.choices(caracteres, k = longitud))
 
 
 class WateringSynchWorker(QObject):

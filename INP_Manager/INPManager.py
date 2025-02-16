@@ -234,7 +234,9 @@ class INPManager():
             if label != "":
                 tag.values.append(Tag("NODE", name, label))
             
-            INP_Utils.add_element(feature.attribute("ID"), name)
+            my_id = str(feature.attribute("ID"))
+            INP_Utils.add_element(my_id, name)
+            print(f"key: {str(my_id)} -> value: {name}")
 
 
     def __readReservoirs(self, layerName = "watering_reservoirs"):
@@ -280,7 +282,9 @@ class INPManager():
             if label != "":
                 tag.values.append(Tag("NODE", name, label))
             
-            INP_Utils.add_element(feature.attribute("ID"), name)
+            my_id = str(feature.attribute("ID"))
+            INP_Utils.add_element(my_id, name)
+            print(f"key: {str(my_id)} -> value: {name}")
 
 
     def __readTanks(self, layerName = "watering_tanks"):
@@ -312,7 +316,9 @@ class INPManager():
             if label != "":
                 tag.values.append(Tag("NODE", name, label))
                 
-            INP_Utils.add_element(feature.attribute("ID"), name)
+            my_id = str(feature.attribute("ID"))
+            INP_Utils.add_element(my_id, name)
+            print(f"key: {str(my_id)} -> value: {name}")
 
 
     def __readPipes(self, layerName = "watering_pipes"):
@@ -330,13 +336,14 @@ class INPManager():
             node1 = feature.attribute("Up-Node") #if feature.attribute("Up-Node") is not None else 0.0
             node2 = feature.attribute("Down-Node") #if feature.attribute("Down-Node") is not None else 0.0
             length = feature.attribute("Length") #if feature.attribute("Length") is not None else 0.0
-            diameter = feature.attribute("Diameter") #if feature.attribute("Diameter") is not None else 0.0
+            diameter = feature.attribute("Diameter") * 1000 #if feature.attribute("Diameter") is not None else 0.0
             roughness = feature.attribute("Rough.A") #if feature.attribute("Rough.A") is not None else 0.0
             minorLoss = 0
             status = "Open"
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
             node1Name = INP_Utils.get_element(node1)
+            print(node1Name)
             node2Name = INP_Utils.get_element(node2)
             
             # geom = feature.geometry()
@@ -360,7 +367,9 @@ class INPManager():
             if label != "":
                 tag.values.append(Tag("LINK", id, label))
             
-            INP_Utils.add_element(feature.attribute("ID"), name)
+            my_id = str(feature.attribute("ID"))
+            INP_Utils.add_element(my_id, name)
+            print(f"key: {str(my_id)} -> value: {name}")
 
 
     def __Pumps(self, layerName = "watering_pumps"):
@@ -403,20 +412,20 @@ class INPManager():
         self.__readReservoirs()
         self.__readTanks()
         self.__readPipes()
-        
+        print(INP_Utils.get_all().values())
         self.__readBackdrop()
 
 
     def writeSections(self, options: WateringINPOptions, path: str = None):
         self.__readLayers()
         fileName = path if path is not None else self.OutFile
-        print(fileName)
+
         with open(os.path.join(fileName), "w") as inpfile:
             for t, s in self.sections.items():
                 print(t, s.name)
                 if (t == 'OPTIONS'):
                     s.setOptions(options)
-                
+
                 s.writeSection(inpfile)
 
         # Cierra el fichero manualmente
@@ -439,7 +448,8 @@ class INPManager():
         inpFileTemp = os.path.dirname(self.OutFile) +"\\temp"
 
         # Simulate hydraulics
-        sim = wntr.sim.EpanetSimulator(wn)
+        # sim = wntr.sim.EpanetSimulator(wn)
+        sim = wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim(inpFileTemp)
 
         NodeNetworkAnalysisLocal(results, "1000-2221-45", "23:12")

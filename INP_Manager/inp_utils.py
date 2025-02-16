@@ -37,8 +37,11 @@ class INP_Utils:
         cls.static_elements[key] = value
 
     @classmethod
-    def get_element(cls, key):
-        return cls.static_elements.get(key, None)
+    def get_element(cls, element):
+        for key, valor in cls.static_elements.items():
+            if (key == element) or (valor == element):
+                return valor
+        return None
 
     @classmethod
     def get_all(cls):
