@@ -448,8 +448,8 @@ class INPManager():
         inpFileTemp = os.path.dirname(self.OutFile) +"\\temp"
 
         # Simulate hydraulics
-        # sim = wntr.sim.EpanetSimulator(wn)
-        sim = wntr.sim.WNTRSimulator(wn)
+        sim = wntr.sim.EpanetSimulator(wn)
+        # sim = wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim(inpFileTemp)
 
         NodeNetworkAnalysisLocal(results, "1000-2221-45", "23:12")
