@@ -170,8 +170,9 @@ class InputDialog(QDialog):
     def submit_data(self):
         name = self.name_input.text()
         age = self.age_input.text()
-        QMessageBox.information(self, 'Datos Ingresados', f'Nombre: {name}\nEdad: {age}')
-        QMessageBox.error(self, 'Datos Ingresados')
+        self.close()
+        # QMessageBox.information(self, 'Datos Ingresados', f'Nombre: {name}\nEdad: {age}')
+        # QMessageBox.error(self, 'Datos Ingresados')
 
 
 def show_custom_dialog(title="", description=""):

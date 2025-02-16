@@ -1,5 +1,7 @@
 import os
 import requests
+
+from ..watering_utils import WateringUtils
 from .abstract_repository import AbstractRepository
 
 from qgis.core import (
@@ -69,7 +71,7 @@ class WateringDemandNodeRepository(AbstractRepository):
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
-        name = "nodeName"
+        name = f"N-[{WateringUtils.generar_name_aleatorio()}]"
         description = "node from QGIS"
         baseDemand = 5
         z = 0

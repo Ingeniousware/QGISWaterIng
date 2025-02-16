@@ -1,6 +1,6 @@
 from .abstractAnalysisRepository import AbstractAnalysisRepository
 from ..watering_utils import WateringUtils
-from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtGui import QColor # type: ignore
 
 
 class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):

@@ -4,7 +4,7 @@
 ***************************************************************************
     nodeNetworkAnalysisLocal.py
     ---------------------
-    Date                 : Febrero 2025
+    Date                 : Enero 2025
     Copyright            : (C) 2025 by Ingeniowarest
     Email                : 
 ***************************************************************************
@@ -17,36 +17,33 @@
 """
 
 
-from wntr.sim.results import SimulationResults
 
-
-
-
-from ..INP_Manager.node_link_ResultType import NodeResultType
 from qgis.PyQt.QtGui import QColor # type: ignore
 
-from .abstractAnalysisLocalNode import AbstractAnalysisLocalNode
 
-class NodeNetworkAnalysisLocal(AbstractAnalysisLocalNode):
+from .abstractAnalysisLocalPipe import AbstractAnalysisLocalPipe
+from ..INP_Manager.node_link_ResultType import LinkResultType
+from wntr.sim.results import SimulationResults
+
+class PipeNetworkAnalysisLocal(AbstractAnalysisLocalPipe):
     """
-    Clase que representa los resultados de los nodes.
+    Clase que representa los resultados de las tuberías.
     """
-    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, resultType = NodeResultType.pressure):
-        """Constructor of NodeNetworkAnalysisLocal."""
+    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, resultType = LinkResultType.flowrate):
+        """Constructor of PipeNetworkAnalysisLocal."""
         super().__init__(results, resultType, analysisExecutionId, datetime)
         self.UrlGet = ""
         self.KeysApi = ""
         self.Attributes = ""
-        self.LayerName = "watering_demand_nodes"
+        self.LayerName = "watering_pipes"
 
-        self.Field = f"Nodes_{datetime.replace(':', '_')}_{resultType.name}"
+        self.Field = f"Pipes_{datetime.replace(':', '_')}_{resultType.name}"
         self.StartColor = QColor(55, 148, 255)
         self.EndColor = QColor(255, 47, 151)
-        self.Size = 3
+        self.Size = 1
         self.join_field = "Name"
         self.fields_to_add = [resultType.name]
 
         self.elementAnalysisResults()
-        self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Nodes.csv", f"Nodes_{datetime.replace(':', '_')}")
-        self.joinLayersAttributes(f"Nodes_{datetime.replace(':', '_')}", self.LayerName, self.join_field, self.fields_to_add)
-
+        self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Pipes.csv", f"Pipes_{datetime.replace(':', '_')}")
+        self.joinLayersAttributes(f"Pipes_{datetime.replace(':', '_')}", self.LayerName, self.join_field, self.fields_to_add)

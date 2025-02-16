@@ -2,7 +2,7 @@
 
 """
 ***************************************************************************
-    sections.py
+    dataType.py
     ---------------------
     Date                 : Nomviembre 2024
     Copyright            : (C) 2024 by Ingeniowarest
@@ -15,6 +15,53 @@
 *                                                                         *
 ***************************************************************************
 """
+
+from abc import ABC, abstractmethod
+import warnings
+
+from .inp_options import INP_Options
+
+class AbstractOption(ABC):
+    def __init__(self):
+        super(AbstractOption, self).__init__()
+        self._properties =  {}
+
+    def add_from_dict(self, dict: dict):
+        for key, value in dict.items():
+            self.add(key, value)
+
+    def get(self, key):
+        return self._properties.get(key, None)
+
+    def keys(self):
+        self._properties.keys()
+
+    def values(self):
+        self._properties.values()
+
+    def update(self, key, valor):
+        self._properties[key] = valor
+
+    def len(self):
+        return len(self._properties)
+
+    # def exists(self, clave):
+    #     return clave in self._properties
+
+
+    @abstractmethod
+    def read_properties(self, fileName: str):
+        pass
+
+
+    @abstractmethod
+    def write_properties(self, fileName: str):
+        pass
+
+
+    def __str__(self):
+        return self._properties.__str__()
+
 
 class Junction():
     #ID              	Elev        	Demand      	Pattern
@@ -150,8 +197,462 @@ class Curve():
     def __str__(self):
         return f" {self.ID: <15}\t{self.X_value: <12}\t{self.Y_value: <15};"
     
-######################### Proximas clas #####################################################
+######################### Proximas class #####################################################
+class TimeOptions(AbstractOption):
+    """
+    Options related to simulation and model timing.
+    These options are named according to the EPANET 2.2 "Times" settings.
     
+    Parameters
+    ----------
+    duration : int
+        Simulation duration (seconds), by default 0.
+
+    hydraulic_timestep : int >= 1
+        Hydraulic timestep (seconds), by default 3600 (one hour).
+
+    quality_timestep : int >= 1
+        Water quality timestep (seconds), by default 360 (five minutes).
+
+    rule_timestep : int >= 1
+        Rule timestep (seconds), by default 360 (five minutes).
+
+    pattern_timestep : int >= 1
+        Pattern timestep (seconds), by default 3600 (one hour).
+
+    pattern_start : int
+        Time offset (in seconds) to find the starting pattern step; changes 
+        where in pattern the pattern starts out, *not* what time the pattern 
+        starts, by default 0.
+
+    report_timestep : int >= 1
+        Reporting timestep (seconds), by default 3600 (one hour).
+
+    report_start : int
+        Start time of the report (in seconds) from the start of the simulation, by default 0.
+
+    start_clocktime : int
+        Time of day (in seconds from midnight) at which the simulation begins, by default 0 (midnight).
+
+    statistic: str
+        Provide statistics rather than time series report in the report file.
+        Options are "AVERAGED", "MINIMUM", "MAXIUM", "RANGE", and "NONE" (as defined in the 
+        EPANET User Manual). Defaults to "NONE".
+
+    pattern_interpolation: bool 
+        **Only used by the WNTRSimulator**. Defaults to False. If True, interpolation will
+        be used determine pattern values between pattern timesteps. If
+        False, patterns cause step-like behavior where the pattern
+        value corresponding to the most recent pattern timestep is
+        used until the next pattern timestep. For example, given the
+        pattern [1, 1.2, 1.6], a pattern timestep of 1 hour, and a
+        pattern_interpolation value of False, a value of 1 is used at
+        0 hours and every time strictly less than 1 hour. A value of
+        1.2 is used at hour 1 and every time strictly less than 2
+        hours. With a pattern_interpolation value of True, a value of
+        1 is used at 0 hours and a value of 1.2 is used at 1
+        hour. However, at an intermediat time such as 0.5 hours,
+        interpolation is used, resulting in a value of 1.1. Using
+        interpolation with a shorter hydraulic_timestep can make
+        problems with large changes in patterns (e.g., large changes
+        in demand) easier to solve.
+
+    """
+    
+    def __init__(self,
+                duration: str = "00:00",
+                hydraulic_timestep: str = "01:00",
+                quality_timestep: str = "00:05",
+                pattern_timestep: str = "01:00",
+                pattern_start: str = "00:00",
+                report_timestep: str = "01:00",
+                report_start: str = "00:00",
+                start_clocktime: str = "12 am",
+                statistic: str='NONE'):
+        super(TimeOptions, self).__init__()
+        self.duration = duration
+        self.hydraulic_timestep = hydraulic_timestep
+        self.quality_timestep = quality_timestep
+        self.pattern_timestep = pattern_timestep
+        self.pattern_start = pattern_start
+        self.report_timestep = report_timestep
+        self.report_start = report_start
+        self.start_clocktime = start_clocktime
+        self.statistic = statistic
+        self._properties = {"statistic": ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE'],
+                            "pattern_interpolation": [False, True]}
+
+
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
+
+
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+    def __str__(self):
+        text = "[TIMES]\n"
+        text += f" Duration           	{self.duration}\n Hydraulic Timestep 	{self.hydraulic_timestep}\n Quality Timestep   	{self.quality_timestep}\n"
+        text += f" Pattern Timestep   	{self.pattern_timestep}\n Pattern Start      	{self.pattern_start}\n Report Timestep    	{self.report_timestep}\n"
+        text += f" Report Start       	{self.report_start}\n Start ClockTime    	{self.start_clocktime}\n Statistic          	{self.statistic}\n"
+        return text
+
+
+class HydraulicOptions(AbstractOption):
+    """
+    Options related to hydraulic model.
+    These options are named according to the settings in the EPANET "[OPTIONS]"
+    section. Unless specified, these options are valid for both EPANET 2.0 and 2.2.
+    
+    Parameters
+    ----------
+    headloss : str
+        Formula to use for computing head loss through a pipe. Options are "H-W", 
+        "D-W", and "C-M", by default "H-W".
+
+    hydraulics : str
+        Indicates if a hydraulics file should be read in or saved; options are 
+        ``None``, "USE" and "SAVE", by default ``None``.
+
+    hydraulics_filename : str
+        Filename to use if ``hydraulics is not None``, by default ``None``.
+
+    viscosity : float
+        Kinematic viscosity of the fluid, by default 1.0.
+
+    specific_gravity : float
+        Specific gravity of the fluid, by default 1.0.
+
+    pattern : str
+        Name of the default pattern for junction demands. By default,
+        the default pattern is the pattern named "1". If this is set 
+        to None (or if pattern "1" does not exist), then
+        junctions with demands but without patterns will be held constant.
+
+    demand_multiplier : float
+        The demand multiplier adjusts the values of baseline demands for all 
+        junctions, by default 1.0.
+
+    emitter_exponent : float
+        The exponent used when computing flow from an emitter, by default 0.5.
+
+    minimum_pressure : float
+        (EPANET 2.2 only) The global minimum nodal pressure, by default 0.0.
+
+    required_pressure: float
+        (EPANET 2.2 only) The required nodal pressure, by default 0.07 (m H2O)
+
+    pressure_exponent: float
+        (EPANET 2.2 only) The pressure exponent, by default 0.5.
+
+    trials : int
+        Maximum number of trials used to solve network hydraulics, by default 200.
+
+    accuracy : float
+        Convergence criteria for hydraulic solutions, by default 0.001.
+
+    headerror : float
+        (EPANET 2.2 only) Augments the `accuracy` option by adjusting the head 
+        error convergence limit, by default 0 (off).
+
+    flowchange : float
+        (EPANET 2.2 only) Augments the `accuracy` option by adjusting the flow 
+        change convergence limit, by default 0 (off).
+
+    unbalanced : str
+        Indicate what happens if a hydraulic solution cannot be reached.  
+        Options are "STOP" and "CONTINUE", by default "STOP".
+
+    unbalanced_value : int
+        Number of additional trials if ``unbalanced == "CONTINUE"``, by default ``None``.
+
+    checkfreq : int
+        Number of solution trials that pass between status checks, by default 2.
+
+    maxcheck : int
+        Number of solution trials that pass between status check, by default 10.
+
+    damplimit : float
+        Accuracy value at which solution damping begins, by default 0 (no damping).
+
+    demand_model : str
+        Demand model for EPANET 2.2; acceptable values are "DD" and "PDD", by default "DD".
+        EPANET 2.0 only contains demand driven analysis, and will issue a warning 
+        if this option is not set to DD.
+
+    inpfile_units : str
+        Units for the INP file; options are "CFS", "GPM", "MGD", "IMGD", "AFD", "LPS", 
+        "LPM", "MLD", "CMH", and "CMD". This **only** changes the units used in generating
+        the INP file -- it has **no impact** on the units used in WNTR, which are 
+        **always** SI units (m, kg, s).
+    
+    inpfile_pressure_units: str
+        Pressure units for the INP file, by default None (uses pressure units from inpfile_units)
+
+    """
+    def __init__(self,
+                 headloss: str = 'H-W',
+                 hydraulics: str = None,
+                 hydraulics_filename: str = None,
+                 viscosity: float = 1.0,
+                 specific_gravity: float = 1.0,
+                 pattern: str = '1',
+                 demand_multiplier: float = 1.0,
+                 demand_model: str = 'DDA',
+                 minimum_pressure: float = 0.0,
+                 required_pressure: float = 0.07,  # EPANET 2.2 default
+                 pressure_exponent: float = 0.5,
+                 emitter_exponent: float = 0.5,
+                 trials: int = 200,  # EPANET 2.2 increased the default from 40 to 200
+                 accuracy: float = 0.001,
+                 unbalanced: str = 'Continue 10',
+                 unbalanced_value: int = None,
+                 checkfreq: int = 2,
+                 maxcheck: int = 10,
+                 damplimit: int = 0,
+                 headerror: float = 0,
+                 flowchange: float = 0,
+                 inpfile_units: str = 'GPM',
+                 inpfile_pressure_units: str = None):
+        super(HydraulicOptions, self).__init__()
+        self.headloss = headloss
+        self.hydraulics = hydraulics
+        self.hydraulics_filename = hydraulics_filename
+        self.viscosity = viscosity
+        self.specific_gravity = specific_gravity
+        self.pattern = pattern
+        self.demand_multiplier = demand_multiplier
+        self.demand_model = demand_model
+        self.minimum_pressure = minimum_pressure
+        self.required_pressure = required_pressure
+        self.pressure_exponent = pressure_exponent
+        self.emitter_exponent = emitter_exponent
+        self.trials = trials
+        self.accuracy = accuracy
+        self.unbalanced = unbalanced
+        self.unbalanced_value = unbalanced_value
+        self.checkfreq = checkfreq
+        self.maxcheck = maxcheck
+        self.damplimit = damplimit
+        self.headerror = headerror
+        self.flowchange = flowchange
+        self.inpfile_units = inpfile_units
+        self.inpfile_pressure_units = inpfile_pressure_units
+        self._properties = {"inpfile_units": ['CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD'],
+                            "headloss": ['H-W', 'D-W', 'C-M'],
+                            "demand_model": ['DDA', 'PDA'],
+                            "hydraulics": ['None', 'USE', 'SAVE'],
+                            "unbalanced": ['STOP', 'CONTINUE']}
+        self._options = None
+
+
+    def setOptions(self, options):
+        self._options = options
+
+
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
+
+
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+    def __str__(self):
+        quality: QualityOptions = self._options.classes[INP_Options.Quality.name]
+        txt = quality.parameter + ' ' + quality.inpfile_units
+        text = "[OPTIONS]\n"
+        text += f" Units              	{self.inpfile_units}\n Headloss           	{self.headloss}\n Specific Gravity   	{self.specific_gravity}\n"
+        text += f" Viscosity          	{self.viscosity}\n Trials             	{self.trials}\n Accuracy           	{self.accuracy}\n"
+        text += f" CHECKFREQ          	{self.checkfreq}\n MAXCHECK           	{self.maxcheck}\n DAMPLIMIT          	{self.damplimit}\n"
+        text += f" Unbalanced         	{self.unbalanced}\n Pattern            	{self.pattern}\n Demand Multiplier  	{self.demand_multiplier}\n"
+        text += f" Demand Model       	{self.demand_model}\n Minimum Pressure   	{self.minimum_pressure}\n Required Pressure  	{self.required_pressure}\n"
+        text += f" Pressure Exponent  	{self.pressure_exponent}\n Emitter Exponent   	{self.emitter_exponent}\n Quality            	{txt}\n"
+        text += f" Diffusivity        	{quality.diffusivity}\n Tolerance          	{quality.tolerance}\n"
+        return text
+
+
+class ReactionOptions(AbstractOption):
+    """
+    Options related to water quality reactions.
+    From the EPANET "[REACTIONS]" options.
+    
+    Parameters
+    ----------
+    bulk_order : float
+        Order of reaction occurring in the bulk fluid, by default 1.0.
+
+    wall_order : float
+        Order of reaction occurring at the pipe wall; must be either 0 or 1, by default 1.0.
+
+    tank_order : float
+        Order of reaction occurring in the tanks, by default 1.0.
+
+    bulk_coeff : float
+        Global reaction coefficient for bulk fluid and tanks, by default 0.0.
+
+    wall_coeff : float
+        Global reaction coefficient for pipe walls, by default 0.0.
+
+    limiting_potential : float
+        Specifies that reaction rates are proportional to the difference 
+        between the current concentration and some limiting potential value, 
+        by default ``None`` (off).
+
+    roughness_correl : float
+        Makes all default pipe wall reaction coefficients related to pipe 
+        roughness, according to functions as defined in EPANET, by default 
+        ``None`` (off).
+        
+
+    .. note::
+
+        Remember to use positive numbers for growth reaction coefficients and 
+        negative numbers for decay coefficients. The time units for all reaction
+        coefficients are in "per-second" and converted to/from EPANET units during I/O.
+
+    """
+    def __init__(self,
+                 bulk_order: float = 1.0,
+                 wall_order: float = 1.0,
+                 tank_order: float = 1.0,
+                 bulk_coeff: float = 0.0,
+                 wall_coeff: float = 0.0,
+                 limiting_potential: float = 0.0,
+                 roughness_correl: float = 0.0):
+        super(ReactionOptions, self).__init__()
+        self.bulk_order = bulk_order
+        self.wall_order = wall_order
+        self.tank_order = tank_order
+        self.bulk_coeff = bulk_coeff
+        self.wall_coeff = wall_coeff
+        self.limiting_potential = limiting_potential
+        self.roughness_correl = roughness_correl
+
+
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
+
+
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+    def __str__(self):
+        text = "[REACTIONS]\n"
+        text += f" Order Bulk            	{self.bulk_order}\n Order Tank            	{self.tank_order}\n Order Wall            	{self.wall_order}"
+        text += f" Global Bulk           	{self.bulk_coeff}\n Global Wall           	{self.wall_coeff}\n Limiting Potential    	{self.limiting_potential}"
+        text += f" Roughness Correlation 	{self.roughness_correl}\n"
+        return text
+
+
+class QualityOptions(AbstractOption):
+    """
+    Options related to water quality modeling. These options come from
+    the "[OPTIONS]" section of an EPANET INP file.
+    
+    Parameters
+    ----------
+    parameter : str
+        Type of water quality analysis.  Options are "NONE", "CHEMICAL", "AGE", and 
+        "TRACE", by default ``None``.
+
+    trace_node : str
+        Trace node name if ``quality == "TRACE"``, by default ``None``.
+
+    chemical : str
+        Chemical name for "CHEMICAL" analysis, by default "CHEMICAL" if appropriate.
+
+    diffusivity : float
+        Molecular diffusivity of the chemical, by default 1.0.
+
+    tolerance : float
+        Water quality solver tolerance, by default 0.01.
+
+    inpfile_units : str
+        Units for quality analysis if the parameter is set to CHEMICAL. 
+        This is **only** relevant for the INP file. This value **must** be either
+        "mg/L" (default) or "ug/L" (miligrams or micrograms per liter). 
+        Internal WNTR units are always SI units (kg/m3).
+
+
+    """
+    def __init__(self,
+                 parameter: str = 'NONE',
+                 trace_node: str = None,
+                 chemical_name: str = 'CHEMICAL',
+                 diffusivity: float = 1.0,
+                 tolerance: float = 0.01,
+                 inpfile_units: str = 'mg/L'):
+        super(QualityOptions, self).__init__()
+        self.parameter = parameter
+        self.trace_node = trace_node
+        self.chemical_name = chemical_name
+        self.diffusivity = diffusivity
+        self.tolerance = tolerance
+        self.inpfile_units = inpfile_units
+        self._properties = {"parameter":['NONE', 'CHEMICAL', 'AGE', 'TRACE'],
+                            "inpfile_units": ['mg/L', 'ug/L']}
+
+
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
+
+
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+class EnergyOptions(AbstractOption):
+    """
+    Options related to energy calculations.
+    From the EPANET "[ENERGY]" settings.
+    
+    Parameters
+    ----------
+    global_price : float
+        Global average cost per Joule, by default 0.
+
+    global_pattern : str
+        ID label of time pattern describing how energy price varies with
+        time, by default ``None``.
+
+    global_efficiency : float
+        Global pump efficiency as percent; i.e., 75.0 means 75%,
+        by default ``None``.
+
+    demand_charge : float
+        Added cost per maximum kW usage during the simulation period,
+        by default ``None``.
+    """
+    def __init__(self,
+                global_price: float = 0,
+                global_pattern: str = None,
+                global_efficiency: float = 75,
+                demand_charge: float = 0):
+        super(EnergyOptions, self).__init__()
+        self.global_price = global_price
+        self.global_pattern = global_pattern
+        self.global_efficiency = global_efficiency
+        self.demand_charge = demand_charge
+
+
+    def read_properties(self, fileName):
+        return super().read_properties(fileName)
+
+
+    def write_properties(self, fileName):
+        return super().write_properties(fileName)
+
+
+    def __str__(self):
+        text = "[ENERGY]\n"
+        text += f" Global Efficiency  	{self.global_efficiency}\n Global Price       	{self.global_price}\n"
+        text += f" Demand Charge      	{self.demand_charge}\n"
+        return text
+
+######################### Proximas class #####################################################
 class Coordinate():
     #Node            	X-Coord         	Y-Coord
     def __init__(self, node = "", x_coord = 0.0, y_coord = 0.0):

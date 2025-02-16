@@ -1,5 +1,7 @@
 import os
 import requests
+
+from ..watering_utils import WateringUtils
 from .abstract_repository import AbstractRepository
 
 from qgis.core import (
@@ -84,7 +86,7 @@ class ValveNodeRepository(AbstractRepository):
         self.createBackupLayer()
 
     def setDefaultValues(self, feature):
-        name = "valveName"
+        name = f"V-[{WateringUtils.generar_name_aleatorio()}]"
         description = "valve from QGIS"
         z = 0
         typeValve = 1

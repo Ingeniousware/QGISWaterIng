@@ -1,5 +1,5 @@
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QAction, QMenu, QToolBar
 from qgis.utils import iface
 from qgis.gui import QgsMapTool, QgsMapToolPan
 from PyQt5.QtCore import Qt

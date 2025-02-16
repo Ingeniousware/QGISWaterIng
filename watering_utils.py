@@ -830,6 +830,13 @@ class WateringUtils:
             print("Updated sync data written to sync file after removal.")
 
 
+    def generar_name_aleatorio(longitud = 3):
+
+        caracteres = string.ascii_letters + string.digits
+
+        return ''.join(random.choices(caracteres, k = longitud))
+
+
 class WateringSynchWorker(QObject):
     finished = pyqtSignal()
     isRunning = True

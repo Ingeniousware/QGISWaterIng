@@ -1,24 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-from qgis.core import (
-    QgsProject,
-    QgsGraduatedSymbolRenderer,
-    QgsRendererRangeLabelFormat,
-    QgsSymbol,
-    QgsSimpleLineSymbolLayer,
-    QgsSymbolLayer,
-)
-from qgis.core import (
-    QgsStyle,
-    QgsClassificationQuantile,
-    QgsGradientColorRamp,
-    QgsVectorLayer,
-    QgsLayerTreeLayer,
-    QgsVectorLayerJoinInfo,
-)
-from PyQt5.QtCore import QVariant
-import requests
+from qgis.core import (QgsProject, QgsGraduatedSymbolRenderer, QgsRendererRangeLabelFormat, QgsSymbol, # type: ignore
+    QgsSimpleLineSymbolLayer, QgsSymbolLayer)
+from qgis.core import (QgsStyle, QgsClassificationQuantile, QgsGradientColorRamp, QgsVectorLayer, # type: ignore
+    QgsLayerTreeLayer, QgsVectorLayerJoinInfo)
+from PyQt5.QtCore import QVariant # type: ignore
+import requests # type: ignore
 import os
 
 from ..watering_utils import WateringUtils
@@ -80,7 +68,20 @@ class AbstractAnalysisRepository(AbstractAnalysis):
         
         print(self.LayerName, "analysis results done, behavior: ", self.behavior)
         self.changeColor() """
+    def addCSVNonSpatialLayerToPanel(self, fileName, layerName):
+        root = QgsProject.instance().layerTreeRoot()
+        shapeGroup = root.findGroup("Analysis")
+        if not shapeGroup:
+            shapeGroup = root.addGroup("Analysis")
 
+        date = self.datetime.replace(":", "")
+        project_path, scenario_id = QgsProject.instance().readEntry("watering", "project_path", "default text")[0], QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
+        print("Project path (addCSVNonSpatialLayerToPanel): ", project_path)
+        print("Scenario ID: ", scenario_id)
+        date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date)
+
+        self.loadCSVLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
+        
     # def addCSVNonSpatialLayerToPanel(self, fileName, layerName):
     #     root = QgsProject.instance().layerTreeRoot()
     #     shapeGroup = root.findGroup("Analysis")

@@ -3,7 +3,7 @@
 # Import QGis
 from qgis.core import QgsProject, Qgis, QgsNetworkAccessManager
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMessageBox, QLabel
+from PyQt5.QtWidgets import QAction, QMessageBox, QLabel, QMenu
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker, QgsMapToolIdentify
 from qgis.utils import iface
@@ -64,9 +64,12 @@ from signalrcore.hub_connection_builder import HubConnectionBuilder
 import os.path
 
 # Import the code for the process INP file.
-from .INP_Manager.INPManager import INPManager
-from .shpProcessing.waterTanks import ImportTanksShp
+from .INP_Manager.simulatorQGIS import SimulatorQGIS
+# from .INP_Manager.INPManager import INPManager
+# from .shpProcessing.waterTanks import ImportTanksShp
 from .INP_Manager.customdialog import show_custom_dialog, show_input_dialog
+from .INP_Manager.inp_utils import INP_Utils
+from .INP_Manager.dataType import HydraulicOptions
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -96,7 +99,7 @@ class QGISPlugin_WaterIng:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr("&Watering API Connection")
-        """self.insertSensorAction = None        
+        """self.insertSensorAction = None
         self.insertReservoirNodeAction = None
         self.insertValveNodeAction = None
         self.insertPumpNodeAction = None
@@ -124,6 +127,8 @@ class QGISPlugin_WaterIng:
         self.actionManager = None
         self.toolbarToolManager = None
         self.project_info = None
+        
+        self.simulatorQGIS = SimulatorQGIS()
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message, context="QGISPlugin_WaterIng"):
@@ -176,6 +181,40 @@ class QGISPlugin_WaterIng:
 
         return action
 
+#-------------- Acciones que se reslizan para la simulación -------------------
+    def simulator_run(self):
+        # print("001: Simulation no implementada...")
+        # self.simulatorQGIS.MessageInformation("001: Simulation no implementada...")
+        self.simulatorQGIS.run()
+
+
+    def simulator_patterns(self):
+        print("002: Patterns de patrones no implementado...")
+        self.simulatorQGIS.MessageInformation("002: Patterns no implementada...")
+
+
+    def simulator_curves(self):
+        print("003: Curves no implementado...")
+        self.simulatorQGIS.MessageInformation("003: Curves no implementada...")
+
+
+    def simulator_controls(self):
+        print("004: Controls no implementado...")
+        self.simulatorQGIS.MessageInformation("004: Controls no implementada...")
+
+
+    def simulator_options(self):
+        # print("005: Options no implementada...")
+        # self.simulatorQGIS.MessageInformation("005: Options no implementada...")
+        self.simulatorQGIS.viewOptions()
+
+    def simulator_resilience(self):
+        print("006: Resilience no implementada...")
+        self.simulatorQGIS.MessageInformation("006: Resilience no implementada...")
+
+
+#-------------- Acciones que se reslizan para la simulación -------------------
+
     def initGui(self):
 
         self.toolbarToolManager = toolbarToolManager(self.toolbar, self.iface.mainWindow(), self.canvas)
@@ -190,14 +229,72 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        # Esto es nuevo es los de exportar a INP
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
+        # Esto es la simulación de de redes hidráulicas.
+        # Crear el submenú
+        # submenu = QMenu("Submenu", self.toolbar)
+        
+        # Crear acciones para el submenú
+        # Patterns
+        # icon1 = QIcon(":/plugins/QGISPlugin_WaterIng/images/01_01.svg")
+        # action1 = QAction(icon1, self.tr("Patterns"), self.toolbar)
+        # action1.triggered.connect(self.simulator_patterns)
+        # submenu.addAction(action1)
+
+        # Curves
+        # icon2 = QIcon(":/plugins/QGISPlugin_WaterIng/images/01_01.svg")
+        # action2 = QAction(icon2, self.tr("Curves"), self.toolbar)
+        # action2.triggered.connect(self.simulator_curves)
+        # submenu.addAction(action2)
+
+        # Controls
+        # icon3 = QIcon(":/plugins/QGISPlugin_WaterIng/images/01_01.png")
+        # action3 = QAction(icon3, self.tr("Controls"), self.toolbar)
+        # action3.triggered.connect(self.simulator_controls)
+        # submenu.addAction(action3)
+
+        # Options
+        # icon4 = QIcon(":/plugins/QGISPlugin_WaterIng/images/01_01.svg")
+        # action4 = QAction(icon4, self.tr("Options"), self.toolbar)
+        # action4.triggered.connect(self.simulator_options)
+        # submenu.addAction(action4)
+        
+        # icon5 = QIcon(":/plugins/QGISPlugin_WaterIng/images/01_01.svg")
+        # action5 = QAction(icon5, self.tr("Resilience metrics"), self.toolbar)
+        # action5.triggered.connect(self.simulator_resilience)
+        # submenu.addAction(action5)
+
+        # # Crear una acción para el toolbar que abra el submenú
+        # icon3 = QIcon(":/plugins/QGISPlugin_WaterIng/images/refresh.svg")
+        # menu_action = QAction(icon3, self.tr("Run simulation"), self.toolbar)
+        # menu_action.triggered.connect(self.simulator_run)
+        # menu_action.setMenu(submenu)
+        # self.toolbar.addAction(menu_action)
+        
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
+        self.add_action(
+            icon_path,
+            text=self.tr("Watering Run simulación"),
+            callback=self.simulator_run,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
+        self.add_action(
+            icon_path,
+            text=self.tr("Watering Opciones"),
+            callback=self.simulator_options,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+        
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
         self.add_action(
             icon_path,
             text=self.tr("Watering export INP"),
             callback=self.exportAndImportINP,
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
+        
+        
 
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(
@@ -266,7 +363,7 @@ class QGISPlugin_WaterIng:
                 # self.setHubConnection()
                 WateringUtils.setProjectMetadata("connection_status", "online")
             self.addLoad()
-            
+    
     def exportAndImportINP(self):
         print("Exporte INP")
         # project_path = WateringUtils.getProjectPath()
@@ -294,23 +391,35 @@ class QGISPlugin_WaterIng:
         
         
         try:
+            
             #with open(os.path.join(scenario_folder_path), "w") as inpfile:
                 #print(inpfile)
                 #inpMan = INPManager(inpfile)
-            inpMan = INPManager()
-            print("001", inpMan.OutFile)
-                #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
-            inpMan.writeSections()
+            # inpMan = INPManager()
+            # #print("001", inpMan.OutFile)
+            #     #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
+            # inpMan.writeSections()
 
-            #inpMan.updateLayer()
+            # #inpMan.updateLayer()
             # print("001")
-            #inp_file = scenario_folder_path.replace('/','\\')
-            print("002", inpMan.OutFile)
-            inpMan.testEpanet(inpMan.OutFileINP)
-            print("003", inpMan.OutFile)
-        
+            # #inp_file = scenario_folder_path.replace('/','\\')
+            # #print("002 ", "Iniciando simulación")
+            # #inpMan.testEpanet(inpMan.OutFile)
+            # #print("003 ", "Final de la simulation")
+            # print("004: Principio del análisis...")
+            # inpMan.getAnalysisResults_1()
+            # print("005: Fin del análisis...")
+            # print("006: Inicio de la Resilience metrics (Hydraulic metrics)...")
+            # inpMan.getMetrics()
+            # print("007: Fin de la Resilience metrics (Hydraulic metrics)...")
+            #show_input_dialog()
+            #self.simulatorQGIS.abrir_dialogo_archivo()
+            self.simulatorQGIS.exportINP()
+            # inpMan.showDialog()
+            
         except Exception as e:
-            show_custom_dialog("Información", "Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering")
+            text = f"Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering\n'{e}'"
+            show_custom_dialog("Información", text)
         
         
     def addLoad(self):

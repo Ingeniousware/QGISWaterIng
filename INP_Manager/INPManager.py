@@ -98,9 +98,15 @@ Ejemplo de como crear un grupo en QGIS.
 
 import os
 import stat
-from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject
-from qgis.core import QgsProject, QgsField
+
+import numpy as np
+
+from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject # type: ignore
+from qgis.core import QgsProject, QgsField # type: ignore
 from PyQt5.QtCore import QVariant
+from PyQt5.QtCore import Qt
+from qgis.utils import iface
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 from .sections import (sectionTitle, sectionJunctions, sectionReservoirs, sectionTanks, sectionPipes, sectionPumps,
@@ -113,14 +119,17 @@ from .dataType import (Junction, Reservoir, Tank, Pipe, Pump, Valve, Tag, Demand
 
 import json
 import os
+import wntr
 #import wntr.resultTypes as rt
 #from ..wntr.resultTypes import
 from ..watering_utils import WateringUtils
-from ..wntr.epanet.toolkit import ENepanet
-from ..wntr.epanet.util import EN
-from ..wntr.resultTypes import ResultNode, ResultLink
-
-
+# from ..wntr.epanet.toolkit import ENepanet
+# from ..wntr.epanet.util import EN
+# from ..wntr.resultTypes import ResultNode, ResultLink
+from .inp_utils import INP_Utils
+from ..NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
+from ..NetworkAnalysis.pipeNetworkAnalysisLocal import PipeNetworkAnalysisLocal
+from ..ui.watering_inp_options import WateringINPOptions
 
 class INPManager():
     def __init__(self):
@@ -169,43 +178,27 @@ class INPManager():
     @property
     def OutFile(self):
         if self._outfile == "":
-            self._outfile = self.__getScenarioFolderPath()
+            self._outfile = self.__getWorkingDirectory()
         return self._outfile
-    @OutFile.setter
-    def OutFile(self, value: str):
-        self._outfile = value
-        
+    # @OutFile.setter
+    # def OutFile(self, value: str):
+    #     self._outfile = value
+
     @property
-    def OutFileINP(self):
-        return self.OutFile.replace('/','\\')
+    def Out_Folder_Path_INP(self):
+        return os.path.splitext(self.OutFile)
 
 
-    def __getScenarioFolderPath(self):
-        # project_path = WateringUtils.getProjectPath()
-        # scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        # scenario_folder_path = project_path + "/" + scenario_id + "/epanet2_2/scenario.inp"
+    def __getWorkingDirectory(self):
+        workingDirectory = INP_Utils.default_working_directory()
         
-        project_path = WateringUtils.getProjectPath()
-        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        scenario_folder_path = project_path + "/" + scenario_id + "/epanet2_2"
-        # scenario_folder_path = scenario_folder_path.replace('/','\\')
+        workingDirectory = workingDirectory + "\\localScenario.inp"
         
-        if not os.path.exists(scenario_folder_path):
-            os.makedirs(scenario_folder_path)
-            os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-        else:
-           os.chmod(scenario_folder_path, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-        
-        scenario_folder_path = scenario_folder_path + "/scenario.inp"
-        return scenario_folder_path
-
-
-    def __getScenarioFolderPathToINP(self):
-        return self.OutFile.replace('/','\\')
+        return workingDirectory
 
 
     def __readFeatures(self, layerName):
-        source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
+        source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         print(source_layer)
         return source_layer.getFeatures()
 
@@ -227,19 +220,23 @@ class INPManager():
             #transformed_point = transform.transform(pointXY)
             #print(f"Imprimiento puntos {transformed_point}")
         
-            id = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
+            name = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
             elev = feature.attribute("Z[m]") #if feature.attribute("Z[m]") is not None else 0.0
             demand = feature.attribute("B. Demand") #if feature.attribute("B. Demand") is not None else ""
             pattern = feature.attribute("EmitterCoe") #if feature.attribute("EmitterCoe") is not None else ""
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
             
-            coordinate.values.append(Coordinate(id, pointXY.x(), pointXY.y()))
+            coordinate.values.append(Coordinate(name, pointXY.x(), pointXY.y()))
             
-            junctions.values.append(Junction(id, elev, demand, pattern, description))
+            junctions.values.append(Junction(name, elev, demand, pattern, description))
             
             if label != "":
-                tag.values.append(Tag("NODE", id, label))
+                tag.values.append(Tag("NODE", name, label))
+            
+            my_id = str(feature.attribute("ID"))
+            INP_Utils.add_element(my_id, name)
+            print(f"key: {str(my_id)} -> value: {name}")
 
 
     def __readReservoirs(self, layerName = "watering_reservoirs"):
@@ -253,7 +250,7 @@ class INPManager():
         
         for feature in features:
             pointXY = feature.geometry().asPoint()
-            id = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
+            name = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
             #elev = feature.attribute("Z[m]") if feature.attribute("Z[m]") is not None else ""
             head = feature.attribute("Head[m]") #if feature.attribute("Head[m]") is not None else 0.0
             pattern = ""
@@ -278,17 +275,21 @@ class INPManager():
             # visibleFeatures.append("Carlos")
             # print(visibleFeatures)
             
-            coordinate.values.append(Coordinate(id, pointXY.x(), pointXY.y()))
+            coordinate.values.append(Coordinate(name, pointXY.x(), pointXY.y()))
             
-            reservoirs.values.append(Reservoir(id, head, pattern, description))
+            reservoirs.values.append(Reservoir(name, head, pattern, description))
             
             if label != "":
-                tag.values.append(Tag("NODE", id, label))
+                tag.values.append(Tag("NODE", name, label))
+            
+            my_id = str(feature.attribute("ID"))
+            INP_Utils.add_element(my_id, name)
+            print(f"key: {str(my_id)} -> value: {name}")
 
 
     def __readTanks(self, layerName = "watering_tanks"):
         
-        source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
+        source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         features = source_layer.getFeatures() #self.__readFeatures(layerName)
         
         coordinate = self.sections['COORDINATES']
@@ -297,7 +298,7 @@ class INPManager():
         
         for feature in features:
             pointXY = feature.geometry().asPoint()
-            id = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
+            name = feature.attribute("Name") #if feature.attribute("Name") is not None else ""
             elevation = feature.attribute("Z[m]") #if feature.attribute("Z[m]") is not None else 0.0
             initLevel = feature.attribute("Init. Lvl") #if feature.attribute("Init. Lvl") is not None else 0.0
             minLevel = feature.attribute("Min. Lvl") #if feature.attribute("Min. Lvl") is not None else 0.0
@@ -308,17 +309,21 @@ class INPManager():
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
             
-            coordinate.values.append(Coordinate(id, pointXY.x(), pointXY.y()))
+            coordinate.values.append(Coordinate(name, pointXY.x(), pointXY.y()))
             
-            tank.values.append(Tank(id, elevation, initLevel, minLevel, maxLevel, diameter, minVol, volCurve, description))
+            tank.values.append(Tank(name, elevation, initLevel, minLevel, maxLevel, diameter, minVol, volCurve, description))
             
             if label != "":
-                tag.values.append(Tag("NODE", id, label))
+                tag.values.append(Tag("NODE", name, label))
+                
+            my_id = str(feature.attribute("ID"))
+            INP_Utils.add_element(my_id, name)
+            print(f"key: {str(my_id)} -> value: {name}")
 
 
     def __readPipes(self, layerName = "watering_pipes"):
         
-        source_layer = QgsProject.instance().mapLayersByName(layerName)[1]
+        source_layer = QgsProject.instance().mapLayersByName(layerName)[0]
         features = source_layer.getFeatures() #self.__readFeatures(layerName)
         
         coordinate = self.sections['COORDINATES']
@@ -327,16 +332,19 @@ class INPManager():
         tag = self.sections['TAGS']
         
         for feature in features:
-            id = feature.attribute("Name") #if feature.attribute("Name") is not None else 0.0
+            name = feature.attribute("Name") #if feature.attribute("Name") is not None else 0.0
             node1 = feature.attribute("Up-Node") #if feature.attribute("Up-Node") is not None else 0.0
             node2 = feature.attribute("Down-Node") #if feature.attribute("Down-Node") is not None else 0.0
             length = feature.attribute("Length") #if feature.attribute("Length") is not None else 0.0
-            diameter = feature.attribute("Diameter") #if feature.attribute("Diameter") is not None else 0.0
+            diameter = feature.attribute("Diameter") * 1000 #if feature.attribute("Diameter") is not None else 0.0
             roughness = feature.attribute("Rough.A") #if feature.attribute("Rough.A") is not None else 0.0
             minorLoss = 0
             status = "Open"
             description = feature.attribute("Descript") #if feature.attribute("Descript") is not None else ""
             label = "" #Esto es para escribir las etiquetas de epanet.
+            node1Name = INP_Utils.get_element(node1)
+            print(node1Name)
+            node2Name = INP_Utils.get_element(node2)
             
             # geom = feature.geometry()
             # vert = 0
@@ -350,7 +358,7 @@ class INPManager():
             #             vertice.values.append(Vertice(id, vertex.x(), vertex.y()))
             #         vert += 1
             
-            pipe.values.append(Pipe(id, node1, node2, length, diameter, roughness, minorLoss, status, description))
+            pipe.values.append(Pipe(name, node1Name, node2Name, length, diameter, roughness, minorLoss, status, description))
             
             """
             pipe_feature.setAttribute("C(H.W.)", 0)
@@ -358,6 +366,10 @@ class INPManager():
             
             if label != "":
                 tag.values.append(Tag("LINK", id, label))
+            
+            my_id = str(feature.attribute("ID"))
+            INP_Utils.add_element(my_id, name)
+            print(f"key: {str(my_id)} -> value: {name}")
 
 
     def __Pumps(self, layerName = "watering_pumps"):
@@ -400,147 +412,186 @@ class INPManager():
         self.__readReservoirs()
         self.__readTanks()
         self.__readPipes()
-        
+        print(INP_Utils.get_all().values())
         self.__readBackdrop()
 
 
-    def writeSections(self):
+    def writeSections(self, options: WateringINPOptions, path: str = None):
         self.__readLayers()
-        print("0001", self._outfile)
-        with open(os.path.join(self.OutFile), "w") as inpfile:
+        fileName = path if path is not None else self.OutFile
+
+        with open(os.path.join(fileName), "w") as inpfile:
             for t, s in self.sections.items():
                 print(t, s.name)
+                if (t == 'OPTIONS'):
+                    s.setOptions(options)
+
                 s.writeSection(inpfile)
 
         # Cierra el fichero manualmente
         # self.outfile.close()
 
 
-    # def updateLayer(self):
-    #     layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+    def getAnalysisResults(self):
+        """Se obtienen los resultados de la simulación local"""
+        # Seeliminan los layes que se crearon para motrar los resultados
+        root = QgsProject.instance().layerTreeRoot()
+        shapeGroup = root.findGroup("Analysis")
+        if shapeGroup:
+            layer_ids = [layer.layerId() for layer in shapeGroup.findLayers()]
+            root.removeChildNode(shapeGroup)
+            for layer_id in layer_ids:
+                QgsProject.instance().removeMapLayer(layer_id)
 
-    #     # Verificar si la capa es válida
-    #     if not layer_1:
-    #         print("No hay una capa activa.")
-    #     else:
-    #         # Definir el nombre de la nueva propiedad (campo)
-    #         new_field_name = "Pressure"
+        wn = wntr.network.WaterNetworkModel(self.OutFile)
 
-    #         # Verificar si la propiedad ya existe
-    #         existing_fields = [field.name() for field in layer_1.fields()]
-    #         if new_field_name in existing_fields:
-    #             print(f"La propiedad '{new_field_name}' ya existe en la capa.")
-    #         else:
-    #             # Añadir la nueva propiedad
-    #             # Iniciar edición
-    #             print("actulaizando el layer")
-    #             layer_1.startEditing()
-    #             new_field = QgsField(new_field_name, QVariant.String)
-    #             layer_1.dataProvider().addAttributes([new_field])
-    #             layer_1.updateFields()
-    #             print(f"La propiedad '{new_field_name}' ha sido añadida a la capa.")
+        inpFileTemp = os.path.dirname(self.OutFile) +"\\temp"
+
+        # Simulate hydraulics
+        # sim = wntr.sim.EpanetSimulator(wn)
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim(inpFileTemp)
+
+        NodeNetworkAnalysisLocal(results, "1000-2221-45", "23:12")
+        PipeNetworkAnalysisLocal(results, "1000-2221-45", "23:12")
 
 
-    def __getidNode(self, espanet: ENepanet, nodeName: str, count: int):
-        result = 0
+    def getMetrics(self):
+        """Se obtienen los resultados de la Resilience metrics (Hydraulic metrics)"""
+        print("----------------Hydraulic metrics------------------------")
+
+        wn = wntr.network.WaterNetworkModel(self.OutFile)
         
-        for i in range(1, count + 1):
-            a = espanet.ENgetnodeid(i)
-            if a == nodeName:
-                result = i
-                break
-        return result
-
-
-    def testEpanet(self, inpfile = "C:\\Temp\\Net1.inp", rptfile=None, binfile=None):
-        """
-        Run an EPANET command-line simulation
+        wn.options.hydraulic.demand_model = 'PDD'
         
-        Parameters
-        ----------
-        inpfile : str
-            The input file name
-        """
-        file_prefix, file_ext = os.path.splitext(inpfile)
-        if rptfile is None:
-            rptfile = file_prefix + ".rpt"
-        if binfile is None:
-            binfile = file_prefix + ".bin"
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
         
-        try:
-            enData = ENepanet()
-            enData.ENopen(inpfile, rptfile, binfile)
-            enData.ENsolveH()
-            #enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
-            try:
-                enData.ENreport()
-            except:
-                pass
+        pressure = results.node[NodeLinkResultType.pressure.name]
+        threshold = 2.4
+        pressure_above_threshold = wntr.metrics.query(pressure, np.greater, threshold)
+        print("Metric pressure above threshold:\n", pressure_above_threshold)
+        
+        expected_demand = wntr.metrics.expected_demand(wn)
+        demand = results.node[NodeLinkResultType.demand.name]
+        wsa = wntr.metrics.water_service_availability(expected_demand, demand)
+        print("Metric Water service availability:\n", wsa)
+
+        head = results.node[NodeLinkResultType.head.name]
+        pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
+        todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, threshold)
+        print("Todini index:\n", todini)
+
+        flowrate = results.link[NodeLinkResultType.flowrate.name]#.loc[12*3600,:]
+        G = wn.to_graph(link_weight=flowrate)
+        entropy, system_entropy = wntr.metrics.entropy(G)
+        print("Entropy:\n", entropy)
+        print("System entropy:", system_entropy)
+
+    # def testEpanet(self, inpfile = "C:\\Temp\\Net1.inp", rptfile=None, binfile=None):
+    #     """
+    #     Run an EPANET command-line simulation
+        
+    #     Parameters
+    #     ----------
+    #     inpfile : str
+    #         The input file name
+    #     """
+    #     file_prefix, file_ext = os.path.splitext(inpfile)
+    #     if rptfile is None:
+    #         rptfile = file_prefix + ".rpt"
+    #     if binfile is None:
+    #         binfile = file_prefix + ".bin"
+        
+    #     try:
+    #         enData = ENepanet()
+    #         enData.ENopen(inpfile, rptfile, binfile)
+    #         enData.ENsolveH()
+    #         #enData.ENsolveQ() #Para el caso del análisis de la calidad del agua.
+    #         # try:
+    #         #     enData.ENreport()
+    #         # except:
+    #         #     pass
             
-            nNodes = enData.ENgetcount(EN.NODECOUNT)
-            print("Cantidad de nodos: ", nNodes)
+    #         nNodes = enData.ENgetcount(EN.NODECOUNT)
+    #         print("Cantidad de nodos: ", nNodes)
             
-            layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
-            # Iniciar edición de la capa
-            layer_1.startEditing()
+    #         # layer_1 = QgsProject.instance().mapLayersByName("watering_demand_nodes")[0]
+    #         # # Iniciar edición de la capa
+    #         # layer_1.startEditing()
             
-            valoresNodes = []
-            for i in range(1, nNodes + 1):
-                a = enData.ENgetnodeid(i)#.ENgetnodevalue(i, EN.BASEDEMAND)
-                b = enData.ENgetnodevalue(i, EN.DEMAND)
-                c = enData.ENgetnodevalue(i, EN.PRESSURE)
-                d = enData.ENgetnodevalue(i, EN.HEAD)
-                valoresNodes.append(ResultNode(a, b, c, d))
+    #         valoresNodes = []
+    #         for i in range(1, nNodes + 1):
+    #             a = enData.ENgetnodeid(i)#.ENgetnodevalue(i, EN.BASEDEMAND)
+    #             b = enData.ENgetnodevalue(i, EN.DEMAND)
+    #             c = enData.ENgetnodevalue(i, EN.PRESSURE)
+    #             d = enData.ENgetnodevalue(i, EN.HEAD)
+    #             #valoresNodes.append(ResultNode(a, b, c, d))
             
-            features = layer_1.getFeatures()
-            for feature in features:
-                nodeName = feature.attribute("Name")
-                item = self.__getidNode(enData, nodeName, nNodes)
-                pressure = enData.ENgetnodevalue(item, EN.PRESSURE)
-                feature.setAttribute("Pressure", pressure)
-                # Actualizar la característica en la capa
-                layer_1.updateFeature(feature)
-            # Guardar cambios
-            layer_1.commitChanges()
+    #         # features = layer_1.getFeatures()
+    #         # for feature in features:
+    #         #     nodeName = feature.attribute("Name")
+    #         #     item = self.__getidNode(enData, nodeName, nNodes)
+    #         #     pressure = enData.ENgetnodevalue(item, EN.PRESSURE)
+    #         #     feature.setAttribute("Pressure", pressure)
+    #         #     # Actualizar la característica en la capa
+    #         #     layer_1.updateFeature(feature)
+    #         # # Guardar cambios
+    #         # layer_1.commitChanges()
                 
             
-            # Paso 3: Escribe la lista en un archivo JSON
-            jsonFile = file_prefix + "Node" + ".json"
-            with open(jsonFile, 'w') as archivo_json:
-                json.dump([item.to_dict() for item in valoresNodes], archivo_json, ensure_ascii = False, indent = 4)
+    #         # Paso 3: Escribe la lista en un archivo JSON
+    #         jsonFile = file_prefix + "Node" + ".json"
+    #         with open(jsonFile, 'w') as archivo_json:
+    #             json.dump([item.to_dict() for item in valoresNodes], archivo_json, ensure_ascii = False, indent = 4)
             
-            nLinks = enData.ENgetcount(EN.LINKCOUNT)
-            print("Cantidad de tuberias: ", nLinks)
+    #         nLinks = enData.ENgetcount(EN.LINKCOUNT)
+    #         print("Cantidad de tuberias: ", nLinks)
             
-            linkResult = []
+    #         linkResult = []
             
-            for i in range(1, nLinks + 1):
-                a = enData.ENgetlinkvalue(i, EN.LPS)
-                b = enData.ENgetlinkvalue(i, EN.HEADLOSS)
-                c = enData.ENgetlinkvalue(i, EN.STATUS)
-                d = enData.ENgetlinkvalue(i, EN.DIAMETER)
-                g = enData.ENgetlinkvalue(i, EN.MINORLOSS)
-                linkResult.append(ResultLink(a, b, c, d, g))
+    #         for i in range(1, nLinks + 1):
+    #             a = enData.ENgetlinkvalue(i, EN.LPS)
+    #             b = enData.ENgetlinkvalue(i, EN.HEADLOSS)
+    #             c = enData.ENgetlinkvalue(i, EN.STATUS)
+    #             d = enData.ENgetlinkid(i)
+    #             g = enData.ENgetlinkvalue(i, EN.MINORLOSS)
+    #             #linkResult.append(ResultLink(a, b, c, d, g))
                 
-            # Paso 3: Escribe la lista en un archivo JSON
-            jsonFile = file_prefix + "Link" + ".json"
-            with open(jsonFile, 'w') as archivo_json:
-                json.dump([item.to_json() for item in linkResult], archivo_json, ensure_ascii=False, indent=4)
+    #         # Paso 3: Escribe la lista en un archivo JSON
+    #         jsonFile = file_prefix + "Link" + ".json"
+    #         with open(jsonFile, 'w') as archivo_json:
+    #             json.dump([item.to_json() for item in linkResult], archivo_json, ensure_ascii=False, indent=4)
             
-            flows = enData.ENgetflowunits()
-            if flows == 0: UndCaudal = "CFS"
-            if flows == 1: UndCaudal = "GPM"
-            if flows == 2: UndCaudal = "MGD"
-            if flows == 3: UndCaudal = "IMGD"
-            if flows == 4: UndCaudal = "AFD"
-            if flows == 5: UndCaudal = "LPS"
-            if flows == 6: UndCaudal = "LPM"
-            if flows == 7: UndCaudal = "MLD"
-            if flows == 8: UndCaudal = "CMH"
-            if flows == 9: UndCaudal = "CMD"
-            print("Unidad de caudal: ", UndCaudal)
-            
-            enData.ENclose()
+    #         flows = enData.ENgetflowunits()
+    #         if flows == 0: UndCaudal = "CFS"
+    #         if flows == 1: UndCaudal = "GPM"
+    #         if flows == 2: UndCaudal = "MGD"
+    #         if flows == 3: UndCaudal = "IMGD"
+    #         if flows == 4: UndCaudal = "AFD"
+    #         if flows == 5: UndCaudal = "LPS"
+    #         if flows == 6: UndCaudal = "LPM"
+    #         if flows == 7: UndCaudal = "MLD"
+    #         if flows == 8: UndCaudal = "CMH"
+    #         if flows == 9: UndCaudal = "CMD"
+    #         print("Unidad de caudal: ", UndCaudal)
+           
+    #         print("Termine el análisis...")
+    #         enData.ENclose()
         
-        except Exception as e:
-            raise e
+    #     except Exception as e:
+    #         raise e
+
+
+    def showDialog(self):
+        
+        ui = WateringINPOptions()
+        
+        ui.show()
+        if ui.exec_() == 1:
+            print("0001: Dialogo abierto...")
+        else:
+            print("0002: Dialogo cerrado...")
+        # self.dlg = WateringLogin()
+        # self.dlg.show()
+        # if self.dlg.exec_() == 1:
