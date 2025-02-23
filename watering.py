@@ -301,13 +301,13 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering view result"),
-            callback=self.viewResult,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering view result"),
+        #     callback=self.viewResult,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
 # =================================================================
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(

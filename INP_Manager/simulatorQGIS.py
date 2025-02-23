@@ -54,8 +54,8 @@ class SimulatorQGIS:
         
         time: TimeOptions = self.INPMan.options[INP_Options.Times]
         _, rtime, _ = INP_Utils.hora_to_int(time.duration)
+        print("---------------- Fin de los cáculos ------------------------")
         if (rtime > 0):
-            print("----------------Hydraulics------------------------")
             sim_manager = WateringSimulationManagerDialog(rtime)
             sim_manager.timeChanged.subscribe(self.onTimeChanged)
             sim_manager.show()
