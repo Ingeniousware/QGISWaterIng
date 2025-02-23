@@ -17,15 +17,20 @@
 """
 
 
-from ..ui.watering_inp_options import WateringINPOptions
-from .inp_utils import INP_Utils
+
+
+from .inp_options_enum import INP_Options
 from .sectionAbstract import sectionAbstract
-from .inp_options import INP_Options
+# from __future__ import annotations
+# from typing import TYPE_CHECKING
+
+# if TYPE_CHECKING:
+#     from .INPManager import INPManager
 
 # Section Title [TITLE] =================================================================
 class sectionTitle(sectionAbstract):
-    def __init__(self, title=""):
-        super(sectionTitle, self).__init__(1)
+    def __init__(self, inpM, title=""):
+        super(sectionTitle, self).__init__(inpM, 1)
         self.name = '[TITLE]'
         self.title = title if title is not None else ""
         
@@ -35,8 +40,8 @@ class sectionTitle(sectionAbstract):
 
 # Section Junctions [JUNCTIONS] =================================================================
 class sectionJunctions(sectionAbstract):
-    def __init__(self):
-        super(sectionJunctions, self).__init__(2)
+    def __init__(self, inpM):
+        super(sectionJunctions, self).__init__(inpM, 2)
         self.name = '[JUNCTIONS]'
         
     def writeSection(self, outfile):
@@ -50,8 +55,8 @@ class sectionJunctions(sectionAbstract):
 
 # Section Reservoirs [RESERVOIRS] =================================================================
 class sectionReservoirs(sectionAbstract):
-    def __init__(self):
-        super(sectionReservoirs, self).__init__(3)
+    def __init__(self, inpM):
+        super(sectionReservoirs, self).__init__(inpM, 3)
         self.name = '[RESERVOIRS]'
         
     def writeSection(self, outfile):
@@ -65,8 +70,8 @@ class sectionReservoirs(sectionAbstract):
 
 # Section Tanks [TANKS] =================================================================
 class sectionTanks(sectionAbstract):
-    def __init__(self):
-        super(sectionTanks, self).__init__(4)
+    def __init__(self, inpM):
+        super(sectionTanks, self).__init__(inpM, 4)
         self.name = '[TANKS]'
         
     def writeSection(self, outfile):
@@ -80,8 +85,8 @@ class sectionTanks(sectionAbstract):
 
 # Section Pipes [PIPES] =================================================================
 class sectionPipes(sectionAbstract):
-    def __init__(self):
-        super(sectionPipes, self).__init__(5)
+    def __init__(self, inpM):
+        super(sectionPipes, self).__init__(inpM, 5)
         self.name = '[PIPES]'
         
     def writeSection(self, outfile):
@@ -95,8 +100,8 @@ class sectionPipes(sectionAbstract):
 
 # Section Pumps [PUMPS] =================================================================
 class sectionPumps(sectionAbstract):
-    def __init__(self):
-        super(sectionPumps, self).__init__(6)
+    def __init__(self, inpM):
+        super(sectionPumps, self).__init__(inpM, 6)
         self.name = '[PUMPS]'
         
     def writeSection(self, outfile):
@@ -110,8 +115,8 @@ class sectionPumps(sectionAbstract):
 
 # Section Valves [VALVES] =================================================================
 class sectionValves(sectionAbstract):
-    def __init__(self):
-        super(sectionValves, self).__init__(7)
+    def __init__(self, inpM):
+        super(sectionValves, self).__init__(inpM, 7)
         self.name = '[VALVES]'
         
     def writeSection(self, outfile):
@@ -125,8 +130,8 @@ class sectionValves(sectionAbstract):
 
 # Section Tags [TAGS] =================================================================
 class sectionTags(sectionAbstract):
-    def __init__(self):
-        super(sectionTags, self).__init__(8)
+    def __init__(self, inpM):
+        super(sectionTags, self).__init__(inpM, 8)
         self.name = '[TAGS]'
         
     def writeSection(self, outfile):
@@ -136,8 +141,8 @@ class sectionTags(sectionAbstract):
 
 # Section Demands [DEMANDS] =================================================================
 class sectionDemands(sectionAbstract):
-    def __init__(self):
-        super(sectionDemands, self).__init__(9)
+    def __init__(self, inpM):
+        super(sectionDemands, self).__init__(inpM, 9)
         self.name = '[DEMANDS]'
         
     def writeSection(self, outfile):
@@ -151,8 +156,8 @@ class sectionDemands(sectionAbstract):
 
 # Section Status [STATUS] =================================================================
 class sectionStatus(sectionAbstract):
-    def __init__(self):
-        super(sectionStatus, self).__init__(10)
+    def __init__(self, inpM):
+        super(sectionStatus, self).__init__(inpM, 10)
         self.name = '[STATUS]'
         
     def writeSection(self, outfile):
@@ -163,8 +168,8 @@ class sectionStatus(sectionAbstract):
 
 # Section Patterns [PATTERNS] =================================================================
 class sectionPatterns(sectionAbstract):
-    def __init__(self):
-        super(sectionPatterns, self).__init__(11)
+    def __init__(self, inpM):
+        super(sectionPatterns, self).__init__(inpM, 11)
         self.name = '[PATTERNS]'
         
     def writeSection(self, outfile):
@@ -175,8 +180,8 @@ class sectionPatterns(sectionAbstract):
 
 # Section Curves [CURVES] =================================================================
 class sectionCurves(sectionAbstract):
-    def __init__(self):
-        super(sectionCurves, self).__init__(12)
+    def __init__(self, inpM):
+        super(sectionCurves, self).__init__(inpM, 12)
         self.name = '[CURVES]'
         
     def writeSection(self, outfile):
@@ -190,8 +195,8 @@ class sectionCurves(sectionAbstract):
 
 # Section Controls [CONTROLS] =================================================================
 class sectionControls(sectionAbstract):
-    def __init__(self):
-        super(sectionControls, self).__init__(13)
+    def __init__(self, inpM):
+        super(sectionControls, self).__init__(inpM, 13)
         self.name = '[CONTROLS]'
         
     def writeSection(self, outfile):
@@ -201,8 +206,8 @@ class sectionControls(sectionAbstract):
 
 # Section Rules [RULES] =================================================================
 class sectionRules(sectionAbstract):
-    def __init__(self):
-        super(sectionRules, self).__init__(14)
+    def __init__(self, inpM):
+        super(sectionRules, self).__init__(inpM, 14)
         self.name = '[RULES]'
         
     def writeSection(self, outfile):
@@ -212,19 +217,19 @@ class sectionRules(sectionAbstract):
 
 # Section Energy [ENERGY] =================================================================
 class sectionEnergy(sectionAbstract):
-    def __init__(self):
-        super(sectionEnergy, self).__init__(15)
+    def __init__(self, inpM):
+        super(sectionEnergy, self).__init__(inpM, 15)
         self.name = '[ENERGY]'
         
     def writeSection(self, outfile):
-        result = INP_Utils.getoption_from_JSON(self.getPath(), INP_Options.Energy)
-        outfile.write(result.__str__())
+        result = self.INPManager.options[INP_Options.Energy]
+        outfile.write(str(result))
         outfile.write('\n')
 
 # Section Emitters [EMITTERS] =================================================================
 class sectionEmitters(sectionAbstract):
-    def __init__(self):
-        super(sectionEmitters, self).__init__(16)
+    def __init__(self, inpM):
+        super(sectionEmitters, self).__init__(inpM, 16)
         self.name = '[EMITTERS]'
         
     def writeSection(self, outfile):
@@ -235,8 +240,8 @@ class sectionEmitters(sectionAbstract):
 
 # Section Quality [QUALITY] =================================================================
 class sectionQuality(sectionAbstract):
-    def __init__(self):
-        super(sectionQuality, self).__init__(17)
+    def __init__(self, inpM):
+        super(sectionQuality, self).__init__(inpM, 17)
         self.name = '[QUALITY]'
         
     def writeSection(self, outfile):
@@ -247,8 +252,8 @@ class sectionQuality(sectionAbstract):
 
 # Section Sources [SOURCES] =================================================================
 class sectionSources(sectionAbstract):
-    def __init__(self):
-        super(sectionSources, self).__init__(18)
+    def __init__(self, inpM):
+        super(sectionSources, self).__init__(inpM, 18)
         self.name = '[SOURCES]'
         
     def writeSection(self, outfile):
@@ -259,8 +264,8 @@ class sectionSources(sectionAbstract):
 
 # Section Reactions [REACTIONS] =================================================================
 class sectionReactions(sectionAbstract):
-    def __init__(self):
-        super(sectionReactions, self).__init__(19)
+    def __init__(self, inpM):
+        super(sectionReactions, self).__init__(inpM, 19)
         self.name = '[REACTIONS]'
         
     def writeSection(self, outfile):
@@ -271,8 +276,8 @@ class sectionReactions(sectionAbstract):
 
 # Section Reactions20 [REACTIONS] =================================================================
 class sectionReactions20(sectionAbstract):
-    def __init__(self):
-        super(sectionReactions20, self).__init__(20)
+    def __init__(self, inpM):
+        super(sectionReactions20, self).__init__(inpM, 20)
         self.name = '[REACTIONS]'
         
     def writeSection(self, outfile):
@@ -284,14 +289,14 @@ class sectionReactions20(sectionAbstract):
         # outfile.write(' Global Wall           	0' + '\n')
         # outfile.write(' Limiting Potential    	0' + '\n')
         # outfile.write(' Roughness Correlation 	0' + '\n')
-        result = INP_Utils.getoption_from_JSON(self.getPath(), INP_Options.Reactions)
-        outfile.write(result.__str__())
+        result = self.INPManager.options[INP_Options.Reactions]
+        outfile.write(str(result))
         outfile.write('\n')
 
 # Section Mixing [MIXING] =================================================================
 class sectionMixing(sectionAbstract):
-    def __init__(self):
-        super(sectionMixing, self).__init__(21)
+    def __init__(self, inpM):
+        super(sectionMixing, self).__init__(inpM, 21)
         self.name = '[MIXING]'
         
     def writeSection(self, outfile):
@@ -302,20 +307,20 @@ class sectionMixing(sectionAbstract):
 
 # Section Times [TIMES] =================================================================
 class sectionTimes(sectionAbstract):
-    def __init__(self):
-        super(sectionTimes, self).__init__(22)
+    def __init__(self, inpM):
+        super(sectionTimes, self).__init__(inpM, 22)
         self.name = '[TIMES]'
         
     def writeSection(self, outfile):
-        result = INP_Utils.getoption_from_JSON(self.getPath(), INP_Options.Times)
-        outfile.write(result.__str__())
+        result = self.INPManager.options[INP_Options.Times]
+        outfile.write(str(result))
         outfile.write('\n')
 
 
 # Section Report [REPORT] =================================================================
 class sectionReport(sectionAbstract):
-    def __init__(self):
-        super(sectionReport, self).__init__(23)
+    def __init__(self, inpM):
+        super(sectionReport, self).__init__(inpM, 23)
         self.name = '[REPORT]'
         
     def writeSection(self, outfile):
@@ -327,24 +332,23 @@ class sectionReport(sectionAbstract):
 
 # Section Options [OPTIONS] =================================================================
 class sectionOptions(sectionAbstract):
-    def __init__(self):
-        super(sectionOptions, self).__init__(24)
+    def __init__(self, inpM):
+        super(sectionOptions, self).__init__(inpM, 24)
         self.name = '[OPTIONS]'
-        self._options = None
+        # self._options = None
         
-    def setOptions(self, options: WateringINPOptions):
-        self._options = options
+    # def setOptions(self, options: WateringINPOptions):
+    #     self._options = options
         
     def writeSection(self, outfile):
-        result = INP_Utils.getoption_from_JSON(self.getPath(), INP_Options.Hydraulics)
-        result.setOptions(self._options)
-        outfile.write(result.__str__())
+        result = self.INPManager.options[INP_Options.Hydraulics]
+        outfile.write(str(result))
         outfile.write('\n')
 
 # Section Coordinates [COORDINATES] =================================================================
 class sectionCoordinates(sectionAbstract):
-    def __init__(self):
-        super(sectionCoordinates, self).__init__(25)
+    def __init__(self, inpM):
+        super(sectionCoordinates, self).__init__(inpM, 25)
         self.name = '[COORDINATES]'
         
     def writeSection(self, outfile):
@@ -358,8 +362,8 @@ class sectionCoordinates(sectionAbstract):
 
 # Section Vertices [VERTICES] =================================================================
 class sectionVertices(sectionAbstract):
-    def __init__(self):
-        super(sectionVertices, self).__init__(26)
+    def __init__(self, inpM):
+        super(sectionVertices, self).__init__(inpM, 26)
         self.name = '[VERTICES]'
         
     def writeSection(self, outfile):
@@ -373,8 +377,8 @@ class sectionVertices(sectionAbstract):
 
 # Section Labels [LABELS] =================================================================
 class sectionLabels(sectionAbstract):
-    def __init__(self):
-        super(sectionLabels, self).__init__(27)
+    def __init__(self, inpM):
+        super(sectionLabels, self).__init__(inpM, 27)
         self.name = '[LABELS]'
         
     def writeSection(self, outfile):
@@ -388,8 +392,8 @@ class sectionLabels(sectionAbstract):
 
 # Section Backdrop [BACKDROP] =================================================================
 class sectionBackdrop(sectionAbstract):
-    def __init__(self):
-        super(sectionBackdrop, self).__init__(28)
+    def __init__(self, inpM):
+        super(sectionBackdrop, self).__init__(inpM, 28)
         self.name = '[BACKDROP]'
         
     def writeSection(self, outfile):
@@ -402,8 +406,8 @@ class sectionBackdrop(sectionAbstract):
 
 # Section End [END] =================================================================
 class sectionEnd(sectionAbstract):
-    def __init__(self):
-        super(sectionEnd, self).__init__(29)
+    def __init__(self, inpM):
+        super(sectionEnd, self).__init__(inpM, 29)
         self.name = '[END]'
         
     def writeSection(self, outfile):

@@ -17,14 +17,10 @@
 """
 
 
-import enum
-import json
 import os
 import stat
 
-from qgis.core import QgsProject
-from .inp_options import INP_Options
-from .dataType import AbstractOption, EnergyOptions, HydraulicOptions, QualityOptions, ReactionOptions, TimeOptions
+from qgis.core import QgsProject # type: ignore
 
 
 class INP_Utils:
@@ -125,44 +121,44 @@ class INP_Utils:
         partes = valor.split(':')
         horas = int(partes[0])
         minutos = int(partes[1])
-        segundos = int(partes[2])
+        segundos = int(partes[2]) if len(partes) > 2 else 0
         horas_int = (horas + minutos / 60 + segundos / 3600) * 3600
-        return horas_int, horas_int/3600, [horas, minutos, segundos]
-    
-    
-    def read_options(path: str):
-        """
-        Read the OPTIONS file and return its content.
-        Args:
-            path (str): The file path where the OPTIONS file is located.
-        Returns:
-            dict: The content of the OPTIONS file as a dictionary.
-        Raises:
-            IOError: If the file cannot be opened or read.
-        """
-        try:
-            with open(path, 'r') as file:
-                data = json.load(file)
-            return data
-        except IOError as e:
-            print(f"Error al leer el archivo OPTIONS: {e}")
-            return None
-        
-        
-    def getoption_from_JSON(path: str, inpOption: INP_Options) -> AbstractOption:
-        data = INP_Utils.read_options(path)[inpOption.name]
-        result = None
+        return horas_int, horas_int / 3600, [horas, minutos, segundos]
 
-        if inpOption == INP_Options.Hydraulics:
-            result = HydraulicOptions()
-        elif inpOption == INP_Options.Quality:
-            result = QualityOptions()
-        elif inpOption == INP_Options.Reactions:
-            result = ReactionOptions()
-        elif inpOption == INP_Options.Times:
-            result = TimeOptions()
-        else:
-            result = EnergyOptions()
 
-        result.__dict__.update(data)
-        return result
+    # def read_options(path: str):
+    #     """
+    #     Read the OPTIONS file and return its content.
+    #     Args:
+    #         path (str): The file path where the OPTIONS file is located.
+    #     Returns:
+    #         dict: The content of the OPTIONS file as a dictionary.
+    #     Raises:
+    #         IOError: If the file cannot be opened or read.
+    #     """
+    #     try:
+    #         with open(path, 'r') as file:
+    #             data = json.load(file)
+    #         return data
+    #     except IOError as e:
+    #         print(f"Error al leer el archivo OPTIONS: {e}")
+    #         return None
+
+
+    # def getoption_from_JSON(path: str, inpOption: INP_Options) -> AbstractOption:
+    #     data = INP_Utils.read_options(path)[inpOption.name]
+    #     result = None
+
+    #     if inpOption == INP_Options.Hydraulics:
+    #         result = HydraulicOptions()
+    #     elif inpOption == INP_Options.Quality:
+    #         result = QualityOptions()
+    #     elif inpOption == INP_Options.Reactions:
+    #         result = ReactionOptions()
+    #     elif inpOption == INP_Options.Times:
+    #         result = TimeOptions()
+    #     else:
+    #         result = EnergyOptions()
+
+    #     result.__dict__.update(data)
+    #     return result

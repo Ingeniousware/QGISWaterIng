@@ -31,9 +31,9 @@ class NodeNetworkAnalysisLocal(AbstractAnalysisLocalNode):
     """
     Clase que representa los resultados de los nodes.
     """
-    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, resultType = NodeResultType.pressure):
+    def __init__(self, nodeResult, analysisExecutionId, datetime, resultType = NodeResultType.pressure):
         """Constructor of NodeNetworkAnalysisLocal."""
-        super().__init__(results, resultType, analysisExecutionId, datetime)
+        super().__init__(nodeResult, resultType, analysisExecutionId, datetime)
         self.UrlGet = ""
         self.KeysApi = ""
         self.Attributes = ""

@@ -3,7 +3,7 @@
 # Import QGis
 from qgis.core import QgsProject, Qgis, QgsNetworkAccessManager
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMessageBox, QLabel, QMenu
+from PyQt5.QtWidgets import QAction, QMessageBox, QLabel, QMenu, QDockWidget
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker, QgsMapToolIdentify
 from qgis.utils import iface
@@ -70,6 +70,7 @@ from .INP_Manager.simulatorQGIS import SimulatorQGIS
 from .INP_Manager.customdialog import show_custom_dialog, show_input_dialog
 from .INP_Manager.inp_utils import INP_Utils
 from .INP_Manager.dataType import HydraulicOptions
+from .ui.watering_simulation_manager import InputDialog, WateringSimulationManagerDialog
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -270,6 +271,12 @@ class QGISPlugin_WaterIng:
         # menu_action.setMenu(submenu)
         # self.toolbar.addAction(menu_action)
         
+        # self.action1 = QAction("Open Input Dialog", self.iface.mainWindow())
+        # self.action1.triggered.connect(self.open_dock_widget)
+        # self.iface.addToolBarIcon(self.action1)
+        # self.iface.addPluginToMenu("&My Plugin", self.action1)
+        
+        
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
         self.add_action(
             icon_path,
@@ -294,8 +301,14 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        
-
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
+        self.add_action(
+            icon_path,
+            text=self.tr("Watering view result"),
+            callback=self.viewResult,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+# =================================================================
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(
             icon_path,
@@ -420,6 +433,10 @@ class QGISPlugin_WaterIng:
         except Exception as e:
             text = f"Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering\n'{e}'"
             show_custom_dialog("Información", text)
+        
+        
+    def viewResult(self):
+        self.simulatorQGIS.exportResults()
         
         
     def addLoad(self):

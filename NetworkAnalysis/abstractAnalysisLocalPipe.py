@@ -20,6 +20,8 @@
 import csv
 import os
 
+from pandas import Series
+
 from .abstractAnalysisLocal import AbstractAnalysisLocal
 from ..INP_Manager.inp_utils import INP_Utils
 from ..INP_Manager.node_link_ResultType import LinkResultType
@@ -33,9 +35,9 @@ class AbstractAnalysisLocalPipe(AbstractAnalysisLocal):
     """
     Clase base para la visualización de lo los resultado de la modelación en QGIS de proyectos locales (Nodes).
     """
-    def __init__(self, results: SimulationResults, resultType: LinkResultType, analysisExecutionId, datetime):
+    def __init__(self, linkResult: Series, resultType: LinkResultType, analysisExecutionId, datetime):
         super().__init__(analysisExecutionId, datetime)
-        self.__results = results
+        self.__linkResult = linkResult
         self.__resultType = resultType
 
 
@@ -49,15 +51,12 @@ class AbstractAnalysisLocalPipe(AbstractAnalysisLocal):
         date_folder_path = INP_Utils.generate_directory(date_folder_path)
         
         elements.append(["Name", self.__resultType.name])
-        range_1 = len(self.__results.link[self.__resultType.name].columns)
-
-        resultValue = self.__results.link[self.__resultType.name].values.tolist()
-
-        name = self.__results.link[self.__resultType.name].columns.tolist()
+        name = self.__linkResult.index.tolist()
+        range_1 = len(name)
+        resultValue = self.__linkResult.values
 
         for i in range(range_1):
-            subdatos = [name[i], resultValue[0][i]]
-
+            subdatos = [name[i], resultValue[i]]
             elements.append(subdatos)
 
         pipes_filepath = os.path.join(date_folder_path, f"{filename}_Pipes.csv")
