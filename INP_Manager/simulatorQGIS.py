@@ -56,16 +56,30 @@ class SimulatorQGIS:
         _, rtime, _ = INP_Utils.hora_to_int(time.duration)
         print("---------------- Fin de los cáculos ------------------------")
         if (rtime > 0):
-            sim_manager = WateringSimulationManagerDialog(rtime)
+            element = [v[0] for v in INP_Utils.static_elements.values()]
+            sim_manager = WateringSimulationManagerDialog(rtime, element)
             sim_manager.timeChanged.subscribe(self.onTimeChanged)
-            sim_manager.show()
+            sim_manager.elementDoubleClicked.subscribe(self.onElementDoubleClicked)
             
-            # if sim_manager.exec_() == 1:
-            #     print("001: Dialogo abierto...\n")
+            sim_manager.show()
+            if sim_manager.exec_() == 1:
+                print("001: Dialogo abierto...\n")
             # else:
             #     print("0002: Dialogo cerrado...")
 
-
+    
+    def getType(self, value):
+        for item in INP_Utils.get_all().values():
+            if (item[0] == value):
+                return item[1]
+        return None
+    
+    def onElementDoubleClicked(self, index, nodeResultType, linkResultType):
+        typeval = self.getType(index)
+        self.INPMan.getValues_for_element(index, typeval, nodeResultType, linkResultType)
+            
+        
+        
     def MessageInformation(self, message: str):
         msg = QMessageBox()
         msg.setIcon(QMessageBox.Information)
@@ -110,23 +124,28 @@ class SimulatorQGIS:
 
 
     def exportResults(self):
-        pass
-        # # self.time += 1
-        # # print(self.time)
-        # # result = self.INPMan.getResultforTime(self.time)
-        # # if result is not None:
-        # #     print(result.values)
-        # sim_manager = WateringSimulationManagerDialog(3)
+        # pass
+        # self.time += 1
+        # print(self.time)
+        # result = self.INPMan.getResultforTime(self.time)
+        # if result is not None:
+        #     print(result.values)
+        # a = [v for k, v in INP_Utils.static_elements.items()]
+        # element = [v[0] for v in INP_Utils.static_elements.values()]
+        # # print(element)
+        # sim_manager = WateringSimulationManagerDialog(3, element)
         
         # # sim_manager.previousEvent.subscribe(self.onPrevious)
         # # sim_manager.nextEvent.subscribe(self.onNext)
         # sim_manager.timeChanged.subscribe(self.onTimeChanged)
+        # sim_manager.elementDoubleClicked.subscribe(self.onElementDoubleClicked)
         
         # sim_manager.show()
         # if sim_manager.exec_() == 1:
         #     print("001: Dialogo abierto...\n")
         # else:
         #     print("0002: Dialogo cerrado...")
+        self.INPMan.getMetrics()
     
     
     def onTimeChanged(self, time, nodeResultType, linkResultType):

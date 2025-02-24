@@ -21,7 +21,9 @@ import stat
 import uuid
 
 import numpy as np
+import matplotlib.pyplot as plt
 from pandas import Series
+
 
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem, QgsFields, QgsRenderContext, QgsVectorLayer, QgsProject # type: ignore
 from qgis.core import QgsProject, QgsField # type: ignore
@@ -166,7 +168,7 @@ class INPManager():
                 tag.values.append(Tag("NODE", name, label))
 
             my_id = str(feature.attribute("ID"))
-            INP_Utils.add_element(my_id, name)
+            INP_Utils.add_element(my_id, [name, 'node'])
 
 
     def __readReservoirs(self, layerName = "watering_reservoirs"):
@@ -213,7 +215,7 @@ class INPManager():
                 tag.values.append(Tag("NODE", name, label))
 
             my_id = str(feature.attribute("ID"))
-            INP_Utils.add_element(my_id, name)
+            INP_Utils.add_element(my_id, [name, 'node'])
 
 
     def __readTanks(self, layerName = "watering_tanks"):
@@ -246,7 +248,7 @@ class INPManager():
                 tag.values.append(Tag("NODE", name, label))
 
             my_id = str(feature.attribute("ID"))
-            INP_Utils.add_element(my_id, name)
+            INP_Utils.add_element(my_id, [name, 'node'])
 
 
     def __readPipes(self, layerName = "watering_pipes"):
@@ -306,7 +308,7 @@ class INPManager():
                 tag.values.append(Tag("LINK", id, label))
 
             my_id = str(feature.attribute("ID"))
-            INP_Utils.add_element(my_id, name)
+            INP_Utils.add_element(my_id, [name, 'link'])
 
 
     def __Pumps(self, layerName = "watering_pumps"):
@@ -421,6 +423,32 @@ class INPManager():
         time_string = f"{time:02}:00"
         NodeNetworkAnalysisLocal(nodeResult_at_hour, self._guid, time_string, nodeResultType)
         PipeNetworkAnalysisLocal(linkResult_at_hour, self._guid, time_string, linkResultType)
+        
+        
+    def getValues_for_element(self, element, typeValue, nodeResultType: NodeResultType = NodeResultType.pressure, linkResultType: LinkResultType = LinkResultType.flowrate):
+        result: Series = None
+        var_y = ""
+        if (typeValue == 'node'):
+            result = self._results.node[nodeResultType.name].loc[:, element]
+            var_y = nodeResultType.name
+        else:
+            result = self._results.link[linkResultType.name].loc[:, element]
+            var_y = linkResultType.name
+        
+        if (result is not None):
+            x_values = [x1 / 3600 for x1 in result.index.tolist()]
+            y_values = result.values
+
+            # Crear la gráfica
+            plt.plot(x_values, y_values, marker='o', linestyle='-')
+
+            # Configurar el título y las etiquetas de los ejes
+            plt.title(f"Comportamineto {element}")
+            plt.xlabel("valores en hora")
+            plt.ylabel(f"Valores de {var_y}")
+
+            # Mostrar la gráfica
+            plt.show()
 
 
     def getMetrics(self):
@@ -435,21 +463,21 @@ class INPManager():
         results = sim.run_sim()
 
         pressure = results.node[NodeResultType.pressure.name]
-        threshold = 2.4
+        threshold = 5.4
         pressure_above_threshold = wntr.metrics.query(pressure, np.greater, threshold)
-        print("Metric pressure above threshold:\n", pressure_above_threshold)
+        print(f"Metric pressure above threshold ({threshold}):\n", pressure_above_threshold)
 
         expected_demand = wntr.metrics.expected_demand(wn)
-        demand = results.node[LinkResultType.demand.name]
+        demand = results.node[NodeResultType.demand.name]
         wsa = wntr.metrics.water_service_availability(expected_demand, demand)
         print("Metric Water service availability:\n", wsa)
 
         head = results.node[NodeResultType.head.name]
-        pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
+        pump_flowrate = results.link[LinkResultType.flowrate.name].loc[:, wn.pump_name_list]
         todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, threshold)
         print("Todini index:\n", todini)
 
-        flowrate = results.link[LinkResultType.flowrate.name]#.loc[12*3600,:]
+        flowrate = results.link[LinkResultType.flowrate.name].loc[1*3600, :]
         G = wn.to_graph(link_weight=flowrate)
         entropy, system_entropy = wntr.metrics.entropy(G)
         print("Entropy:\n", entropy)

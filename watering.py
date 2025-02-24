@@ -277,7 +277,7 @@ class QGISPlugin_WaterIng:
         # self.iface.addPluginToMenu("&My Plugin", self.action1)
         
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/run_epanet.svg"
         self.add_action(
             icon_path,
             text=self.tr("Watering Run simulación"),
@@ -285,7 +285,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/optins.svg"
         self.add_action(
             icon_path,
             text=self.tr("Watering Opciones"),
@@ -293,7 +293,7 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/exportar_inp.svg"
         self.add_action(
             icon_path,
             text=self.tr("Watering export INP"),
@@ -301,13 +301,13 @@ class QGISPlugin_WaterIng:
             toolbar = self.toolbar,
             parent=self.iface.mainWindow())
         
-        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
-        # self.add_action(
-        #     icon_path,
-        #     text=self.tr("Watering view result"),
-        #     callback=self.viewResult,
-        #     toolbar = self.toolbar,
-        #     parent=self.iface.mainWindow())
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        self.add_action(
+            icon_path,
+            text=self.tr("Watering view metrics"),
+            callback=self.viewResult,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
 # =================================================================
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(

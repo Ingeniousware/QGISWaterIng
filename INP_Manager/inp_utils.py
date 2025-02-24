@@ -35,8 +35,8 @@ class INP_Utils:
     @classmethod
     def get_element(cls, element):
         for key, valor in cls.static_elements.items():
-            if (key == element) or (valor == element):
-                return valor
+            if (key == element) or (element in valor):
+                return valor[0]
         return None
 
     @classmethod
@@ -46,7 +46,7 @@ class INP_Utils:
     @classmethod
     def find_element(cls, key):
         if key in cls.static_elements:
-            return cls.static_elements[key]
+            return cls.static_elements[key][0]
         else:
             return None
 

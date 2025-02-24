@@ -17,12 +17,13 @@
 """
 
 
+from abc import ABC, abstractmethod
 import os
 
 from qgis.PyQt import uic # type: ignore
 from qgis.PyQt import QtWidgets # type: ignore
-from PyQt5.QtWidgets import QMessageBox, QHeaderView, QTableWidgetItem, QComboBox, QLabel, QDialog, QLineEdit, QFormLayout, QPushButton
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMessageBox, QHeaderView, QAbstractItemView, QTableWidgetItem, QComboBox, QLabel, QDialog, QLineEdit, QFormLayout, QPushButton
+from PyQt5.QtCore import Qt, QStringListModel
 from PyQt5.QtGui import QIntValidator
 
 from ..INP_Manager.node_link_ResultType import LinkResultType, NodeResultType
@@ -41,14 +42,30 @@ class Event:
     #     self.__subscribers.remove(func)
 
     def notify(self, time, nodeResultType: NodeResultType = NodeResultType.pressure, linkResultType: LinkResultType = LinkResultType.flowrate):
-        self.__event(time, nodeResultType, linkResultType)
+        if self.__event is not None:
+            self.__event(time, nodeResultType, linkResultType)
 
+class EventBase(ABC):
+    def __init__(self):
+        self.__event = None
+    def connect(self, func):
+        self.__event = func
+    @abstractmethod
+    def notify(self, *value):
+        self.__event(*value)
+
+class Event_1(EventBase):
+    def __init__(self):
+        super().__init__()
+    def notify(self, *value, **v1):
+        super().notify(*value, **v1)
+        # self.__event(value, v1)
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_simulation_manager_dialog.ui"))
 
 
 class WateringSimulationManagerDialog(QtWidgets.QDialog, FORM_CLASS):
-    def __init__(self, maxTime, parent=None):
+    def __init__(self, maxTime, listElement = None, parent = None):
         """Constructor."""
         super(WateringSimulationManagerDialog, self).__init__(parent)
         self.setupUi(self)
@@ -57,8 +74,10 @@ class WateringSimulationManagerDialog(QtWidgets.QDialog, FORM_CLASS):
         self._time = 0
         self._nodeResultType = NodeResultType.pressure
         self._linkResultType = LinkResultType.flowrate
+        self._listElement = listElement
         # for item in NodeResultType:
         #     self.nodeComboBox.addItem(item.name)
+        
         self.nodeComboBox.addItems([item.name for item in NodeResultType])
         self.nodeComboBox.setCurrentText(self._nodeResultType.name)
         self.nodeComboBox.currentTextChanged.connect(self.nodeResultTypeChanged)
@@ -74,6 +93,16 @@ class WateringSimulationManagerDialog(QtWidgets.QDialog, FORM_CLASS):
         self.timeLabel.mousePressEvent = self.label_clicked
 
         self.timeChanged = Event()
+        
+        self.textEdit.textChanged.connect(self.filter_list)
+        
+        self.model = QStringListModel(self._listElement)
+        self.listView.setModel(self.model)
+        self.listView.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.listView.setEditTriggers(QAbstractItemView.NoEditTriggers)  # Deshabilitar la edición
+        self.listView.doubleClicked.connect(self.on_item_double_clicked)  # Conectar doble clic a la función
+        
+        self.elementDoubleClicked = Event()
 
 
     @property
@@ -117,6 +146,18 @@ class WateringSimulationManagerDialog(QtWidgets.QDialog, FORM_CLASS):
             #     self.time = self._maxTime
             # else:
             #     self.time = dialog.value
+
+
+    def filter_list(self):
+        filter_text = self.textEdit.toPlainText()
+        all_items = self._listElement
+        filtered_items = [item for item in all_items if filter_text.lower() in item.lower()]
+        self.model.setStringList(filtered_items)
+
+
+    def on_item_double_clicked(self, index):
+        item_text = self.model.data(index, Qt.DisplayRole)
+        self.elementDoubleClicked.notify(item_text, self._nodeResultType, self._linkResultType)
 
 
 class InputDialog(QDialog):
