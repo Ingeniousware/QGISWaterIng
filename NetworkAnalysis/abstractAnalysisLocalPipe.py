@@ -35,10 +35,11 @@ class AbstractAnalysisLocalPipe(AbstractAnalysisLocal):
     """
     Clase base para la visualización de lo los resultado de la modelación en QGIS de proyectos locales (Nodes).
     """
-    def __init__(self, linkResult: Series, resultType: LinkResultType, analysisExecutionId, datetime):
+    def __init__(self, linkResult: Series, resultType: LinkResultType, analysisExecutionId, datetime, flow_unit = "LPS"):
         super().__init__(analysisExecutionId, datetime)
         self.__linkResult = linkResult
         self.__resultType = resultType
+        self.__flow_unit = flow_unit
 
 
     def elementAnalysisResults(self):
@@ -53,7 +54,10 @@ class AbstractAnalysisLocalPipe(AbstractAnalysisLocal):
         elements.append(["Name", self.__resultType.name])
         name = self.__linkResult.index.tolist()
         range_1 = len(name)
-        resultValue = self.__linkResult.values
+        if (self.__flow_unit == "LPS"):
+            resultValue = [v * 1000 for v in self.__linkResult.values]
+        else:
+            resultValue = self.__linkResult.values
 
         for i in range(range_1):
             subdatos = [name[i], resultValue[i]]

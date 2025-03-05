@@ -29,9 +29,9 @@ class PipeNetworkAnalysisLocal(AbstractAnalysisLocalPipe):
     """
     Clase que representa los resultados de las tuberías.
     """
-    def __init__(self, linkResult, analysisExecutionId, datetime, resultType = LinkResultType.flowrate):
+    def __init__(self, linkResult, analysisExecutionId, datetime, resultType = LinkResultType.flowrate, flow_unit = "LPS"):
         """Constructor of PipeNetworkAnalysisLocal."""
-        super().__init__(linkResult, resultType, analysisExecutionId, datetime)
+        super().__init__(linkResult, resultType, analysisExecutionId, datetime, flow_unit)
         self.UrlGet = ""
         self.KeysApi = ""
         self.Attributes = ""

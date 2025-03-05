@@ -33,6 +33,7 @@ class toolbarToolManager:
         self.editElementsAction = None
         self.toolImportINPFile = None
         self.toolImportShapeFile = None
+        self.toolExportINPFile = None
         self.toolReviewNetwork = None
         self.toolSelectionReview = None
         self.toolDemandPattern = None
@@ -50,11 +51,17 @@ class toolbarToolManager:
         self.openOptimizationManagerAction = None
         self.openPumpModels = None
         self.readAnalysisAction = None
+        self.readAnalysisAction_1 = None
         self.readMeasurementsAction = None
         self.waterBalanceAction = None
         self.getLastMeasurementAction = None
         self.undoAction = None
         self.redoAction = None
+        
+        self.analysisOptions = None
+        self.localAnalysisWithWNTR = None
+        self.metricsAnalysis = None
+        self.addGraphics = None
 
         # Dock
         self.analysisDockPanel = WateringAnalysis(iface)
@@ -74,7 +81,7 @@ class toolbarToolManager:
         # self.editElementsAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         self.editElementsAction.toggled.connect(self.activateEditTool)
 
-        # Analysis
+        # Analysis =================================================================================================
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/analysisChart.svg"
         self.readAnalysisAction = self.addMapToolButtonAction(
             icon_path,
@@ -87,6 +94,20 @@ class toolbarToolManager:
         self.readAnalysisAction.setEnabled(not WateringUtils.isScenarioNotOpened())
         self.readAnalysisAction.setCheckable(True)
         self.readAnalysisAction.toggled.connect(self.activateWaterAnalysisTool)
+        
+        # Analysis_1
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/networkAnalysis.svg"
+        self.readAnalysisAction_1 = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Water Network Analysis", "QGISWaterIng"),
+            # text=self.tr(u'Water Network Analysis'),
+            callback=self.activeControllerTool,
+            toolbar=self.toolbar,
+            parent=self.parentWindow,
+        )
+        # self.readAnalysisAction_1.setEnabled(not WateringUtils.isScenarioNotOpened())
+        self.readAnalysisAction_1.setCheckable(True)
+        self.readAnalysisAction_1.toggled.connect(self.activateAnalysisTool)
 
         # Optimization Tools
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/optimizationTools.svg"
@@ -206,6 +227,18 @@ class toolbarToolManager:
         )
         self.toolImportShapeFile.setCheckable(False)
         self.toolImportShapeFile.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
+        # export inp file
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/exportar_inp.svg"
+        self.toolExportINPFile = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Export INP File"),
+            callback=self.activateActionTool,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+        self.toolExportINPFile.setCheckable(False)
+        self.toolExportINPFile.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # demand patterns
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/icon_pattern_GT.svg"
@@ -373,6 +406,58 @@ class toolbarToolManager:
         )
         self.openPumpModels.setEnabled(not WateringUtils.isScenarioNotOpened())
 
+        # Analysis Options
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/optins.svg"
+        self.analysisOptions = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Analysis Options"),
+            callback=self.activateActionTool,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+
+        self.analysisOptions.setCheckable(False)
+        self.analysisOptions.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # Local Analysis With WNTR
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/run_epanet.svg"
+        self.localAnalysisWithWNTR = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Local Analysis With WNTR"),
+            callback=self.activateActionTool,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+
+        self.localAnalysisWithWNTR.setCheckable(False)
+        self.localAnalysisWithWNTR.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # Metrics Analysis
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        self.metricsAnalysis = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Metrics Analysis"),
+            callback=self.activateActionTool,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+
+        self.metricsAnalysis.setCheckable(False)
+        self.metricsAnalysis.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+        # Add Graphics
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/analysisChart.svg"
+        self.addGraphics = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Add Graphics"),
+            callback=self.activateActionTool,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+
+        self.addGraphics.setCheckable(False)
+        self.addGraphics.setEnabled(not WateringUtils.isScenarioNotOpened())
+
     def addMapToolButtonAction(
         self,
         icon_path,
@@ -442,6 +527,7 @@ class toolbarToolManager:
         editTools = [
             self.toolImportINPFile,
             self.toolImportShapeFile,
+            self.toolExportINPFile,
             self.toolReviewNetwork,
             self.toolSelectionReview,
             self.toolDemandPattern,
@@ -467,6 +553,32 @@ class toolbarToolManager:
                 self.toolbar.removeAction(tool)
 
                 tool.setChecked(False)
+
+
+    def activateAnalysisTool(self, checked):
+        """ Análisis local con WNTR, el de opciones de análisis, el de mostrar las métricas así como el de adicionar un gráfico de resultados
+            Análisis local con WNTR
+            Opciones de análisis
+            Análisis de métricas
+            Addicionar un gráficos
+        """
+        analysisTool = [
+            self.analysisOptions,
+            self.localAnalysisWithWNTR,
+            self.metricsAnalysis,
+            self.addGraphics
+            ]
+
+        if checked:
+            for tool in analysisTool:
+                self.toolbar.addAction(tool)
+        else:
+            self.canvas.setMapTool(self.panTool)
+            for tool in analysisTool:
+                self.toolbar.removeAction(tool)
+
+                tool.setChecked(False)
+
 
     def activateOptimizationTool(self, checked):
         optimizationTools = [self.openOptimizationManagerAction, self.openPumpModels]
@@ -526,6 +638,7 @@ class toolbarToolManager:
             dlg = WateringPumpModels()
             dlg.show()
             dlg.exec_()
+
 
     def activateMeasurementTool(self, *args):
         if WateringUtils.isScenarioNotOpened():

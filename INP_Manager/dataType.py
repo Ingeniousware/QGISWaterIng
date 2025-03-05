@@ -200,7 +200,7 @@ class Curve():
         return f" {self.ID: <15}\t{self.X_value: <12}\t{self.Y_value: <15};"
     
 ######################### Proximas class #####################################################
-class TimeOptions(AbstractOption):
+class Time_Options(AbstractOption):
     """
     Options related to simulation and model timing.
     These options are named according to the EPANET 2.2 "Times" settings.
@@ -271,7 +271,7 @@ class TimeOptions(AbstractOption):
                 report_start: str = "00:00",
                 start_clocktime: str = "12 am",
                 statistic: str='NONE'):
-        super(TimeOptions, self).__init__(inpM)
+        super().__init__(inpM)
         self.duration = duration
         self.hydraulic_timestep = hydraulic_timestep
         self.quality_timestep = quality_timestep
@@ -310,7 +310,7 @@ class TimeOptions(AbstractOption):
         return text
 
 
-class HydraulicOptions(AbstractOption):
+class Hydraulic_Options(AbstractOption):
     """
     Options related to hydraulic model.
     These options are named according to the settings in the EPANET "[OPTIONS]"
@@ -425,7 +425,7 @@ class HydraulicOptions(AbstractOption):
                  flowchange: float = 0,
                  inpfile_units: str = 'GPM',
                  inpfile_pressure_units: str = None):
-        super(HydraulicOptions, self).__init__(inpM)
+        super().__init__(inpM)
         self.headloss = headloss
         self.hydraulics = hydraulics
         self.viscosity = viscosity
@@ -483,7 +483,7 @@ class HydraulicOptions(AbstractOption):
 
 
     def __str__(self):
-        quality: QualityOptions = self._inpManeger.options[INP_Options.Quality] # if self._options is not None else QualityOptions()
+        quality: Quality_Options = self._inpManeger.options[INP_Options.Quality] # if self._options is not None else QualityOptions()
         txt = quality.parameter + ' ' + quality.inpfile_units
         text = "[OPTIONS]\n"
         text += f" Units              	{self.inpfile_units}\n Headloss           	{self.headloss}\n Specific Gravity   	{self.specific_gravity}\n"
@@ -496,7 +496,7 @@ class HydraulicOptions(AbstractOption):
         return text
 
 
-class ReactionOptions(AbstractOption):
+class Reaction_Options(AbstractOption):
     """
     Options related to water quality reactions.
     From the EPANET "[REACTIONS]" options.
@@ -544,7 +544,7 @@ class ReactionOptions(AbstractOption):
                  wall_coeff: float = 0.0,
                  limiting_potential: float = 0.0,
                  roughness_correl: float = 0.0):
-        super(ReactionOptions, self).__init__(inpM)
+        super().__init__(inpM)
         self.bulk_order = bulk_order
         self.wall_order = wall_order
         self.tank_order = tank_order
@@ -570,7 +570,7 @@ class ReactionOptions(AbstractOption):
         return text
 
 
-class QualityOptions(AbstractOption):
+class Quality_Options(AbstractOption):
     """
     Options related to water quality modeling. These options come from
     the "[OPTIONS]" section of an EPANET INP file.
@@ -608,7 +608,7 @@ class QualityOptions(AbstractOption):
                  diffusivity: float = 1.0,
                  tolerance: float = 0.01,
                  inpfile_units: str = 'mg/L'):
-        super(QualityOptions, self).__init__(inpM)
+        super().__init__(inpM)
         self.parameter = parameter
         self.trace_node = trace_node
         self.chemical_name = chemical_name
@@ -634,7 +634,7 @@ class QualityOptions(AbstractOption):
         return text
 
 
-class EnergyOptions(AbstractOption):
+class Energy_Options(AbstractOption):
     """
     Options related to energy calculations.
     From the EPANET "[ENERGY]" settings.
@@ -657,11 +657,11 @@ class EnergyOptions(AbstractOption):
         by default ``None``.
     """
     def __init__(self, inpM,
-                global_price: float = 0,
+                global_price: float = 0.0,
                 global_pattern: str = None,
                 global_efficiency: float = 75,
-                demand_charge: float = 0):
-        super(EnergyOptions, self).__init__(inpM)
+                demand_charge: float = 0.0):
+        super().__init__(inpM)
         self.global_price = global_price
         self.global_pattern = global_pattern
         self.global_efficiency = global_efficiency

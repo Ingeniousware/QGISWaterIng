@@ -37,7 +37,7 @@ from .sections import (sectionTitle, sectionJunctions, sectionReservoirs, sectio
                        sectionControls, sectionRules, sectionEnergy, sectionEmitters, sectionQuality, sectionSources,
                        sectionReactions, sectionReactions20, sectionMixing, sectionTimes, sectionReport, sectionOptions,
                        sectionCoordinates, sectionVertices, sectionLabels, sectionBackdrop, sectionEnd)
-from .dataType import (Junction, Reservoir, Tank, Pipe, Pump, TimeOptions, Valve, Tag, Demand, Curve, Coordinate, Vertice, Label,
+from .dataType import (Junction, Reservoir, Tank, Pipe, Pump, Time_Options, Valve, Tag, Demand, Curve, Coordinate, Vertice, Label,
                        Backdrop)
 
 import json
@@ -72,6 +72,7 @@ class INPManager():
         self.xmax = 10000.0
         self.ymax = 10000.0
         
+        INP_Utils.Clear()
         self.options: INPOptions = INPOptions(self)
         self.options.load()
         self._simulation_validity = False
@@ -117,9 +118,9 @@ class INPManager():
     # def OutFile(self, value: str):
     #     self._outfile = value
 
-    @property
-    def Out_Folder_Path_INP(self):
-        return os.path.splitext(self.OutFile)
+    # @property
+    # def Out_Folder_Path_INP(self):
+    #     return os.path.splitext(self.OutFile)
 
 
     def __getWorkingDirectory(self):
@@ -412,7 +413,7 @@ class INPManager():
         # print(pressure_at_5hr)
         self._guid = str(uuid.uuid4())
         NodeNetworkAnalysisLocal(nodeResult_at_0hr, self._guid, "00:00")
-        PipeNetworkAnalysisLocal(linkResult_at_0hr, self._guid, "00:00")
+        PipeNetworkAnalysisLocal(linkResult_at_0hr, self._guid, "00:00", LinkResultType.flowrate, self.options[INP_Options.Hydraulics].inpfile_units)
         self._simulation_validity = True
 
 
@@ -422,7 +423,7 @@ class INPManager():
         linkResult_at_hour = self._results.link[linkResultType.name].loc[time * 3600, :]
         time_string = f"{time:02}:00"
         NodeNetworkAnalysisLocal(nodeResult_at_hour, self._guid, time_string, nodeResultType)
-        PipeNetworkAnalysisLocal(linkResult_at_hour, self._guid, time_string, linkResultType)
+        PipeNetworkAnalysisLocal(linkResult_at_hour, self._guid, time_string, linkResultType, self.options[INP_Options.Hydraulics].inpfile_units)
         
         
     def getValues_for_element(self, element, typeValue, nodeResultType: NodeResultType = NodeResultType.pressure, linkResultType: LinkResultType = LinkResultType.flowrate):

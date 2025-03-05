@@ -50,6 +50,10 @@ class INP_Utils:
         else:
             return None
 
+    @classmethod
+    def Clear(cls):
+        cls.static_elements.clear()
+
     def default_directory_optins():
         return INP_Utils.default_working_directory() + "\\optins.json"
 
@@ -61,13 +65,14 @@ class INP_Utils:
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0] # Obtiene el esenario de trabajo
         working_directory = home_Path + "/" + scenario_id + "/epanet2_2"
         #Se comprueba si el directorio de trabajo existe. De no existir se crea el directorio de trabajo
-        if not os.path.exists(working_directory):
-            os.makedirs(working_directory, exist_ok=True)
-            os.chmod(working_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
-        else:
-           os.chmod(working_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+        # if not os.path.exists(working_directory):
+        #     os.makedirs(working_directory, exist_ok=True)
+        #     os.chmod(working_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
+        # else:
+        #    os.chmod(working_directory, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
 
-        working_directory = working_directory.replace('/','\\')
+        # working_directory = working_directory.replace('/','\\')
+        working_directory = INP_Utils.generate_directory(working_directory)
 
         return working_directory
 

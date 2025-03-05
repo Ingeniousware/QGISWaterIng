@@ -28,7 +28,7 @@ from .inp_utils import INP_Utils
 from .node_link_ResultType import LinkResultType, NodeResultType
 from .customdialog import show_input_dialog
 from .inp_options_enum import INP_Options
-from .dataType import TimeOptions
+from .dataType import Time_Options
 
 
 class SimulatorQGIS:
@@ -52,7 +52,7 @@ class SimulatorQGIS:
         self.time = -1
         self.INPMan.getAnalysisResults()
         
-        time: TimeOptions = self.INPMan.options[INP_Options.Times]
+        time: Time_Options = self.INPMan.options[INP_Options.Times]
         _, rtime, _ = INP_Utils.hora_to_int(time.duration)
         print("---------------- Fin de los cáculos ------------------------")
         if (rtime > 0):
