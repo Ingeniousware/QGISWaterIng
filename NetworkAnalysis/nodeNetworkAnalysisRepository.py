@@ -7,7 +7,7 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
 
     def __init__(self, token, analysisExecutionId, datetime, nodeProperty, behavior, field=None):
         """Constructor."""
-        super(NodeNetworkAnalysisRepository, self).__init__(token, analysisExecutionId, datetime, behavior)
+        super().__init__(token, analysisExecutionId, datetime, behavior)
         self.UrlGet = "/api/v1/WaterAnalysisResults/nodes"
         self.KeysApi = ["nodeKey", "pressure", "waterDemand", "waterDemandCovered", "waterAge"]
         self.Attributes = ["Pressure", "Demand", "Demand C", "Age"]

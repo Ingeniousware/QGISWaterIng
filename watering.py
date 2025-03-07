@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Import QGis
+from datetime import datetime
 from qgis.core import QgsProject, Qgis, QgsNetworkAccessManager
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QMessageBox, QLabel, QMenu, QDockWidget
@@ -280,30 +281,30 @@ class QGISPlugin_WaterIng:
         # self.iface.addPluginToMenu("&My Plugin", self.action1)
         
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/run_epanet.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering Run simulación"),
-            callback=self.simulator_run,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/run_epanet.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering Run simulación"),
+        #     callback=self.simulator_run,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/optins.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering Opciones"),
-            callback=self.simulator_options,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/optins.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering Opciones"),
+        #     callback=self.simulator_options,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
 
 
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering view metrics"),
-            callback=self.viewResult,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering view metrics"),
+        #     callback=self.viewResult,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
 # =================================================================
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(
@@ -375,9 +376,26 @@ class QGISPlugin_WaterIng:
 
 
     def viewResult(self):
-        self.simulatorQGIS.exportResults()
+        # self.simulatorQGIS.exportResults()
+        fecha = datetime.now().date()
+        time = datetime.now().time()
+        fecha_to_int = int(fecha.strftime("%Y%m%d"))
+        time_to_int = int(time.strftime("%H%M%S"))
+        print(f"fecha en ertero: {fecha_to_int}")
+        print(f"time en entero: {time_to_int}")
+        fecha = datetime.strptime(str(fecha_to_int), "%Y%m%d").strftime("%d/%m/%Y")
+        time = datetime.strptime(str(time_to_int), "%H%M%S").strftime("%H:%M:%S")
+        print(f"fecha en string: {fecha}")
+        print(f"time en string: {time}")
         
-        
+        fecha_hora = datetime.now()
+        fecha_to_int = int(fecha_hora.strftime("%y%m%d%H%M%S"))
+        fecha_hora_new_format = datetime.strptime(str(fecha_to_int), "%y%m%d%H%M%S").strftime("%/%m/%YY => %H:%M")
+        print(f"La fecha de la PC es: {fecha_hora}")
+        print(f"La fecha de la PC en entero es: {fecha_to_int}")
+        print(f"La fecha de la PC con un nuevo formato: {fecha_hora_new_format}")
+
+
     def addLoad(self):
         print("calling watering load dialog")
         self.dlg = WateringLoad()

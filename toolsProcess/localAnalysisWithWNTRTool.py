@@ -16,6 +16,7 @@
 ***************************************************************************
 """
 
+from datetime import datetime
 import os
 import uuid
 import wntr
@@ -30,6 +31,7 @@ from ..INP_Manager.inp_options_enum import INP_Options
 from ..INP_Manager.node_link_ResultType import LinkResultType, NodeResultType
 from ..NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
 from ..NetworkAnalysis.pipeNetworkAnalysisLocal import PipeNetworkAnalysisLocal
+from ..INP_Manager.inp_utils import INP_Utils
 
 class LocalAnalysisWithWNTRTool:
     def __init__(self, iface):
@@ -42,10 +44,13 @@ class LocalAnalysisWithWNTRTool:
                 self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5
             )
         else:
-            print("0001: Run simulation")
             """Se obtienen los resultados de la simulación local"""
             self.removerAnalysis()
             # Se configura el archivo del inp. aqui se debe guardar las opciones del inp si no existen.
+            
+            fecha_hora = datetime.now()
+            fecha_to_int = int(fecha_hora.strftime("%y%m%d%H%M%S"))
+            tempFile = f"S_{fecha_to_int}"
             
             inpFile = INPManager()
             inpFile.writeSections()
@@ -56,7 +61,8 @@ class LocalAnalysisWithWNTRTool:
 
             wn = wntr.network.WaterNetworkModel(inpFile.OutFile)
 
-            inpFileTemp = os.path.dirname(inpFile.OutFile) + "\\temp"
+            inpFileTemp = INP_Utils.generate_directory(os.path.dirname(inpFile.OutFile) + "\\Simulaciones\\" + tempFile)
+            inpFileTemp += "\\" + tempFile
 
             # Simulate hydraulics
             sim = wntr.sim.EpanetSimulator(wn)
