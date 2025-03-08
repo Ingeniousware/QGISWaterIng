@@ -7,7 +7,7 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
 
     def __init__(self, token, analysisExecutionId, datetime, pipeProperty, behavior, field=None):
         """Constructor."""
-        super(PipeNetworkAnalysisRepository, self).__init__(token, analysisExecutionId, datetime, behavior)
+        super().__init__(token, analysisExecutionId, datetime, behavior)
         self.UrlGet = "/api/v1/WaterAnalysisResults/pipes"
         self.KeysApi = ["pipeKey", "pipeCurrentStatus", "velocity", "flow", "headLoss"]
         self.Attributes = ["C Status", "Velocity", "Flow", "HeadLoss"]

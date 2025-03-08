@@ -17,7 +17,7 @@ class AbstractAnalysisRepository(AbstractAnalysis):
 
     def __init__(self, token, analysisExecutionId, datetime, behavior):
         """Constructor."""
-        super(AbstractAnalysis, self).__init__(analysisExecutionId, datetime)
+        super().__init__(analysisExecutionId, datetime)
         self.token = token
         self.behavior = behavior
         #self.analysisExecutionId = analysisExecutionId
