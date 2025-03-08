@@ -184,9 +184,13 @@ class AbstractAnalysis(ABC):
         fields_to_add:
             Campos que se van a adicionar.
         """
+        print("00021: ", layerName)
         for layer in QgsProject.instance().mapLayers().values():
             if layer.name() == layerName:
                 source_layer = layer
+            else:
+                source_layer = None
+            print("0001: ",layer.name())
             if layer.name() == layerDest:
                 target_layer = layer
         if not source_layer or not target_layer:
