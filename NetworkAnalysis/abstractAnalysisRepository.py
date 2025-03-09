@@ -40,7 +40,6 @@ class AbstractAnalysisRepository(AbstractAnalysis):
         element_dict = {}
         for elementData in response.json()["data"]:
             for element in elementData["pipeResults"]:
-                element["simulationDateTime"] = elementData["timeStamp"]
                 element_dict[element[self.KeysApi[0]]] = [
                     element[self.KeysApi[1]],
                     element[self.KeysApi[2]],
