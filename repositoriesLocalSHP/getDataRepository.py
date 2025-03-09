@@ -71,14 +71,17 @@ class getDataRepository:
                 if not file_exists:
                     writer.writerow(keys)
                 writer.writerow([element[key] for key in keys])
-
+        
+        print("000001: Crando el fichero csv")
         date = date.replace(":", "")
         project_path = WateringUtils.getProjectPath()
         scenario_id = QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
         scenario_folder_path = project_path + "/" + scenario_id
         analysis_folder_path = scenario_folder_path + "/" + "Analysis"
         date_folder_path = analysis_folder_path + "/" + date
-
+        print(analysis_folder_path)
+        print(date_folder_path)
+        
         # Create analysis folder
         os.makedirs(analysis_folder_path, exist_ok=True)
         # Create date folder inside analysis

@@ -36,7 +36,9 @@ class AbstractAnalysisRepository(AbstractAnalysis):
         print("Entering elementAnalysisResults")
         response = self.getResponse()
         filename = self.analysisExecutionId
-
+        print("0001: Imprimiendo datos del servidor\n", [temt["pipeKey"] for temt in response.json()["data"]])
+        print("-> ", "pipeKey")
+        
         element_dict = {}
         for element in response.json()["data"]:
             element_dict[element[self.KeysApi[0]]] = [
@@ -78,7 +80,7 @@ class AbstractAnalysisRepository(AbstractAnalysis):
         project_path, scenario_id = QgsProject.instance().readEntry("watering", "project_path", "default text")[0], QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
         print("Project path (addCSVNonSpatialLayerToPanel): ", project_path)
         print("Scenario ID: ", scenario_id)
-        date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date)
+        date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date).replace("/","\\")
 
         self.loadCSVLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
         

@@ -17,6 +17,7 @@
 """
 
 from datetime import datetime
+import json
 import os
 import uuid
 import wntr
@@ -60,9 +61,11 @@ class LocalAnalysisWithWNTRTool:
             # self.writeSections()
 
             wn = wntr.network.WaterNetworkModel(inpFile.OutFile)
-
-            inpFileTemp = INP_Utils.generate_directory(os.path.dirname(inpFile.OutFile) + "\\Simulaciones\\" + tempFile)
-            inpFileTemp += "\\" + tempFile
+            # os.path.join(inpFile.OutFile, "Simulaciones", tempFile)
+            # inpFileTemp = INP_Utils.generate_directory(inpFile.OutFile + "\\Simulaciones\\" + tempFile)
+            inpFileTemp = INP_Utils.generate_directory(os.path.join(os.path.dirname(inpFile.OutFile), "Simulaciones", tempFile))
+            # inpFileTemp += "\\" + tempFile
+            inpFileTemp = os.path.join(inpFileTemp, tempFile)
 
             # Simulate hydraulics
             sim = wntr.sim.EpanetSimulator(wn)
@@ -78,6 +81,8 @@ class LocalAnalysisWithWNTRTool:
             NodeNetworkAnalysisLocal(nodeResult_at_0hr, self._guid, "00:00")
             PipeNetworkAnalysisLocal(linkResult_at_0hr, self._guid, "00:00", LinkResultType.flowrate, units)
 
+            self.updateJSON(os.path.join(os.path.dirname(inpFile.OutFile), "Simulaciones"))
+
 
     def removerAnalysis(self):
          # Seeliminan los layes que se crearon para motrar los resultados
@@ -88,3 +93,24 @@ class LocalAnalysisWithWNTRTool:
             root.removeChildNode(shapeGroup)
             for layer_id in layer_ids:
                 QgsProject.instance().removeMapLayer(layer_id)
+
+
+    def updateJSON(self, path: str):
+        """Äctualiza el archivo JSON con los resultados de la simulación"""
+        directorios = []
+
+        for directory_name in os.listdir(path):
+            directory_path = os.path.join(path, directory_name)
+            if os.path.isdir(directory_path):
+                temp = directory_name.split("_")
+                date = datetime.strptime(temp[1], "%y%m%d%H%M%S").strftime("%d/%m/%Y %H:%M:%S")
+                directorios.append({
+                    "directoryName": directory_name,
+                    "directoryDate": date,
+                    "directoryPath": directory_path
+                })
+        
+        ruta_json = os.path.join(path, "inf.json")
+
+        with open(ruta_json, 'w') as archivo_json:
+            json.dump(directorios, archivo_json, indent=4)

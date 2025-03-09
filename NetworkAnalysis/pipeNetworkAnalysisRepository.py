@@ -21,6 +21,9 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         self.Size = 1
         self.join_field = "pipeKey"
         self.fields_to_add = ["velocity", "flow", "headLoss"]
+        print(analysisExecutionId)
+        print(datetime)
+        print(behavior)
         self.elementAnalysisResults()
         self.addCSVNonSpatialLayerToPanel(f"{self.analysisExecutionId}_Pipes.csv", f"Pipes_{datetime}")
         self.joinLayersAttributes(f"Pipes_{datetime}", self.LayerName, self.join_field, self.fields_to_add)
