@@ -29,26 +29,31 @@ class AbstractAnalysisRepository(AbstractAnalysis):
             "datetime": "{}".format(self.datetime),
             "behavior": "{}".format(self.behavior),
         }
-        url = WateringUtils.getServerUrl() + self.UrlGet
+        url = WateringUtils.getServerUrl() + self.UrlGet        
         return requests.get(url, params=params, headers={"Authorization": "Bearer {}".format(self.token)})
 
     def elementAnalysisResults(self):
         print("Entering elementAnalysisResults")
         response = self.getResponse()
+        print(response.json()["data"])
         filename = self.analysisExecutionId
         print("0001: Imprimiendo datos del servidor\n", [temt["pipeKey"] for temt in response.json()["data"]])
         print("-> ", "pipeKey")
         
         element_dict = {}
-        for element in response.json()["data"]:
-            element_dict[element[self.KeysApi[0]]] = [
-                element[self.KeysApi[1]],
-                element[self.KeysApi[2]],
-                element[self.KeysApi[3]],
-                element[self.KeysApi[4]],
-            ]
+        for elementData in response.json()["data"]:
+            for element in elementData["pipeResults"]:
+                element["simulationDateTime"] = elementData["timeStamp"]
+                element_dict[element[self.KeysApi[0]]] = [
+                    element[self.KeysApi[1]],
+                    element[self.KeysApi[2]],
+                    element[self.KeysApi[3]],
+                    element[self.KeysApi[4]],
+                ]
+                getDataRepository.analysis_to_csv(element, element, filename, self.datetime)
 
-            getDataRepository.analysis_to_csv(element, element, filename, self.datetime)
+        print(element_dict)
+        
         """       
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
 
