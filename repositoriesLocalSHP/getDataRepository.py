@@ -79,24 +79,15 @@ class getDataRepository:
         scenario_folder_path = project_path + "/" + scenario_id
         analysis_folder_path = scenario_folder_path + "/" + "Analysis"
         date_folder_path = analysis_folder_path + "/" + date
-        print(analysis_folder_path)
-        print(date_folder_path)
-        
+
         # Create analysis folder
         os.makedirs(analysis_folder_path, exist_ok=True)
         # Create date folder inside analysis
         os.makedirs(date_folder_path, exist_ok=True)
 
-        pipe_keys = [
-            "pipeKey",   
-            "simulationDateTime",         
-            "pipeCurrentStatus",
-            "velocity",
-            "flow",
-            "headLoss",            
-        ]
-
-        node_keys = ["nodeKey", "simulationDateTime", "pressure", "waterDemand", "waterAge"]
+        pipe_keys = ["serverKeyId", "pipeKey", "simulationDateTime", "pipeCurrentStatus", "velocity", "flow", "headLoss"]
+        node_keys = ["serverKeyId", "nodeKey", "simulationDateTime", "pressure", "waterDemand", "waterAge"]
+        
         # File for pipes analysis
         print(element)
         if all(key in element for key in pipe_keys):

@@ -17,7 +17,6 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         # self.Field = "Velocity"
         # self.Field = (f"Pipes_{datetime}_velocity")
         self.Field = f"Pipes_{datetime}_{pipeProperty}"
-        print("00012: ", datetime)
         self.StartColor = QColor(255, 0, 0)
         self.EndColor = QColor(0, 0, 139)
         self.Size = 1

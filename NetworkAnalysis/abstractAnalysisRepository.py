@@ -29,7 +29,7 @@ class AbstractAnalysisRepository(AbstractAnalysis):
             "datetime": "{}".format(self.datetime),
             "behavior": "{}".format(self.behavior),
         }
-        url = WateringUtils.getServerUrl() + self.UrlGet        
+        url = WateringUtils.getServerUrl() + self.UrlGet
         return requests.get(url, params=params, headers={"Authorization": "Bearer {}".format(self.token)})
 
     def elementAnalysisResults(self):
