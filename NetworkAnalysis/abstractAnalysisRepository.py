@@ -35,10 +35,7 @@ class AbstractAnalysisRepository(AbstractAnalysis):
     def elementAnalysisResults(self):
         print("Entering elementAnalysisResults")
         response = self.getResponse()
-        print(response.json()["data"])
         filename = self.analysisExecutionId
-        print("0001: Imprimiendo datos del servidor\n", [temt["pipeKey"] for temt in response.json()["data"]])
-        print("-> ", "pipeKey")
         
         element_dict = {}
         for elementData in response.json()["data"]:
