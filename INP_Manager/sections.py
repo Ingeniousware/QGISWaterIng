@@ -175,6 +175,12 @@ class sectionPatterns(sectionAbstract):
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
         outfile.write(';ID              	Multipliers' + '\n')
+        text = ";General Default Demand Pattern\n"
+        text += "1               	1.34        	1.94        	1.46        	1.44        	0.76         	0.92"
+        text += "1               	0.85         	1.07        	0.96         	1.1         	1.08        	1.19"
+        text += "1               	1.16        	1.08        	0.96         	0.83         	0.79         	0.74"
+        text += "1               	0.64         	0.64         	0.85         	0.96         	1.24        	1.67"
+        outfile.write(text + '\n')
         #imprimir el otro contenido de la section
         outfile.write('\n')
 

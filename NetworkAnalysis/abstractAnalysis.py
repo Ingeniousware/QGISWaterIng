@@ -184,6 +184,9 @@ class AbstractAnalysis(ABC):
         fields_to_add:
             Campos que se van a adicionar.
         """
+        
+        source_layer = None
+        target_layer = None
         for layer in QgsProject.instance().mapLayers().values():
             if layer.name() == layerName:
                 source_layer = layer
@@ -194,7 +197,7 @@ class AbstractAnalysis(ABC):
 
         joinObject = QgsVectorLayerJoinInfo()
         joinObject.setJoinFieldName(join_field)
-        joinObject.setTargetFieldName("Name")
+        joinObject.setTargetFieldName("ID")
         joinObject.setJoinLayerId(source_layer.id())
         joinObject.setUsingMemoryCache(True)
         joinObject.setJoinLayer(source_layer)

@@ -49,14 +49,18 @@ class AbstractAnalysisLocalNode(AbstractAnalysisLocal):
         working_directory = INP_Utils.default_working_directory()
         date_folder_path = os.path.join(working_directory, "Analysis", date)
         date_folder_path = INP_Utils.generate_directory(date_folder_path)
-        
-        elements.append(["Name", self.__resultType.name])
+
+        elements.append(["nodeKey", self.__resultType.name])
         name = self.__nodeResult.index.tolist()
         range_1 = len(name)
         resultValue = self.__nodeResult.values
 
+        nodeKey = []
         for i in range(range_1):
-            subdatos = [name[i], resultValue[i]]
+            nodeKey.append(INP_Utils.get_key_element(name[i]))
+
+        for i in range(range_1):
+            subdatos = [nodeKey[i], round(resultValue[i], 4)]
             elements.append(subdatos)
 
         nodes_filepath = os.path.join(date_folder_path, f"{filename}_Nodes.csv")

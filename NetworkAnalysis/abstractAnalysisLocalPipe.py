@@ -35,10 +35,11 @@ class AbstractAnalysisLocalPipe(AbstractAnalysisLocal):
     """
     Clase base para la visualización de lo los resultado de la modelación en QGIS de proyectos locales (Nodes).
     """
-    def __init__(self, linkResult: Series, resultType: LinkResultType, analysisExecutionId, datetime):
+    def __init__(self, linkResult: Series, resultType: LinkResultType, analysisExecutionId, datetime, flow_unit = "LPS"):
         super().__init__(analysisExecutionId, datetime)
         self.__linkResult = linkResult
         self.__resultType = resultType
+        self.__flow_unit = flow_unit
 
 
     def elementAnalysisResults(self):
@@ -50,13 +51,20 @@ class AbstractAnalysisLocalPipe(AbstractAnalysisLocal):
         date_folder_path = os.path.join(working_directory, "Analysis", date)
         date_folder_path = INP_Utils.generate_directory(date_folder_path)
         
-        elements.append(["Name", self.__resultType.name])
+        elements.append(["pipeKey", self.__resultType.name])
         name = self.__linkResult.index.tolist()
         range_1 = len(name)
-        resultValue = self.__linkResult.values
+        if (self.__flow_unit == "LPS"):
+            resultValue = [v * 1000 for v in self.__linkResult.values]
+        else:
+            resultValue = self.__linkResult.values
 
+        pipeKey = []
         for i in range(range_1):
-            subdatos = [name[i], resultValue[i]]
+            pipeKey.append(INP_Utils.get_key_element(name[i]))
+        
+        for i in range(range_1):
+            subdatos = [pipeKey[i], resultValue[i]]
             elements.append(subdatos)
 
         pipes_filepath = os.path.join(date_folder_path, f"{filename}_Pipes.csv")

@@ -21,7 +21,7 @@ import os
 
 from .inp_utils import INP_Utils
 from .inp_options_enum import INP_Options
-from .dataType import HydraulicOptions, QualityOptions, ReactionOptions, TimeOptions, EnergyOptions
+from .dataType import Hydraulic_Options, Quality_Options, Reaction_Options, Time_Options, Energy_Options
 # from __future__ import annotations
 
 class INPOptions(dict):
@@ -29,11 +29,11 @@ class INPOptions(dict):
         super(INPOptions, self).__init__(*args, **kwargs)
         self.__inpManager = inpM
         
-        self[INP_Options.Hydraulics] = HydraulicOptions(self.__inpManager)
-        self[INP_Options.Quality] = QualityOptions(self.__inpManager)
-        self[INP_Options.Reactions] = ReactionOptions(self.__inpManager)
-        self[INP_Options.Times] = TimeOptions(self.__inpManager)
-        self[INP_Options.Energy] = EnergyOptions(self.__inpManager)
+        self[INP_Options.Hydraulics] = Hydraulic_Options(self.__inpManager)
+        self[INP_Options.Quality] = Quality_Options(self.__inpManager)
+        self[INP_Options.Reactions] = Reaction_Options(self.__inpManager)
+        self[INP_Options.Times] = Time_Options(self.__inpManager)
+        self[INP_Options.Energy] = Energy_Options(self.__inpManager)
 
 
     def __setitem__(self, key: INP_Options, value):
