@@ -35,11 +35,13 @@ class AbstractAnalysisRepository(AbstractAnalysis):
     def elementAnalysisResults(self):
         print("Entering elementAnalysisResults")
         response = self.getResponse()
+
         filename = self.analysisExecutionId
-        
+
         element_dict = {}
         for elementData in response.json()["data"]:
             for element in elementData["pipeResults"]:
+                element["simulationDateTime"] = elementData["timeStamp"]
                 element_dict[element[self.KeysApi[0]]] = [
                     element[self.KeysApi[1]],
                     element[self.KeysApi[2]],
@@ -48,9 +50,8 @@ class AbstractAnalysisRepository(AbstractAnalysis):
                 ]
                 getDataRepository.analysis_to_csv(element, element, filename, self.datetime)
 
-        print(element_dict)
-        
-        """       
+
+        """
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
 
         layer.startEditing()
@@ -79,9 +80,8 @@ class AbstractAnalysisRepository(AbstractAnalysis):
 
         date = self.datetime.replace(":", "")
         project_path, scenario_id = QgsProject.instance().readEntry("watering", "project_path", "default text")[0], QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
-        print("Project path (addCSVNonSpatialLayerToPanel): ", project_path)
-        print("Scenario ID: ", scenario_id)
-        date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date).replace("/","\\")
+
+        date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date)
 
         self.loadCSVLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)
         

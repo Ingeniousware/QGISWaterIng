@@ -18,8 +18,10 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
         # self.Field = "Pressure"
         # self.Field = (f"Nodes_{datetime}_pressure")
         self.Field = f"Nodes_{datetime}_{nodeProperty}"
-        self.StartColor = QColor(255, 0, 0)
-        self.EndColor = QColor(0, 0, 139)
+        # self.StartColor = QColor(255, 0, 0)
+        # self.EndColor = QColor(0, 0, 139)
+        self.StartColor = QColor(55, 148, 255)
+        self.EndColor = QColor(255, 47, 151)
         self.Size = 3
         self.join_field = "nodeKey"
         self.fields_to_add = ["pressure", "waterDemand", "waterAge"]
@@ -44,7 +46,7 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
     def elementAnalysisResults(self):
         print("Entering nodes AnalysisResults")
         response = self.getResponse()
-        print(response.json()["data"])
+
         filename = self.analysisExecutionId
 
         element_dict = {}
@@ -58,5 +60,3 @@ class NodeNetworkAnalysisRepository(AbstractAnalysisRepository):
                     element[self.KeysApi[4]],
                 ]
                 getDataRepository.analysis_to_csv(element, element, filename, self.datetime)
-
-        print(element_dict)

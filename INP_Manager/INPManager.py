@@ -126,7 +126,8 @@ class INPManager():
     def __getWorkingDirectory(self):
         workingDirectory = INP_Utils.default_working_directory()
 
-        workingDirectory = workingDirectory + "\\localScenario.inp"
+        scenario_id = WateringUtils.getScenarioId()
+        workingDirectory = workingDirectory + f"\\{scenario_id}.inp"
 
         return workingDirectory
 

@@ -17,8 +17,10 @@ class PipeNetworkAnalysisRepository(AbstractAnalysisRepository):
         # self.Field = "Velocity"
         # self.Field = (f"Pipes_{datetime}_velocity")
         self.Field = f"Pipes_{datetime}_{pipeProperty}"
-        self.StartColor = QColor(255, 0, 0)
-        self.EndColor = QColor(0, 0, 139)
+        # self.StartColor = QColor(255, 0, 0)
+        # self.EndColor = QColor(0, 0, 139)
+        self.StartColor = QColor(55, 148, 255)
+        self.EndColor = QColor(255, 47, 151)
         self.Size = 1
         self.join_field = "pipeKey"
         self.fields_to_add = ["velocity", "flow", "headLoss"]

@@ -71,8 +71,7 @@ class getDataRepository:
                 if not file_exists:
                     writer.writerow(keys)
                 writer.writerow([element[key] for key in keys])
-        
-        print("000001: Crando el fichero csv")
+
         date = date.replace(":", "")
         project_path = WateringUtils.getProjectPath()
         scenario_id = QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
@@ -85,11 +84,18 @@ class getDataRepository:
         # Create date folder inside analysis
         os.makedirs(date_folder_path, exist_ok=True)
 
-        pipe_keys = ["serverKeyId", "pipeKey", "simulationDateTime", "pipeCurrentStatus", "velocity", "flow", "headLoss"]
-        node_keys = ["serverKeyId", "nodeKey", "simulationDateTime", "pressure", "waterDemand", "waterAge"]
-        
+        pipe_keys = [
+            "pipeKey",
+            "simulationDateTime",
+            "pipeCurrentStatus",
+            "velocity",
+            "flow",
+            "headLoss",
+        ]
+
+        node_keys = ["nodeKey", "simulationDateTime", "pressure", "waterDemand", "waterAge"]
         # File for pipes analysis
-        print(element)
+
         if all(key in element for key in pipe_keys):
             pipes_filepath = os.path.join(date_folder_path, f"{filename}_Pipes.csv")
             write_to_csv(pipes_filepath, pipe_keys)

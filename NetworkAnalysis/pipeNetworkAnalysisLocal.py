@@ -41,7 +41,7 @@ class PipeNetworkAnalysisLocal(AbstractAnalysisLocalPipe):
         self.StartColor = QColor(55, 148, 255)
         self.EndColor = QColor(255, 47, 151)
         self.Size = 1
-        self.join_field = "Name"
+        self.join_field = "pipeKey"
         self.fields_to_add = [resultType.name]
 
         self.elementAnalysisResults()

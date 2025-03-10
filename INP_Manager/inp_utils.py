@@ -40,6 +40,13 @@ class INP_Utils:
         return None
 
     @classmethod
+    def get_key_element(cls, name_element):
+        for key, valor in cls.static_elements.items():
+            if (name_element in valor):
+                return key
+        return None
+
+    @classmethod
     def get_all(cls):
         return cls.static_elements
 
@@ -63,7 +70,7 @@ class INP_Utils:
         home_Path = QgsProject.instance().homePath() # Obtiene el directorio de base del proyecto
         #working_directory
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0] # Obtiene el esenario de trabajo
-        working_directory = home_Path + "/" + scenario_id + "/epanet2_2"
+        working_directory = home_Path + "/" + scenario_id + "/Simulation"
         #Se comprueba si el directorio de trabajo existe. De no existir se crea el directorio de trabajo
         # if not os.path.exists(working_directory):
         #     os.makedirs(working_directory, exist_ok=True)

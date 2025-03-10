@@ -72,13 +72,15 @@ class LocalAnalysisWithWNTRTool:
             # sim = wntr.sim.WNTRSimulator(wn)
             self._results = sim.run_sim(inpFileTemp)
 
-            nodeResult_at_0hr = self._results.node[NodeResultType.pressure.name].loc[0 * 3600, :]
+            node_Result = NodeResultType.pressure
+            print("01: ", node_Result.name)
+            nodeResult_at_0hr = self._results.node[node_Result.name].loc[0 * 3600, :]
             linkResult_at_0hr = self._results.link[LinkResultType.flowrate.name].loc[0 * 3600, :]
             # pressure_at_5hr = results.node[NodeResultType.pressure.name].loc[0*3600, :]
             # print(pressure_at_5hr)
             self._guid = str(uuid.uuid4())
             units = inpFile.options[INP_Options.Hydraulics].inpfile_units
-            NodeNetworkAnalysisLocal(nodeResult_at_0hr, self._guid, "00:00")
+            NodeNetworkAnalysisLocal(nodeResult_at_0hr, self._guid, "00:00", node_Result)
             PipeNetworkAnalysisLocal(linkResult_at_0hr, self._guid, "00:00", LinkResultType.flowrate, units)
 
             self.updateJSON(os.path.join(os.path.dirname(inpFile.OutFile), "Simulaciones"))
