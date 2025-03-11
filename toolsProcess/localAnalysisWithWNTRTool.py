@@ -48,14 +48,14 @@ class LocalAnalysisWithWNTRTool:
             """Se obtienen los resultados de la simulación local"""
             self.removerAnalysis()
             # Se configura el archivo del inp. aqui se debe guardar las opciones del inp si no existen.
-            
+
             fecha_hora = datetime.now()
             fecha_to_int = int(fecha_hora.strftime("%y%m%d%H%M%S"))
             tempFile = f"S_{fecha_to_int}"
-            
+
             inpFile = INPManager()
             inpFile.writeSections()
-            
+
             # options: INPOptions = INPOptions(None)
             # options.load()
             # self.writeSections()
@@ -111,7 +111,7 @@ class LocalAnalysisWithWNTRTool:
                     "directoryDate": date,
                     "directoryPath": directory_path
                 })
-        
+
         ruta_json = os.path.join(path, "inf.json")
 
         with open(ruta_json, 'w') as archivo_json:
