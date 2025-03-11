@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
 
 # Import QGis
+from datetime import datetime
+import uuid
+import wntr
+
 from qgis.core import QgsProject, Qgis, QgsNetworkAccessManager
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QMessageBox, QLabel, QMenu
+from PyQt5.QtWidgets import QAction, QMessageBox, QLabel, QMenu, QDockWidget
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication, Qt
 from qgis.gui import QgsMapCanvas, QgsMapToolIdentify, QgsVertexMarker, QgsMapToolIdentify
 from qgis.utils import iface
 from PyQt5.QtCore import QThread, pyqtSignal, QUrl
 from qgis.PyQt.QtNetwork import QNetworkRequest
 from PyQt5.QtCore import QTimer
+
 
 from .syncInfrastructureSHPREST.syncManagerSHPREST import syncManagerSHPREST
 
@@ -31,6 +36,11 @@ from .toolbarManager.toolbarToolManager import toolbarToolManager
 from .toolsMap.insertSensorNodeToolPlacement import InsertSensorNodeToolPlacement
 from .toolsProcess.ImportINPFileTool import ImportINPFileTool
 from .toolsProcess.ImportShapeFileTool import ImportShapeFileTool
+from .toolsProcess.exportINPFileTool import ExportINPFileTool
+from .toolsProcess.localAnalysisWithWNTRTool import LocalAnalysisWithWNTRTool
+from .toolsProcess.analysisOptionsTool import AnalysisOptionsTool
+from .toolsProcess.metricsAnalysisTool import MetricsAnalysisTool
+from .toolsProcess.addGraphicsTool import AddGraphicsTool
 from .toolsProcess.NetworkReviewTool import NetworkReviewTool
 from .toolsProcess.SelectionReviewTool import SelectionReviewTool
 from .toolsProcess.DemandPatternTool import DemandPatternTool
@@ -68,8 +78,12 @@ from .INP_Manager.simulatorQGIS import SimulatorQGIS
 # from .INP_Manager.INPManager import INPManager
 # from .shpProcessing.waterTanks import ImportTanksShp
 from .INP_Manager.customdialog import show_custom_dialog, show_input_dialog
+from .INP_Manager.INPManager import INPManager
+from .INP_Manager.inp_options_enum import INP_Options
 from .INP_Manager.inp_utils import INP_Utils
-from .INP_Manager.dataType import HydraulicOptions
+from .INP_Manager.node_link_ResultType import LinkResultType, NodeResultType
+from .NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
+from .NetworkAnalysis.pipeNetworkAnalysisLocal import PipeNetworkAnalysisLocal
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -270,32 +284,37 @@ class QGISPlugin_WaterIng:
         # menu_action.setMenu(submenu)
         # self.toolbar.addAction(menu_action)
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering Run simulación"),
-            callback=self.simulator_run,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-        
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering Opciones"),
-            callback=self.simulator_options,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
-        
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh1.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering export INP"),
-            callback=self.exportAndImportINP,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # self.action1 = QAction("Open Input Dialog", self.iface.mainWindow())
+        # self.action1.triggered.connect(self.open_dock_widget)
+        # self.iface.addToolBarIcon(self.action1)
+        # self.iface.addPluginToMenu("&My Plugin", self.action1)
         
         
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/run_epanet.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering Run simulación"),
+        #     callback=self.simulator_run,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
+        
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/optins.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering Opciones"),
+        #     callback=self.simulator_options,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
 
+
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        self.add_action(
+            icon_path,
+            text=self.tr("Watering view metrics"),
+            callback=self.viewResult,
+            toolbar = self.toolbar,
+            parent=self.iface.mainWindow())
+# =================================================================
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(
             icon_path,
@@ -363,65 +382,31 @@ class QGISPlugin_WaterIng:
                 # self.setHubConnection()
                 WateringUtils.setProjectMetadata("connection_status", "online")
             self.addLoad()
-    
-    def exportAndImportINP(self):
-        print("Exporte INP")
-        # project_path = WateringUtils.getProjectPath()
-        # scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0]
-        # scenario_folder_path = project_path + "/" + scenario_id + "/scenario.inp"
-        #print("=========cartpeta de trabajo: ==>", scenario_folder_path)
-        #os.path.join("skjks", "kdkf.txx")
-        #inpfile = open("C:\\Temp\\pruebaINP.inp", "w")
-        #inpfile = open(scenario_folder_path.replace('/','\\') + "\\scenario.inp", "w")
-        
-        #inpfile = open(os.path.join(scenario_folder_path), "w")
-        
-        #Nombre del layer de tanques watering_tanks
-        #source_layer = QgsProject.instance().mapLayersByName("watering_pipes")[0]
-        #fields = QgsProject.instance().mapLayersByName("watering_tanks")[0].fields()
-        #print(list(fields))
-        # for feature in source_layer.getFeatures():
-        #     #print(feature.id())
-        #     print(feature.geometry().asWkt())
-        #     idx = feature.fieldNameIndex('Name')
-        #     print(idx)
-        #     print(feature.attributes()[idx])
-            #print(f"========={feature: 10}==========")
-        #tanks = ImportTanksShp().shpProcessing("watering_tanks")
-        
-        
-        try:
-            
-            #with open(os.path.join(scenario_folder_path), "w") as inpfile:
-                #print(inpfile)
-                #inpMan = INPManager(inpfile)
-            # inpMan = INPManager()
-            # #print("001", inpMan.OutFile)
-            #     #with open("C:\\Temp\\pruebaINP_1.inp", "w") as inpFile_1:
-            # inpMan.writeSections()
 
-            # #inpMan.updateLayer()
-            # print("001")
-            # #inp_file = scenario_folder_path.replace('/','\\')
-            # #print("002 ", "Iniciando simulación")
-            # #inpMan.testEpanet(inpMan.OutFile)
-            # #print("003 ", "Final de la simulation")
-            # print("004: Principio del análisis...")
-            # inpMan.getAnalysisResults_1()
-            # print("005: Fin del análisis...")
-            # print("006: Inicio de la Resilience metrics (Hydraulic metrics)...")
-            # inpMan.getMetrics()
-            # print("007: Fin de la Resilience metrics (Hydraulic metrics)...")
-            #show_input_dialog()
-            #self.simulatorQGIS.abrir_dialogo_archivo()
-            self.simulatorQGIS.exportINP()
-            # inpMan.showDialog()
-            
-        except Exception as e:
-            text = f"Para ejecutar esta función es necesario crear o abrir \nun proyecto de QGISWatering\n'{e}'"
-            show_custom_dialog("Información", text)
+
+    def viewResult(self):
+        # self.simulatorQGIS.exportResults()
+        # fecha = datetime.now().date()
+        # time = datetime.now().time()
+        # fecha_to_int = int(fecha.strftime("%Y%m%d"))
+        # time_to_int = int(time.strftime("%H%M%S"))
+        # print(f"fecha en ertero: {fecha_to_int}")
+        # print(f"time en entero: {time_to_int}")
+        # fecha = datetime.strptime(str(fecha_to_int), "%Y%m%d").strftime("%d/%m/%Y")
+        # time = datetime.strptime(str(time_to_int), "%H%M%S").strftime("%H:%M:%S")
+        # print(f"fecha en string: {fecha}")
+        # print(f"time en string: {time}")
         
-        
+        # fecha_hora = datetime.now()
+        # fecha_to_int = int(fecha_hora.strftime("%y%m%d%H%M%S"))
+        # fecha_hora_new_format = datetime.strptime(str(fecha_to_int), "%y%m%d%H%M%S").strftime("%/%m/%YY => %H:%M")
+        # print(f"La fecha de la PC es: {fecha_hora}")
+        # print(f"La fecha de la PC en entero es: {fecha_to_int}")
+        # print(f"La fecha de la PC con un nuevo formato: {fecha_hora_new_format}")
+        result = LocalAnalysisWithWNTRTool(self.iface)
+        result.ExecuteAction()
+
+
     def addLoad(self):
         print("calling watering load dialog")
         self.dlg = WateringLoad()
@@ -470,6 +455,26 @@ class QGISPlugin_WaterIng:
         toolImportShapeFile = ImportShapeFileTool(self.iface)
         self.toolbarToolManager.toolImportShapeFile.setCurrentTool(toolImportShapeFile)
         self.toolbarToolManager.toolImportShapeFile.setEnabled(True)
+        
+        toolExportINPFile = ExportINPFileTool(self.iface)
+        self.toolbarToolManager.toolExportINPFile.setCurrentTool(toolExportINPFile)
+        self.toolbarToolManager.toolExportINPFile.setEnabled(True)
+        
+        localAnalysisWithWNTRTool = LocalAnalysisWithWNTRTool(self.iface)
+        self.toolbarToolManager.localAnalysisWithWNTR.setCurrentTool(localAnalysisWithWNTRTool)
+        self.toolbarToolManager.localAnalysisWithWNTR.setEnabled(True)
+        
+        analysisOptionsTool = AnalysisOptionsTool(self.iface)
+        self.toolbarToolManager.analysisOptions.setCurrentTool(analysisOptionsTool)
+        self.toolbarToolManager.analysisOptions.setEnabled(True)
+        
+        metricsAnalysisTool = MetricsAnalysisTool(self.iface)
+        self.toolbarToolManager.metricsAnalysis.setCurrentTool(metricsAnalysisTool)
+        self.toolbarToolManager.metricsAnalysis.setEnabled(True)
+        
+        addGraphicsTool = AddGraphicsTool(self.iface)
+        self.toolbarToolManager.addGraphics.setCurrentTool(addGraphicsTool)
+        self.toolbarToolManager.addGraphics.setEnabled(True)
 
         # toolReviewNetwork = NetworkReviewTool(self.iface)
         # self.toolbarToolManager.toolReviewNetwork.setCurrentTool(toolReviewNetwork)
@@ -599,6 +604,11 @@ class QGISPlugin_WaterIng:
             self.toolbarToolManager.insertWaterMeterNodeAction,
             self.toolbarToolManager.insertSensorNodeAction,
             self.toolbarToolManager.toolDeleteElementAction,
+            self.toolbarToolManager.toolExportINPFile,
+            self.toolbarToolManager.localAnalysisWithWNTR,
+            self.toolbarToolManager.analysisOptions,
+            self.toolbarToolManager.metricsAnalysis,
+            self.toolbarToolManager.addGraphics,
         ]
 
         for action in actions:

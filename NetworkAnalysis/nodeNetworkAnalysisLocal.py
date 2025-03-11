@@ -20,8 +20,6 @@
 from wntr.sim.results import SimulationResults
 
 
-
-
 from ..INP_Manager.node_link_ResultType import NodeResultType
 from qgis.PyQt.QtGui import QColor # type: ignore
 
@@ -31,9 +29,9 @@ class NodeNetworkAnalysisLocal(AbstractAnalysisLocalNode):
     """
     Clase que representa los resultados de los nodes.
     """
-    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, resultType = NodeResultType.pressure):
+    def __init__(self, nodeResult, analysisExecutionId, datetime, resultType = NodeResultType.pressure):
         """Constructor of NodeNetworkAnalysisLocal."""
-        super().__init__(results, resultType, analysisExecutionId, datetime)
+        super().__init__(nodeResult, resultType, analysisExecutionId, datetime)
         self.UrlGet = ""
         self.KeysApi = ""
         self.Attributes = ""
@@ -43,7 +41,7 @@ class NodeNetworkAnalysisLocal(AbstractAnalysisLocalNode):
         self.StartColor = QColor(55, 148, 255)
         self.EndColor = QColor(255, 47, 151)
         self.Size = 3
-        self.join_field = "Name"
+        self.join_field = "nodeKey"
         self.fields_to_add = [resultType.name]
 
         self.elementAnalysisResults()

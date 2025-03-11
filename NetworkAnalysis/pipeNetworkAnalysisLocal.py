@@ -29,9 +29,9 @@ class PipeNetworkAnalysisLocal(AbstractAnalysisLocalPipe):
     """
     Clase que representa los resultados de las tuberías.
     """
-    def __init__(self, results: SimulationResults, analysisExecutionId, datetime, resultType = LinkResultType.flowrate):
+    def __init__(self, linkResult, analysisExecutionId, datetime, resultType = LinkResultType.flowrate, flow_unit = "LPS"):
         """Constructor of PipeNetworkAnalysisLocal."""
-        super().__init__(results, resultType, analysisExecutionId, datetime)
+        super().__init__(linkResult, resultType, analysisExecutionId, datetime, flow_unit)
         self.UrlGet = ""
         self.KeysApi = ""
         self.Attributes = ""
@@ -41,7 +41,7 @@ class PipeNetworkAnalysisLocal(AbstractAnalysisLocalPipe):
         self.StartColor = QColor(55, 148, 255)
         self.EndColor = QColor(255, 47, 151)
         self.Size = 1
-        self.join_field = "Name"
+        self.join_field = "pipeKey"
         self.fields_to_add = [resultType.name]
 
         self.elementAnalysisResults()

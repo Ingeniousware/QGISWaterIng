@@ -85,7 +85,6 @@ class getDataRepository:
         os.makedirs(date_folder_path, exist_ok=True)
 
         pipe_keys = [
-            "serverKeyId",
             "pipeKey",
             "simulationDateTime",
             "pipeCurrentStatus",
@@ -93,8 +92,10 @@ class getDataRepository:
             "flow",
             "headLoss",
         ]
-        node_keys = ["serverKeyId", "nodeKey", "simulationDateTime", "pressure", "waterDemand", "waterAge"]
+
+        node_keys = ["nodeKey", "simulationDateTime", "pressure", "waterDemand", "waterAge"]
         # File for pipes analysis
+
         if all(key in element for key in pipe_keys):
             pipes_filepath = os.path.join(date_folder_path, f"{filename}_Pipes.csv")
             write_to_csv(pipes_filepath, pipe_keys)

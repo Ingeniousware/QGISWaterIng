@@ -17,7 +17,7 @@ class AbstractAnalysisRepository(AbstractAnalysis):
 
     def __init__(self, token, analysisExecutionId, datetime, behavior):
         """Constructor."""
-        super(AbstractAnalysis, self).__init__(analysisExecutionId, datetime)
+        super().__init__(analysisExecutionId, datetime)
         self.token = token
         self.behavior = behavior
         #self.analysisExecutionId = analysisExecutionId
@@ -35,19 +35,23 @@ class AbstractAnalysisRepository(AbstractAnalysis):
     def elementAnalysisResults(self):
         print("Entering elementAnalysisResults")
         response = self.getResponse()
+
         filename = self.analysisExecutionId
 
         element_dict = {}
-        for element in response.json()["data"]:
-            element_dict[element[self.KeysApi[0]]] = [
-                element[self.KeysApi[1]],
-                element[self.KeysApi[2]],
-                element[self.KeysApi[3]],
-                element[self.KeysApi[4]],
-            ]
+        for elementData in response.json()["data"]:
+            for element in elementData["pipeResults"]:
+                element["simulationDateTime"] = elementData["timeStamp"]
+                element_dict[element[self.KeysApi[0]]] = [
+                    element[self.KeysApi[1]],
+                    element[self.KeysApi[2]],
+                    element[self.KeysApi[3]],
+                    element[self.KeysApi[4]],
+                ]
+                getDataRepository.analysis_to_csv(element, element, filename, self.datetime)
 
-            getDataRepository.analysis_to_csv(element, element, filename, self.datetime)
-        """       
+
+        """
         layer = QgsProject.instance().mapLayersByName(self.LayerName)[0]
 
         layer.startEditing()
@@ -76,8 +80,7 @@ class AbstractAnalysisRepository(AbstractAnalysis):
 
         date = self.datetime.replace(":", "")
         project_path, scenario_id = QgsProject.instance().readEntry("watering", "project_path", "default text")[0], QgsProject.instance().readEntry("watering", "scenario_id", "default text")[0]
-        print("Project path (addCSVNonSpatialLayerToPanel): ", project_path)
-        print("Scenario ID: ", scenario_id)
+
         date_folder_path = os.path.join(project_path, scenario_id, "Analysis", date)
 
         self.loadCSVLayer(os.path.join(date_folder_path, fileName), layerName, shapeGroup)

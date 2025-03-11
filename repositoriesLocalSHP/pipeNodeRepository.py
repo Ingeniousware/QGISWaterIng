@@ -1,18 +1,17 @@
 import os
-import requests
 import json
 import uuid
 from .abstract_repository import AbstractRepository
 from ..watering_utils import WateringUtils
 
-from qgis.core import (QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem,
+from qgis.core import (QgsProject, QgsVectorLayer, QgsFields, QgsField, QgsGeometry, QgsCoordinateReferenceSystem, # type: ignore
     QgsCoordinateTransform, QgsLayerTreeLayer, QgsDistanceArea)
-from qgis.core import (QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase,
+from qgis.core import (QgsVectorFileWriter, QgsPointXY, QgsFeature, QgsSimpleMarkerSymbolLayer, QgsSimpleMarkerSymbolLayerBase, # type: ignore
     QgsSymbol, edit)
 
 from PyQt5.QtCore import QVariant, QFileInfo
 from PyQt5.QtGui import QColor
-from qgis.utils import iface
+from qgis.utils import iface # type: ignore
 
 
 class PipeNodeRepository(AbstractRepository):
@@ -204,7 +203,7 @@ class PipeNodeRepository(AbstractRepository):
     def setDefaultValues(self, feature):
         name = f"Pi-[{WateringUtils.generar_name_aleatorio()}]"
         description = "pipe from QGIS"
-        diameter = 200
+        diameter = 0.2
         roughnessAbsolute = 0.045
         roughnessCoefficient = 150
 

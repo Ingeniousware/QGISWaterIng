@@ -13,6 +13,7 @@ from datetime import datetime
 from time import time, gmtime, strftime
 from ..watering_utils import WateringUtils
 
+from ..INP_Manager.node_link_ResultType import NodeResultType
 from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
 from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
 
@@ -55,9 +56,12 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
         self.BoxSelectType.addItem("Graph Decomposition")
         self.BoxSelectType.addItem("Sector Identification")
         # Node and pipes property comboBox
-        self.nodesComboBox.addItem("Pressure")
-        self.nodesComboBox.addItem("Water Demand")
-        self.nodesComboBox.addItem("Water Age")
+        # self.nodesComboBox.addItem("Pressure")
+        # self.nodesComboBox.addItem("Water Demand")
+        # self.nodesComboBox.addItem("Water Age")
+        self.nodesComboBox.addItems([item.name for item in NodeResultType])
+        self.nodesComboBox.setCurrentText(NodeResultType.pressure.name)
+        
         self.pipesComboBox.addItem("Velocity")
         self.pipesComboBox.addItem("Flow")
         self.pipesComboBox.addItem("Headloss")
