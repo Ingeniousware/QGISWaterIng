@@ -1,0 +1,11 @@
+-KeyId de simulación -Nombre de simulación
+-RequestDateTime
+-KeyId del simulador usado (Revisar)
+-IsLocalcalculated(bool)
+-IsImportant(bool) Para mi es mejor dar importancia del 1 al 5
+-La información del servidor se carga después que se realice una simulación local.
+-> OK Tambien se puede cargar la información del servidor con un boton de carga de datos -> OK
+-> OK El icono de descarga de la información del servidor es un grafico con una nuve -> OK
+-Hacer un dialogo para preguntar alguna descripción de la simulación y que importancia tiene del 1 al 5
+-Poner boton para levantar una tabla con todas las simulaciones realizadas que esten en el proyecto (locales y del servidor).
+-

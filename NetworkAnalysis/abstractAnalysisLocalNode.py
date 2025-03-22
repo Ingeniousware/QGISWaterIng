@@ -45,7 +45,7 @@ class AbstractAnalysisLocalNode(AbstractAnalysisLocal):
         filename = self.analysisExecutionId
 
         elements = []
-        date = self.datetime.replace(":", "")
+        date = self.datetime.replace(":", "").replace(" ", "_")
         working_directory = INP_Utils.default_working_directory()
         date_folder_path = os.path.join(working_directory, "Analysis", date)
         date_folder_path = INP_Utils.generate_directory(date_folder_path)
