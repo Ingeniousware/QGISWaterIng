@@ -309,29 +309,29 @@ class QGISPlugin_WaterIng:
         # self.iface.addToolBarIcon(self.action1)
         # self.iface.addPluginToMenu("&My Plugin", self.action1)
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/backward.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering hacia atrás simulación"),
-            callback=self.simulator_run,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/backward.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering hacia atrás simulación"),
+        #     callback=self.simulator_run,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/forward.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering hacia adelante simulación"),
-            callback=self.simulator_patterns,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/forward.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering hacia adelante simulación"),
+        #     callback=self.simulator_patterns,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering actualizar simulaciones"),
-            callback=self.simulator_options,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering actualizar simulaciones"),
+        #     callback=self.simulator_options,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
 
 
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
