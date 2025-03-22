@@ -17,6 +17,8 @@ from ..ui.watering_pumpModels import WateringPumpModels
 from ..toolsMap.toolbarAction import toolbarAction
 from ..ActionManagement.identifyElementAction import WateringIdentifyTool
 
+from ..ui.watering_analysis_1 import WateringAnalysis_1
+
 
 class toolbarToolManager:
 
@@ -62,10 +64,14 @@ class toolbarToolManager:
         self.localAnalysisWithWNTR = None
         self.metricsAnalysis = None
         self.addGraphics = None
+        self.readAnalysisAction_2 = None
 
         # Dock
         self.analysisDockPanel = WateringAnalysis(iface)
         iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
+        
+        self.analysisDockPanel_1 = WateringAnalysis_1(iface)
+        iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel_1)
 
     def initializeToolbarButtonActions(self):
         # Edit
@@ -95,7 +101,7 @@ class toolbarToolManager:
         self.readAnalysisAction.setCheckable(True)
         self.readAnalysisAction.toggled.connect(self.activateWaterAnalysisTool)
         
-        # Analysis_1
+        # Analysis_1 para mostrar el menú de las opciones de análisis.
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/networkAnalysis.svg"
         self.readAnalysisAction_1 = self.addMapToolButtonAction(
             icon_path,
@@ -227,7 +233,7 @@ class toolbarToolManager:
         )
         self.toolImportShapeFile.setCheckable(False)
         self.toolImportShapeFile.setEnabled(not WateringUtils.isScenarioNotOpened())
-        
+
         # export inp file
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/exportar_inp.svg"
         self.toolExportINPFile = self.addMapToolButtonAction(
@@ -457,6 +463,28 @@ class toolbarToolManager:
 
         self.addGraphics.setCheckable(False)
         self.addGraphics.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
+        # Analysis =================================================================================================
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/analysisServer.svg"
+        self.readAnalysisAction_2 = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Water Network Analysis", "QGISWaterIng"),
+            callback=self.activeAnalysisDockPanel,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+
+        self.readAnalysisAction_2.setCheckable(True)
+        self.readAnalysisAction_2.setEnabled(not WateringUtils.isScenarioNotOpened())
+        # self.readAnalysisAction_2.toggled.connect(self.activateWaterAnalysisTool)
+
+
+    def activeAnalysisDockPanel(self, action):
+        is_visible = not self.analysisDockPanel_1.isVisible()
+        self.analysisDockPanel_1.setVisible(is_visible)
+        if (is_visible):
+            self.analysisDockPanel_1.initializeRepository()
+
 
     def addMapToolButtonAction(
         self,
@@ -563,6 +591,7 @@ class toolbarToolManager:
             Addicionar un gráficos
         """
         analysisTool = [
+            self.readAnalysisAction_2,
             self.analysisOptions,
             self.localAnalysisWithWNTR,
             self.metricsAnalysis,
@@ -683,20 +712,25 @@ class toolbarToolManager:
             dlg.exec_()
 
     def activateWaterAnalysisTool(self):
-        if WateringUtils.isScenarioNotOpened():
-            iface.messageBar().pushMessage(
-                WateringUtils.tr("Error"),
-                WateringUtils.tr("Load a project scenario first in Download Elements!"),
-                level=1,
-                duration=5,
-            )
-        if os.environ.get("TOKEN") == None:
-            iface.messageBar().pushMessage(
-                WateringUtils.tr("Error"), WateringUtils.tr("You must connect to WaterIng!"), level=1, duration=5
-            )
-        else:
-            self.analysisDockPanel.initializeRepository()
-            self.analysisDockPanel.show()
+        # if WateringUtils.isScenarioNotOpened():
+        #     iface.messageBar().pushMessage(
+        #         WateringUtils.tr("Error"),
+        #         WateringUtils.tr("Load a project scenario first in Download Elements!"),
+        #         level=1,
+        #         duration=5,
+        #     )
+        # if os.environ.get("TOKEN") == None:
+        #     iface.messageBar().pushMessage(
+        #         WateringUtils.tr("Error"), WateringUtils.tr("You must connect to WaterIng!"), level=1, duration=5
+        #     )
+        # else:
+        #     self.analysisDockPanel.initializeRepository()
+        # self.analysisDockPanel.show()
+            
+        self.analysisDockPanel_1.initializeRepository()
+        is_visible = self.analysisDockPanel_1.isVisible()
+        self.analysisDockPanel_1.setVisible(is_visible)
+        # self.analysisDockPanel_1.show()
 
     def getLastOnlineMeasurementTool(self, second):
         if WateringUtils.isScenarioNotOpened():

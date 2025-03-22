@@ -91,6 +91,7 @@ class WateringAnalysis(QDockWidget, FORM_CLASS):
             response_analysis.raise_for_status()
 
             analysis_data = response_analysis.json()["data"]
+            print("imprimiendo analysis data del servidor: ", analysis_data)
             self.analysis_box.addItems([item["name"] for item in analysis_data])
             self.analysis_box2.addItems([item["name"] for item in analysis_data])
 
