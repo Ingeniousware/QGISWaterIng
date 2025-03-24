@@ -1,24 +1,34 @@
 # -*- coding: utf-8 -*-
 
-from qgis.PyQt import uic, QtWidgets
-from qgis.core import QgsProject, QgsExpression, QgsField, QgsExpressionContext
+"""
+***************************************************************************
+    watering_analysis_1.py
+    ---------------------
+    Date                 : Febrero 2025
+    Copyright            : (C) 2025 by Ingeniowarest
+    Email                : 
+***************************************************************************
+*                                                                         *
+*   This program is free software; you can redistribute it and/or modify  *
+*   it under the terms of the GNU General Public License as published by  *
+*   the Ingenioware                                                       *
+*                                                                         *
+***************************************************************************
+"""
+
+from qgis.PyQt import uic
 from PyQt5.QtCore import QTimer, QVariant, QDateTime
 from PyQt5.QtWidgets import QDockWidget, QMessageBox
 from PyQt5.QtGui import QIcon
 
 import os
-import requests
-import uuid
-from datetime import datetime
-from time import time, gmtime, strftime
+from time import time
 import threading
 import time
 
 from ..watering_utils import WateringUtils
 
 from ..INP_Manager.node_link_ResultType import LinkResultType, NodeResultType
-from ..NetworkAnalysis.nodeNetworkAnalysisRepository import NodeNetworkAnalysisRepository
-from ..NetworkAnalysis.pipeNetworkAnalysisRepository import PipeNetworkAnalysisRepository
 from ..INP_Manager.inp_utils import INP_Utils
 from ..NetworkAnalysis.previous_and_next_analysis import SimulationsManager
 from .watering_simulations_filter import WateringSimulationsFilter

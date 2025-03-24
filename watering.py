@@ -39,7 +39,7 @@ from .toolsProcess.ImportShapeFileTool import ImportShapeFileTool
 from .toolsProcess.exportINPFileTool import ExportINPFileTool
 from .toolsProcess.localAnalysisWithWNTRTool import LocalAnalysisWithWNTRTool
 from .toolsProcess.analysisOptionsTool import AnalysisOptionsTool
-from .toolsProcess.metricsAnalysisTool import MetricsAnalysisTool
+# from .toolsProcess.metricsAnalysisTool import MetricsAnalysisTool
 from .toolsProcess.addGraphicsTool import AddGraphicsTool
 from .toolsProcess.NetworkReviewTool import NetworkReviewTool
 from .toolsProcess.SelectionReviewTool import SelectionReviewTool
@@ -234,13 +234,14 @@ class QGISPlugin_WaterIng:
         # print("005: Options no implementada...")
         # self.simulatorQGIS.MessageInformation("005: Options no implementada...")
         # self.simulatorQGIS.viewOptions()
-        pathFile = "C:\\Users\\Carlos\\AppData\\Roaming\\QGISWatering\\eba59fc8-6194-480d-9ef6-779a75a4c5a6\\69474b13-6e91-49d3-874d-6b7109b4b338\\Simulations\\Analysis\\2025-03-18T09-27-18-356Z"
+        # pathFile = "C:\\Users\\Carlos\\AppData\\Roaming\\QGISWatering\\eba59fc8-6194-480d-9ef6-779a75a4c5a6\\69474b13-6e91-49d3-874d-6b7109b4b338\\Simulations\\Analysis\\2025-03-18T09-27-18-356Z"
         
-        print(pathFile)
-        self._previousAndNextAnalysis = PreviousAndNextAnalysis(pathFile)
-        self._previousAndNextAnalysis.TimeChanged.subscribe(self.onTimeChanged)
-        self._previous = True
-        self._next = True
+        # print(pathFile)
+        # self._previousAndNextAnalysis = PreviousAndNextAnalysis(pathFile)
+        # self._previousAndNextAnalysis.TimeChanged.subscribe(self.onTimeChanged)
+        # self._previous = True
+        # self._next = True
+        print("0001: ")
 
     def simulator_resilience(self):
         print("006: Resilience no implementada...")
@@ -309,21 +310,21 @@ class QGISPlugin_WaterIng:
         # self.iface.addToolBarIcon(self.action1)
         # self.iface.addPluginToMenu("&My Plugin", self.action1)
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/backward.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering hacia atrás simulación"),
-            callback=self.simulator_run,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/backward.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering hacia atrás simulación"),
+        #     callback=self.simulator_run,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/forward.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering hacia adelante simulación"),
-            callback=self.simulator_patterns,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/forward.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering hacia adelante simulación"),
+        #     callback=self.simulator_patterns,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
         
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
         self.add_action(
@@ -495,9 +496,9 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.analysisOptions.setCurrentTool(analysisOptionsTool)
         self.toolbarToolManager.analysisOptions.setEnabled(True)
         
-        metricsAnalysisTool = MetricsAnalysisTool(self.iface)
-        self.toolbarToolManager.metricsAnalysis.setCurrentTool(metricsAnalysisTool)
-        self.toolbarToolManager.metricsAnalysis.setEnabled(True)
+        # metricsAnalysisTool = MetricsAnalysisTool(self.iface)
+        # self.toolbarToolManager.metricsAnalysis.setCurrentTool(metricsAnalysisTool)
+        # self.toolbarToolManager.metricsAnalysis.setEnabled(True)
         
         addGraphicsTool = AddGraphicsTool(self.iface)
         self.toolbarToolManager.addGraphics.setCurrentTool(addGraphicsTool)
@@ -605,6 +606,7 @@ class QGISPlugin_WaterIng:
             self.toolbarToolManager.readMeasurementsAction.setEnabled(True)
             self.toolbarToolManager.waterBalanceAction.setEnabled(True)
             self.toolbarToolManager.getLastMeasurementAction.setEnabled(True)
+            self.toolbarToolManager.resilienceMetricAction.setEnabled(True)
             print("After setting to true")
 
     def updateActionStateClose(self):
@@ -618,6 +620,7 @@ class QGISPlugin_WaterIng:
 
         actions = [
             self.toolbarToolManager.readAnalysisAction,
+            self.toolbarToolManager.readAnalysisAction_2,
             self.toolbarToolManager.openOptimizationManagerAction,
             self.toolbarToolManager.openPumpModels,
             self.toolbarToolManager.readMeasurementsAction,
@@ -635,9 +638,9 @@ class QGISPlugin_WaterIng:
             self.toolbarToolManager.toolExportINPFile,
             self.toolbarToolManager.localAnalysisWithWNTR,
             self.toolbarToolManager.analysisOptions,
-            self.toolbarToolManager.metricsAnalysis,
+            # self.toolbarToolManager.metricsAnalysis,
             self.toolbarToolManager.addGraphics,
-        ]
+            self.toolbarToolManager.resilienceMetricAction]
 
         for action in actions:
             if action:

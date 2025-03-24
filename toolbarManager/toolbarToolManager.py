@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt
 from functools import partial
 import os
 
+
 from ..watering_utils import WateringUtils
 from ..ui.watering_datachannels import WateringDatachannels
 from ..ui.watering_waterBalance import WateringWaterBalance
@@ -18,6 +19,7 @@ from ..toolsMap.toolbarAction import toolbarAction
 from ..ActionManagement.identifyElementAction import WateringIdentifyTool
 
 from ..ui.watering_analysis_1 import WateringAnalysis_1
+from ..ui.watering_resilience_metrics import WateringResilienceMetric
 
 
 class toolbarToolManager:
@@ -62,9 +64,10 @@ class toolbarToolManager:
         
         self.analysisOptions = None
         self.localAnalysisWithWNTR = None
-        self.metricsAnalysis = None
+        # self.metricsAnalysis = None
         self.addGraphics = None
         self.readAnalysisAction_2 = None
+        self.resilienceMetricAction = None
 
         # Dock
         self.analysisDockPanel = WateringAnalysis(iface)
@@ -72,6 +75,9 @@ class toolbarToolManager:
         
         self.analysisDockPanel_1 = WateringAnalysis_1(iface)
         iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel_1)
+        
+        self.resilienceMetric = WateringResilienceMetric(iface)
+        iface.addDockWidget(Qt.RightDockWidgetArea, self.resilienceMetric)
 
     def initializeToolbarButtonActions(self):
         # Edit
@@ -439,17 +445,17 @@ class toolbarToolManager:
         self.localAnalysisWithWNTR.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Metrics Analysis
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
-        self.metricsAnalysis = self.addMapToolButtonAction(
-            icon_path,
-            text=WateringUtils.tr("Metrics Analysis"),
-            callback=self.activateActionTool,
-            toolbar=None,
-            parent=self.parentWindow,
-        )
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        # self.metricsAnalysis = self.addMapToolButtonAction(
+        #     icon_path,
+        #     text=WateringUtils.tr("Metrics Analysis"),
+        #     callback=self.activateActionTool,
+        #     toolbar=None,
+        #     parent=self.parentWindow,
+        # )
 
-        self.metricsAnalysis.setCheckable(False)
-        self.metricsAnalysis.setEnabled(not WateringUtils.isScenarioNotOpened())
+        # self.metricsAnalysis.setCheckable(False)
+        # self.metricsAnalysis.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Add Graphics
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/analysisChart.svg"
@@ -479,11 +485,31 @@ class toolbarToolManager:
         # self.readAnalysisAction_2.toggled.connect(self.activateWaterAnalysisTool)
 
 
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        self.resilienceMetricAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Water resilience metric", "QGISWaterIng"),
+            callback=self.activeRecilienceMetricDockPanel,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+
+        self.resilienceMetricAction.setCheckable(True)
+        self.resilienceMetricAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+
     def activeAnalysisDockPanel(self, action):
         is_visible = not self.analysisDockPanel_1.isVisible()
         self.analysisDockPanel_1.setVisible(is_visible)
         if (is_visible):
             self.analysisDockPanel_1.initializeRepository()
+
+
+    def activeRecilienceMetricDockPanel(self, action):
+        is_visible = not self.resilienceMetric.isVisible()
+        self.resilienceMetric.setVisible(is_visible)
+        if (is_visible):
+            self.resilienceMetric.initializeRepository()
 
 
     def addMapToolButtonAction(
@@ -594,9 +620,9 @@ class toolbarToolManager:
             self.readAnalysisAction_2,
             self.analysisOptions,
             self.localAnalysisWithWNTR,
-            self.metricsAnalysis,
-            self.addGraphics
-            ]
+            self.resilienceMetricAction,
+            # self.metricsAnalysis,
+            self.addGraphics]
 
         if checked:
             for tool in analysisTool:

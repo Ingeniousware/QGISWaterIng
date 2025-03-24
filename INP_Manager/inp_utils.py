@@ -64,6 +64,11 @@ class INP_Utils:
 
     def default_directory_optins():
         return INP_Utils.default_working_directory() + "\\optins.json"
+    
+    
+    def default_directory_inp():
+        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0] # Obtiene el esenario de trabajo
+        return INP_Utils.default_working_directory() + f"\\{scenario_id}.inp"
 
 
     def default_working_directory():
