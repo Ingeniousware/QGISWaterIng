@@ -326,22 +326,22 @@ class QGISPlugin_WaterIng:
         #     toolbar = self.toolbar,
         #     parent=self.iface.mainWindow())
         
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering actualizar simulaciones"),
-            callback=self.simulator_options,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering actualizar simulaciones"),
+        #     callback=self.simulator_options,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
 
 
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering view metrics"),
-            callback=self.viewResult,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering view metrics"),
+        #     callback=self.viewResult,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
 # =================================================================
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(
