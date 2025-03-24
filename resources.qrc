@@ -47,5 +47,6 @@
         <file>images/optins.svg</file>
         <file>images/exportar_inp.svg</file>
         <file>images/networkAnalysis.svg</file>
+        <file>images/analysisServer.svg</file>
     </qresource>
 </RCC>

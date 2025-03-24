@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt
 from functools import partial
 import os
 
+
 from ..watering_utils import WateringUtils
 from ..ui.watering_datachannels import WateringDatachannels
 from ..ui.watering_waterBalance import WateringWaterBalance
@@ -16,6 +17,9 @@ from ..ui.watering_analysis import WateringAnalysis
 from ..ui.watering_pumpModels import WateringPumpModels
 from ..toolsMap.toolbarAction import toolbarAction
 from ..ActionManagement.identifyElementAction import WateringIdentifyTool
+
+from ..ui.watering_analysis_1 import WateringAnalysis_1
+from ..ui.watering_resilience_metrics import WateringResilienceMetric
 
 
 class toolbarToolManager:
@@ -60,12 +64,20 @@ class toolbarToolManager:
         
         self.analysisOptions = None
         self.localAnalysisWithWNTR = None
-        self.metricsAnalysis = None
+        # self.metricsAnalysis = None
         self.addGraphics = None
+        self.readAnalysisAction_2 = None
+        self.resilienceMetricAction = None
 
         # Dock
         self.analysisDockPanel = WateringAnalysis(iface)
         iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel)
+        
+        self.analysisDockPanel_1 = WateringAnalysis_1(iface)
+        iface.addDockWidget(Qt.RightDockWidgetArea, self.analysisDockPanel_1)
+        
+        self.resilienceMetric = WateringResilienceMetric(iface)
+        iface.addDockWidget(Qt.RightDockWidgetArea, self.resilienceMetric)
 
     def initializeToolbarButtonActions(self):
         # Edit
@@ -95,7 +107,7 @@ class toolbarToolManager:
         self.readAnalysisAction.setCheckable(True)
         self.readAnalysisAction.toggled.connect(self.activateWaterAnalysisTool)
         
-        # Analysis_1
+        # Analysis_1 para mostrar el menú de las opciones de análisis.
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/networkAnalysis.svg"
         self.readAnalysisAction_1 = self.addMapToolButtonAction(
             icon_path,
@@ -227,7 +239,7 @@ class toolbarToolManager:
         )
         self.toolImportShapeFile.setCheckable(False)
         self.toolImportShapeFile.setEnabled(not WateringUtils.isScenarioNotOpened())
-        
+
         # export inp file
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/exportar_inp.svg"
         self.toolExportINPFile = self.addMapToolButtonAction(
@@ -433,17 +445,17 @@ class toolbarToolManager:
         self.localAnalysisWithWNTR.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Metrics Analysis
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
-        self.metricsAnalysis = self.addMapToolButtonAction(
-            icon_path,
-            text=WateringUtils.tr("Metrics Analysis"),
-            callback=self.activateActionTool,
-            toolbar=None,
-            parent=self.parentWindow,
-        )
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        # self.metricsAnalysis = self.addMapToolButtonAction(
+        #     icon_path,
+        #     text=WateringUtils.tr("Metrics Analysis"),
+        #     callback=self.activateActionTool,
+        #     toolbar=None,
+        #     parent=self.parentWindow,
+        # )
 
-        self.metricsAnalysis.setCheckable(False)
-        self.metricsAnalysis.setEnabled(not WateringUtils.isScenarioNotOpened())
+        # self.metricsAnalysis.setCheckable(False)
+        # self.metricsAnalysis.setEnabled(not WateringUtils.isScenarioNotOpened())
 
         # Add Graphics
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/analysisChart.svg"
@@ -457,6 +469,48 @@ class toolbarToolManager:
 
         self.addGraphics.setCheckable(False)
         self.addGraphics.setEnabled(not WateringUtils.isScenarioNotOpened())
+        
+        # Analysis =================================================================================================
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/analysisServer.svg"
+        self.readAnalysisAction_2 = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Water Network Analysis", "QGISWaterIng"),
+            callback=self.activeAnalysisDockPanel,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+
+        self.readAnalysisAction_2.setCheckable(True)
+        self.readAnalysisAction_2.setEnabled(not WateringUtils.isScenarioNotOpened())
+        # self.readAnalysisAction_2.toggled.connect(self.activateWaterAnalysisTool)
+
+
+        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        self.resilienceMetricAction = self.addMapToolButtonAction(
+            icon_path,
+            text=WateringUtils.tr("Water resilience metric", "QGISWaterIng"),
+            callback=self.activeRecilienceMetricDockPanel,
+            toolbar=None,
+            parent=self.parentWindow,
+        )
+
+        self.resilienceMetricAction.setCheckable(True)
+        self.resilienceMetricAction.setEnabled(not WateringUtils.isScenarioNotOpened())
+
+
+    def activeAnalysisDockPanel(self, action):
+        is_visible = not self.analysisDockPanel_1.isVisible()
+        self.analysisDockPanel_1.setVisible(is_visible)
+        if (is_visible):
+            self.analysisDockPanel_1.initializeRepository()
+
+
+    def activeRecilienceMetricDockPanel(self, action):
+        is_visible = not self.resilienceMetric.isVisible()
+        self.resilienceMetric.setVisible(is_visible)
+        if (is_visible):
+            self.resilienceMetric.initializeRepository()
+
 
     def addMapToolButtonAction(
         self,
@@ -563,11 +617,12 @@ class toolbarToolManager:
             Addicionar un gráficos
         """
         analysisTool = [
+            self.readAnalysisAction_2,
             self.analysisOptions,
             self.localAnalysisWithWNTR,
-            self.metricsAnalysis,
-            self.addGraphics
-            ]
+            self.resilienceMetricAction,
+            # self.metricsAnalysis,
+            self.addGraphics]
 
         if checked:
             for tool in analysisTool:
@@ -683,20 +738,25 @@ class toolbarToolManager:
             dlg.exec_()
 
     def activateWaterAnalysisTool(self):
-        if WateringUtils.isScenarioNotOpened():
-            iface.messageBar().pushMessage(
-                WateringUtils.tr("Error"),
-                WateringUtils.tr("Load a project scenario first in Download Elements!"),
-                level=1,
-                duration=5,
-            )
-        if os.environ.get("TOKEN") == None:
-            iface.messageBar().pushMessage(
-                WateringUtils.tr("Error"), WateringUtils.tr("You must connect to WaterIng!"), level=1, duration=5
-            )
-        else:
-            self.analysisDockPanel.initializeRepository()
-            self.analysisDockPanel.show()
+        # if WateringUtils.isScenarioNotOpened():
+        #     iface.messageBar().pushMessage(
+        #         WateringUtils.tr("Error"),
+        #         WateringUtils.tr("Load a project scenario first in Download Elements!"),
+        #         level=1,
+        #         duration=5,
+        #     )
+        # if os.environ.get("TOKEN") == None:
+        #     iface.messageBar().pushMessage(
+        #         WateringUtils.tr("Error"), WateringUtils.tr("You must connect to WaterIng!"), level=1, duration=5
+        #     )
+        # else:
+        #     self.analysisDockPanel.initializeRepository()
+        # self.analysisDockPanel.show()
+            
+        is_visible = not self.analysisDockPanel_1.isVisible()
+        self.analysisDockPanel_1.setVisible(is_visible)
+        if (is_visible):
+            self.analysisDockPanel_1.initializeRepository()
 
     def getLastOnlineMeasurementTool(self, second):
         if WateringUtils.isScenarioNotOpened():

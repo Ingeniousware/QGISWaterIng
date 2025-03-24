@@ -20,6 +20,7 @@
 import os
 import stat
 
+from .node_link_ResultType import LinkResultType, NodeResultType
 from qgis.core import QgsProject # type: ignore
 
 
@@ -65,12 +66,17 @@ class INP_Utils:
         return INP_Utils.default_working_directory() + "\\optins.json"
 
 
+    def default_directory_inp():
+        scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0] # Obtiene el esenario de trabajo
+        return INP_Utils.default_working_directory() + f"\\{scenario_id}.inp"
+
+
     def default_working_directory():
         """Devuelve el directorio de trabajo del proyecto. De no existir se crea el directorio de trabajo."""
         home_Path = QgsProject.instance().homePath() # Obtiene el directorio de base del proyecto
         #working_directory
         scenario_id = QgsProject.instance().readEntry("watering","scenario_id","default text")[0] # Obtiene el esenario de trabajo
-        working_directory = home_Path + "/" + scenario_id + "/Simulation"
+        working_directory = home_Path + "/" + scenario_id + "/Simulations"
         #Se comprueba si el directorio de trabajo existe. De no existir se crea el directorio de trabajo
         # if not os.path.exists(working_directory):
         #     os.makedirs(working_directory, exist_ok=True)
@@ -84,23 +90,37 @@ class INP_Utils:
         return working_directory
 
 
-    def generate_directory(directoryName: str):
+    def generate_directory(directoryName: str, ifDirectoryExistsCreateNew: bool = False):
+        """ES - Crea el directorio físico en la computadora.
+        
+        Parameters
+        ----------
+        directoryName : str
+            Directorio que se va crear.
+        
+        ifDirectoryExistsCreateNew : bool
+            Varlo por defecto `False`. SI es `True`, crea un direcorio nuevo incrementando `_1`.
+
+        """
         if directoryName != "":
             if not os.path.exists(directoryName):
                 os.makedirs(directoryName, exist_ok = True)
                 os.chmod(directoryName, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
             else:
+                if (ifDirectoryExistsCreateNew):
+                    directoryName = f"{directoryName}_1"
+                    os.makedirs(directoryName, exist_ok = True)
                 os.chmod(directoryName, stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IWGRP | stat.S_IROTH | stat.S_IWOTH)
 
         newDirectory = directoryName.replace('/','\\')
-        
+
         return newDirectory
-    
-    
+
+
     def int_to_hora(valor: int):
         """
         Convierte un número entero que representa cantidad de segundos a formato hora (HH:MM:SS)
-        
+
         Parameters
         ----------
         valor : int
@@ -174,3 +194,22 @@ class INP_Utils:
 
     #     result.__dict__.update(data)
     #     return result
+    
+    def string_to_NodeResultType(value: str)->NodeResultType:
+        """ES - Convierte un texto a `NodeResultType`
+
+        EN - Converts a text to `NodeResultType`."""
+        for item in NodeResultType:
+            if value.lower() == item.name.lower():
+                return item
+        return None
+
+
+    def string_to_LinkResultType(value: str)->LinkResultType:
+        """ES - Convierte un texto a `LinkResultType`
+
+        EN - Converts a text to `LinkResultType`."""
+        for item in LinkResultType:
+            if value.lower() == item.name.lower():
+                return item
+        return None

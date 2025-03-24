@@ -39,7 +39,7 @@ from .toolsProcess.ImportShapeFileTool import ImportShapeFileTool
 from .toolsProcess.exportINPFileTool import ExportINPFileTool
 from .toolsProcess.localAnalysisWithWNTRTool import LocalAnalysisWithWNTRTool
 from .toolsProcess.analysisOptionsTool import AnalysisOptionsTool
-from .toolsProcess.metricsAnalysisTool import MetricsAnalysisTool
+# from .toolsProcess.metricsAnalysisTool import MetricsAnalysisTool
 from .toolsProcess.addGraphicsTool import AddGraphicsTool
 from .toolsProcess.NetworkReviewTool import NetworkReviewTool
 from .toolsProcess.SelectionReviewTool import SelectionReviewTool
@@ -84,6 +84,8 @@ from .INP_Manager.inp_utils import INP_Utils
 from .INP_Manager.node_link_ResultType import LinkResultType, NodeResultType
 from .NetworkAnalysis.nodeNetworkAnalysisLocal import NodeNetworkAnalysisLocal
 from .NetworkAnalysis.pipeNetworkAnalysisLocal import PipeNetworkAnalysisLocal
+from .NetworkAnalysis.nodeNetworkAnalysisFile import NodeNetworkAnalysisFile
+from .NetworkAnalysis.previous_and_next_analysis import PreviousAndNextAnalysis
 
 class QGISPlugin_WaterIng:
     """QGIS Plugin Implementation."""
@@ -143,6 +145,7 @@ class QGISPlugin_WaterIng:
         self.project_info = None
         
         self.simulatorQGIS = SimulatorQGIS()
+        self._previousAndNextAnalysis = None
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message, context="QGISPlugin_WaterIng"):
@@ -199,12 +202,16 @@ class QGISPlugin_WaterIng:
     def simulator_run(self):
         # print("001: Simulation no implementada...")
         # self.simulatorQGIS.MessageInformation("001: Simulation no implementada...")
-        self.simulatorQGIS.run()
+        # self.simulatorQGIS.run()
+        if (self._previous):
+            self._previousAndNextAnalysis.previous_analysis()
 
 
     def simulator_patterns(self):
-        print("002: Patterns de patrones no implementado...")
-        self.simulatorQGIS.MessageInformation("002: Patterns no implementada...")
+        # print("002: Patterns de patrones no implementado...")
+        # self.simulatorQGIS.MessageInformation("002: Patterns no implementada...")
+        if (self._next):
+            self._previousAndNextAnalysis.next_analysis()
 
 
     def simulator_curves(self):
@@ -217,10 +224,24 @@ class QGISPlugin_WaterIng:
         self.simulatorQGIS.MessageInformation("004: Controls no implementada...")
 
 
+    def onTimeChanged(self, previous, next):
+        # print("005: Time changed...")
+        self._previous = previous
+        self._next = next
+
+
     def simulator_options(self):
         # print("005: Options no implementada...")
         # self.simulatorQGIS.MessageInformation("005: Options no implementada...")
-        self.simulatorQGIS.viewOptions()
+        # self.simulatorQGIS.viewOptions()
+        # pathFile = "C:\\Users\\Carlos\\AppData\\Roaming\\QGISWatering\\eba59fc8-6194-480d-9ef6-779a75a4c5a6\\69474b13-6e91-49d3-874d-6b7109b4b338\\Simulations\\Analysis\\2025-03-18T09-27-18-356Z"
+        
+        # print(pathFile)
+        # self._previousAndNextAnalysis = PreviousAndNextAnalysis(pathFile)
+        # self._previousAndNextAnalysis.TimeChanged.subscribe(self.onTimeChanged)
+        # self._previous = True
+        # self._next = True
+        print("0001: ")
 
     def simulator_resilience(self):
         print("006: Resilience no implementada...")
@@ -289,31 +310,38 @@ class QGISPlugin_WaterIng:
         # self.iface.addToolBarIcon(self.action1)
         # self.iface.addPluginToMenu("&My Plugin", self.action1)
         
-        
-        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/run_epanet.svg"
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/backward.svg"
         # self.add_action(
         #     icon_path,
-        #     text=self.tr("Watering Run simulación"),
+        #     text=self.tr("Watering hacia atrás simulación"),
         #     callback=self.simulator_run,
         #     toolbar = self.toolbar,
         #     parent=self.iface.mainWindow())
         
-        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/optins.svg"
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/forward.svg"
         # self.add_action(
         #     icon_path,
-        #     text=self.tr("Watering Opciones"),
+        #     text=self.tr("Watering hacia adelante simulación"),
+        #     callback=self.simulator_patterns,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
+        
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/refresh.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering actualizar simulaciones"),
         #     callback=self.simulator_options,
         #     toolbar = self.toolbar,
         #     parent=self.iface.mainWindow())
 
 
-        icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
-        self.add_action(
-            icon_path,
-            text=self.tr("Watering view metrics"),
-            callback=self.viewResult,
-            toolbar = self.toolbar,
-            parent=self.iface.mainWindow())
+        # icon_path = ":/plugins/QGISPlugin_WaterIng/images/01_01.svg"
+        # self.add_action(
+        #     icon_path,
+        #     text=self.tr("Watering view metrics"),
+        #     callback=self.viewResult,
+        #     toolbar = self.toolbar,
+        #     parent=self.iface.mainWindow())
 # =================================================================
         icon_path = ":/plugins/QGISPlugin_WaterIng/images/loadElements.svg"
         self.add_action(
@@ -468,9 +496,9 @@ class QGISPlugin_WaterIng:
         self.toolbarToolManager.analysisOptions.setCurrentTool(analysisOptionsTool)
         self.toolbarToolManager.analysisOptions.setEnabled(True)
         
-        metricsAnalysisTool = MetricsAnalysisTool(self.iface)
-        self.toolbarToolManager.metricsAnalysis.setCurrentTool(metricsAnalysisTool)
-        self.toolbarToolManager.metricsAnalysis.setEnabled(True)
+        # metricsAnalysisTool = MetricsAnalysisTool(self.iface)
+        # self.toolbarToolManager.metricsAnalysis.setCurrentTool(metricsAnalysisTool)
+        # self.toolbarToolManager.metricsAnalysis.setEnabled(True)
         
         addGraphicsTool = AddGraphicsTool(self.iface)
         self.toolbarToolManager.addGraphics.setCurrentTool(addGraphicsTool)
@@ -572,11 +600,13 @@ class QGISPlugin_WaterIng:
             self.toolSelectNode = SelectNodeTool(self.canvas)  # (self.canvas)
             print("before setting to true")
             self.toolbarToolManager.readAnalysisAction.setEnabled(True)
+            self.toolbarToolManager.readAnalysisAction_2.setEnabled(True)
             self.toolbarToolManager.openOptimizationManagerAction.setEnabled(True)
             self.toolbarToolManager.openPumpModels.setEnabled(True)
             self.toolbarToolManager.readMeasurementsAction.setEnabled(True)
             self.toolbarToolManager.waterBalanceAction.setEnabled(True)
             self.toolbarToolManager.getLastMeasurementAction.setEnabled(True)
+            self.toolbarToolManager.resilienceMetricAction.setEnabled(True)
             print("After setting to true")
 
     def updateActionStateClose(self):
@@ -590,6 +620,7 @@ class QGISPlugin_WaterIng:
 
         actions = [
             self.toolbarToolManager.readAnalysisAction,
+            self.toolbarToolManager.readAnalysisAction_2,
             self.toolbarToolManager.openOptimizationManagerAction,
             self.toolbarToolManager.openPumpModels,
             self.toolbarToolManager.readMeasurementsAction,
@@ -607,9 +638,9 @@ class QGISPlugin_WaterIng:
             self.toolbarToolManager.toolExportINPFile,
             self.toolbarToolManager.localAnalysisWithWNTR,
             self.toolbarToolManager.analysisOptions,
-            self.toolbarToolManager.metricsAnalysis,
+            # self.toolbarToolManager.metricsAnalysis,
             self.toolbarToolManager.addGraphics,
-        ]
+            self.toolbarToolManager.resilienceMetricAction]
 
         for action in actions:
             if action:
