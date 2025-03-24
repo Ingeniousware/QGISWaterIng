@@ -70,9 +70,9 @@ class SimulationsManager:
 
     EN - Class that implements the logic to manage the simulations performed on the study network."""
 
-    def __init__(self, simulations_directory):
+    def __init__(self):
         self.__fileName = "simulations.json"
-        self.__simulactions_directory = os.path.join(simulations_directory, self.__fileName)
+        self.__simulactions_directory = None
         self.__dataSimulations = None
 
         self.TimeChanged = Event()
@@ -100,13 +100,24 @@ class SimulationsManager:
 
 
     @property
+    def SimulationDirectory(self):
+        """ES - Propiedad que devuelve la ruta del directorio de las simulaciones.
+
+        EN - Property that returns the path of the simulations directory."""
+        return self.__simulactions_directory
+    @SimulationDirectory.setter
+    def SimulationDirectory(self, value):
+        self.__simulactions_directory = os.path.join(value, self.__fileName)
+
+
+    @property
     def DataSimulacions(self):
         """ES - Devuelve los datos de las simulaciones realizadas.
 
         En - Returns the data of the simulations performed."""
         if (self.__dataSimulations is None):
             try:
-                self.__dataSimulations = self.__loadJson(self.__simulactions_directory)
+                self.__dataSimulations = self.__loadJson(self.SimulationDirectory)
                 # self.__analysisOne = self.__dataSimulations[-1]
             except FileNotFoundError as e:
                 self.__dataSimulations = None

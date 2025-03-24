@@ -89,11 +89,10 @@ class WateringAnalysis_1(QDockWidget, FORM_CLASS):
         self.startDateTime.setDateTime(QDateTime.currentDateTime())
         print("0001: Project path (at init WateringAnalysis):  ", WateringUtils.getProjectPath())
         
-        simulationsPath = os.path.join(INP_Utils.default_working_directory(), "Analysis")
-        self.__simulations_manager = SimulationsManager(simulationsPath)
+        self.__simulations_manager = SimulationsManager()
         self.__simulations_manager.TimeChanged.subscribe(self.onTimeChanged)
         
-        self.filterPushButton.clicked.connect(lambda: self.filterSimulation(self.__simulations_manager.DataSimulacions))
+        self.filterPushButton.clicked.connect(self.filterSimulation)
         
         self.stop_event = threading.Event()
         self.thread = threading.Thread(target=self.procedimiento)
@@ -105,6 +104,9 @@ class WateringAnalysis_1(QDockWidget, FORM_CLASS):
         self.BoxSimulator.clear()
         self.listOfAnalysis = []
         self.listOfSimulators = []
+        simulationsPath = os.path.join(INP_Utils.default_working_directory(), "Analysis")
+        self.__simulations_manager.SimulationDirectory = simulationsPath
+
         # self.analysis_box.addItem("Select simulaction")
         self.analysis_box.addItems([item["datetime"] for item in self.__simulations_manager.DataSimulacions])
         # self.analysis_box2.addItem("Select simulaction")
@@ -129,7 +131,7 @@ class WateringAnalysis_1(QDockWidget, FORM_CLASS):
         self.thread.join()  # Esperar a que el hilo termine
 
 
-    def filterSimulation(self, data):
+    def filterSimulation(self):
         dlg = WateringSimulationsFilter()
         dlg.show()
         dlg.exec_()

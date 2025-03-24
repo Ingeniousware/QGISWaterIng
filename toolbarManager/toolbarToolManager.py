@@ -753,10 +753,10 @@ class toolbarToolManager:
         #     self.analysisDockPanel.initializeRepository()
         # self.analysisDockPanel.show()
             
-        self.analysisDockPanel_1.initializeRepository()
-        is_visible = self.analysisDockPanel_1.isVisible()
+        is_visible = not self.analysisDockPanel_1.isVisible()
         self.analysisDockPanel_1.setVisible(is_visible)
-        # self.analysisDockPanel_1.show()
+        if (is_visible):
+            self.analysisDockPanel_1.initializeRepository()
 
     def getLastOnlineMeasurementTool(self, second):
         if WateringUtils.isScenarioNotOpened():
