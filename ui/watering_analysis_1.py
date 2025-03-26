@@ -132,7 +132,7 @@ class WateringAnalysis_1(QDockWidget, FORM_CLASS):
 
 
     def filterSimulation(self):
-        dlg = WateringSimulationsFilter()
+        dlg = WateringSimulationsFilter(None)
         dlg.show()
         dlg.exec_()
 
