@@ -1,7 +1,13 @@
 #!/bin/bash
 
 # Determine QGIS Watering folder to be added to QGIS plugin’s folder
-scriptDir="$(dirname "$(readlink -f "$0")")"
+if command -v realpath >/dev/null 2>&1; then
+    scriptDir="$(dirname "$(realpath "$0")")"
+else
+    # Fallback for systems without realpath (works on macOS)
+    scriptDir="$(cd "$(dirname "$0")" && pwd)"
+fi
+
 folderToCopy="$(dirname "$scriptDir")"
 folderName=$(basename "$folderToCopy")
 
@@ -29,6 +35,7 @@ else
         echo "Usage: $0 [QGIS_PYTHON_PATH]"
         exit 1
     fi
+    # Use the proper executable path inside the QGIS app bundle
     QGIS_PYTHON_PATH="$QGIS_APP_PATH/Contents/MacOS/bin/python3"
 fi
 
