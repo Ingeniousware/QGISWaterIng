@@ -404,6 +404,9 @@ class sectionBackdrop(sectionAbstract):
         
     def writeSection(self, outfile):
         outfile.write(self.name + '\n')
+
+        for item in self.values:
+            outfile.write(f"{item!s}\n")
         # outfile.write(' DIMENSIONS     	0.00            	0.00            	10000.00        	10000.00        ' + '\n')
         # outfile.write(' UNITS          	Ninguno' + '\n')
         # outfile.write(' FILE           	' + '\n')

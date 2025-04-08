@@ -9,3 +9,25 @@
 -Hacer un dialogo para preguntar alguna descripción de la simulación y que importancia tiene del 1 al 5
 -Poner boton para levantar una tabla con todas las simulaciones realizadas que esten en el proyecto (locales y del servidor).
 -
+
+1- Graficar el indicador de Todini y el porciento de Nodos que cumplen la presión mínima.
+     2 gráficos por separado (uno para Todino y otro para el % de nodos que cumplen con presión mínima).
+     Estos gráficos muestran el tiempo de simulación en el eje de las X y el valor del indicador en Y.
+     El cálculo de los indicadores y la generación de los gráficos debe ser independiente del tipo de simulador
+     utilizado para ejecutar la simulación en la que se basan los cálculos de los mencionados indicadores.
+
+2-  Montar filtros de simulaciones para seleccionar la simulación que se quiera visualizar o la simulación que se quiera eliminar del sistema local
+-   El filtro busca las simulaciones locales y las en línea.
+    (yo diría filtrar por tipo de simulador, eso ya divide automáticamente entre simulaciones online y simulaciones
+    en línea...WNTR, EPANET 2.2 Local, WaterIng, WtarIng Transient [para el futuro])
+
+3- Ejecutar nuevas simulaciones a partir de seleccionar un simulador y las opciones de simulación que correspondan.
+    El sistema debe ser capaz de llamar al simulador adecuado, ya sea local o del servidor. Inicialmente probemos con
+    los simuladores locales solamente y luego de que funcione adicionamos el simulador de WaterIng Online. Los dos
+    simuladores locales que se tomarán en cuenta serán:
+    -   WNTR.
+    -   Toolkit de Epanet.
+
+4- Preparar función nueva para exportar a .inp. (esto mejor no tocarlo por el moment, el que quiera exportar, que lo descargue
+    desde WaterIng jejejejeje), hay un montón de cosas por hacer todavía antes de llegar aquí, primero que esto tenemos que pulir
+    bien lo de las simulaciones y después lo de la sincronización de datos entre local y servidor.

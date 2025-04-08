@@ -411,10 +411,10 @@ class Hydraulic_Options(AbstractOption):
                  demand_multiplier: float = 1.0,
                  demand_model: str = 'DDA',
                  minimum_pressure: float = 0.0,
-                 required_pressure: float = 0.07,  # EPANET 2.2 default
+                 required_pressure: float = 0.1,  # EPANET 2.2 default
                  pressure_exponent: float = 0.5,
                  emitter_exponent: float = 0.5,
-                 trials: int = 200,  # EPANET 2.2 increased the default from 40 to 200
+                 trials: int = 40,  # EPANET 2.2 increased the default from 40 to 200
                  accuracy: float = 0.001,
                  unbalanced: str = 'Continue 10',
                  unbalanced_value: int = None,
@@ -423,7 +423,7 @@ class Hydraulic_Options(AbstractOption):
                  damplimit: int = 0,
                  headerror: float = 0,
                  flowchange: float = 0,
-                 inpfile_units: str = 'GPM',
+                 inpfile_units: str = 'LPS',
                  inpfile_pressure_units: str = None):
         super().__init__(inpM)
         self.headloss = headloss
@@ -714,12 +714,12 @@ class Label():
         return f" {self.X_Coord: <15}\t{self.Y_Coord: <12}\t{self.Anchor_node: <15};"
     
 class Backdrop():
-    def __init__(self, xmin = 0.0, ymin = 0.0, xmax = 10000.0, ymax = 10000.0, units = "Ninguno", file = "", offsetx = 0.0, offsety = 0.0):
+    def __init__(self, xmin = 0.0, ymin = 0.0, xmax = 10000.0, ymax = 10000.0, units = "NONE", file = "", offsetx = 0.0, offsety = 0.0):
         self.x_min = xmin if xmin else 0.0
         self.y_min = ymin if ymin else 0
         self.x_max = xmax if xmax else 0.0
         self.y_max = ymax if ymax else 0.0
-        self.Units = units if units else "Ninguno"
+        self.Units = units if units else "NONE"
         self.File = file if file else ""
         self.offset_x = offsetx if offsetx else 0.0
         self.offset_y = offsety if offsety else 0.0

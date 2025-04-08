@@ -91,9 +91,9 @@ class WateringResilienceMetric(QDockWidget, FORM_CLASS):
             self.show_progress_bar()
             wn = wntr.network.WaterNetworkModel(inpFile)
             self.set_progress(20)
-            wn.options.hydraulic.demand_model = 'PDD'
+            # wn.options.hydraulic.demand_model = 'PDD'
 
-            sim = wntr.sim.WNTRSimulator(wn)
+            sim = wntr.sim.EpanetSimulator(wn)
             results = sim.run_sim()
             self.set_progress(60)
             # Cálculo de la métrica de resistencia de Todini

@@ -18,7 +18,7 @@
 
 from ..INP_Manager.INPManager import INPManager
 from qgis.PyQt.QtWidgets import QFileDialog # type: ignore
-from qgis.core import QgsProject
+from qgis.core import QgsProject # type: ignore
 
 from ..watering_utils import WateringUtils
 

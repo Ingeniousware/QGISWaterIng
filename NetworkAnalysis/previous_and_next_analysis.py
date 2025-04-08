@@ -30,6 +30,8 @@ from .nodeNetworkAnalysisFile import NodeNetworkAnalysisFile
 from .pipeNetworkAnalysisFile import PipeNetworkAnalysisFile
 from ..INP_Manager.node_link_ResultType import LinkResultType, NodeResultType
 
+from wntr.epanet.toolkit import ENepanet
+
 
 class Event:
     def __init__(self):
