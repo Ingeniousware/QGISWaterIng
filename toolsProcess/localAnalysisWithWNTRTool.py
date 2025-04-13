@@ -118,25 +118,25 @@ class LocalAnalysisWithWNTRTool:
                 QgsProject.instance().removeMapLayer(layer_id)
 
 
-    def updateJSON(self, path: str ):
-        """Äctualiza el archivo JSON con los resultados de la simulación"""
-        directorios = []
+    # def updateJSON(self, path: str ):
+    #     """Äctualiza el archivo JSON con los resultados de la simulación"""
+    #     directorios = []
 
-        for directory_name in os.listdir(path):
-            directory_path = os.path.join(path, directory_name)
-            if os.path.isdir(directory_path):
-                temp = directory_name.split("_")
-                date = datetime.strptime(temp[1], "%y%m%d%H%M%S").strftime("%d/%m/%Y %H:%M:%S")
-                directorios.append({
-                    "directoryName": directory_name,
-                    "directoryDate": date,
-                    "directoryPath": directory_path
-                })
+    #     for directory_name in os.listdir(path):
+    #         directory_path = os.path.join(path, directory_name)
+    #         if os.path.isdir(directory_path):
+    #             temp = directory_name.split("_")
+    #             date = datetime.strptime(temp[1], "%y%m%d%H%M%S").strftime("%d/%m/%Y %H:%M:%S")
+    #             directorios.append({
+    #                 "directoryName": directory_name,
+    #                 "directoryDate": date,
+    #                 "directoryPath": directory_path
+    #             })
 
-        ruta_json = os.path.join(path, "inf.json")
+    #     ruta_json = os.path.join(path, "inf.json")
 
-        with open(ruta_json, 'w') as archivo_json:
-            json.dump(directorios, archivo_json, indent=4)
+    #     with open(ruta_json, 'w') as archivo_json:
+    #         json.dump(directorios, archivo_json, indent=4)
 
 
     def updateData(self, pathWork: str, dateTime: str):
