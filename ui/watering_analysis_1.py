@@ -399,6 +399,60 @@ class WNTR_Simulator(AbstractTypeSimulator):
     def Run(self):
         """Se obtienen los resultados de la simulación local con el WNTR"""
         print("0001: Inicio de la simulación con WNTR.")
+        self.removerAnalysis()
+        # Se configura el archivo del inp. aqui se debe guardar las opciones del inp si no existen.
+
+        date_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        # fecha_to_int = int(fecha_hora.strftime("%y%m%d%H%M%S"))
+        # tempFile = f"S_{fecha_to_int}"
+        dataTimeStr = date_time.translate(str.maketrans({":": "-", ".": "-"}))
+        # tempFile = f"{fecha_hora}"
+
+        inpManager = INPManager()
+        inpManager.writeSections()
+
+        inpFileTemp = INP_Utils.generate_directory(os.path.join(os.path.dirname(inpManager.OutFile), "Analysis", dataTimeStr))
+        inp_for_sim = inpFileTemp + f"\\{dataTimeStr}.inp"
+
+        try:
+            shutil.copy(inpManager.OutFile, inp_for_sim)
+        except FileNotFoundError:
+            self.show_message("Error", "El archivo de origen no existe.", QMessageBox.critical)
+        except PermissionError:
+            self.show_message("Error", "No tienes permisos suficientes para copiar el archivo.", QMessageBox.critical)
+
+        wn = wntr.network.WaterNetworkModel(inp_for_sim)
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim(inp_for_sim)
+
+        node_result = NodeResultType.pressure
+        link_result = LinkResultType.flowrate
+
+        nodeResult_at_0hr = results.node[node_result.name].loc[0 * 3600, :]
+        linkResult_at_0hr = results.link[link_result.name].loc[0 * 3600, :]
+
+        analysis_id = str(uuid.uuid4())
+        time = datetime.now()
+        units = inpManager.options[INP_Options.Hydraulics].inpfile_units
+        nodeAnalysis = NodeNetworkAnalysisLocal(nodeResult_at_0hr, inpFileTemp, analysis_id, date_time, node_result)
+        nodeAnalysis.Execute()
+
+        pipeAnalysis = PipeNetworkAnalysisLocal(linkResult_at_0hr, inpFileTemp, analysis_id, date_time, units, link_result)
+        pipeAnalysis.Execute()
+
+        time: Time_Options = inpManager.options[INP_Options.Times]
+        _, rtime, _ = INP_Utils.hora_to_int(time.duration)
+        # print("---------------- Fin de los cáculos ------------------------")
+        if (rtime > 0):
+            for i in range(1, int(rtime)):
+                analysis_id = str(uuid.uuid4())
+                nodeResult_at_hr = results.node[node_result.name].loc[i * 3600, :]
+                linkResult_at_hr = results.link[link_result.name].loc[0 * 3600, :]
+                nodeAnalysis.elementAnalysisResults(nodeResult_at_hr, analysis_id)
+                pipeAnalysis.elementAnalysisResults(linkResult_at_hr, analysis_id, units)
+
+        self.updateData(inpFileTemp, date_time)
+        print("0001: Fin de la simulación con WNTR.")
 
 
 class WNTR_Epanet_Simulator(AbstractTypeSimulator):
@@ -410,62 +464,63 @@ class WNTR_Epanet_Simulator(AbstractTypeSimulator):
         """Se obtienen los resultados de la simulación local con el Epanet de WNTR"""
         print("0001: Inicio de la simulación con Epanet de WNTR.")
         self.removerAnalysis()
-            # Se configura el archivo del inp. aqui se debe guardar las opciones del inp si no existen.
+        # Se configura el archivo del inp. aqui se debe guardar las opciones del inp si no existen.
 
-            date_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-            # fecha_to_int = int(fecha_hora.strftime("%y%m%d%H%M%S"))
-            # tempFile = f"S_{fecha_to_int}"
-            dataTimeStr = date_time.translate(str.maketrans({":": "-", ".": "-"}))
-            # tempFile = f"{fecha_hora}"
+        date_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        # fecha_to_int = int(fecha_hora.strftime("%y%m%d%H%M%S"))
+        # tempFile = f"S_{fecha_to_int}"
+        dataTimeStr = date_time.translate(str.maketrans({":": "-", ".": "-"}))
+        # tempFile = f"{fecha_hora}"
 
 
-            inpManager = INPManager()
-            inpManager.writeSections()
+        inpManager = INPManager()
+        inpManager.writeSections()
 
-            # options: INPOptions = INPOptions(None)
-            # options.load()
-            # self.writeSections()
+        # options: INPOptions = INPOptions(None)
+        # options.load()
+        # self.writeSections()
 
-            wn = wntr.network.WaterNetworkModel(inpManager.OutFile)
-            # os.path.join(inpFile.OutFile, "Simulaciones", tempFile)
-            # inpFileTemp = INP_Utils.generate_directory(inpFile.OutFile + "\\Simulaciones\\" + tempFile)
-            inpFileTemp = INP_Utils.generate_directory(os.path.join(os.path.dirname(inpManager.OutFile), "Analysis", dataTimeStr))
-            # inpFileTemp += "\\" + tempFile
-            # inpFileTemp = inpFileTemp + f"\\{dataTimeStr}"
+        wn = wntr.network.WaterNetworkModel(inpManager.OutFile)
+        # os.path.join(inpFile.OutFile, "Simulaciones", tempFile)
+        # inpFileTemp = INP_Utils.generate_directory(inpFile.OutFile + "\\Simulaciones\\" + tempFile)
+        inpFileTemp = INP_Utils.generate_directory(os.path.join(os.path.dirname(inpManager.OutFile), "Analysis", dataTimeStr))
+        # inpFileTemp += "\\" + tempFile
+        # inpFileTemp = inpFileTemp + f"\\{dataTimeStr}"
 
-            # Simulate hydraulics
-            sim = wntr.sim.EpanetSimulator(wn)
-            # sim = wntr.sim.WNTRSimulator(wn)
-            self._results = sim.run_sim(inpFileTemp + f"\\{dataTimeStr}")
+        # Simulate hydraulics
+        sim = wntr.sim.EpanetSimulator(wn)
+        # sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim(inpFileTemp + f"\\{dataTimeStr}")
 
-            node_Result = NodeResultType.pressure
+        node_Result = NodeResultType.pressure
 
-            nodeResult_at_0hr = self._results.node[node_Result.name].loc[0 * 3600, :]
-            linkResult_at_0hr = self._results.link[LinkResultType.flowrate.name].loc[0 * 3600, :]
-            # pressure_at_5hr = results.node[NodeResultType.pressure.name].loc[0*3600, :]
-            # print(pressure_at_5hr)
-            # self._guid = str(uuid.uuid4())
-            analysis_id = str(uuid.uuid4())
-            time = datetime.now()
-            units = inpManager.options[INP_Options.Hydraulics].inpfile_units
-            nodeAnalysis = NodeNetworkAnalysisLocal(nodeResult_at_0hr, inpFileTemp, analysis_id, date_time, node_Result)
-            nodeAnalysis.Execute()
+        nodeResult_at_0hr = results.node[node_Result.name].loc[0 * 3600, :]
+        linkResult_at_0hr = results.link[LinkResultType.flowrate.name].loc[0 * 3600, :]
+        # pressure_at_5hr = results.node[NodeResultType.pressure.name].loc[0*3600, :]
+        # print(pressure_at_5hr)
+        # self._guid = str(uuid.uuid4())
+        analysis_id = str(uuid.uuid4())
+        time = datetime.now()
+        units = inpManager.options[INP_Options.Hydraulics].inpfile_units
+        nodeAnalysis = NodeNetworkAnalysisLocal(nodeResult_at_0hr, inpFileTemp, analysis_id, date_time, node_Result)
+        nodeAnalysis.Execute()
 
-            pipeAnalysis = PipeNetworkAnalysisLocal(linkResult_at_0hr, inpFileTemp, analysis_id, date_time, units)
-            pipeAnalysis.Execute()
+        pipeAnalysis = PipeNetworkAnalysisLocal(linkResult_at_0hr, inpFileTemp, analysis_id, date_time, units)
+        pipeAnalysis.Execute()
 
-            time: Time_Options = inpManager.options[INP_Options.Times]
-            _, rtime, _ = INP_Utils.hora_to_int(time.duration)
-            # print("---------------- Fin de los cáculos ------------------------")
-            if (rtime > 0):
-                for i in range(1, int(rtime)):
-                    analysis_id = str(uuid.uuid4())
-                    nodeResult_at_hr = self._results.node[node_Result.name].loc[i * 3600, :]
-                    linkResult_at_hr = self._results.link[LinkResultType.flowrate.name].loc[0 * 3600, :]
-                    nodeAnalysis.elementAnalysisResults(nodeResult_at_hr, analysis_id)
-                    pipeAnalysis.elementAnalysisResults(linkResult_at_hr, analysis_id, units)
+        time: Time_Options = inpManager.options[INP_Options.Times]
+        _, rtime, _ = INP_Utils.hora_to_int(time.duration)
+        # print("---------------- Fin de los cáculos ------------------------")
+        if (rtime > 0):
+            for i in range(1, int(rtime)):
+                analysis_id = str(uuid.uuid4())
+                nodeResult_at_hr = results.node[node_Result.name].loc[i * 3600, :]
+                linkResult_at_hr = results.link[LinkResultType.flowrate.name].loc[0 * 3600, :]
+                nodeAnalysis.elementAnalysisResults(nodeResult_at_hr, analysis_id)
+                pipeAnalysis.elementAnalysisResults(linkResult_at_hr, analysis_id, units)
 
-            self.updateData(inpFileTemp, date_time)
+        self.updateData(inpFileTemp, date_time)
+        print("0001: Fin de la simulación con Epanet de WNTR.")
 
 
 
