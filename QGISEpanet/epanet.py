@@ -17,7 +17,8 @@ class EpanetSimulator():
         self._data = {
             'JunctionNameID': None,
             'ReservoirNameID': None,
-            'PumpNameID': None }
+            'PumpNameID': None,
+            'PumpNodesNameID': []}
 
 
     def run_sim(self, file_prefix, save_hyd=False, use_hyd=False, hydfile=None,
@@ -80,7 +81,17 @@ class EpanetSimulator():
             self._data['JunctionNameID'] = enData.getNodeJunctionNameID()
             self._data['ReservoirNameID'] = enData.getNodeReservoirNameID()
             self._data['PumpNameID'] = enData.getLinkPumpNameID()
-            
+            # Iterar sobre los índices de bombas
+            for pump_index in enData.getLinkPumpIndex():
+                # Obtener los nodos vinculados a la bomba
+                pump_nodes = enData.getLinkPumpNodesIndex(pump_index)
+                # Validar que se obtengan los nodos correctamente
+                if pump_nodes and isinstance(pump_nodes, list) and len(pump_nodes) > 0:
+                    # Obtener el nombre del nodo y añadirlo a los datos
+                    node_name_id = enData.getNodeNameID(pump_nodes[0])
+                    pumpNameID = enData.getLinkPumpNameID(pump_index)
+                    self._data.setdefault('PumpNodesNameID', []).append({pumpNameID: node_name_id})
+
             logger.debug('Solved hydraulics')
         if save_hyd:
             enData.ENsavehydfile(hydfile)
@@ -108,3 +119,7 @@ class EpanetSimulator():
 
     def getLinkPumpNameID(self):
         return self._data['PumpNameID']
+
+
+    def getLinkPumpNodesNameID(self):
+        return self._data['PumpNodesNameID']

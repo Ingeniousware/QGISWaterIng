@@ -1188,7 +1188,7 @@ class ENepanet:
         return lTypes
 
 
-    def getLinkPumpIndex(self, *argv):
+    def getLinkPumpIndex(self):
         """ Retrieves the pump indices.
 
         Example 1:
@@ -1207,17 +1207,9 @@ class ENepanet:
         See also getLinkIndex, getLinkPipeIndex, getLinkValveIndex.
         """
         tmpLinkTypes = self.getLinkTypeIndex()
-        value = np.array([i for i, x in enumerate(tmpLinkTypes) if x == EN.PUMP]) + 1
-        if value.size == 0:
-            return value
-        if argv:
-            index = np.array(argv[0])
-            try:
-                return value[index - 1]
-            except:
-                raise Exception('Some PUMP indices do not exist.')
-        else:
-            return value
+        # value = np.array([i for i, x in enumerate(tmpLinkTypes) if x == EN.PUMP]) + 1
+        value = np.where(np.array(tmpLinkTypes) == EN.PUMP)[0] + 1
+        return value
 
 
     def getLinkPumpNameID(self, *argv):
@@ -1238,7 +1230,18 @@ class ENepanet:
 
         See also getLinkNameID, getLinkPipeNameID, getNodeNameID.
         """
-        return self.getLinkNameID(self.getLinkPumpIndex(*argv))
+        lTypes = []
+        if len(argv) > 0:
+            index = argv[0]
+            if isinstance(index, list):
+                for i in index:
+                    lTypes.append(self.getLinkNameID(i))
+            else:
+                lTypes = self.getLinkNameID(index)
+        else:
+            for i in self.getLinkPumpIndex():
+                lTypes.append(self.getLinkNameID(i))
+        return lTypes
 
 
     def ENgetlinknodes(self, index):
@@ -1256,10 +1259,69 @@ class ENepanet:
         fromNode = c_int()
         toNode = c_int()
 
-        if self._ph is not None:
-            self.errcode = self._lib.EN_getlinknodes(self._ph, int(index), byref(fromNode), byref(toNode))
+        if self._project is not None:
+            self.errcode = self.ENlib.EN_getlinknodes(self._project, int(index), byref(fromNode), byref(toNode))
         else:
-            self.errcode = self._lib.ENgetlinknodes(int(index), byref(fromNode), byref(toNode))
+            self.errcode = self.ENlib.ENgetlinknodes(int(index), byref(fromNode), byref(toNode))
 
         self._error()
         return [fromNode.value, toNode.value]
+    
+    
+    def getLinkNodesIndex(self, *argv):
+        """ EN - Retrieves the index of the downstream and upstream node.
+
+        ES - Recupera el índice del nodo aguas abajo y aguas arriba
+
+        Example 1:
+
+        >>> d.getlinknodes()          # Retrieves the downstream and upstream node index of all links.
+
+        Example 2:
+
+        >>> d.getlinknodes(1)         # Retrieves the index of the node downstream and upstream of the link with the specified ID = 1.
+
+        Example 3:
+
+        >>> d.getlinknodes([1,2])     # Retrieves the index of the node downstream and upstream of the links to the specified ID = [1, 2].
+
+        See also...
+        """
+
+        nodes = []
+        if len(argv) > 0:
+            index = argv[0]
+            if isinstance(index, list):
+                # a = np.array([self.ENgetlinknodes(i) for i in index])
+                for i in index:
+                    nodes.append(self.ENgetlinknodes(i))
+            else:
+                # a = np.array([self.ENgetlinknodes(i) for i in index])
+                nodes.append(self.ENgetlinknodes(index))
+        else:
+            # a = np.array([self.ENgetlinknodes(i) for i in index])
+            for i in range(self.getLinkCount()):
+                nodes.append(self.ENgetlinknodes(i + 1))
+        return nodes
+
+
+    def getLinkPumpNodesIndex(self, *argv):
+        """ EN - Retrieves the index of the downstream and upstream node of a pump.
+
+        ES - Recupera el índice del nodo aguas abajo y aguas arriba de una bomba
+
+        Example 1:
+
+        >>> d.getlinknodes()          # Retrieves the downstream and upstream node index of all pump links.
+
+        Example 2:
+
+        >>> d.getlinknodes(1)         # Retrieves the index of the node downstream and upstream of the pump link with the specified ID = 1.
+
+        Example 3:
+
+        >>> d.getlinknodes([1,2])     # Retrieves the index of the downstream and upstream node of the pump links with the specified ID = [1, 2].
+
+        See also...
+        """
+        return self.getLinkNodesIndex(*argv)

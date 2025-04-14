@@ -29,6 +29,8 @@ from PyQt5.QtCore import QTimer
 
 from ..INP_Manager.inp_utils import INP_Utils
 from ..INP_Manager.node_link_ResultType import LinkResultType, NodeResultType
+from ..QGISEpanet.epanet import EpanetSimulator
+from ..QGISEpanet.metrics.hydraulic import todini_index
 
 # watering_resilience_metrics_dialog
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_resilience_metrics_dialog.ui"))
@@ -89,20 +91,18 @@ class WateringResilienceMetric(QDockWidget, FORM_CLASS):
             inpFile = INP_Utils.default_directory_inp()
 
             self.show_progress_bar()
-            wn = wntr.network.WaterNetworkModel(inpFile)
+            simEp = EpanetSimulator()
             self.set_progress(20)
-            # wn.options.hydraulic.demand_model = 'PDD'
 
-            sim = wntr.sim.EpanetSimulator(wn)
-            results = sim.run_sim()
+            results = simEp.run_sim(inpFile)
             self.set_progress(60)
             # Cálculo de la métrica de resistencia de Todini
             pressure = results.node[NodeResultType.pressure.name]
             demand = results.node[NodeResultType.demand.name]
             head = results.node[NodeResultType.head.name]
-            pump_flowrate = results.link[LinkResultType.flowrate.name].loc[:, wn.pump_name_list]
+            flowrate = results.link[LinkResultType.flowrate.name]
             self.set_progress(80)
-            self.todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, threshold)
+            self.todini = todini_index(head, pressure, demand, flowrate, simEp, threshold)
             self.showGraphic()
             self.set_progress(100)
             self.timer_hide_progress_bar()
