@@ -30,7 +30,7 @@ from PyQt5.QtCore import QTimer
 from ..INP_Manager.inp_utils import INP_Utils
 from ..INP_Manager.node_link_ResultType import LinkResultType, NodeResultType
 
-
+# watering_resilience_metrics_dialog
 FORM_CLASS, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), "watering_resilience_metrics_dialog.ui"))
 
 

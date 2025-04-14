@@ -50,7 +50,7 @@ class LocalAnalysisWithEpanetTool(AbstractAnalysisTool):
             self.iface.messageBar().pushMessage(
                 self.tr("Error"), self.tr("Load a project scenario first in Download Elements!"), level=1, duration=5)
         else:
-            """Se obtienen los resultados de la simulación local"""
+            """Se obtienen los resultados de la simulación local con el Toolkit de Epanet 2.2"""
             self.removerAnalysis()
             # Se configura el archivo del inp. aqui se debe guardar las opciones del inp si no existen.
 

@@ -462,7 +462,7 @@ class toolbarToolManager:
         self.addGraphics = self.addMapToolButtonAction(
             icon_path,
             text=WateringUtils.tr("Add Graphics"),
-            callback=self.activateActionTool,
+            callback=self.activeAnalysisDockPanelTemp,
             toolbar=None,
             parent=self.parentWindow,
         )
@@ -503,6 +503,13 @@ class toolbarToolManager:
         self.analysisDockPanel_1.setVisible(is_visible)
         if (is_visible):
             self.analysisDockPanel_1.initializeRepository()
+
+
+    def activeAnalysisDockPanelTemp(self, action):
+        is_visible = not self.analysisDockPanel.isVisible()
+        self.analysisDockPanel.setVisible(is_visible)
+        if (is_visible):
+            self.analysisDockPanel.initializeRepository()
 
 
     def activeRecilienceMetricDockPanel(self, action):
@@ -617,9 +624,9 @@ class toolbarToolManager:
             Addicionar un gráficos
         """
         analysisTool = [
-            self.readAnalysisAction_2,
             self.analysisOptions,
-            self.localAnalysisWithWNTR,
+            self.readAnalysisAction_2,
+            # self.localAnalysisWithWNTR,
             self.resilienceMetricAction,
             # self.metricsAnalysis,
             self.addGraphics]

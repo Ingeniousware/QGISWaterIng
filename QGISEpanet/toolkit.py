@@ -8,7 +8,7 @@ import os
 import os.path
 import platform
 import sys
-from ctypes import byref, create_string_buffer
+from ctypes import byref, c_int, create_string_buffer
 
 import numpy as np
 from pkg_resources import resource_filename
@@ -1239,3 +1239,27 @@ class ENepanet:
         See also getLinkNameID, getLinkPipeNameID, getNodeNameID.
         """
         return self.getLinkNameID(self.getLinkPumpIndex(*argv))
+
+
+    def ENgetlinknodes(self, index):
+        """ Gets the indexes of a link's start- and end-nodes.
+
+        ENgetlinknodes(index)
+
+        Parameters:
+        index      	a link's index (starting from 1).
+
+        Returns:
+        from   the index of the link's start node (starting from 1).
+        to     the index of the link's end node (starting from 1).
+        """
+        fromNode = c_int()
+        toNode = c_int()
+
+        if self._ph is not None:
+            self.errcode = self._lib.EN_getlinknodes(self._ph, int(index), byref(fromNode), byref(toNode))
+        else:
+            self.errcode = self._lib.ENgetlinknodes(int(index), byref(fromNode), byref(toNode))
+
+        self._error()
+        return [fromNode.value, toNode.value]
