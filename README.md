@@ -33,8 +33,6 @@ This project is a work in progress and represents an early version of the toolki
 ## Contributing  
 We believe in the power of collaboration and open-source development. If you are interested in contributing to this project, feel free to open issues or submit pull requests. Your feedback and contributions are highly appreciated.
 
-## License  
-This project is licensed under the [MIT License](./LICENSE).
 
 ## Contact  
 For any inquiries or further information, please reach out via email at:  
