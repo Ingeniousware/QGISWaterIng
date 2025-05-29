@@ -1,3 +1,5 @@
+![SWAN](https://swan-forum.com/wp-content/themes/swan/images/logos/primary.svg)
+
 # Smart Water Network Resilience Toolkit
 
 ## Project Overview  
