@@ -1,3 +1,4 @@
+ ![#f03c15](https://placehold.co/15x15/f03c15/f03c15.png) `#f03c15`
 ![SWAN](https://swan-forum.com/wp-content/themes/swan/images/logos/primary.svg)
 
 # Smart Water Network Resilience Toolkit
