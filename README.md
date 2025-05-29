@@ -1,4 +1,4 @@
-![SWAN](https://swan-forum.com/wp-content/themes/swan/images/logos/primary.svg)
+![SWAN]([https://swan-forum.com/wp-content/themes/swan/images/logos/primary.svg](https://granite-currant-36e.notion.site/image/attachment%3A6fd16f8f-37bc-4c85-9222-f802eb39d76a%3AUntitled_design_(5).png?table=block&id=1cbae7f0-f9a0-8052-81be-f360370b5520&spaceId=e8bde19c-1bbf-4363-8bbb-89f84170fcfd&width=2000&userId=&cache=v2))
 
 # Smart Water Network Resilience Toolkit
 
